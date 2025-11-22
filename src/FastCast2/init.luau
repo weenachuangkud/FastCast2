@@ -260,6 +260,7 @@ function FastCast:ReturnObject(obj : Instance)
 end
 
 function FastCast:Destroy()
+	self.ObjectCache:Destroy()
 	self.Dispatcher:Destroy()
 	setmetatable(self, nil)
 end
