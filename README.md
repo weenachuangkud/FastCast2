@@ -12,6 +12,7 @@ An improved version of FastCast with Parallel scripting, more extensions, and st
 7. Inside FastCast2, go to FastCastVMs, inside the ClientVM and the ServerVM, you can see a comment telling you to replace the highlighted warning line with the correct path.
 8. Enjoy
 
+videos/install.mp4
 
 ## How to setup (Basic)
 
