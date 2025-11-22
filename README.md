@@ -1,2 +1,2 @@
 # FastCast2
-a Improved version of FastCast with Parallel scripting, more extensions, statically typed
+An improved version of FastCast with Parallel scripting, more extensions, and statically typed
