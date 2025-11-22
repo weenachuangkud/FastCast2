@@ -21,7 +21,7 @@ local IS_SERVER = RunService:IsServer()
 
 export type Dispatcher = {
 	Init : (ContainerParent : Instance, VMContainerName : string, VMname : string) -> (),
-	new : (Threads: number, Module: any?, Callback: (...any) -> (...any)?) -> Dispatcher,
+	new : (Threads: number, Data: any?, Callback: (...any) -> (...any)?) -> Dispatcher,
 	
 	TemplateScript : LocalScript | Script,
 	Data : any?,
