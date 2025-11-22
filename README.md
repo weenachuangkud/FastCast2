@@ -97,7 +97,7 @@ Caster.RayHit:Connect(OnRayHit)
 
 ## API Usages/Examples
 
-ActiveCast Function are **unsafe**?, use `Caster:SafeCall(f : (...any) -> (...any), ...)`\
+Function are **unsafe**?, use `Caster:SafeCall(f : (...any) -> (...any), ...)`\
 **Q:** How do you know that the function is not safe to call?\
 **A:** You're going to run the game first, to test if it will throw an error at you or not\
 If so, meaning, the functions are **unsafe**
