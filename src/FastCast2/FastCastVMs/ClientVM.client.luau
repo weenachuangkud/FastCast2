@@ -7,13 +7,9 @@
 local Rep = game:GetService("ReplicatedStorage")
 
 -- Modules
-
-local GunEngine = Rep:WaitForChild("Gun_Engine")
-local Modules = GunEngine:WaitForChild("Modules")
-local Libraries = Modules:WaitForChild("Libraries")
+local FastCast2Module = PathTo:WaitForChild("FastCast2")
 
 -- Requires
-local FastCast2Module = Libraries:WaitForChild("FastCast2")
 
 local ActiveCast = require(FastCast2Module:WaitForChild("ActiveCast"))
 local ActiveBlockcast = require(FastCast2Module:WaitForChild("ActiveBlockcast"))
