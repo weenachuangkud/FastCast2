@@ -7,7 +7,12 @@
 local Rep = game:GetService("ReplicatedStorage")
 
 -- Modules
-local FastCast2Module = PathTo:WaitForChild("FastCast2")
+
+local GunEngine = Rep:WaitForChild("Gun_Engine")
+local Modules = GunEngine:WaitForChild("Modules")
+local Libraries = Modules:WaitForChild("Libraries")
+
+local FastCast2Module = Libraries:WaitForChild("FastCast2")
 
 -- Requires
 
@@ -29,7 +34,10 @@ if actor == nil then error("The script must placed inside of actor") end
 -- Listeners
 
 actor:BindToMessage("Init", function(Data : any?)
-	BaseCast = BaseCast.Init(script.Parent:WaitForChild("Output"))
+	BaseCast = BaseCast.Init(
+		script.Parent:WaitForChild("Output"), 
+		Data
+	)
 end)
 
 actor:BindToMessage("Raycast", function(
@@ -41,7 +49,7 @@ actor:BindToMessage("Raycast", function(
 	--print(behavior)
 	--print(SharedCasters[casterID])
 	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
-	
+
 	BaseCast:Raycast(origin, direction, velocity, behavior)
 end)
 
