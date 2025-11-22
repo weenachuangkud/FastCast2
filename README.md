@@ -58,7 +58,7 @@ Caster:Init(
 ```luau
 -- Local functions
 local function OnRayHit(
-	ActiveCast : TypeDef.ActiveCast, 
+	ActiveCast, 
 	resultOfCast : RaycastResult, 
 	segmentVelocity : Vector3, 
 	segmentAcceleration : Vector3, 
@@ -68,7 +68,7 @@ local function OnRayHit(
 end
 
 local function OnLengthChanged(
-	ActiveCast : TypeDef.ActiveCast, 
+	ActiveCast, 
 	lastPoint : Vector3, 
 	rayDir : Vector3, 
 	rayDisplacement : number, 
@@ -80,7 +80,7 @@ local function OnLengthChanged(
 	end
 end
 
-local function OnCastTerminating(cast : TypeDef.ActiveCast)
+local function OnCastTerminating(cast)
 	if cast.RayInfo.CosmeticBulletObject then
 		cast.RayInfo.CosmeticBulletObject:Destroy()
 		cast.RayInfo.CosmeticBulletObject = nil
