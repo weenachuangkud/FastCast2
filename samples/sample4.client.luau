@@ -61,10 +61,10 @@ Caster:Init(
 	game:GetService("ReplicatedFirst").CastVMsContainer, -- Where workers stored
 	"VMsContainer", -- Name Folder of workerFolder
 	"CastWorkers",-- Name of workers
-	true,
-	BulletTemplate,
-	100,
-	workspace.Projectiles
+	true, -- useObjectCache?
+	BulletTemplate, -- BulletTemplate
+	100, -- CacheSize
+	workspace.Projectiles -- ProjectileContainer
 )
 
 -- Local functions
