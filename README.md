@@ -1,7 +1,7 @@
 # FastCast2
 An improved version of FastCast with Parallel scripting, more extensions, and statically typed
 
-## How to use (Basic)
+## How to setup (Basic)
 
 1. Create a behavior
 ```luau
@@ -70,4 +70,4 @@ Caster.CastTerminating:Connect(OnCastTerminating)
 Caster.RayHit:Connect(OnRayHit)
 ```
 
-4. Enjoy, see more samples at https://github.com/weenachuangkud/FastCast2/tree/main/samples to see how it was actually used
+4. Enjoy, see more [samples](https://github.com/weenachuangkud/FastCast2/tree/main/samples)
