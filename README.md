@@ -70,4 +70,4 @@ Caster.CastTerminating:Connect(OnCastTerminating)
 Caster.RayHit:Connect(OnRayHit)
 ```
 
-4. Enjoy, see more samples at 
+4. Enjoy, see more samples at https://github.com/weenachuangkud/FastCast2/tree/main/samples to see how it was actually used
