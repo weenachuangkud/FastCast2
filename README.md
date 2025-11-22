@@ -1,6 +1,9 @@
 # FastCast2
 An improved version of FastCast with Parallel scripting, more extensions, and statically typed
 
+> [!NOTE]
+> I still have not finished making the API Usage, README.md, so you're gonna learn how to use **FastCast2** by yourself
+
 ## How to install
 
 1. Go to https://create.roblox.com/store/asset/87459814880446/FastCast2
@@ -14,9 +17,16 @@ An improved version of FastCast with Parallel scripting, more extensions, and st
 
 https://github.com/user-attachments/assets/157b0829-b56a-48c8-ad08-bb37dd8c3215
 
-## How to setup (Basic)
+## How to set up (Basic example)
 
-1. Create a behavior
+1.In StarterCharacterScripts, insert a LocalScript, rename it to anything
+
+2. Inside the LocalScript, require the FastCast2
+```luau
+local FastCast = require(PathTo.FastCastModule)
+```
+
+3. Create a behavior
 ```luau
 local CastParams = RaycastParams.new()
 CastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -31,7 +41,7 @@ behavior.Acceleration = Vector3.new(0, -workspace.Gravity, 0)
 behavior.AutoIgnoreContainer = true
 ```
 
-2. Create Caster and initialize
+4. Create Caster and initialize
 ```luau
 local Caster = FastCast.new()
 Caster:Init(
@@ -44,7 +54,7 @@ Caster:Init(
 )
 ```
 
-3. Connecting events
+5. Connecting events
 ```luau
 -- Local functions
 local function OnRayHit(
@@ -83,4 +93,4 @@ Caster.CastTerminating:Connect(OnCastTerminating)
 Caster.RayHit:Connect(OnRayHit)
 ```
 
-4. Enjoy, see more [samples](https://github.com/weenachuangkud/FastCast2/tree/main/samples)
+6. Enjoy, see more [samples](https://github.com/weenachuangkud/FastCast2/tree/main/samples)
