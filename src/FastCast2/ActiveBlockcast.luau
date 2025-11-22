@@ -10,18 +10,19 @@ local RS = game:GetService("RunService")
 local FastCastModule = script.Parent
 
 -- Requires
-local UtilityModule = FastCastModule:WaitForChild("Utility")
+--local UtilityModule = FastCastModule:WaitForChild("Utility")
 
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
-local Utility = require(UtilityModule)
+--local Utility = require(UtilityModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
-local ErrorMsgs = require(UtilityModule.ErrorMessage)
-local MathUtil = require(UtilityModule.Math)
+local ErrorMsgs = require(script.Parent:WaitForChild("ErrorMessage"))
+--local MathUtil = require(UtilityModule.Math)
 local Configs = require(FastCastModule:WaitForChild("Configs"))
-local LookUpTables = require(FastCastModule:WaitForChild("LookUpTables"))
+--local LookUpTables = require(FastCastModule:WaitForChild("LookUpTables"))
 
 -- CONSTs
 local MAX_PIERCE_TEST_COUNT = 100
+local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 
 
 --- ActiveCast
@@ -32,6 +33,57 @@ ActiveCast.__index = ActiveCast
 ActiveCast.__type = "ActiveBlockCast"
 
 -----> Local functions
+
+function GetPositionAtTime(time: number, origin: Vector3, initialVelocity: Vector3, acceleration: Vector3): Vector3
+	local force = Vector3.new((acceleration.X * time^2) / 2,(acceleration.Y * time^2) / 2, (acceleration.Z * time^2) / 2)
+	return origin + (initialVelocity * time) + force
+end
+
+function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
+	return initialVelocity + acceleration * time
+end
+
+function CloneCastParams(params: RaycastParams): RaycastParams
+	local clone : RaycastParams = RaycastParams.new()
+	clone.CollisionGroup = params.CollisionGroup
+	clone.FilterType = params.FilterType
+	clone.FilterDescendantsInstances = params.FilterDescendantsInstances
+	clone.IgnoreWater = params.IgnoreWater
+	return clone
+end
+
+function GetFastCastVisualizationContainer(): Instance
+	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
+	if fcVisualizationObjects then
+		return fcVisualizationObjects
+	end
+
+	fcVisualizationObjects = Instance.new("Folder")
+	fcVisualizationObjects.Name = FC_VIS_OBJ_NAME
+	fcVisualizationObjects.Archivable = false
+	fcVisualizationObjects.Parent = workspace.Terrain
+	return fcVisualizationObjects
+end
+
+function GetTrajectoryInfo(
+	cast: TypeDef.ActiveCast | TypeDef.ActiveBlockCast, 
+	index: number
+): {[number]: Vector3}
+	assert(cast.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED)
+	local trajectories = cast.StateInfo.Trajectories
+	local trajectory = trajectories[index]
+	local duration = trajectory.EndTime - trajectory.StartTime
+
+	local origin = trajectory.Origin
+	local vel = trajectory.InitialVelocity
+	local accel = trajectory.Acceleration
+
+	return {GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel)}
+end
+
+function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveCast | TypeDef.ActiveBlockCast): {[number]: Vector3}
+	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
+end
 
 ---> Debugging
 
@@ -51,7 +103,7 @@ local function DbgVisualizeSegment(castStartCFrame: CFrame, size : Vector3, cast
 	adornment.Color3 = Color3.new()
 	--adornment.Radius = 0.25
 	adornment.Transparency = 0.5
-	adornment.Parent = Utility.GetFastCastVisualizationContainer()
+	adornment.Parent = GetFastCastVisualizationContainer()
 	return adornment
 end
 
@@ -64,7 +116,7 @@ local function DbgVisualizeHit(atCF: CFrame, size : Vector3, wasPierce: boolean)
 	adornment.Size = size
 	adornment.Transparency = 0.25
 	adornment.Color3 = (wasPierce == false) and Color3.new(0.2, 1, 0.5) or Color3.new(1, 0.2, 0.2)
-	adornment.Parent = Utility.GetFastCastVisualizationContainer()
+	adornment.Parent = GetFastCastVisualizationContainer()
 	return adornment
 end
 
@@ -146,16 +198,16 @@ local function SimulateCast(
 	local initialVelocity = latestTrajectory.InitialVelocity
 	local acceleration = latestTrajectory.Acceleration
 
-	local lastPoint = MathUtil.GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-	local lastVelocity = MathUtil.GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+	local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
 	cast.StateInfo.TotalRuntime += delta
 
 	totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
-	local currentTarget = MathUtil.GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-	local segmentVelocity = MathUtil.GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	local currentTarget = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local totalDisplacement = currentTarget - lastPoint
 
 	local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * delta
@@ -230,8 +282,8 @@ local function SimulateCast(
 						break
 					end
 
-					local subPosition = MathUtil.GetPositionAtTime(lastDelta + (timeIncrement * segmentIndex), origin, initialVelocity, acceleration)
-					local subVelocity = MathUtil.GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
+					local subPosition = GetPositionAtTime(lastDelta + (timeIncrement * segmentIndex), origin, initialVelocity, acceleration)
+					local subVelocity = GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
 					local subRayDir = subVelocity * delta
 					local subResult = targetWorldRoot:Raycast(subPosition, subRayDir, cast.RayInfo.Parameters)
 
@@ -408,7 +460,7 @@ function ActiveCast.new(
 	end
 
 	if cast.RayInfo.Parameters ~= nil then
-		cast.RayInfo.Parameters = Utility.CloneCastParams(cast.RayInfo.Parameters)
+		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
 	else
 		cast.RayInfo.Parameters = RaycastParams.new()
 	end
@@ -514,16 +566,16 @@ function ActiveCast.new(
 			local initialVelocity = latestTrajectory.InitialVelocity
 			local acceleration = latestTrajectory.Acceleration
 
-			local lastPoint = MathUtil.GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-			local lastVelocity = MathUtil.GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+			local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 			local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
 			cast.StateInfo.TotalRuntime += delta
 
 			totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
-			local currentPoint = MathUtil.GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-			local currentVelocity = MathUtil.GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			local currentPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+			local currentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 			local totalDisplacement = currentPoint - lastPoint
 
 			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
@@ -598,7 +650,7 @@ local function ModifyTransformation(cast: ActiveCast, velocity: Vector3?, accele
 	else
 		lastTrajectory.EndTime = cast.StateInfo.TotalRuntime
 
-		local point, velAtPoint = unpack(Utility.GetLatestTrajectoryEndInfo(cast))
+		local point, velAtPoint = unpack(GetLatestTrajectoryEndInfo(cast))
 
 		if (velocity == nil) then
 			velocity = velAtPoint
@@ -664,7 +716,7 @@ function ActiveCast:GetVelocity() : Vector3
 		ErrorMsgs.ERR_OBJECT_DISPOSED
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
-	return MathUtil.GetVelocityAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
+	return GetVelocityAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
 end
 
 function ActiveCast:GetAcceleration(): Vector3
@@ -689,7 +741,7 @@ function ActiveCast:GetPosition(): Vector3
 		ErrorMsgs.ERR_OBJECT_DISPOSED
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
-	return MathUtil.GetPositionAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.Origin, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
+	return GetPositionAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.Origin, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
 end
 
 ---> Add
