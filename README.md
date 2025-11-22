@@ -48,7 +48,7 @@ Caster:Init(
 	12, -- numWorkers
 	player, -- Where VMs Stored
 	"CastVMs", -- Name of VMs
-	game:GetService("ReplicatedFirst").CastVMsContainer, -- Where workers stored
+	CastVMsContainer, -- Where workers stored
 	"VMsContainer", -- Name Folder of workerFolder
 	"CastWorkers" -- Name of workers
 )
