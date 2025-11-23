@@ -95,7 +95,25 @@ Caster.RayHit:Connect(OnRayHit)
 
 6. Enjoy, see more [samples](https://github.com/weenachuangkud/FastCast2/tree/main/samples)
 
-# API Usages/Examples
+# API Usages
+
+## Constructor
+> [!warning]
+> Do not create a new caster every time your weapon fires! This is a common mistake people make. Doing this will cause severe performance problems and unexpected behavior in the  module.\
+> Remember - A caster is like a gun. Creating a caster every time the weapon is fired is like buying a new gun every time you want to fire a bullet.
+
+**FastCast.new()**
+Construct a new **Caster** instance, which represents an entire gun or other projectile launching system.
+
+**FastCast.newBehavior()**
+Creates a new **FastCastBehavior**, which contains information necessary to fire the cast properly.
+
+## Methods
+
+**FastCast:Init(numWorkers, newParent, newName, ContainerParent, VMContainerName, VMname)**
+Initialize the **Caster** instance and then create a copy of **FastCastVMs**, set the Parent to the specified **newParent**, and rename it to specified **newName**
+
+# API Examples
 
 Function are **unsafe**?, use `Caster:SafeCall(f : (...any) -> (...any), ...)`\
 **Q:** How do you know that the function is not safe to call?\
