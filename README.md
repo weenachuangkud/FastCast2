@@ -102,7 +102,7 @@ Function are **unsafe**?, use `Caster:SafeCall(f : (...any) -> (...any), ...)`\
 **A:** You're going to run the game first, to test if it will throw an error at you or not\
 If so, meaning, the functions are **unsafe**\
 **Q:** Why It's **unsafe** in this example?\
-**A:** Because it attempts to call a nil (function does not exist, nil)
+**A:** Because it attempts to call a nil (function does not exist, even though it should)
 ```luau
 local function OnRayHit(
 	ActiveCast : TypeDef.ActiveCast, 
