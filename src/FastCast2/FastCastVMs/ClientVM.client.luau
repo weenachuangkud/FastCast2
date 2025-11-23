@@ -4,11 +4,12 @@
 ]]
 
 -- Services
-
+local Rep = game:GetService("ReplicatedStorage")
 
 -- Modules
 
-local FastCast2Module = PathTo:WaitForChild("FastCast2")
+-- REPLACE WITH ACTUAL PATH
+local FastCast2Module = Rep:WaitForChild("FastCast2")
 
 -- Requires
 
