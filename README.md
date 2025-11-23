@@ -102,15 +102,15 @@ Caster.RayHit:Connect(OnRayHit)
 > Do not create a new caster every time your weapon fires! This is a common mistake people make. Doing this will cause severe performance problems and unexpected behavior in the  module.\
 > Remember - A caster is like a gun. Creating a caster every time the weapon is fired is like buying a new gun every time you want to fire a bullet.
 
-**FastCast.new()**
+**FastCast.new()**\
 Construct a new **Caster** instance, which represents an entire gun or other projectile launching system.
 
-**FastCast.newBehavior()**
+**FastCast.newBehavior()**\
 Creates a new **FastCastBehavior**, which contains information necessary to fire the cast properly.
 
 ## Methods
 
-**FastCast:Init(numWorkers, newParent, newName, ContainerParent, VMContainerName, VMname)**
+**FastCast:Init(numWorkers, newParent, newName, ContainerParent, VMContainerName, VMname)**\
 Initialize the **Caster** instance and then create a copy of **FastCastVMs**, set the Parent to the specified **newParent**, and rename it to specified **newName**
 
 # API Examples
