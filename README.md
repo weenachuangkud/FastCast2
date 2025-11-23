@@ -95,7 +95,7 @@ Caster.RayHit:Connect(OnRayHit)
 
 6. Enjoy, see more [samples](https://github.com/weenachuangkud/FastCast2/tree/main/samples)
 
-## API Usages/Examples
+# API Usages/Examples
 
 Function are **unsafe**?, use `Caster:SafeCall(f : (...any) -> (...any), ...)`\
 **Q:** How do you know that the function is not safe to call?\
