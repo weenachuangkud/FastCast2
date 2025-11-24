@@ -227,6 +227,8 @@ RayHit:Connect(
 This event fires when any ray fired by this **Caster** runs into something and will be subsequently terminated
 -  **ActiveCast** that fired this event
 -  **RaycastResult** is the result of the ray that caused this hit to occur
+> [!NOTE]
+> The **RaycastResult** passed into this event will never be nil.
 -  **segmentVelocity** is the velocity of the bullet at the time of the hit
 -  **cosmeticBulletObject** is a reference to the passed-in cosmetic bullet. This will not fire if the ray hits nothing and instead reaches its maximum distance.
 
