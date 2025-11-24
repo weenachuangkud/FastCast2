@@ -3,7 +3,7 @@ An improved version of FastCast with Parallel scripting, more extensions, and st
 
 > [!NOTE]
 > - I still have not finished making the API Usage, README.md
-> - This library is still in development and consistently improving
+> - This library is still in development and consistently improving 
 
 ## How to install
 
