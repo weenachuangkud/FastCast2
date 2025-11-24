@@ -170,6 +170,25 @@ FastCast:SafeCall(f : (...any) -> (...any), ...)
 
 Attempt to call the passed-in function with arguments... if it exists, otherwise pass
 
+```luau
+FastCast:SetVisualizeCasts(bool : boolean)
+```
+
+Set **VisualizeCasts** to the specified boolean
+
+```luau
+FastCast:ReturnObject(obj : Instance)
+```
+
+Return passed-in **obj** to **ObjectCache** if it is a valid **obj** instance from ObjectCache, otherwise do nothing
+> [!warning]
+> You must **useObjectCache** when initializing, or else you will get an error
+
+```luau
+FastCast:Destroy()
+```
+Destroy **Caster** instance, which includes: **ObjectCache**, **Dispatcher**
+
 # API Examples
 
 Function are **unsafe**?, use `Caster:SafeCall(f : (...any) -> (...any), ...)`\
