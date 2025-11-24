@@ -211,10 +211,10 @@ LengthChanged:Connect(
 ```
 Safety level: **intermediate**
 
-This event fires every time any ray fired by this **Caster** updates and moves\
-- **lastPoint** parameter is the point the ray was at before it was moved\
-- **rayDir** represents the direction of movement, and displacement represents how far it moved in that direction. To calculate the current point, use **lastPoint + (rayDir * displacement)**\
-- **segmentVelocity** represents the velocity of the bullet at the time this event fired.\
+This event fires every time any ray fired by this **Caster** updates and moves
+- **lastPoint** parameter is the point the ray was at before it was moved
+- **rayDir** represents the direction of movement, and displacement represents how far it moved in that direction. To calculate the current point, use **lastPoint + (rayDir * displacement)**
+- **segmentVelocity** represents the velocity of the bullet at the time this event fired.
 - **cosmeticBulletObject** is a reference to the cosmetic bullet passed into the Fire method (or nil if no such object was passed in)
 
 ```luau
@@ -225,7 +225,7 @@ RayHit:Connect(
 	cosmeticBulletObject : Instance?
 ```
 This event fires when any ray fired by this **Caster** runs into something and will be subsequently terminated
--  **ActiveCast** that fired this event\
+-  **ActiveCast** that fired this event
 -  **RaycastResult** is the result of the ray that caused this hit to occur
 -  **segmentVelocity** is the velocity of the bullet at the time of the hit
 -  **cosmeticBulletObject** is a reference to the passed-in cosmetic bullet. This will not fire if the ray hits nothing and instead reaches its maximum distance.
