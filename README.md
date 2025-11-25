@@ -251,3 +251,4 @@ local function OnRayHit(
 	FastCast:SafeCall(ActiveCast.Terminate)
 end
 ```
+# SPECIAL THANKS
