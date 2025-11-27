@@ -255,4 +255,6 @@ local function OnRayHit(
 	FastCast:SafeCall(ActiveCast.Terminate)
 end
 ```
-# SPECIAL THANKS
+# SPECIAL THANKS TO
+- @avibah On Discord: **For helping me make VMDispatcher**
+- @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
