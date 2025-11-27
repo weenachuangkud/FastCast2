@@ -130,7 +130,6 @@ FastCast.newBehavior()
 
 Creates a new **FastCastBehavior**, which contains information necessary to fire the cast properly.
 
-<br>
 
 ## Methods
 
@@ -236,6 +235,7 @@ The target **WorldRoot** that this Caster runs in by default. Its default value 
 > Changing this value will not update any existing ActiveCasts during runtime.
 > When an ActiveCast is instantiated by a Caster, it looks at this property to see what it should set its own WorldRoot property to (see CastRayInfo), and then from there onward, it uses its own property to determine where to simulate.
 
+
 ## Events
 
 ```luau
@@ -270,6 +270,8 @@ This event fires when any ray fired by this **Caster** runs into something and w
 > The **RaycastResult** passed into this event will never be nil.
 -  **segmentVelocity** is the velocity of the bullet at the time of the hit
 -  **cosmeticBulletObject** is a reference to the passed-in cosmetic bullet. This will not fire if the ray hits nothing and instead reaches its maximum distance.
+
+
 
 # API Examples
 
