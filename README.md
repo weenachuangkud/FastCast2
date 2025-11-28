@@ -256,6 +256,9 @@ This event fires every time any ray fired by this **Caster** updates and moves
 - **segmentVelocity** represents the velocity of the bullet at the time this event fired.
 - **cosmeticBulletObject** is a reference to the cosmetic bullet passed into the Fire method (or nil if no such object was passed in)
 
+<br>
+<br>
+
 ```luau
 RayHit:Connect(
 	ActiveCast : ActiveCast,
@@ -272,6 +275,9 @@ This event fires when any ray fired by this **Caster** runs into something and w
 > The **RaycastResult** passed into this event will never be nil.
 -  **segmentVelocity** is the velocity of the bullet at the time of the hit
 -  **cosmeticBulletObject** is a reference to the passed-in cosmetic bullet. This will not fire if the ray hits nothing and instead reaches its maximum distance.
+
+<br>
+<br>
 
 ```luau
 RayPierced:Connect(
