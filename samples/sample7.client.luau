@@ -43,7 +43,6 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
 behavior.CosmeticBulletContainer = workspace.Projectiles
 behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2, 0)
 behavior.AutoIgnoreContainer = true
-behavior.UseLengthChanged = false
 
 -- Caster
 
@@ -90,7 +89,7 @@ local function OnCastTerminating(cast : TypeDef.ActiveCast)
 end
 
 -- Listeners
---Caster.LengthChanged:Connect(OnLengthChanged)
+Caster.LengthChanged:Connect(OnLengthChanged)
 Caster.CastTerminating:Connect(OnCastTerminating)
 Caster.RayHit:Connect(OnRayHit)
 
