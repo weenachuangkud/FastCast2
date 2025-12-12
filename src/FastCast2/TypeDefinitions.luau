@@ -68,7 +68,9 @@ export type FastCastBehavior = {
 	--CosmeticBulletProvider: any, -- any ObjectPool Library Class(Unused)
 	CosmeticBulletContainer: Instance?,
 	AutoIgnoreContainer: boolean,
-	CanPierceFunction: CanPierceFunction?
+	CanPierceFunction: CanPierceFunction?,
+	UseLengthChanged : boolean,
+	SimulateAfterPhysic : boolean
 }
 
 -- Represents a CastTrajectory :: https://etithespirit.github.io/FastCastAPIDocs/fastcast-objects/casttrajectory/
@@ -93,7 +95,9 @@ export type CastStateInfo = {
 	CancelHighResCast: boolean,
 	Trajectories: {[number]: CastTrajectory},
 	--OnParallel : boolean
+	UseLengthChanged : boolean
 }
+
 
 -- Represents a CastRayInfo :: https://etithespirit.github.io/FastCastAPIDocs/fastcast-objects/castrayinfo/
 export type CastRayInfo = {
