@@ -10,7 +10,6 @@ with **Parallel Luau scripting**, **static typing**, **more extensions**, **buil
 
 > [!NOTE]
 > - I still have not finished making the API Usage, README.md
-> - This might take some time because I'm busy with school, and the weather is so cold that my arms just froze
 
 ## How to install
 
