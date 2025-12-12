@@ -213,9 +213,8 @@ local function SimulateCast(
 	local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * delta
 
 	local targetWorldRoot = cast.RayInfo.WorldRoot
-	local resultOfCast = targetWorldRoot:Blockcast(CFrame.new(lastPoint), cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
+	local resultOfCast = targetWorldRoot:Blockcast(lastPoint, cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
 
-	
 	local point = currentTarget
 	local part: Instance? = nil
 	local material = Enum.Material.Air
@@ -233,7 +232,9 @@ local function SimulateCast(
 
 	task.synchronize()
 
-	SendLengthChanged(cast, lastPoint, rayDir.Unit, rayDisplacement, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+	if cast.StateInfo.UseLengthChanged then
+		SendLengthChanged(cast, lastPoint, rayDir.Unit, rayDisplacement, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+	end
 	cast.StateInfo.DistanceCovered += rayDisplacement
 
 	local rayVisualization: ConeHandleAdornment? = nil
@@ -440,6 +441,7 @@ function ActiveCast.new(
 					Acceleration = behavior.Acceleration
 				}
 			},
+			UseLengthChanged = behavior.UseLengthChanged
 			--OnParallel = false
 		},
 
@@ -539,7 +541,7 @@ function ActiveCast.new(
 
 	local event
 	if RS:IsClient() then
-		event = RS.PostSimulation
+		event = behavior.SimulateAfterPhysic and RS.Heartbeat or RS.PostSimulation
 	else
 		event = RS.Heartbeat
 	end
@@ -582,7 +584,7 @@ function ActiveCast.new(
 			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
 
 			local targetWorldRoot = cast.RayInfo.WorldRoot
-			local resultOfCast = targetWorldRoot:Blockcast(CFrame.new(lastPoint), cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
+			local resultOfCast = targetWorldRoot:Blockcast(lastPoint, cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
 
 			local point = currentPoint
 
@@ -630,7 +632,7 @@ end
 
 -- ... Wow?
 
-local function ModifyTransformation(cast: ActiveCast, velocity: Vector3?, acceleration: Vector3?, position: Vector3?)
+local function ModifyTransformation(cast: TypeDef.ActiveBlockCast, velocity: Vector3?, acceleration: Vector3?, position: Vector3?)
 	local trajectories = cast.StateInfo.Trajectories
 	local lastTrajectory = trajectories[#trajectories]
 
