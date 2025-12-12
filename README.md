@@ -10,9 +10,7 @@ with **Parallel Luau scripting**, **static typing**, **more extensions**, **buil
 
 > [!NOTE]
 > - I still have not finished making the API Usage, README.md
-> - This library is still in development and consistently improving
 > - This might take some time because I'm busy with school, and the weather is so cold that my arms just froze
-> - Hey, I’ve found a performance issue with FastCast2. I found that it stores RunService connections every time it creates a projectile, so my plan was: instead of multiple RunService, why not just 1 for each actor? It can handle 100+ projectiles, but that just roughly 100+ RunService connections too
 
 ## How to install
 
