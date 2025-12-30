@@ -25,6 +25,10 @@ local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local DEFAULT_MAX_DISTANCE = 1000
 
+--- So silly - Mawin CK 2025
+-- When using high fidelity mode, this will prevent it from taking too long 
+local MAX_HIGHFIDE_CAST_TIME = 0.016 * 5
+
 
 --- ActiveCast
 
@@ -611,7 +615,7 @@ function ActiveCast.new(
 			if getmetatable(cast) == nil then return end
 			cast.StateInfo.IsActivelyResimulating = false
 
-			if (tick() - timeAtStart) > 0.016 * 5 then
+			if (tick() - timeAtStart) > MAX_HIGHFIDE_CAST_TIME then
 				warn("Extreme cast lag encountered! Consider increasing HighFidelitySegmentSize.")
 			end
 		else
