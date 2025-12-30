@@ -23,6 +23,7 @@ local Configs = require(FastCastModule:WaitForChild("Configs"))
 -- CONSTs
 local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
+local DEFAULT_MAX_DISTANCE = 1000
 
 
 --- ActiveCast
@@ -439,7 +440,7 @@ function ActiveCast.new(
 		RayInfo = {
 			Parameters = behavior.RaycastParams,
 			WorldRoot = workspace,
-			MaxDistance = behavior.MaxDistance or 1000,
+			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
 			CanPierceCallback = behavior.CanPierceFunction
 		},
