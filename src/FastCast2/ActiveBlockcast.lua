@@ -291,7 +291,7 @@ local function SimulateCast(
 					local subRayDir = subVelocity * delta
 					local subResult = targetWorldRoot:Raycast(subPosition, subRayDir, cast.RayInfo.Parameters)
 
-					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
+					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
 					if (subResult ~= nil) then
 						local subDisplacement = (subPosition - subResult.Position).Magnitude
