@@ -25,6 +25,7 @@ local DebugLogging = Configs.DebugLogging
 ----> CONSTs
 local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
+local MAX_SEGMENT_CAL_TIME = 0.016 * 5
 
 -- DEBUG
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
@@ -211,7 +212,7 @@ local function SimulateCast(
 	local acceleration = latestTrajectory.Acceleration
 
 	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-	local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
 	cast.StateInfo.TotalRuntime += delta
@@ -230,13 +231,13 @@ local function SimulateCast(
 	local point = currentTarget
 	local part: Instance? = nil
 	local material = Enum.Material.Air
-	local normal = Vector3.new()
+	--local normal = Vector3.new()
 
 	if (resultOfCast ~= nil) then
 		point = resultOfCast.Position
 		part = resultOfCast.Instance
 		material = resultOfCast.Material
-		normal = resultOfCast.Normal
+		--normal = resultOfCast.Normal
 	end
 
 	local rayDisplacement = (point - lastPoint).Magnitude
@@ -299,7 +300,7 @@ local function SimulateCast(
 
 				local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
 				local numSegmentsReal = math.floor(numSegmentsDecimal)
-				local realSegmentLength = rayDisplacement / numSegmentsReal
+				--local realSegmentLength = rayDisplacement / numSegmentsReal
 
 				local timeIncrement = delta / numSegmentsReal
 				for segmentIndex = 1, numSegmentsReal do
@@ -622,8 +623,8 @@ function ActiveCast.new(
 			local acceleration = latestTrajectory.Acceleration
 
 			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-			local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
-			local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+			--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			--local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
 			cast.StateInfo.TotalRuntime += delta
 
@@ -674,7 +675,7 @@ function ActiveCast.new(
 			if getmetatable(cast) == nil then return end
 			cast.StateInfo.IsActivelyResimulating = false
 
-			if (tick() - timeAtStart) > 0.016 * 5 then
+			if (tick() - timeAtStart) > MAX_SEGMENT_CAL_TIME then
 				warn("Extreme cast lag encountered! Consider increasing HighFidelitySegmentSize.")
 			end
 		else
