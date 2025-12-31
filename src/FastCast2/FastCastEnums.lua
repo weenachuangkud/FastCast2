@@ -9,6 +9,7 @@ local Enums = {}
 
 Enums.HighFidelityBehavior = {
 	Default = 1,
+	Automatic = 2,
 	Always = 3
 }
 
