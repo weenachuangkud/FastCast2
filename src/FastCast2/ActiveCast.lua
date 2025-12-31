@@ -36,6 +36,7 @@ local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412) 
 
+local DBG_SEGMENT_COLOR = Color3.new(1, 0.666667, 0)
 
 --- ActiveCast
 
