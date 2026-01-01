@@ -22,6 +22,7 @@ export type OnLengthChangedFunction = (
 	cosmeticBulletObject : Instance?
 ) -> ()
 export type OnCastTerminatingFunction = (ActiveCast) -> ()
+export type OnCastFireFunction = (ActiveCast, Origin : Vector3, Direction : Vector3, Velocity : Vector3, behavior : FastCastBehavior) -> ()
 
 -- Represents any table.
 export type GenericTable = {[any]: any}
@@ -102,7 +103,9 @@ export type CastStateInfo = {
 	CancelHighResCast: boolean,
 	Trajectories: {[number]: CastTrajectory},
 	--OnParallel : boolean
-	UseLengthChanged : boolean
+	UseLengthChanged : boolean,
+	--TimeStamp : number,
+	--LastUpdateTime : number
 }
 
 
@@ -150,6 +153,7 @@ export type ActiveCast = {
 	Destroy : (ActiveCast) -> (),
 	Terminate : (ActiveCast) -> (),
 	
+	CFrame : CFrame,
 	ID : string
 }
 
@@ -187,7 +191,8 @@ export type ActiveBlockCast = {
 
 	Destroy : (ActiveCast) -> (),
 	Terminate : (ActiveCast) -> (),
-
+	
+	CFrame : CFrame,
 	ID : string
 }
 
