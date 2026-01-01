@@ -566,7 +566,8 @@ function ActiveCast.new(
 		},
 
 		UserData = {},
-
+		
+		CFrame = CFrame.new(),
 		ID = activeCastID
 	}
 
