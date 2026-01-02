@@ -4,11 +4,12 @@
 ]]
 
 -- Services
-
+local Rep = game:GetService("ReplicatedStorage")
 
 -- Modules
 
-local FastCast2Module = PathTo:WaitForChild("FastCast2")
+-- REPLACE WITH ACTUAL PATH
+local FastCast2Module = Rep:WaitForChild("FastCast2")
 
 -- Requires
 
@@ -45,7 +46,7 @@ actor:BindToMessage("Raycast", function(
 	--print(behavior)
 	--print(SharedCasters[casterID])
 	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
-
+	
 	BaseCast:Raycast(origin, direction, velocity, behavior)
 end)
 
@@ -75,6 +76,12 @@ actor:BindToMessage("Blockcast", function(
 
 	BaseCast:Blockcast(origin, size, direction, velocity, behavior)
 end)
+
+actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
+	BaseCast:BindBulkMoveTo(bool)
+end)
+
+-- CleanUp
 
 actor:BindToMessage("Destroy", function()
 	BaseCast:Destroy()

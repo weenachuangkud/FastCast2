@@ -39,14 +39,17 @@
 	Make the caster once, then use the caster to fire your bullets. Do not make a caster for each bullet.
 --]]
 
+-- Mozilla Public License 2.0 (files originally from FastCast)
+
 --[[
-	- Modified Author : Mawin CK
+	- Modified by: Mawin CK 
 	- Date : 2025
 ]]
 
 
 -- Services
 --local HTTPS = game:GetService("HttpService")
+local RS = game:GetService("RunService")
 
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
@@ -150,10 +153,10 @@ function FastCast.new() : TypeDef.Caster
 		RayHit = Signal.new(),
 		RayPierced = Signal.new(),
 		CastTerminating = Signal.new(),
+		CastFire = Signal.new(),
 		WorldRoot = workspace,
 		Dispatcher = nil,
-		AlreadyInit = false,
-		
+		AlreadyInit = false
 		--id = HTTPS:GenerateGUID(false)
 	} :: any, FastCast) :: TypeDef.Caster
 end
@@ -166,6 +169,8 @@ function FastCast:Init(
 	VMContainerName : string,
 	VMname : string,
 	
+	useBulkMoveTo : boolean,
+
 	useObjectCache : boolean,
 	Template : BasePart | Model,
 	CacheSize : number,
@@ -173,29 +178,38 @@ function FastCast:Init(
 )
 	if self.AlreadyInit then warn("Cannot Init more than 1") return end
 	assert(numWorkers > 1, "numWorker must be more than 1")
-	
+
 	local DispatcherClone = DispatcherModule:Clone()
 	DispatcherClone.Parent = newParent
 	DispatcherClone.Name = newName or "FastCastVMs"
-	
+
 	local newDispatcher : Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
-	
+
 	newDispatcher.Init(ContainerParent,VMContainerName, VMname)
-	local data = {
+	--[[local data = {
+		useBulkMoveTo = useBulkMoveTo,
 		useObjectCache = useObjectCache,
 		Template = Template,
 		CacheSize = CacheSize,
 		CacheHolder = CacheHolder
-	}
+	}]]
 	self.ObjectCache = useObjectCache and ObjectCache.new(Template, CacheSize, CacheHolder) :: any
 	local data = {
+		useBulkMoveTo = useBulkMoveTo,
 		useObjectCache = useObjectCache,
 		CacheHolder = CacheHolder
 	}
 	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName : string, ...)
-		self[signalName]:Fire(...)
+		local f = self[signalName]
+		if not f then return end
+
+		if type(f) == "function" then
+			f(...)
+		else
+			f:Fire(...)
+		end
 	end)
-	
+
 	-- Idk who tf write this
 	--[[if not shared.SharedCasters then
 		shared.SharedCasters = {}
@@ -207,13 +221,15 @@ function FastCast:Init(
 	end]]
 	--print(self.Dispatcher)
 	self.AlreadyInit = true
-	
+
 	if not useObjectCache then return end
 	
-	repeat task.wait() until #self.Dispatcher.Threads == numWorkers
+	local Dispatcher = self.Dispatcher
+
+	repeat task.wait() until #Dispatcher.Threads == numWorkers
 	--print("STARTED CONNECTING")
-	
-	for i, v in self.Dispatcher.Threads do
+
+	for i, v in Dispatcher.Threads do
 		-- Please dont change this to FindFirstChild, or else diddy will oil you up
 		local BindableObjectCache : BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
 		if BindableObjectCache then
@@ -226,10 +242,10 @@ function FastCast:Init(
 	end -- OH YES DADDY
 end
 
-function FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)-- : string
+function FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
-	
+
 	--local ActiveCastID = HTTPS:GenerateGUID(false)
 	--self.Dispatcher:Dispatch("Raycast", self.id, ActiveCastID, origin, direction, velocity, BehaviorData)
 	--local newActiveCast : TypeDef.ActiveCast = ActiveCast.new(self, origin, direction, velocity, BehaviorData :: TypeDef.FastCastBehavior) 
@@ -243,7 +259,7 @@ end
 function FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
-	
+
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
 end
 
@@ -253,6 +269,14 @@ function FastCast:SafeCall(f : (...any) -> (...any), ...)
 		f(...)
 	end
 end
+
+function FastCast:BindBulkMoveTo(bool : boolean)
+	local Dispatcher = self.Dispatcher
+	for Index, Thread in Dispatcher.Threads do
+		Thread:SendMessage("BindBulkMoveTo", bool)
+	end
+end
+
 
 function FastCast:SetVisualizeCasts(bool : boolean)
 	Configs.VisualizeCasts = bool

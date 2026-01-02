@@ -1,6 +1,7 @@
 --[[
 	- Author : Mawin_CK
 	- Date : 2025
+	-- Verison : 0.0.3
 ]]
 
 --!strict
@@ -31,7 +32,12 @@ Defaults.FastCastBehavior = {
 	CosmeticBulletContainer = nil,
 	UseLengthChanged = true,
 	AutoIgnoreContainer = true,
-	SimulateAfterPhysic = true
+	SimulateAfterPhysic = true,
+	AutomaticPerformance = true,
+	AdaptivePerformance = {
+		HighFidelitySegmentSizeIncrease = 0.5,
+		LowerHighFidelityBehavior = true
+	}
 }
 
 return Defaults

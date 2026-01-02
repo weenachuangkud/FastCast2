@@ -1,6 +1,8 @@
+-- Mozilla Public License 2.0 (files originally from FastCast)
 --[[
-	- Author : Mawin CK 
+	- Modified by: Mawin CK 
 	- Date : 2025
+	-- Verison : 0.0.3
 ]]
 
 -- Services
@@ -18,12 +20,34 @@ local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local ErrorMsgs = require(script.Parent:WaitForChild("ErrorMessage"))
 --local MathUtil = require(UtilityModule.Math)
 local Configs = require(FastCastModule:WaitForChild("Configs"))
+local DebugLogging = Configs.DebugLogging
+local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 --local LookUpTables = require(FastCastModule:WaitForChild("LookUpTables"))
 
 -- CONSTs
 local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
+local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
+local MAX_CASTING_TIME = 0.2 -- 200ms
 
+-- DEBUG
+local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
+local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.286275, 0.329412, 0.247059)
+
+local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
+
+local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
+local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412) 
+
+--local DBG_SEGMENT_COLOR = Color3.new(1, 0.666667, 0)
+local DBG_HIT_COLOR = Color3.new(0.2, 1, 0.5)
+local DBG_RAYPIERCE_COLOR = Color3.new(1, 0.2, 0.2)
+
+local DBG_RAY_LIFETIME = 1
+local DBG_HIT_LIFETIME = 1
+
+-- AutomaticPerformance setting
+local HIGH_FIDE_INCREASE_SIZE = 0.5
 
 --- ActiveCast
 
@@ -33,6 +57,15 @@ ActiveCast.__index = ActiveCast
 ActiveCast.__type = "ActiveBlockCast"
 
 -----> Local functions
+
+local function DebrisAdd(obj : Instance, Lifetime : number)
+	if not obj then return end
+	if Lifetime <= 0 then obj:Destroy() end
+
+	task.delay(Lifetime, function()
+		obj:Destroy()
+	end)
+end
 
 local function GetPositionAtTime(time: number, origin: Vector3, initialVelocity: Vector3, acceleration: Vector3): Vector3
 	local force = Vector3.new((acceleration.X * time^2) / 2,(acceleration.Y * time^2) / 2, (acceleration.Z * time^2) / 2)
@@ -87,11 +120,11 @@ end
 
 ---> Debugging
 
-local function PrintDebug(message : string)
+--[[local function PrintDebug(message : string)
 	if Configs.DebugLogging then
 		print(message)
 	end
-end
+end]]
 
 local function DbgVisualizeSegment(castStartCFrame: CFrame, size : Vector3, castLength: number) : BoxHandleAdornment?
 	if Configs.VisualizeCasts ~= true then return nil end
@@ -99,24 +132,28 @@ local function DbgVisualizeSegment(castStartCFrame: CFrame, size : Vector3, cast
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = castStartCFrame
 	--adornment.Height = castLength
-	adornment.Size = Vector3.new(size.X, size.Y, castLength)
+	adornment.Size = Vector3.new(size.X, size.Y, size.Z+castLength)
 	adornment.Color3 = Color3.new()
 	--adornment.Radius = 0.25
-	adornment.Transparency = 0.5
+	adornment.Transparency = 0.75
 	adornment.Parent = GetFastCastVisualizationContainer()
+	
+	DebrisAdd(adornment, DBG_RAY_LIFETIME)
 	return adornment
 end
 
-local function DbgVisualizeHit(atCF: CFrame, size : Vector3, wasPierce: boolean): BoxHandleAdornment?
+local function DbgVisualizeHit(atCF: CFrame, wasPierce: boolean): SphereHandleAdornment?
 	if Configs.VisualizeCasts ~= true then return nil end
-	local adornment = Instance.new("BoxHandleAdornment")
+	local adornment = Instance.new("SphereHandleAdornment")
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = atCF
-	--adornment.Radius = 0.4
-	adornment.Size = size
+	-- Alert! someone is Mawining it!!!!!
+	adornment.Radius = 0.35
 	adornment.Transparency = 0.25
-	adornment.Color3 = (wasPierce == false) and Color3.new(0.2, 1, 0.5) or Color3.new(1, 0.2, 0.2)
+	adornment.Color3 = (wasPierce == false) and DBG_HIT_COLOR or DBG_RAYPIERCE_COLOR
 	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, DBG_HIT_LIFETIME)
 	return adornment
 end
 
@@ -182,6 +219,23 @@ local function SendLengthChanged(
 	)
 end
 
+local function SendCastFire(
+	cast : TypeDef.ActiveCast,
+	origin : Vector3, 
+	direction : Vector3,
+	velocity : Vector3 | number, 
+	behavior : TypeDef.FastCastBehavior
+)
+	cast.Caster.Output:Fire(
+		"CastFire",
+		cast,
+		origin, 
+		direction,
+		velocity,
+		behavior
+	)
+end
+
 local function SimulateCast(
 	cast : TypeDef.ActiveBlockCast, 
 	delta : number, 
@@ -189,7 +243,9 @@ local function SimulateCast(
 )
 	assert(cast.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED)
 
-	PrintDebug("Casting for frame.")
+	if DebugLogging.Casting then
+		print("Casting for frame.")
+	end
 
 	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 
@@ -213,7 +269,7 @@ local function SimulateCast(
 	local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * delta
 
 	local targetWorldRoot = cast.RayInfo.WorldRoot
-	local resultOfCast = targetWorldRoot:Blockcast(lastPoint, cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
+	local resultOfCast = targetWorldRoot:Blockcast(CFrame.new(lastPoint), cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
 
 	local point = currentTarget
 	local part: Instance? = nil
@@ -229,6 +285,12 @@ local function SimulateCast(
 
 	local rayDisplacement = (point - lastPoint).Magnitude
 	local BlockcastSize = cast.RayInfo.Size
+	
+	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
+		latestTrajectory.Acceleration = Vector3.new()
+	end
+
+	cast.CFrame = CFrame.new(lastPoint, lastPoint+rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	task.synchronize()
 
@@ -237,47 +299,60 @@ local function SimulateCast(
 	end
 	cast.StateInfo.DistanceCovered += rayDisplacement
 
-	local rayVisualization: ConeHandleAdornment? = nil
+	local rayVisualization: BoxHandleAdornment? = nil
 
 	if (delta > 0) then
 		rayVisualization = DbgVisualizeSegment(CFrame.new(lastPoint, lastPoint + rayDir), BlockcastSize, rayDisplacement)
 	end
+	
+	-- I'm kinda gay
 
 	if part and part ~= cast.RayInfo.CosmeticBulletObject then
 		local start = tick()
-		PrintDebug("Hit something, testing now.")
+		if DebugLogging.Hit then
+			print("Hit something, testing now.")
+		end
 
 		if (cast.RayInfo.CanPierceCallback ~= nil) then
-			if expectingShortCall == false then
-				if (cast.StateInfo.IsActivelySimulatingPierce) then
-					cast:Terminate()
-					error("ERROR: The latest call to CanPierceCallback took too long to complete! This cast is going to suffer desyncs which WILL cause unexpected behavior and errors. Please fix your performance problems, or remove statements that yield (e.g. wait() calls)")
-				end
+			if expectingShortCall == false and cast.StateInfo.IsActivelySimulatingPierce then
+				cast:Terminate()
+				warn("WARN: The latest call to CanPierceCallback took too long to complete! This cast is going to suffer desyncs which WILL cause unexpected behavior and errors. Please fix your performance problems, or remove statements that yield (e.g. wait() calls)")
 			end
 			cast.StateInfo.IsActivelySimulatingPierce = true
 		end
 
-		if cast.RayInfo.CanPierceCallback == nil or (cast.RayInfo.CanPierceCallback ~= nil and cast.RayInfo.CanPierceCallback(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject) == false) then
-			PrintDebug("Piercing function is nil or it returned FALSE to not pierce this hit.")
+		if cast.RayInfo.CanPierceCallback == nil or cast.RayInfo.CanPierceCallback(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject) == false then
+			
+			if DebugLogging.RayPierce then
+				print("Piercing function is nil or it returned FALSE to not pierce this hit.")	
+			end
+			
 			cast.StateInfo.IsActivelySimulatingPierce = false
 
-			if (cast.StateInfo.HighFidelityBehavior == 2 and latestTrajectory.Acceleration ~= Vector3.new() and cast.StateInfo.HighFidelitySegmentSize ~= 0) then
+			if (cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Automatic and cast.StateInfo.HighFidelitySegmentSize > 0) then
 				cast.StateInfo.CancelHighResCast = false
 
 				if cast.StateInfo.IsActivelyResimulating then
 					cast:Terminate()
-					error("Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize.")
+					warn("Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize.")
 				end
 
 				cast.StateInfo.IsActivelyResimulating = true
 
-				PrintDebug("Hit was registered, but recalculation is on for physics based casts. Recalculating to verify a real hit...")
+				if DebugLogging.Calculation then
+					print("Hit was registered, but recalculation is on for physics based casts. Recalculating to verify a real hit...")
+				end
 
 				local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
 				local numSegmentsReal = math.floor(numSegmentsDecimal)
-				local realSegmentLength = rayDisplacement / numSegmentsReal
+				--local realSegmentLength = rayDisplacement / numSegmentsReal
 
 				local timeIncrement = delta / numSegmentsReal
+				
+				if DebugLogging.Calculation then
+					print("Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal)
+				end
+				
 				for segmentIndex = 1, numSegmentsReal do
 					if cast.StateInfo.CancelHighResCast then
 						cast.StateInfo.CancelHighResCast = false
@@ -287,52 +362,65 @@ local function SimulateCast(
 					local subPosition = GetPositionAtTime(lastDelta + (timeIncrement * segmentIndex), origin, initialVelocity, acceleration)
 					local subVelocity = GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
 					local subRayDir = subVelocity * delta
-					local subResult = targetWorldRoot:Raycast(subPosition, subRayDir, cast.RayInfo.Parameters)
+					local subResult = targetWorldRoot:Blockcast(CFrame.new(subPosition), subRayDir, cast.RayInfo.Parameters)
 
 					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
+					-- Mama may i have some cookies
 					if (subResult ~= nil) then
+
 						local subDisplacement = (subPosition - subResult.Position).Magnitude
-						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), BlockcastSize, subDisplacement)
-						if (dbgSeg ~= nil) then dbgSeg.Color3 = Color3.new(0.286275, 0.329412, 0.247059) end
+						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), subDisplacement)
+						if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR end
 
 						if cast.RayInfo.CanPierceCallback == nil or (cast.RayInfo.CanPierceCallback ~= nil and cast.RayInfo.CanPierceCallback(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject) == false) then
 							cast.StateInfo.IsActivelyResimulating = false
 
 							SendRayHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
 							cast:Terminate()
-							local vis = DbgVisualizeHit(CFrame.new(point), BlockcastSize, false)
-							if (vis ~= nil) then vis.Color3 = Color3.new(0.0588235, 0.87451, 1) end
+							local vis = DbgVisualizeHit(CFrame.new(point), false)
+							if (vis ~= nil) then vis.Color3 = DBG_HIT_SUB_COLOR end
+
 							return
 						else
 							SendRayPierced(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
-							local vis = DbgVisualizeHit(CFrame.new(point), BlockcastSize, true)
-							if (vis ~= nil) then vis.Color3 = Color3.new(1, 0.113725, 0.588235) end
-							if (dbgSeg ~= nil) then dbgSeg.Color3 = Color3.new(0.305882, 0.243137, 0.329412) end
+							local vis = DbgVisualizeHit(CFrame.new(point), true)
+							if (vis ~= nil) then vis.Color3 = DBG_RAYPIERCE_SUB_COLOR end
+							if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_RAYPIERCE_SEGMENT_COLOR end
 						end
+
 					else
-						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), BlockcastSize, subDisplacement)
-						if (dbgSeg ~= nil) then dbgSeg.Color3 = Color3.new(0.286275, 0.329412, 0.247059) end
+						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), subDisplacement)
+						if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR2 end
+
+					end
+
+					if DebugLogging.Segment then
+						print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 					end
 				end
 
 				cast.StateInfo.IsActivelyResimulating = false
-			elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
-				cast:Terminate()
-				error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
+		--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
+		--		cast:Terminate()
+		--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
 			else
-				PrintDebug("Hit was successful. Terminating.")
+				if DebugLogging.Hit then
+					print("Hit was successful. Terminating.")
+				end
 				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
 				cast:Terminate()
-				DbgVisualizeHit(CFrame.new(point), BlockcastSize, false)
+				DbgVisualizeHit(CFrame.new(point), false)
 				return
 			end
 		else
-			PrintDebug("Piercing function returned TRUE to pierce this part.")
+			if DebugLogging.RayPierce then
+				print("Piercing function returned TRUE to pierce this part.")
+			end
 			if rayVisualization ~= nil then
 				rayVisualization.Color3 = Color3.new(0.4, 0.05, 0.05)
 			end
-			DbgVisualizeHit(CFrame.new(point), BlockcastSize, true)
+			DbgVisualizeHit(CFrame.new(point), true)
 
 			local params = cast.RayInfo.Parameters
 			local alteredParts = {}
@@ -384,10 +472,12 @@ local function SimulateCast(
 			cast.StateInfo.IsActivelySimulatingPierce = false
 
 			if brokeFromSolidObject then
-				PrintDebug("Broke because the ray hit something solid (" .. tostring(resultOfCast.Instance) .. ") while testing for a pierce. Terminating the cast.")
+				if DebugLogging.Hit then
+					print("Broke because the ray hit something solid (" .. tostring(resultOfCast.Instance) .. ") while testing for a pierce. Terminating the cast.")
+				end
 				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
 				cast:Terminate()
-				DbgVisualizeHit(CFrame.new(resultOfCast.Position), BlockcastSize, false)
+				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false)
 				return
 			end
 		end
@@ -395,7 +485,7 @@ local function SimulateCast(
 
 	if (cast.StateInfo.DistanceCovered >= cast.RayInfo.MaxDistance) then
 		cast:Terminate()
-		DbgVisualizeHit(CFrame.new(currentTarget), BlockcastSize, false)
+		DbgVisualizeHit(CFrame.new(currentTarget), false)
 	end
 end
 
@@ -417,6 +507,13 @@ function ActiveCast.new(
 
 	if (behavior.HighFidelitySegmentSize <= 0) then
 		error("Cannot set FastCastBehavior.HighFidelitySegmentSize <= 0!", 0)
+	end
+	
+	-- This world is cruel, and I must accept it.
+	if behavior.HighFidelityBehavior <= 0 then
+		behavior.HighFidelityBehavior = 1
+	elseif behavior.HighFidelityBehavior >= 4 then
+		behavior.HighFidelityBehavior = 3
 	end
 
 	local cast : TypeDef.ActiveBlockCast = {
@@ -453,14 +550,15 @@ function ActiveCast.new(
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
 			CanPierceCallback = behavior.CanPierceFunction
 		},
-
+		
+		CFrame = CFrame.new(),
 		UserData = {},
 		ID = activeCastID
 	}
 
-	if cast.StateInfo.HighFidelityBehavior == 2 then
+	--[[if cast.StateInfo.HighFidelityBehavior == 2 then
 		cast.StateInfo.HighFidelityBehavior = 3
-	end
+	end]]
 
 	if cast.RayInfo.Parameters ~= nil then
 		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
@@ -475,6 +573,7 @@ function ActiveCast.new(
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
 			warn("ObjectCache already handle that for you, Template Dupe")
 		end
+		-- 1 kebab please
 		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
 	else
@@ -485,11 +584,9 @@ function ActiveCast.new(
 		end
 		if behavior.CosmeticBulletContainer then
 			targetContainer = behavior.CosmeticBulletContainer
-		else
-			error("CosmeticBulletContainer is nil")
 		end
 	end
-	
+
 	--[[local usingProvider = false
 	if behavior.CosmeticBulletProvider == nil then
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
@@ -538,6 +635,8 @@ function ActiveCast.new(
 			cast.RayInfo.Parameters.FilterDescendantsInstances = igroneList
 		end
 	end
+	
+	SendCastFire(cast, origin, direction, velocity, behavior)
 
 	local event
 	if RS:IsClient() then
@@ -551,11 +650,21 @@ function ActiveCast.new(
 	local function Stepped(delta : number)
 		if cast.StateInfo.Paused then return end
 
-		PrintDebug("Casting for frame.")
+		if DebugLogging.Casting then
+			print("Casting for frame.")	
+		end
+		
+		local Cast_timeAtStart = tick()
+		
 		local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
-		if (cast.StateInfo.HighFidelityBehavior == 3 and latestTrajectory.Acceleration ~= Vector3.new() and cast.StateInfo.HighFidelitySegmentSize > 0) then
+		
+		if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
+			latestTrajectory.Acceleration = Vector3.new()
+		end
+		
+		if (cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Always and cast.StateInfo.HighFidelitySegmentSize > 0) then
 
-			local timeAtStart = tick()
+			local Segment_timeAtStart = tick()
 
 			if cast.StateInfo.IsActivelyResimulating then
 				cast:Terminate()
@@ -584,7 +693,7 @@ function ActiveCast.new(
 			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
 
 			local targetWorldRoot = cast.RayInfo.WorldRoot
-			local resultOfCast = targetWorldRoot:Blockcast(lastPoint, cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
+			local resultOfCast = targetWorldRoot:Blockcast(CFrame.new(lastPoint), cast.RayInfo.Size, rayDir, cast.RayInfo.Parameters)
 
 			local point = currentPoint
 
@@ -610,18 +719,32 @@ function ActiveCast.new(
 					cast.StateInfo.CancelHighResCast = false
 					break
 				end
-				PrintDebug("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
+				if DebugLogging.Segment then
+					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
+				end
 				SimulateCast(cast, timeIncrement, true)
 			end
 
 			if getmetatable(cast) == nil then return end
 			cast.StateInfo.IsActivelyResimulating = false
 
-			if (tick() - timeAtStart) > 0.016 * 5 then
-				warn("Extreme cast lag encountered! Consider increasing HighFidelitySegmentSize.")
+			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME then
+				local HighFideSizeAmount = behavior.AdaptivePerformance.HighFidelitySegmentSizeIncrease or HIGH_FIDE_INCREASE_SIZE
+
+				if DebugLogging.AutomaticPerformance then
+					warn("AutomaticPerformance increasing size of HighFidelitySize by : ", HighFideSizeAmount)
+				end
+
+				cast.StateInfo.HighFidelitySegmentSize += HighFideSizeAmount
 			end
 		else
 			SimulateCast(cast, delta, false)
+		end
+		
+		if behavior.AutomaticPerformance and behavior.AdaptivePerformance.LowerHighFidelityBehavior and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME then
+			if cast.StateInfo.HighFidelityBehavior > 1 then
+				cast.StateInfo.HighFidelityBehavior -= 1
+			end
 		end
 	end
 
@@ -832,7 +955,7 @@ function ActiveCast:Terminate()
 
 	self.Caster.Output:Fire("CastTerminating", self)
 	self.Caster.ActiveCastCleaner:Fire(self.ID)
-	
+
 	self.Caster = nil
 	self.StateInfo = nil
 	self.RayInfo = nil

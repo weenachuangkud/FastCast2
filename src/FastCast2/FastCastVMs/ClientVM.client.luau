@@ -77,6 +77,12 @@ actor:BindToMessage("Blockcast", function(
 	BaseCast:Blockcast(origin, size, direction, velocity, behavior)
 end)
 
+actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
+	BaseCast:BindBulkMoveTo(bool)
+end)
+
+-- CleanUp
+
 actor:BindToMessage("Destroy", function()
 	BaseCast:Destroy()
 	script.Parent:Destroy()

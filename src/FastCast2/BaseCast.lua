@@ -1,9 +1,12 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
+	-- Verison : 0.0.3
 ]]
+
 -- Services
 local HTTPS = game:GetService("HttpService")
+local RS = game:GetService("RunService")
 
 -- Requires
 local FastCastM = script.Parent
@@ -18,39 +21,79 @@ local BaseCast = {}
 BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
+-- Connections
+local BulkMoveToConnection : RBXScriptConnection = nil
+
+--- Variables
+-- Because each different threads have different BaseCast haha
+local Actives = {}
+local Actor = nil
+local Output = nil
+local ActiveCastCleaner = nil
+local ObjectCache = nil
+local CacheHolder = nil
+
+-- Private functions 
+
+local function HandleBulkMoveTo()
+	local Parts : {BasePart} = {}
+	local CFrames : {CFrame} = {}
+
+	for _, ActiveCast : TypeDef.ActiveCast in Actives do
+		local ProjectilePart = ActiveCast.RayInfo.CosmeticBulletObject
+		if not ProjectilePart then continue end
+		if ProjectilePart:IsA("BasePart") then
+			table.insert(Parts, ProjectilePart)
+			table.insert(CFrames, ActiveCast.CFrame)
+		else
+			ProjectilePart:PivotTo(ActiveCast.CFrame)
+		end
+	end
+
+	task.synchronize()
+
+	--print("BulkMoveTo parts : ", Parts, "CFrames : ", CFrames)
+	workspace:BulkMoveTo(Parts, CFrames, Enum.BulkMoveMode.FireCFrameChanged)
+end
+
 -- Public functions
 
 function BaseCast.Init(BindableOutput : BindableEvent, Data : any)
 	local self = setmetatable({}, BaseCast)
 	-- Others
 	--print(BindableOutput.Parent)
-	self.Actor = BindableOutput.Parent
-	self.Actives = setmetatable({}, {__mode = 'v'})
+	Actor = BindableOutput.Parent
+	Actives = setmetatable({}, {__mode = 'v'})
 	-- Bindable
-	self.Output = BindableOutput
-	
+	Output = BindableOutput
+
 	local BindableCleaner = Instance.new("BindableEvent")
 	BindableCleaner.Name = "ActiveCastDestroyer"
-	BindableCleaner.Parent = self.Actor
-	
+	BindableCleaner.Parent = Actor
+
 	if Data.useObjectCache then
 		local BindableObjectCache = Instance.new("BindableFunction")
-		BindableObjectCache.Parent = self.Actor
+		BindableObjectCache.Parent = Actor
 		BindableObjectCache.Name = "ActiveCastObjectCache"
-		self.ObjectCache = BindableObjectCache
-		self.CacheHolder = Data.CacheHolder
+		ObjectCache = BindableObjectCache
+		CacheHolder = Data.CacheHolder
 	end
 	
-	self.ActiveCastCleaner = BindableCleaner
-	
-	self.ActiveCastCleaner.Event:Connect(function(activeCastID : string)
-		if self.Actives[activeCastID] then
+	if Data.useBulkMoveTo then
+		--print("Connecting PreRender")
+		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
+	end
+
+	ActiveCastCleaner = BindableCleaner
+
+	ActiveCastCleaner.Event:Connect(function(activeCastID : string)
+		if Actives[activeCastID] then
 			--print("CLEANED ACTIVECAST : " .. activeCastID)
-			self.Actives[activeCastID] = nil
-			self.Actor:SetAttribute("Tasks", self.Actor:GetAttribute("Tasks")-1)
+			Actives[activeCastID] = nil
+			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")-1)
 		end
 	end)
-	
+
 	return self
 end
 
@@ -61,13 +104,13 @@ function BaseCast:Raycast(
 	Behavior : TypeDef.FastCastBehavior
 )
 	--table.insert(self.Actives, ActiveCast.new(self, Origin, Direction, Velocity, Behavior))
-	self.Actor:SetAttribute("Tasks", self.Actor:GetAttribute("Tasks")+1)
-	
+	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")+1)
+
 	local activeCastID = HTTPS:GenerateGUID(false)
-	self.Actives[activeCastID] = ActiveCast.new({
-		Output = self.Output,
-		ActiveCastCleaner = self.ActiveCastCleaner,
-		ObjectCache = self.ObjectCache
+	Actives[activeCastID] = ActiveCast.new({
+		Output = Output,
+		ActiveCastCleaner = ActiveCastCleaner,
+		ObjectCache = ObjectCache
 	}, activeCastID, Origin, Direction, Velocity, Behavior)
 end
 
@@ -78,21 +121,38 @@ function BaseCast:Blockcast(
 	Velocity : Vector3 | number,
 	Behavior : TypeDef.FastCastBehavior
 )
-	self.Actor:SetAttribute("Tasks", self.Actor:GetAttribute("Tasks")+1)
+	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")+1)
 
 	local activeCastID = HTTPS:GenerateGUID(false)
-	self.Actives[activeCastID] = ActiveBlockcast.new({
-		Output = self.Output,
-		ActiveCastCleaner = self.ActiveCastCleaner,
-		ObjectCache = self.ObjectCache
+	Actives[activeCastID] = ActiveBlockcast.new({
+		Output = Output,
+		ActiveCastCleaner = ActiveCastCleaner,
+		ObjectCache = ObjectCache
 	}, activeCastID, Origin, Size, Direction, Velocity, Behavior)
 end
 
+function BaseCast:BindBulkMoveTo(bool : boolean)
+	if bool then
+		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
+	else
+		if BulkMoveToConnection then
+			BulkMoveToConnection:Disconnect()
+			BulkMoveToConnection = nil
+		end
+	end
+end
+
 function BaseCast:Destroy()
-	for k, v in self.Actives do
+	if BulkMoveToConnection then
+		BulkMoveToConnection:Disconnect()
+		BulkMoveToConnection = nil
+	end
+	
+	for k, v in Actives do
 		v:Terminate()
 	end
-	self.Actives = {}
+	
+	Actives = {}
 	setmetatable(self, nil)
 end
 

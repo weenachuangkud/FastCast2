@@ -1,7 +1,9 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
+	-- Verison : 0.0.3
 ]]
+
 --!strict
 
 -- Requires
@@ -21,6 +23,7 @@ export type OnLengthChangedFunction = (
 	cosmeticBulletObject : Instance?
 ) -> ()
 export type OnCastTerminatingFunction = (ActiveCast) -> ()
+export type OnCastFireFunction = (ActiveCast, Origin : Vector3, Direction : Vector3, Velocity : Vector3, behavior : FastCastBehavior) -> ()
 
 -- Represents any table.
 export type GenericTable = {[any]: any}
@@ -32,6 +35,7 @@ export type Caster = {
 	RayHit: RBXScriptSignal,
 	RayPierced: RBXScriptSignal,
 	CastTerminating: RBXScriptSignal,
+	CastFire: RBXScriptSignal,
 	Dispatcher : Dispatcher.Dispatcher,
 	AlreadyInit : boolean,
 	--id : string,
@@ -70,7 +74,13 @@ export type FastCastBehavior = {
 	AutoIgnoreContainer: boolean,
 	CanPierceFunction: CanPierceFunction?,
 	UseLengthChanged : boolean,
-	SimulateAfterPhysic : boolean
+	SimulateAfterPhysic : boolean,
+	
+	AutomaticPerformance : boolean,
+	AdaptivePerformance : {
+		HighFidelitySegmentSizeIncrease : number,
+		LowerHighFidelityBehavior : boolean
+	}
 }
 
 -- Represents a CastTrajectory :: https://etithespirit.github.io/FastCastAPIDocs/fastcast-objects/casttrajectory/
@@ -95,7 +105,9 @@ export type CastStateInfo = {
 	CancelHighResCast: boolean,
 	Trajectories: {[number]: CastTrajectory},
 	--OnParallel : boolean
-	UseLengthChanged : boolean
+	UseLengthChanged : boolean,
+	--TimeStamp : number,
+	--LastUpdateTime : number
 }
 
 
@@ -143,6 +155,7 @@ export type ActiveCast = {
 	Destroy : (ActiveCast) -> (),
 	Terminate : (ActiveCast) -> (),
 	
+	CFrame : CFrame,
 	ID : string
 }
 
@@ -180,7 +193,8 @@ export type ActiveBlockCast = {
 
 	Destroy : (ActiveCast) -> (),
 	Terminate : (ActiveCast) -> (),
-
+	
+	CFrame : CFrame,
 	ID : string
 }
 
