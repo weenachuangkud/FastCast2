@@ -77,7 +77,8 @@ export type FastCastBehavior = {
 	
 	AutomaticPerformance : boolean,
 	AdaptivePerformance : {
-		
+		HighFidelitySegmentSizeIncrease : number,
+		LowerHighFidelityBehavior : boolean
 	}
 }
 
