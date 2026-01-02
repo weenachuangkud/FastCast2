@@ -26,7 +26,8 @@ local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 -- CONSTs
 local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
-local MAX_SEGMENT_CAL_TIME = 0.016 * 5
+local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
+local MAX_CASTING_TIME = 0.2 -- 200ms
 
 -- DEBUG
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
@@ -43,6 +44,9 @@ local DBG_RAYPIERCE_COLOR = Color3.new(1, 0.2, 0.2)
 
 local DBG_RAY_LIFETIME = 1
 local DBG_HIT_LIFETIME = 1
+
+-- AutomaticPerformance setting
+local HIGH_FIDE_INCREASE_SIZE = 0.5
 
 --- ActiveCast
 
@@ -649,6 +653,8 @@ function ActiveCast.new(
 			print("Casting for frame.")	
 		end
 		
+		local Cast_timeAtStart = tick()
+		
 		local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 		
 		if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
@@ -657,7 +663,7 @@ function ActiveCast.new(
 		
 		if (cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Always and cast.StateInfo.HighFidelitySegmentSize > 0) then
 
-			local timeAtStart = tick()
+			local Segment_timeAtStart = tick()
 
 			if cast.StateInfo.IsActivelyResimulating then
 				cast:Terminate()
@@ -721,11 +727,23 @@ function ActiveCast.new(
 			if getmetatable(cast) == nil then return end
 			cast.StateInfo.IsActivelyResimulating = false
 
-			if (tick() - timeAtStart) > MAX_SEGMENT_CAL_TIME then
-				warn("Extreme cast lag encountered! Consider increasing HighFidelitySegmentSize.")
+			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME then
+				local HighFideSizeAmount = behavior.AdaptivePerformance.HighFidelitySegmentSizeIncrease or HIGH_FIDE_INCREASE_SIZE
+
+				if DebugLogging.AutomaticPerformance then
+					warn("AutomaticPerformance increasing size of HighFidelitySize by : ", HighFideSizeAmount)
+				end
+
+				cast.StateInfo.HighFidelitySegmentSize += HighFideSizeAmount
 			end
 		else
 			SimulateCast(cast, delta, false)
+		end
+		
+		if behavior.AutomaticPerformance and behavior.AdaptivePerformance.LowerHighFidelityBehavior and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME then
+			if cast.StateInfo.HighFidelityBehavior > 1 then
+				cast.StateInfo.HighFidelityBehavior -= 1
+			end
 		end
 	end
 
