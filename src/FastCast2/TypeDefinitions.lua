@@ -48,7 +48,7 @@ export type Caster = {
 		ContainerParent : Folder,
 		VMContainerName : string, 
 		VMname : string,
-		
+		useBulkMoveTo : boolean,
 		useObjectCache : boolean,
 		Template : BasePart | Model,
 		CacheSize : number,
