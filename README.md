@@ -40,6 +40,7 @@ with **Parallel Luau scripting**, **static typing**, **more extensions**, **buil
 9. Insert a part into the workspace and then rename it to "Projectile" and set its size to 1,1,1, and make sure "CanCollide", "CanQuery", "CanTouch" are all unmarked. And drag it into ReplicatedStorage
 <img width="194" height="59" alt="Screenshot 2026-01-04 013358" src="https://github.com/user-attachments/assets/19be90fd-66ce-4cf5-849d-ab84d718edd8" />
 
+(If you dont found FastCast2 in the toolbox, click this link : https://create.roblox.com/store/asset/87459814880446/FastCast2)
 
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
