@@ -225,6 +225,19 @@ FastCast:Destroy()
 ```
 Destroy Caster
 
+<br>
+<br>
+
+```luau
+FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
+```
+Create a new `ActiveCast`; it will not work if the `Caster` has not initialized
+
+```luau
+FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
+```
+Create a new `ActiveBlockCast`; it will not work if the `Caster` has not initialized
+
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
 - @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
