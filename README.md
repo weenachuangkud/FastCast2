@@ -73,7 +73,13 @@ local Head = character:WaitForChild("Head")
 local Mouse = player:GetMouse()
 
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
-local ProjectileContainer = workspace:WaitForChild("Projectiles")
+local ProjectileContainer = workspace:FindFirstChild("Projectiles")
+
+if not ProjectileContainer then
+	ProjectileContainer = Instance.new("Folder")
+	ProjectileContainer.Name = "Projectiles"
+	ProjectileContainer.Parent = workspace
+end
 
 local debounce = false
 
@@ -90,7 +96,7 @@ CastParams.FilterType = Enum.RaycastFilterType.Exclude
 -- Behavior
 local Behavior = FastCast2.newBehavior()
 Behavior.RaycastParams = CastParams
-Behavior.MaxDistance = 1000 -- Explictly set the max distance
+Behavior.MaxDistance = 1000 -- Explicitly set the max distance
 Behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 Behavior.Acceleration = Vector3.new(0, -workspace.Gravity, 0)
 Behavior.CosmeticBulletTemplate = ProjectileTemplate
