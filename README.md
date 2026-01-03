@@ -241,6 +241,37 @@ FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, ve
 ```
 Create a new `ActiveBlockCast`; it will not work if the `Caster` has not initialized
 
+## Caster Signals
+
+```luau
+Caster.RayHit(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
+```
+Fires every RayHit 
+
+<br>
+<br>
+
+```luau
+Caster.RayPierceFunction(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
+```
+Fires every RayPierceFunction
+
+<br>
+<br>
+
+```luau
+Caster.LengthChanged(ActiveCast,lastPoint : Vector3, rayDir : Vector3, rayDisplacement : number, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
+```
+Fires every LengthChanged
+
+<br>
+<br>
+
+```luau
+Caster.CastTerminating(ActiveCast)
+```
+Fires every CastTerminating
+
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
 - @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
