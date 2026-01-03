@@ -206,6 +206,22 @@ FastCast:SetVisualizeCasts(bool : boolean)
 ```
 Set `Configs.VisualizeCasts = bool`
 
+<br>
+<br>
+
+```luau
+FastCast:ReturnObject(obj : Instance)
+```
+Return passed-in `obj` to `ObjectCache`
+
+<br>
+<br>
+
+```luau
+FastCast:Destroy()
+```
+Destroy Caster
+
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
 - @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
