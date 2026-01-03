@@ -3,7 +3,7 @@
 </p>
 
 # FastCast2 (Unofficial) 
-**An improved version of [FastCast]([https://github.com/1ForeverHD/FastCast](https://etithespir.it/FastCastAPIDocs/))**  
+**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)**  
 with **Parallel Luau scripting**, **static typing**, **more extensions**, **built-in object pooling**
 
 ---
