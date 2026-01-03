@@ -6,6 +6,19 @@
 **An improved version of [FastCast](https://github.com/1ForeverHD/FastCast)**  
 with **Parallel Luau scripting**, **static typing**, **more extensions**, **built-in object pooling**
 
+---
+
+What the benefits of **using** FastCast2 :
+
+* More customizable
+* Able to communicate between the main thread and different threads, with more control over the thread (costs performance)
+* Parallel scripting
+* Easy to use
+* Raycast, Blockcast support
+* BulkMoveTo support
+* Built-in ObjectCache
+* Flexible
+
 &nbsp;
 
 > [!NOTE]
