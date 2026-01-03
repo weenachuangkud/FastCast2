@@ -40,7 +40,110 @@ with **Parallel Luau scripting**, **static typing**, **more extensions**, **buil
 9. Insert a part into the workspace and then rename it to "Projectile" and set its size to 1,1,1, and make sure "CanCollide", "CanQuery", "CanTouch" are all unmarked. And drag it into ReplicatedStorage
 <img width="194" height="59" alt="Screenshot 2026-01-04 013358" src="https://github.com/user-attachments/assets/19be90fd-66ce-4cf5-849d-ab84d718edd8" />
 
-(If you dont found FastCast2 in the toolbox, click this link : https://create.roblox.com/store/asset/87459814880446/FastCast2)
+(If you dont found FastCast2 in the toolbox, click this link: https://create.roblox.com/store/asset/87459814880446/FastCast2)
+
+## Testing
+- To test if FastCast2 actually works. Insert a "LocalScript" Inside "StarterCharacterScripts" and paste this code :
+
+```luau
+--[[
+	- Author : Mawin_CK
+	- Date : 2025
+]]
+
+-- Services
+local Rep = game:GetService("ReplicatedStorage")
+local RepFirst = game:GetService("ReplicatedFirst")
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+-- Modules
+local FastCast2ModuleScript = Rep:WaitForChild("FastCast2")
+
+-- Requires
+local FastCast2 = require(FastCast2ModuleScript)
+local FastCastEnums = require(FastCast2ModuleScript:WaitForChild("FastCastEnums"))
+local FastCastTypes = require(FastCast2ModuleScript:WaitForChild("TypeDefinitions"))
+
+-- Variables
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local Head = character:WaitForChild("Head")
+
+local Mouse = player:GetMouse()
+
+local ProjectileTemplate = Rep:WaitForChild("Projectile")
+local ProjectileContainer = workspace:WaitForChild("Projectiles")
+
+local debounce = false
+
+-- CONSTANTS
+local DEBOUNCE_TIME = 0.1
+local SPEED = 75
+
+-- CastParams
+local CastParams = RaycastParams.new()
+CastParams.FilterDescendantsInstances = {character}
+CastParams.IgnoreWater = true
+CastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+-- Behavior
+local Behavior = FastCast2.newBehavior()
+Behavior.RaycastParams = CastParams
+Behavior.MaxDistance = 1000 -- Explictly set the max distance
+Behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+Behavior.Acceleration = Vector3.new(0, -workspace.Gravity, 0)
+Behavior.CosmeticBulletTemplate = ProjectileTemplate
+Behavior.CosmeticBulletContainer = ProjectileContainer
+Behavior.AutoIgnoreContainer = true
+Behavior.UseLengthChanged = false
+
+-- Caster
+local Caster = FastCast2.new()
+Caster:Init(
+	4, -- Due to roblox limits :P
+	RepFirst, -- Where cloned FastCastVMs will be parented to
+	"CastVMs", -- New name of cloned FastCastVMs
+	RepFirst, -- VMs Container
+	"CastVMsContainer", -- Name of VMs Container
+	"CastVM",
+	true
+)
+
+-- Event functions
+local function OnRayHit(cast : FastCastTypes.ActiveCast)
+	print("Hit")
+	FastCast2:SafeCall(cast.Terminate)
+end
+
+local function OnCastTerminating(cast : FastCastTypes.ActiveCast)
+	local obj = cast.RayInfo.CosmeticBulletObject
+	if obj then
+		obj:Destroy()
+	end
+end
+
+-- Listeners
+
+Caster.RayHit:Connect(OnRayHit)
+Caster.CastTerminating:Connect(OnCastTerminating)
+
+UIS.InputBegan:Connect(function(input : InputObject, gp : boolean)
+	if gp then return end
+	if debounce then return end
+	
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local Origin = Head.Position
+		local Direction = (Mouse.Hit.Position - Origin).Unit
+		
+		Caster:RaycastFire(Origin, Direction, SPEED, Behavior)
+		
+		debounce = true
+		task.wait(DEBOUNCE_TIME)
+		debounce = false
+	end
+end)
+```
 
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
