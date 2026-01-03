@@ -152,6 +152,36 @@ end)
 ```
 - Or you can get FastCast2 testing ground from : https://github.com/weenachuangkud/FastCast2/releases
 
+# API Usages
+
+## Methods
+
+```luau
+FastCast.new()
+```
+Construct a new Caster instance
+
+```luau
+FastCast:Init(
+	numWorkers : number, 
+	newParent : Folder, 
+	newName : string,
+	ContainerParent : Folder,
+	VMContainerName : string,
+	VMname : string,
+	
+	useBulkMoveTo : boolean,
+
+	useObjectCache : boolean,
+	Template : BasePart | Model,
+	CacheSize : number,
+	CacheHolder : Instance
+)
+```
+Initialize Caster. Allocate the worker amount of `numWorkers`, rename it to `VMname`, clone `FastCastVMs` to `newParent`, rename it to `newName` , and then create a VMsContainer which is a container of workers, set its parent to `ContainerParent`, and rename it to `VMContainerName`
+- useBulkMoveTo: if true, will enable BulkMoveTo to handle CFrame changes for every `ActiveCast.RayInfo.CosmeticBulletObject`. Can be disabled and enabled by `Caster:BindBulkMoveTo(boolean)`
+- useObjectCache: if true, will permanently use ObjectCache for Caster
+
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
 - @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
