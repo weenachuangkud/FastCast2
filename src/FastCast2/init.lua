@@ -85,6 +85,16 @@ If true, verbose debug logging will be used,
 FastCast.__index = FastCast
 FastCast.__type = "FastCast"
 
+-- Local functions
+
+local function DestroySignal(signal : Signal.Signal)
+	if type(signal) == "table" then
+		signal:Destroy()
+	else
+		signal = nil
+	end
+end
+
 --[[
 	<p>
 	<strong>Creates a new FastCastBehavior, which contains information necessary to Fire the cast properly.</strong>
@@ -304,6 +314,14 @@ function FastCast:Destroy()
 	if self.ObjectCacheConnection then
 		self.ObjectCacheConnection.OnInvoke = nil
 	end
+	
+	-- I'm making sure that everything is destroyed here lmao
+	DestroySignal(self.LengthChanged)
+	DestroySignal(self.RayHit)
+	DestroySignal(self.RayPierced)
+	DestroySignal(self.CastTerminating)
+	DestroySignal(self.CastFire)
+	
 	self.Dispatcher:Destroy()
 	setmetatable(self, nil)
 end
