@@ -46,6 +46,8 @@
 	- Date : 2025
 ]]
 
+-- Verison : 0.0.4
+
 
 -- Services
 --local HTTPS = game:GetService("HttpService")
@@ -111,40 +113,7 @@ end
 local DEFAULT_FASTCAST_BEHAVIOR = FastCast.newBehavior()
 
 --[[
-	<strong>Construct a new Caster instance</strong>, 
-	which represents an entire gun or other projectile launching system
-	
-	<strong>RBXScriptSignal</strong> : 
-		<p>- LengthChanged(
-		casterThatFired : ActiveCast | ActiveBlockcast, 
-		lastPoint : Vector3, 
-		rayDir : Vector3, 
-		displacement : number, 
-		segmentVelocity : Vector3, 
-		cosmeticBulletObject : Instance
-		)
-		<strong>Fires whenever the total length of the casted line changes.</strong>
-		
-		- RayHit(
-		casterThatFired : ActiveCast | ActiveBlockcast, 
-		result : RaycastResult, 
-		segmentVelocity : Vector3, 
-		cosmeticBulletObject : Instance
-		)
-		<strong>Fires when a raycast hits part.</strong>
-		
-		- RayPierced(
-		casterThatFired : ActiveCast | ActiveBlockcast, 
-		result : RaycastResult, 
-		segmentVelocity : Vector3, 
-		cosmeticBulletObject : Instance
-		)
-		<strong>Fires when a raycast pierces a part.</strong>
-		
-		- CastTerminating(casterThatFired : ActiveCast | ActiveBlockcast)
-		<strong>Fires when the cast is cancelled by the user.</strong>
-		</p>
-		
+	Contructs a new Caster object.
 	@return Caster
 ]]
 function FastCast.new() : TypeDef.Caster
@@ -194,6 +163,7 @@ function FastCast:Init(
 		CacheHolder = CacheHolder
 	}]]
 	self.ObjectCache = useObjectCache and ObjectCache.new(Template, CacheSize, CacheHolder) :: any
+	
 	local data = {
 		useBulkMoveTo = useBulkMoveTo,
 		useObjectCache = useObjectCache,
@@ -221,7 +191,8 @@ function FastCast:Init(
 	end]]
 	--print(self.Dispatcher)
 	self.AlreadyInit = true
-
+	
+	
 	if not useObjectCache then return end
 	
 	local Dispatcher = self.Dispatcher
@@ -245,7 +216,6 @@ end
 function FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
-
 	--local ActiveCastID = HTTPS:GenerateGUID(false)
 	--self.Dispatcher:Dispatch("Raycast", self.id, ActiveCastID, origin, direction, velocity, BehaviorData)
 	--local newActiveCast : TypeDef.ActiveCast = ActiveCast.new(self, origin, direction, velocity, BehaviorData :: TypeDef.FastCastBehavior) 
@@ -260,6 +230,7 @@ function FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Ve
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
 
+
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
 end
 
@@ -270,17 +241,57 @@ function FastCast:SafeCall(f : (...any) -> (...any), ...)
 	end
 end
 
-function FastCast:BindBulkMoveTo(bool : boolean)
-	local Dispatcher = self.Dispatcher
-	for Index, Thread in Dispatcher.Threads do
-		Thread:SendMessage("BindBulkMoveTo", bool)
+function FastCast:SetBulkMoveEnabled(enabled : boolean)
+	if not self.AlreadyInit or not self.Dispatcher then
+		warn("Caster not initialized", self)
 	end
+
+	self.Dispatcher:DispatchAll("BindBulkMoveTo", enabled)
+	--[[local Dispatcher = self.Dispatcher
+	for Index, Thread in Dispatcher.Threads do
+		Thread:SendMessage("BindBulkMoveTo", enabled)
+	end]]
 end
 
 
-function FastCast:SetVisualizeCasts(bool : boolean)
+function FastCast:SetObjectCacheEnabled(enabled : boolean, Template : BasePart | Model, CacheSize : number, CacheHolder : Instance)
+	local Dispatcher = self.Dispatcher
+	
+	if enabled then
+		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder)
+		Dispatcher:DispatchAll("BindObjectCache", enabled)
+		
+		for i, v in Dispatcher.Threads do
+			-- Please dont change this to FindFirstChild, or else diddy will oil you up
+			local BindableObjectCache : BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
+			if BindableObjectCache then
+				--print("CONNECTED")
+				BindableObjectCache.OnInvoke = function(v : CFrame)
+					--print("INVOKED")
+					return self.ObjectCache:GetPart(v)
+				end -- OH MY GOD
+			end -- KEEP GOING
+		end -- OH YES DADDY
+		
+	else
+		Dispatcher:DispatchAll("BindObjectCache", enabled)
+		if self.ObjectCache then
+			self.ObjectCache:Destroy()
+		end
+		
+		if self.ObjectCacheConnection then
+			self.ObjectCacheConnection.OnInvoke = nil
+		end
+	end
+	--[[for Index, Thread in Dispatcher.Threads do
+		Thread:SendMessage("BindObjectCache", enabled)
+	end]]
+end
+
+
+--[[function FastCast:SetVisualizeCasts(bool : boolean)
 	Configs.VisualizeCasts = bool
-end
+end]]
 
 function FastCast:ReturnObject(obj : Instance)
 	self.ObjectCache:ReturnPart(obj)
