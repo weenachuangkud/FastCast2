@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.3
+	-- Verison : 0.0.4
 ]]
 
 --!strict
@@ -55,10 +55,48 @@ export type Caster = {
 		CacheHolder : Instance
 	) -> (),
 	
+	-- CastFire
+	
 	RaycastFire: (Caster, Origin : Vector3, Direction : Vector3, Velocity : Vector3 | number, Behavior : FastCastBehavior) -> string,
 	BlockcastFire: (Caster, Origin : Vector3, Size : Vector3, Direction : Vector3, Velocity : Vector3 | number, Behavior : FastCastBehavior) -> string,
 	
+	-- Utility ig
+	
+	SetBulkMoveEnabled : (enabled : boolean) -> (),
+	SetObjectCacheEnabled : (enabled : boolean, Template : BasePart | Model, CacheSize : number, CacheHolder : Instance) -> (),
+
+	SetVisualizeCasts : (bool : boolean) -> (),
+	
+	ReturnObject : (obj : Instance) -> (),
+	
 	Destroy : (Caster) -> ()
+}
+
+-- Settings
+export type VisualizeCastSettings = {
+	-- Segment
+	Debug_SegmentColor: Color3,
+	Debug_SegmentTransparency: number,
+	Debug_SegmentSize: number,
+	
+	-- Hit
+	Debug_HitColor: Color3,
+	Debug_HitTransparency : number,
+	Debug_HitSize : number,
+	
+	-- Raypierce
+	Debug_RayPierceColor: Color3,
+	Debug_RayPierceTransparency : number,
+	Debug_RayPierceSize : number,
+	
+	-- Lifetime
+	Debug_RayLifetime: number,
+	Debug_HitLifetime: number
+}
+
+export type AdaptivePerformance = {
+	HighFidelitySegmentSizeIncrease : number,
+	LowerHighFidelityBehavior : boolean
 }
 
 -- Represents a FastCastBehavior :: https://etithespirit.github.io/FastCastAPIDocs/fastcast-objects/fcbehavior/
@@ -76,11 +114,12 @@ export type FastCastBehavior = {
 	UseLengthChanged : boolean,
 	SimulateAfterPhysic : boolean,
 	
+	-- Performance
 	AutomaticPerformance : boolean,
-	AdaptivePerformance : {
-		HighFidelitySegmentSizeIncrease : number,
-		LowerHighFidelityBehavior : boolean
-	}
+	AdaptivePerformance : AdaptivePerformance,
+	
+	VisualizeCasts : boolean,
+	VisualizeCastSettings : VisualizeCastSettings
 }
 
 -- Represents a CastTrajectory :: https://etithespirit.github.io/FastCastAPIDocs/fastcast-objects/casttrajectory/
@@ -104,10 +143,9 @@ export type CastStateInfo = {
 	IsActivelyResimulating: boolean,
 	CancelHighResCast: boolean,
 	Trajectories: {[number]: CastTrajectory},
-	--OnParallel : boolean
 	UseLengthChanged : boolean,
-	--TimeStamp : number,
-	--LastUpdateTime : number
+	VisualizeCasts : boolean,
+	VisualizeCastSettings : VisualizeCastSettings
 }
 
 
