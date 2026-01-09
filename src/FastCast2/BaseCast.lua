@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.3
+	-- Verison : 0.0.4
 ]]
 
 -- Services
@@ -138,6 +138,21 @@ function BaseCast:BindBulkMoveTo(bool : boolean)
 		if BulkMoveToConnection then
 			BulkMoveToConnection:Disconnect()
 			BulkMoveToConnection = nil
+		end
+	end
+end
+
+function BaseCast:BindObjectCache(bool : boolean)
+	if bool then
+		if ObjectCache then return end
+		local BindableObjectCache = Instance.new("BindableFunction")
+		BindableObjectCache.Parent = Actor
+		BindableObjectCache.Name = "ActiveCastObjectCache"
+		ObjectCache = BindableObjectCache
+	else
+		if ObjectCache then
+			ObjectCache:Destroy()
+			ObjectCache = nil
 		end
 	end
 end
