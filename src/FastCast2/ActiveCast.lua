@@ -2,7 +2,7 @@
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
-	-- Verison : 0.0.3
+	-- Verison : 0.0.4
 ]]
 
 -- Services
@@ -30,6 +30,8 @@ local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
 local MAX_CASTING_TIME = 0.2 -- 200ms
 
+local DEFAULT_MAX_DISTANCE = 1000
+
 -- DEBUG
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
 local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.286275, 0.329412, 0.247059)
@@ -37,14 +39,14 @@ local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.286275, 0.329412, 0.247059)
 local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
 
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
-local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412) 
+--local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412) 
 
 --local DBG_SEGMENT_COLOR = Color3.new(1, 0.666667, 0)
-local DBG_HIT_COLOR = Color3.new(0.2, 1, 0.5)
-local DBG_RAYPIERCE_COLOR = Color3.new(1, 0.2, 0.2)
+--local DBG_HIT_COLOR = Color3.new(0.2, 1, 0.5)
+--local DBG_RAYPIERCE_COLOR = Color3.new(1, 0.2, 0.2)
 
-local DBG_RAY_LIFETIME = 1
-local DBG_HIT_LIFETIME = 1
+--local DBG_RAY_LIFETIME = 1
+--local DBG_HIT_LIFETIME = 1
 
 -- Automatic Performance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
@@ -126,34 +128,33 @@ end
 	end
 end]]
 
-local function DbgVisualizeSegment(castStartCFrame: CFrame, castLength: number) : ConeHandleAdornment?
-	if Configs.VisualizeCasts ~= true then return nil end
+local function DbgVisualizeSegment(castStartCFrame: CFrame, castLength: number, VisualizeCasts : boolean, VisualizeCastSettings : TypeDef.VisualizeCastSettings) : ConeHandleAdornment?
+	if not VisualizeCasts then return end
 	local adornment = Instance.new("ConeHandleAdornment")
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = castStartCFrame
 	adornment.Height = castLength
-	adornment.Color3 = Color3.new()
-	-- Hey dude, if you want to edit this, just edit it idc - Mawin_CK 2025
-	adornment.Radius = 0.10
-	adornment.Transparency = 0.5
+	adornment.Color3 = VisualizeCastSettings.Debug_SegmentColor
+	adornment.Radius = VisualizeCastSettings.Debug_SegmentSize
+	adornment.Transparency = VisualizeCastSettings.Debug_SegmentTransparency
 	adornment.Parent = GetFastCastVisualizationContainer()
 
-	DebrisAdd(adornment, DBG_RAY_LIFETIME)
+	DebrisAdd(adornment, VisualizeCastSettings.Debug_RayLifetime)
 	return adornment
 end
 
-local function DbgVisualizeHit(atCF: CFrame, wasPierce: boolean): SphereHandleAdornment?
-	if Configs.VisualizeCasts ~= true then return nil end
+local function DbgVisualizeHit(atCF: CFrame, wasPierce: boolean, VisualizeCasts : boolean, VisualizeCastSettings : TypeDef.VisualizeCastSettings): SphereHandleAdornment?
+	if not VisualizeCasts then return end
 	local adornment = Instance.new("SphereHandleAdornment")
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = atCF
 	-- Alert! someone is Mawining it!!!!!
-	adornment.Radius = 0.4
-	adornment.Transparency = 0.25
-	adornment.Color3 = (wasPierce == false) and DBG_HIT_COLOR or DBG_RAYPIERCE_COLOR
+	adornment.Radius = (wasPierce == false) and VisualizeCastSettings.Debug_HitSize or VisualizeCastSettings.Debug_RayPierceSize
+	adornment.Transparency = (wasPierce == false) and VisualizeCastSettings.Debug_HitTransparency or VisualizeCastSettings.Debug_RayPierceTransparency
+	adornment.Color3 = (wasPierce == false) and VisualizeCastSettings.Debug_HitColor or VisualizeCastSettings.Debug_RayPierceColor
 	adornment.Parent = GetFastCastVisualizationContainer()
 
-	DebrisAdd(adornment, DBG_HIT_LIFETIME)
+	DebrisAdd(adornment, VisualizeCastSettings.Debug_HitLifetime)
 	return adornment
 end
 
@@ -286,6 +287,9 @@ local function SimulateCast(
 	end
 
 	local rayDisplacement = (point - lastPoint).Magnitude
+	
+	local VisualizeCasts = cast.StateInfo.VisualizeCasts
+	local VisualizeCastSettings = cast.StateInfo.VisualizeCastSettings
 
 	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
 		latestTrajectory.Acceleration = Vector3.new()
@@ -297,14 +301,14 @@ local function SimulateCast(
 
 
 	if cast.StateInfo.UseLengthChanged then
-		SendLengthChanged(cast, lastPoint, rayDir.Unit, rayDisplacement, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+		SendLengthChanged(cast, lastPoint, rayDir.Unit, rayDisplacement, segmentVelocity, cast.RayInfo.CosmeticBulletObject, VisualizeCasts)
 	end
 	cast.StateInfo.DistanceCovered += rayDisplacement
 
 	local rayVisualization: ConeHandleAdornment? = nil
 
 	if (delta > 0) then
-		rayVisualization = DbgVisualizeSegment(CFrame.new(lastPoint, lastPoint + rayDir), rayDisplacement)
+		rayVisualization = DbgVisualizeSegment(CFrame.new(lastPoint, lastPoint + rayDir), rayDisplacement, VisualizeCasts, VisualizeCastSettings)
 	end
 
 	--print("2C")
@@ -382,7 +386,7 @@ local function SimulateCast(
 					if (subResult ~= nil) then
 
 						local subDisplacement = (subPosition - subResult.Position).Magnitude
-						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), subDisplacement)
+						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), subDisplacement, VisualizeCasts, VisualizeCastSettings)
 						if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR end
 
 						if cast.RayInfo.CanPierceCallback == nil or (cast.RayInfo.CanPierceCallback ~= nil and cast.RayInfo.CanPierceCallback(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject) == false) then
@@ -390,19 +394,19 @@ local function SimulateCast(
 
 							SendRayHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
 							cast:Terminate()
-							local vis = DbgVisualizeHit(CFrame.new(point), false)
+							local vis = DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 							if (vis ~= nil) then vis.Color3 = DBG_HIT_SUB_COLOR end
 
 							return
 						else
 							SendRayPierced(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
-							local vis = DbgVisualizeHit(CFrame.new(point), true)
+							local vis = DbgVisualizeHit(CFrame.new(point), true, VisualizeCasts, VisualizeCastSettings)
 							if (vis ~= nil) then vis.Color3 = DBG_RAYPIERCE_SUB_COLOR end
-							if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_RAYPIERCE_SEGMENT_COLOR end
+							--if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_RAYPIERCE_SEGMENT_COLOR end
 						end
 
 					else
-						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), subDisplacement)
+						local dbgSeg = DbgVisualizeSegment(CFrame.new(subPosition, subPosition + subVelocity), subDisplacement, VisualizeCasts, VisualizeCastSettings)
 						if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR2 end
 
 					end
@@ -426,7 +430,7 @@ local function SimulateCast(
 
 				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
 				cast:Terminate()
-				DbgVisualizeHit(CFrame.new(point), false)
+				DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 				return
 			end
 		else
@@ -439,7 +443,7 @@ local function SimulateCast(
 			if rayVisualization ~= nil then
 				rayVisualization.Color3 = Color3.new(0.4, 0.05, 0.05)
 			end
-			DbgVisualizeHit(CFrame.new(point), true)
+			DbgVisualizeHit(CFrame.new(point), true, VisualizeCasts, VisualizeCastSettings)
 
 			local params = cast.RayInfo.Parameters
 			local alteredParts = {}
@@ -499,7 +503,7 @@ local function SimulateCast(
 
 				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
 				cast:Terminate()
-				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false)
+				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false, VisualizeCasts, VisualizeCastSettings)
 				return
 			end
 		end
@@ -507,7 +511,7 @@ local function SimulateCast(
 
 	if (cast.StateInfo.DistanceCovered >= cast.RayInfo.MaxDistance) then
 		cast:Terminate()
-		DbgVisualizeHit(CFrame.new(currentTarget), false)
+		DbgVisualizeHit(CFrame.new(currentTarget), false, VisualizeCasts, VisualizeCastSettings)
 	end
 end
 
@@ -560,14 +564,15 @@ function ActiveCast.new(
 					Acceleration = behavior.Acceleration
 				}
 			},
-			UseLengthChanged = behavior.UseLengthChanged
-			--OnParallel = false
+			UseLengthChanged = behavior.UseLengthChanged,
+			VisualizeCasts = behavior.VisualizeCasts,
+			VisualizeCastSettings = behavior.VisualizeCastSettings
 		},
 
 		RayInfo = {
 			Parameters = behavior.RaycastParams,
 			WorldRoot = workspace,
-			MaxDistance = behavior.MaxDistance or 1000,
+			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
 			CanPierceCallback = behavior.CanPierceFunction
 		},

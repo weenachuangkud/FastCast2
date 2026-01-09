@@ -81,6 +81,10 @@ actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
 	BaseCast:BindBulkMoveTo(bool)
 end)
 
+actor:BindToMessage("BindObjectCache", function(bool : boolean)
+	BaseCast:BindObjectCache(bool)
+end)
+
 -- CleanUp
 
 actor:BindToMessage("Destroy", function()

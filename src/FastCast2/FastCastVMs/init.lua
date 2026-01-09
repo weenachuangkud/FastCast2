@@ -28,8 +28,9 @@ export type Dispatcher = {
 	Threads: {Actor},
 	Callback: (...any) -> (...any),
 
-	Dispatch: (Dispatcher, ...any) -> (),
+	Dispatch: (Dispatcher, Message : string?, ...any) -> (),
 	Allocate: (Dispatcher, Threads: number) -> (),
+	DispatchAll: (Dispatcher, Message : string?, ...any) -> (),
 	
 	Destroy : (Dispatcher) -> (),
 }
@@ -242,6 +243,12 @@ function Dispatcher:Destroy()
 		while #Container:GetChildren() ~= 0 do task.wait() end
 		Container:Destroy()
 	end)
+end
+
+function Dispatcher:DispatchAll(Message : string?, ...)
+	for Index, Thread in self.Threads do
+		Thread:SendMessage(Message or "Dispatch", ...)
+	end
 end
 
 
