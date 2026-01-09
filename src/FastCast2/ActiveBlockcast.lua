@@ -544,7 +544,8 @@ function ActiveCast.new(
 				}
 			},
 			UseLengthChanged = behavior.UseLengthChanged,
-			VisualizeCasts = behavior.VisualizeCasts
+			VisualizeCasts = behavior.VisualizeCasts,
+			VisualizeCastSettings = behavior.VisualizeCastSettings
 		},
 
 		RayInfo = {
