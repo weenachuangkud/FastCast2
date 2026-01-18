@@ -1,7 +1,7 @@
-    [package]
-    name = "weenachuangkud/FastCast2" # Replace with your Roblox username and project name
-    description = "An improved version of FastCast with Parallel scripting, more extensions, and statically typed"
-    author = ["Mawin Chuangkud"]
-    version = "0.0.1"
-    registry = "https://github.com/weenachuangkud/FastCast2"
-    realm = "shared" # Or "server" or "client" depending on your package's scope
+[package]
+name = "weenachuangkud/fastcast2" # Replace with your Roblox username and project name
+description = "An improved version of FastCast with Parallel scripting, more extensions, and statically typed"
+author = ["Mawin Chuangkud"]
+version = "0.0.1"
+registry = "https://github.com/weenachuangkud/FastCast2"
+realm = "shared" # Or "server" or "client" depending on your package's scope
