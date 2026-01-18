@@ -1,3 +1,5 @@
+--!nonstrict
+
 -- Mozilla Public License 2.0 (files originally from FastCast)
 --[[
 	- Modified by: Mawin CK 
@@ -11,20 +13,15 @@ local RS = game:GetService("RunService")
 -- Variables
 local FastCastModule = script.Parent
 
--- Requires
---local UtilityModule = FastCastModule:WaitForChild("Utility")
+-- Dependencies
 
-local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
---local Utility = require(UtilityModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
-local ErrorMsgs = require(script.Parent:WaitForChild("ErrorMessage"))
---local MathUtil = require(UtilityModule.Math)
+local ErrorMsgs = require(FastCastModule:WaitForChild("ErrorMessage"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
---local LookUpTables = require(FastCastModule:WaitForChild("LookUpTables"))
 
-----> CONSTs
+-- Constants
 local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
@@ -32,21 +29,13 @@ local MAX_CASTING_TIME = 0.2 -- 200ms
 
 local DEFAULT_MAX_DISTANCE = 1000
 
--- DEBUG
+-- Debugging
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
 local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.286275, 0.329412, 0.247059)
 
 local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
 
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
---local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412) 
-
---local DBG_SEGMENT_COLOR = Color3.new(1, 0.666667, 0)
---local DBG_HIT_COLOR = Color3.new(0.2, 1, 0.5)
---local DBG_RAYPIERCE_COLOR = Color3.new(1, 0.2, 0.2)
-
---local DBG_RAY_LIFETIME = 1
---local DBG_HIT_LIFETIME = 1
 
 -- Automatic Performance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
