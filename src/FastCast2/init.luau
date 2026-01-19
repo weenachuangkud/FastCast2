@@ -50,8 +50,7 @@
 
 
 -- Services
---local HTTPS = game:GetService("HttpService")
-local RS = game:GetService("RunService")
+local HTTPService = game:GetService("HttpService")
 
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
@@ -226,22 +225,20 @@ end
 function FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
-	--local ActiveCastID = HTTPS:GenerateGUID(false)
-	--self.Dispatcher:Dispatch("Raycast", self.id, ActiveCastID, origin, direction, velocity, BehaviorData)
-	--local newActiveCast : TypeDef.ActiveCast = ActiveCast.new(self, origin, direction, velocity, BehaviorData :: TypeDef.FastCastBehavior) 
-	--return newActiveCast
+	local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	-- BABE RAYCAST!!!!!
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
-	--return ActiveCastID
+	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData, ActiveCastID)
+	return ActiveCastID
 end
 
 function FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
+	local ActiveCastID = HTTPService:GenerateGUID(false)
 
-
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
+	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData, ActiveCastID)
+	return ActiveCastID
 end
 
 function FastCast:SafeCall(f : (...any) -> (...any), ...)

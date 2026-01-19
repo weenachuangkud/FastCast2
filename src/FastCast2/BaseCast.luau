@@ -101,12 +101,13 @@ function BaseCast:Raycast(
 	Origin : Vector3, 
 	Direction : Vector3, 
 	Velocity : Vector3 | number, 
-	Behavior : TypeDef.FastCastBehavior
+	Behavior : TypeDef.FastCastBehavior,
+	GUID: string
 )
 	--table.insert(self.Actives, ActiveCast.new(self, Origin, Direction, Velocity, Behavior))
 	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")+1)
 
-	local activeCastID = HTTPS:GenerateGUID(false)
+	local activeCastID = GUID
 	Actives[activeCastID] = ActiveCast.new({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
@@ -119,11 +120,12 @@ function BaseCast:Blockcast(
 	Size : Vector3, 
 	Direction : Vector3,
 	Velocity : Vector3 | number,
-	Behavior : TypeDef.FastCastBehavior
+	Behavior : TypeDef.FastCastBehavior,
+	GUID : string
 )
 	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")+1)
 
-	local activeCastID = HTTPS:GenerateGUID(false)
+	local activeCastID = GUID
 	Actives[activeCastID] = ActiveBlockcast.new({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
