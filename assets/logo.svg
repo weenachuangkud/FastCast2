@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="225" viewBox="0 0 800 225">
+  <style>
+    .light { display: block; }
+    .dark { display: none; }
+
+    @media (prefers-color-scheme: dark) {
+      .light { display: none; }
+      .dark { display: block; }
+    }
+  </style>
+
+  <!-- Light mode image -->
+  <image
+    href="https://github.com/user-attachments/assets/dcb6f17c-0e3e-46c2-b694-432a6ef867ac"
+    class="light"
+    width="800"
+    height="225"
+    preserveAspectRatio="xMidYMid meet"
+  />
+
+  <!-- Dark mode image -->
+  <image
+    href="image-dark.png"
+    class="dark"
+    width="800"
+    height="225"
+    preserveAspectRatio="xMidYMid meet"
+  />
+</svg>

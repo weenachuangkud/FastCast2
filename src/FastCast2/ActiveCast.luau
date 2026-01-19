@@ -40,14 +40,14 @@ local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 -- Automatic Performance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
 
---- ActiveCast
+-- ActiveCast
 
 local ActiveCast = {}
 
 ActiveCast.__index = ActiveCast
 ActiveCast.__type = "ActiveCast"
 
------> Local functions
+-- Local functions
 
 local function DebrisAdd(obj : Instance, Lifetime : number)
 	if not obj then return end
@@ -109,7 +109,7 @@ local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveCast | TypeDef.Act
 	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
 end
 
----> Debugging
+-- Debugging
 
 --[[local function PrintDebug(message : string)
 	if Configs.DebugLogging then
@@ -147,7 +147,7 @@ local function DbgVisualizeHit(atCF: CFrame, wasPierce: boolean, VisualizeCasts 
 	return adornment
 end
 
----> Send signals
+-- Send signals
 
 local function SendRayHit(
 	cast : TypeDef.ActiveCast,
@@ -504,7 +504,7 @@ local function SimulateCast(
 	end
 end
 
----> ActiveCast functions
+-- ActiveCast functions
 
 function ActiveCast.new(
 	BaseCast : TypeDef.BaseCastData,
@@ -582,7 +582,7 @@ function ActiveCast.new(
 		cast.RayInfo.Parameters = RaycastParams.new()
 	end
 
-	---> CosmeticBulletObject GET
+	-- CosmeticBulletObject GET
 
 	local targetContainer: Instance;
 	if cast.Caster.ObjectCache then
@@ -627,7 +627,7 @@ function ActiveCast.new(
 		end
 	end
 	
-	---> CosmeticBulletObject Container GET
+	-- CosmeticBulletObject Container GET
 	
 	local targetContainer: Instance;
 	local LIB_GETCONTAINER = LookUpTables.Supported_Lib_GETCONTAINER[typeof(behavior.CosmeticBulletProvider)] or LookUpTables.Supported_Lib_GETCONTAINER[behavior.CosmeticBulletProvider.Type]
@@ -830,7 +830,7 @@ function ActiveCast:Destroy()
 	ActiveCast:Terminate()
 end
 
-----> SET
+-- SET
 
 function ActiveCast:SetVelocity(velocity : Vector3)
 	assert(
@@ -856,7 +856,7 @@ function ActiveCast:SetAcceleration(acceleration: Vector3)
 	ModifyTransformation(self, nil, acceleration, nil)
 end
 
----> GET
+-- GET
 
 function ActiveCast:GetVelocity() : Vector3
 	assert(
@@ -896,7 +896,7 @@ function ActiveCast:GetPosition(): Vector3
 	return GetPositionAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.Origin, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
 end
 
----> Add
+-- Add
 
 function ActiveCast:AddVelocity(velocity: Vector3)
 	assert(
@@ -934,7 +934,7 @@ function ActiveCast:AddPosition(position: Vector3)
 	self:SetPosition(self:GetPosition() + position)
 end
 
----> Others
+-- Others
 
 function ActiveCast:Pause()
 	assert(

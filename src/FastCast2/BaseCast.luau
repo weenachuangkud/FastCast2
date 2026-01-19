@@ -24,7 +24,7 @@ BaseCast.__type = "BaseCast"
 -- Connections
 local BulkMoveToConnection : RBXScriptConnection = nil
 
---- Variables
+-- Variables
 -- Because each different threads have different BaseCast haha
 local Actives = {}
 local Actor = nil

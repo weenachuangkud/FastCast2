@@ -48,6 +48,12 @@
 
 -- Verison : 0.0.4
 
+--[=[
+	@class FastCast
+
+	FastCast? Never heard of her.
+]=]
+
 
 -- Services
 local HTTPService = game:GetService("HttpService")

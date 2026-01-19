@@ -1,5 +1,6 @@
 <p align="center">
   <img width="500" height="225" alt="FastCast2CoverTrans" src="https://github.com/user-attachments/assets/dcb6f17c-0e3e-46c2-b694-432a6ef867ac" />
+  ![Cover](./assets/logo.svg)
 </p>
 
 # FastCast2 (Unofficial) 
@@ -10,7 +11,7 @@ with **Parallel Luau scripting**, **static typing**, **more extensions**, **buil
 
 **FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) meant to **simulate** projectiles without any **physic replication**
 
-<br>
+<br />
 
 What the benefits of **using** FastCast2 :
 
@@ -180,8 +181,8 @@ FastCast.new()
 ```
 Construct a new Caster instance
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:Init(
@@ -204,48 +205,48 @@ Initialize Caster. Allocate the worker amount of `numWorkers`, rename it to `VMn
 - useBulkMoveTo: if true, will enable BulkMoveTo to handle CFrame changes for every `ActiveCast.RayInfo.CosmeticBulletObject`. Can be disabled and enabled by `Caster:BindBulkMoveTo(boolean)`
 - useObjectCache: if true, will permanently use ObjectCache for Caster
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:SafeCall(f : (...any) -> (...any), ...)
 ```
 Call the passed-in function if it exists
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:BindBulkMoveTo(bool : boolean)
 ```
 Enable or disable `BulkMoveTo` for `Caster`
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:ReturnObject(obj : Instance)
 ```
 Return passed-in `obj` to `ObjectCache`
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:Destroy()
 ```
 Destroy Caster
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 ```
 Create a new `ActiveCast`; it will not work if the `Caster` has not initialized
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
@@ -259,32 +260,32 @@ Caster.RayHit(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBull
 ```
 Fires every RayHit 
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 Caster.RayPierceFunction(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
 ```
 Fires every RayPierceFunction
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 Caster.LengthChanged(ActiveCast,lastPoint : Vector3, rayDir : Vector3, rayDisplacement : number, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
 ```
 Fires every LengthChanged
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 Caster.CastTerminating(ActiveCast)
 ```
 Fires every CastTerminating
 
-<br>
-<br>
+<br />
+<br />
 
 ```luau
 Caster.CastFire(ActiveCast, Origin : Vector3, Direction : Vector3, Velocity : Vector3, behavior : FastCastBehavior)
