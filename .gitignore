@@ -7,3 +7,7 @@
 # Roblox Studio lock files
 /*.rbxlx.lock
 /*.rbxl.lock
+
+# Moonwave related stuff
+/node_modules
+/package-lock.json

@@ -2,6 +2,16 @@
 	- Modded By Mawin_CK
 	Desc :  i added __type = "ObjectCache" to letting FastCast Recongize that this is ObjectCache
 ]]
+
+--[=[
+
+@class ObjectCache
+ObjectCache usage should be derived from their DevForum post:
+
+https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112
+
+]=]
+
 --!strict
 --!native
 local HTTPS = game:GetService("HttpService")

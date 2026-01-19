@@ -4,13 +4,13 @@
 
 # FastCast2 (Unofficial) 
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)**  
-with **Parallel Luau scripting**, **static typing**, **more extensions**, **built-in object pooling**
+with **Parallel lua scripting**, **static typing**, **more extensions**, **built-in object pooling**
 
 ---
 
 **FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) meant to **simulate** projectiles without any **physic replication**
 
-<br>
+<br />
 
 What the benefits of **using** FastCast2 :
 
@@ -64,7 +64,7 @@ Follow on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improv
 ## Testing
 - To test if FastCast2 actually works. Insert a "LocalScript" Inside "StarterCharacterScripts" and paste this code :
 
-```luau
+```lua
 --[[
 	- Author : Mawin_CK
 	- Date : 2025
@@ -175,15 +175,15 @@ end)
 
 ## Caster Methods
 
-```luau
+```lua
 FastCast.new()
 ```
 Construct a new Caster instance
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:Init(
 	numWorkers : number, 
 	newParent : Folder, 
@@ -204,89 +204,89 @@ Initialize Caster. Allocate the worker amount of `numWorkers`, rename it to `VMn
 - useBulkMoveTo: if true, will enable BulkMoveTo to handle CFrame changes for every `ActiveCast.RayInfo.CosmeticBulletObject`. Can be disabled and enabled by `Caster:BindBulkMoveTo(boolean)`
 - useObjectCache: if true, will permanently use ObjectCache for Caster
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:SafeCall(f : (...any) -> (...any), ...)
 ```
 Call the passed-in function if it exists
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:BindBulkMoveTo(bool : boolean)
 ```
 Enable or disable `BulkMoveTo` for `Caster`
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:ReturnObject(obj : Instance)
 ```
 Return passed-in `obj` to `ObjectCache`
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:Destroy()
 ```
 Destroy Caster
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 ```
 Create a new `ActiveCast`; it will not work if the `Caster` has not initialized
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 ```
 Create a new `ActiveBlockCast`; it will not work if the `Caster` has not initialized
 
 ## Caster Signals
 
-```luau
+```lua
 Caster.RayHit(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
 ```
 Fires every RayHit 
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 Caster.RayPierceFunction(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
 ```
 Fires every RayPierceFunction
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 Caster.LengthChanged(ActiveCast,lastPoint : Vector3, rayDir : Vector3, rayDisplacement : number, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
 ```
 Fires every LengthChanged
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 Caster.CastTerminating(ActiveCast)
 ```
 Fires every CastTerminating
 
-<br>
-<br>
+<br />
+<br />
 
-```luau
+```lua
 Caster.CastFire(ActiveCast, Origin : Vector3, Direction : Vector3, Velocity : Vector3, behavior : FastCastBehavior)
 ```
 Fires if `ActiveCast` is created successfully before the RunService

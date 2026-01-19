@@ -3,18 +3,11 @@
 	- Date : 11/03/2025
 ]]
 
--- Services
-local Rep = game:GetService("ReplicatedStorage")
-
 -- Modules
 
 -- REPLACE WITH ACTUAL PATH
+local Rep = game:GetService("ReplicatedStorage")
 local FastCast2Module = Rep:WaitForChild("FastCast2")
-
--- Requires
-
-local ActiveCast = require(FastCast2Module:WaitForChild("ActiveCast"))
-local ActiveBlockcast = require(FastCast2Module:WaitForChild("ActiveBlockcast"))
 
 local TypeDef = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 --local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))
@@ -41,13 +34,14 @@ actor:BindToMessage("Raycast", function(
 	origin : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDef.FastCastBehavior
+	behavior : TypeDef.FastCastBehavior,
+	guid : string
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])
 	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
 	
-	BaseCast:Raycast(origin, direction, velocity, behavior)
+	BaseCast:Raycast(origin, direction, velocity, behavior, guid)
 end)
 
 --[[actor:BindToMessage("Blockcast", function(

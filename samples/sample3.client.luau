@@ -101,7 +101,7 @@ Caster.LengthChanged:Connect(OnLengthChanged)
 Caster.CastTerminating:Connect(OnCastTerminating)
 Caster.RayHit:Connect(OnRayHit)
 
---- TEST RESULTS
+-- TEST RESULTS
 
 local targetPos = Vector3.new(0, 5, 0)
 

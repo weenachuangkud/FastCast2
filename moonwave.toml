@@ -1,0 +1,20 @@
+title = "FastCast2"  # From Git
+gitRepoUrl = "https://github.com/weenachuangkud/FastCast2" # From Git
+
+gitSourceBranch = "main"
+changelog = true
+classOrder = []
+
+[docusaurus]
+onBrokenLinks = "throw"
+onBrokenMarkdownLinks = "warn"
+
+# From git:
+organizationName = "weenachuangkud"
+projectName = "FastCast2"
+url = "https://weenachuangkud.github.io"
+baseUrl = "/FastCast2"
+tagline = "Your project's tagline"
+
+[footer]
+style = "dark"

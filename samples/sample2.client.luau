@@ -101,7 +101,7 @@ Caster.LengthChanged:Connect(OnLengthChanged)
 Caster.CastTerminating:Connect(OnCastTerminating)
 Caster.RayHit:Connect(OnRayHit)
 
---- TEST 1 : Basic Fire
+-- TEST 1 : Basic Fire
 
 UIS.InputBegan:Connect(function(input : InputObject, gp : boolean)
 	if gp then return end

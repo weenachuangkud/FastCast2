@@ -12,17 +12,10 @@ local RS = game:GetService("RunService")
 local FastCastModule = script.Parent
 
 -- Requires
---local UtilityModule = FastCastModule:WaitForChild("Utility")
-
-local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
---local Utility = require(UtilityModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
-local ErrorMsgs = require(script.Parent:WaitForChild("ErrorMessage"))
---local MathUtil = require(UtilityModule.Math)
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
---local LookUpTables = require(FastCastModule:WaitForChild("LookUpTables"))
 
 -- CONSTs
 local MAX_PIERCE_TEST_COUNT = 100
@@ -41,24 +34,22 @@ local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412) 
 
---local DBG_SEGMENT_COLOR = Color3.new(1, 0.666667, 0)
---local DBG_HIT_COLOR = Color3.new(0.2, 1, 0.5)
---local DBG_RAYPIERCE_COLOR = Color3.new(1, 0.2, 0.2)
-
---local DBG_RAY_LIFETIME = 1
---local DBG_HIT_LIFETIME = 1 lmao
-
 -- AutomaticPerformance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
 
---- ActiveCast
+--[=[
+	@class ActiveBlockCast
+
+	An ActiveBlockCast represents a BlockCast fired by a parent [Caster](Caster). It contains methods of accessing the physics 
+	data of this specific BlockCast at any given time, as well as methods to alter its trajectory during runtime.
+]=]
 
 local ActiveCast = {}
 
 ActiveCast.__index = ActiveCast
 ActiveCast.__type = "ActiveBlockCast"
 
------> Local functions
+-- Local Functions
 
 local function DebrisAdd(obj : Instance, Lifetime : number)
 	if not obj then return end
@@ -104,7 +95,7 @@ local function GetTrajectoryInfo(
 	cast: TypeDef.ActiveCast | TypeDef.ActiveBlockCast, 
 	index: number
 ): {[number]: Vector3}
-	assert(cast.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local trajectories = cast.StateInfo.Trajectories
 	local trajectory = trajectories[index]
 	local duration = trajectory.EndTime - trajectory.StartTime
@@ -120,13 +111,7 @@ local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveCast | TypeDef.Act
 	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
 end
 
----> Debugging
-
---[[local function PrintDebug(message : string)
-	if Configs.DebugLogging then
-		print(message)
-	end
-end]]
+-- Debug Functions
 
 local function DbgVisualizeSegment(castStartCFrame: CFrame, size : Vector3, castLength: number, VisualizeCasts : boolean, VisualizeCastSetting : TypeDef.VisualizeCastSettings) : BoxHandleAdornment?
 	if not VisualizeCasts then return end
@@ -159,7 +144,7 @@ local function DbgVisualizeHit(atCF: CFrame, wasPierce: boolean, VisualizeCasts 
 	return adornment
 end
 
----> Send signals
+-- Send signals
 
 local function SendRayHit(
 	cast : TypeDef.ActiveBlockCast,
@@ -243,7 +228,7 @@ local function SimulateCast(
 	delta : number, 
 	expectingShortCall : boolean
 )
-	assert(cast.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 
 	if DebugLogging.Casting then
 		print("Casting for frame.")
@@ -494,7 +479,29 @@ local function SimulateCast(
 	end
 end
 
----> ActiveCast functions
+--[=[
+	@function new
+	@within ActiveBlockCast
+
+	Creates a new ActiveBlockCast instance with the given parameters.
+	This is the fancy part where numbers and vectors start cooperating.
+
+	@param BaseCast TypeDef.BaseCastData -- The base cast data used to initialize the active cast.
+
+	@param activeCastID string -- Unique identifier for this active cast.
+
+	@param origin Vector3 -- The starting position of the cast.
+
+	@param size Vector3 -- The size of the cast volume.
+
+	@param direction Vector3 -- The direction the cast will travel in.
+
+	@param velocity Vector3 | number -- The velocity of the cast (either directional or scalar).
+
+	@param behavior TypeDef.FastCastBehavior -- The FastCast behavior configuration.
+
+	@return TypeDef.ActiveCast -- The newly created ActiveCast instance.
+]=]
 
 function ActiveCast.new(
 	BaseCast : TypeDef.BaseCastData,
@@ -562,17 +569,13 @@ function ActiveCast.new(
 		ID = activeCastID
 	}
 
-	--[[if cast.StateInfo.HighFidelityBehavior == 2 then
-		cast.StateInfo.HighFidelityBehavior = 3
-	end]]
-
 	if cast.RayInfo.Parameters ~= nil then
 		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
 	else
 		cast.RayInfo.Parameters = RaycastParams.new()
 	end
 
-	---> CosmeticBulletObject GET
+	-- CosmeticBulletObject GET
 
 	local targetContainer: Instance;
 	if cast.Caster.ObjectCache then
@@ -580,6 +583,7 @@ function ActiveCast.new(
 			warn("ObjectCache already handle that for you, Template Dupe")
 		end
 		-- 1 kebab please
+		-- i love my kebabs - darwin
 		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
 	else
@@ -617,7 +621,7 @@ function ActiveCast.new(
 		end
 	end
 
-	---> CosmeticBulletObject Container GET
+	-- CosmeticBulletObject Container GET
 
 	local targetContainer: Instance;
 	local LIB_GETCONTAINER = LookUpTables.Supported_Lib_GETCONTAINER[typeof(behavior.CosmeticBulletProvider)]
@@ -805,146 +809,235 @@ local function ModifyTransformation(cast: TypeDef.ActiveBlockCast, velocity: Vec
 end
 
 
--- same as ActiveCast:Terminate()
+--[=[
+
+Destroys an ActiveBlockCast, terminating it's simulation, firing the CastTerminating event, and cleaning up resources. 
+This is the equivilant of calling `ActiveBlockCast:Terminate()`.
+
+@method Destroy
+@within ActiveBlockCast
+
+]=]
 function ActiveCast:Destroy()
 	ActiveCast:Terminate()
 end
 
-----> SET
+--[=[
 
+Sets the velocity of an ActiveBlockCast to the specified Vector3.
+
+@method SetVelocity
+@param velocity Vector3 -- The new velocity to set.
+@within ActiveBlockCast
+
+]=]
 function ActiveCast:SetVelocity(velocity : Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("SetVelocity", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	ModifyTransformation(self, velocity, nil, nil)
 end
 
+--[=[
+
+Sets the acceleration of an ActiveBlockCast to the specified Vector3.
+
+@method SetAcceleration
+@param acceleration Vector3 -- The new acceleration to set.
+@within ActiveBlockCast
+]=]
 function ActiveCast:SetAcceleration(acceleration: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("SetAcceleration", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	ModifyTransformation(self, nil, acceleration, nil)
 end
 
----> GET
+--[=[
 
+Gets the velocity of an ActiveBlockCast.
+
+@method GetVelocity
+@within ActiveBlockCast
+@return Vector3 -- The current velocity of the ActiveBlockCast.
+]=]
 function ActiveCast:GetVelocity() : Vector3
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("GetVelocity", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"	
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
 	return GetVelocityAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
 end
 
+--[=[
+
+Gets the acceleration of an ActiveBlockCast.
+
+@method GetAcceleration
+@within ActiveBlockCast
+@return Vector3 -- The current acceleration of the ActiveBlockCast.
+]=]
 function ActiveCast:GetAcceleration(): Vector3
 	assert(getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("GetAcceleration", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
 	return currentTrajectory.Acceleration
 end
 
+--[=[
+
+Gets the position of an ActiveBlockCast.
+
+@method GetPosition
+@within ActiveBlockCast
+@return Vector3 -- The current position of the ActiveBlockCast.
+]=]
 function ActiveCast:GetPosition(): Vector3
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("GetPosition", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
 	return GetPositionAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.Origin, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
 end
 
----> Add
+--[=[
 
+Add velocity to an ActiveBlockCast with the specified Vector3.
+
+@method AddVelocity
+@param velocity Vector3 -- The new velocity to add.
+@within ActiveBlockCast
+]=]
 function ActiveCast:AddVelocity(velocity: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("AddVelocity", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self:SetVelocity(self:GetVelocity() + velocity)
 end
 
+--[=[
+
+Add acceleration to an ActiveBlockCast with the specified Vector3.
+
+@method AddAcceleration
+@param acceleration Vector3 -- The new acceleration to add.
+@within ActiveBlockCast
+]=]
 function ActiveCast:AddAcceleration(acceleration: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("AddAcceleration", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self:SetAcceleration(self:GetAcceleration() + acceleration)
 end
 
+--[=[
+
+Add position to an ActiveBlockCast with the specified Vector3.
+
+@method AddPosition
+@param position Vector3 -- The new position to add.
+@within ActiveBlockCast
+]=]
 function ActiveCast:AddPosition(position: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("AddPosition", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self:SetPosition(self:GetPosition() + position)
 end
 
----> Others
+--[=[
 
+Pauses simulation for an ActiveBlockCast.
+
+@method Pause
+@within ActiveBlockCast
+
+]=]
 function ActiveCast:Pause()
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("Pause", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self.StateInfo.Paused = true
 end
 
+--[=[
+
+Resumes simulation for an ActiveBlockCast if it was paused previously.
+
+@method Resume
+@within ActiveBlockCast
+
+]=]
 function ActiveCast:Resume()
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("Resume", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self.StateInfo.Paused = false
 end
 
+--[=[
+
+Terminates an ActiveBlockCast, firing the CastTerminating event, and cleaning up resources. 
+This is the equivilant of calling `Active:Destroy()`.
+
+@method Resume
+@within ActiveBlockCast
+]=]
 function ActiveCast:Terminate()
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("Terminate", "ActiveCast.new(...)"))
-	assert(self.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_NOT_INSTANCE")
+	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
 
 	)
 

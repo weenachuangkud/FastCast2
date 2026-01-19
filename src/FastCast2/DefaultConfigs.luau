@@ -14,7 +14,7 @@ local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 
 local Defaults = {}
 
----> Configs
+-- Configs
 
 Defaults.VisualizationFolderName = "FastCastVisualizationObjects"
 

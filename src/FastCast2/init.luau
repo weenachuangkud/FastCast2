@@ -48,10 +48,15 @@
 
 -- Verison : 0.0.4
 
+--[=[
+	@class FastCast
+
+	FastCast is the root class of the module and offers the surface level methods required to make it work. This is the object returned from `require(FastCast)`.
+]=]
+
 
 -- Services
---local HTTPS = game:GetService("HttpService")
-local RS = game:GetService("RunService")
+local HTTPService = game:GetService("HttpService")
 
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
@@ -95,37 +100,28 @@ local function DestroySignal(signal : Signal.Signal)
 	end
 end
 
---[[
-	<p>
-	<strong>Creates a new FastCastBehavior, which contains information necessary to Fire the cast properly.</strong>
+--[=[
+	Creates a new FastCastBehavior, which contains information necessary to Fire the cast properly.
 	
 	@return FastCastBehavior
-	
-	<strong>Which Contains : </strong>
-		- Parallel = true,
-		- RaycastParams = nil,
-		- Acceleration = Vector3.new(),
-		- MaxDistance = 1000,
-		- CanPierceFunction = nil,
-		- HighFidelityBehavior = TypeDef.HighFidelityBehavior.Default,
-		- HighFidelitySegmentSize = 0.5,
-		- CosmeticBulletTemplate = nil,
-		- CosmeticBulletProvider = nil,
-		- CosmeticBulletContainer = nil,
-		- AutoIgnoreContainer = true
-	
-	</p>
-]]
+]=]
 function FastCast.newBehavior() : TypeDef.FastCastBehavior
 	return DefaultConfigs.FastCastBehavior :: TypeDef.FastCastBehavior
 end
 
 local DEFAULT_FASTCAST_BEHAVIOR = FastCast.newBehavior()
 
---[[
+--[=[
+	:::warning
+
+	You must [initialize](FastCast#Init) the Caster before using it. Failing to do so will result in nothing happening when attempting to fire!
+
+	:::
 	Contructs a new Caster object.
+	@function new
+	@within FastCast
 	@return Caster
-]]
+]=]
 function FastCast.new() : TypeDef.Caster
 	return setmetatable({
 		LengthChanged = Signal.new(),
@@ -136,10 +132,26 @@ function FastCast.new() : TypeDef.Caster
 		WorldRoot = workspace,
 		Dispatcher = nil,
 		AlreadyInit = false
-		--id = HTTPS:GenerateGUID(false)
 	} :: any, FastCast) :: TypeDef.Caster
 end
 
+--[=[
+	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
+	@method Init
+	@within FastCast
+
+	@param numWorkers number -- The number of worker VMs to create for this Caster. Must be greater than 1.
+	@param newParent Folder -- The Folder in which to place the FastCastVMs Folder
+	@param newName string -- The name to give the FastCastVMs Folder containing worker scripts.
+	@param ContainerParent Folder -- The parent Folder in which to place the worker VM Containers.
+	@param VMContainerName Folder -- The name to give to the Containers housing each worker VM.
+	@param VMname string -- The name to give each worker VM.
+	@param useBulkMoveTo boolean -- Whether to enable BulkMoveTo for the [CosmeticBulletObjects](TypeDefinitions#CastRayInfo)
+	@param useObjectCache boolean -- Whether to use ObjectCache for the [Caster](TypeDefinitions#Caster)
+	@param Template BasePart | Model -- The template object to use for the ObjectCache (if enabled)
+	@param CacheSize number -- The size of the ObjectCache (if enabled)
+	@param CacheHolder Instance -- The Instance in which to place cached objects (if enabled)
+]=]
 function FastCast:Init(
 	numWorkers : number, 
 	newParent : Folder, 
@@ -155,7 +167,10 @@ function FastCast:Init(
 	CacheSize : number,
 	CacheHolder : Instance
 )
-	if self.AlreadyInit then warn("Cannot Init more than 1") return end
+	if self.AlreadyInit then
+		 warn("Cannot Init more than 1") 
+		 return 
+	end
 	assert(numWorkers > 1, "numWorker must be more than 1")
 
 	local DispatcherClone = DispatcherModule:Clone()
@@ -223,27 +238,57 @@ function FastCast:Init(
 	end -- OH YES DADDY
 end
 
+--[=[
+	Raycasts the Caster with the specified parameters.
+	@method RaycastFire
+	@within FastCast
+
+	@param origin Vector3 -- The origin of the raycast.
+	@param direction Vector3 -- The direction of the raycast.
+	@param velocity Vector3 | number -- The velocity of the raycast.
+	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
+	@return string -- The ActiveCast ID of the fired raycast.
+]=]
 function FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
-	--local ActiveCastID = HTTPS:GenerateGUID(false)
-	--self.Dispatcher:Dispatch("Raycast", self.id, ActiveCastID, origin, direction, velocity, BehaviorData)
-	--local newActiveCast : TypeDef.ActiveCast = ActiveCast.new(self, origin, direction, velocity, BehaviorData :: TypeDef.FastCastBehavior) 
-	--return newActiveCast
+	local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	-- BABE RAYCAST!!!!!
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
-	--return ActiveCastID
+	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData, ActiveCastID)
+	return ActiveCastID
 end
 
+--[=[
+	Blockcasts the Caster with the specified parameters.
+	@method BlockcastFire
+	@within FastCast
+
+	@param origin Vector3 -- The origin of the blockcast.
+	@param Size Vector3 -- The size of the blockcast.
+	@param direction Vector3 -- The direction of the blockcast.
+	@param velocity Vector3 | number -- The velocity of the raycast.
+	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
+	@return string -- The ActiveCast ID of the fired raycast.
+]=]
 function FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
 	if not self.AlreadyInit then error("Please Init caster") end
 	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
+	local ActiveCastID = HTTPService:GenerateGUID(false)
 
-
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
+	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData, ActiveCastID)
+	return ActiveCastID
 end
 
+--[=[
+	Calls a function safely.
+	@method SafeCall
+	@within FastCast
+	@private
+
+	@param f (any)
+	@return any -- The result of the function call.
+]=]
 function FastCast:SafeCall(f : (...any) -> (...any), ...)
 	-- am i tripping
 	if f then
@@ -251,6 +296,13 @@ function FastCast:SafeCall(f : (...any) -> (...any), ...)
 	end
 end
 
+--[=[
+	Sets whether BulkMoveTo is enabled for this Caster.
+	@method SetBulkMoveEnabled
+	@within FastCast
+
+	@param enabled boolean
+]=]
 function FastCast:SetBulkMoveEnabled(enabled : boolean)
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
@@ -263,7 +315,14 @@ function FastCast:SetBulkMoveEnabled(enabled : boolean)
 	end]]
 end
 
+--[=[
+	Sets whether ObjectCache is enabled for this Caster.
+	It is recommended to interface with this via [`FastCast:Init()`](FastCast#Init) instead.
+	@method SetObjectCacheEnabled
+	@within FastCast
 
+	@param enabled boolean
+]=]
 function FastCast:SetObjectCacheEnabled(enabled : boolean, Template : BasePart | Model, CacheSize : number, CacheHolder : Instance)
 	local Dispatcher = self.Dispatcher
 	
@@ -303,10 +362,27 @@ end
 	Configs.VisualizeCasts = bool
 end]]
 
+--[=[
+	:::warning
+
+	Don't call this method if you didn't enable ObjectCache in [FastCast:Init()](FastCast#Init) or via [FastCast:SetObjectCacheEnabled()](FastCast#SetObjectCacheEnabled). Doing so will result in an error.
+
+	:::
+	Returns a part to the `ObjectCache` for reuse.
+	@method ReturnObject
+	@within FastCast
+
+	@param obj Instance -- The object to return to the cache.
+]=]
 function FastCast:ReturnObject(obj : Instance)
 	self.ObjectCache:ReturnPart(obj)
 end
 
+--[=[
+	Destroy's a Caster, cleaning up all resources used by it.
+	@method Destroy
+	@within FastCast
+]=]
 function FastCast:Destroy()
 	if self.ObjectCache then
 		self.ObjectCache:Destroy()
