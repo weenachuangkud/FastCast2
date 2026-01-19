@@ -3,18 +3,11 @@
 	- Date : 11/03/2025
 ]]
 
--- Services
-local Rep = game:GetService("ReplicatedStorage")
-
 -- Modules
 
 -- REPLACE WITH ACTUAL PATH
-local FastCast2Module = script:GetAttribute("FastCast2Module")
-
--- Requires
-
-local ActiveCast = require(FastCast2Module:WaitForChild("ActiveCast"))
-local ActiveBlockcast = require(FastCast2Module:WaitForChild("ActiveBlockcast"))
+local Rep = game:GetService("ReplicatedStoraage")
+local FastCast2Module = Rep:WaitForChild("FastCast2")
 
 local TypeDef = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 --local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))

@@ -1,3 +1,5 @@
+--!strict
+
 --[[
 	- Author : Mawin CK
 	- Date : 2025
@@ -10,7 +12,6 @@
 
 	Type definitions for strict-typing.
 ]=]
---!strict
 
 local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
 

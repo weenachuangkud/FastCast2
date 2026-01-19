@@ -36,10 +36,8 @@ export type Dispatcher = {
 }
 
 local ServerScript : Script = script:WaitForChild("ServerVM")
-ServerScript:SetAttribute("FastCast2Module", script.Parent)
 
 local LocalScript : LocalScript = script:WaitForChild("ClientVM")
-LocalScript:SetAttribute("FastCast2Module", script.Parent)
 
 --[[
 	Those are Default

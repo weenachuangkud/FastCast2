@@ -3,13 +3,11 @@
 	- Date : 11/03/2025
 ]]
 
--- Services
-local Rep = game:GetService("ReplicatedStorage")
-
 -- Modules
 
 -- REPLACE WITH ACTUAL PATH
-local FastCast2Module = script:GetAttribute("FastCast2Module")
+local Rep = game:GetService("ReplicatedStoraage")
+local FastCast2Module = Rep:WaitForChild("FastCast2")
 
 -- Requires
 

@@ -16,7 +16,6 @@ local FastCastModule = script.Parent
 -- Dependencies
 
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
-local ErrorMsgs = require(FastCastModule:WaitForChild("ErrorMessage"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
@@ -98,7 +97,7 @@ local function GetTrajectoryInfo(
 	cast: TypeDef.ActiveCast | TypeDef.ActiveBlockCast, 
 	index: number
 ): {[number]: Vector3}
-	assert(cast.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local trajectories = cast.StateInfo.Trajectories
 	local trajectory = trajectories[index]
 	local duration = trajectory.EndTime - trajectory.StartTime
@@ -236,7 +235,7 @@ local function SimulateCast(
 	delta : number, 
 	expectingShortCall : boolean
 )
-	assert(cast.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 
 	--PrintDebug("Casting for frame.")
 	--print("1C")
@@ -876,11 +875,11 @@ Sets the velocity of an ActiveCast to the specified Vector3.
 function ActiveCast:SetVelocity(velocity : Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("SetVelocity", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	ModifyTransformation(self, velocity, nil, nil)
 end
@@ -897,11 +896,11 @@ Sets the acceleration of an ActiveCast to the specified Vector3.
 function ActiveCast:SetAcceleration(acceleration: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("SetAcceleration", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	ModifyTransformation(self, nil, acceleration, nil)
 end
@@ -917,11 +916,11 @@ Gets the velocity of an ActiveCast.
 function ActiveCast:GetVelocity() : Vector3
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("GetVelocity", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
 	return GetVelocityAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
@@ -938,11 +937,11 @@ Gets the acceleration of an ActiveCast.
 ]=]
 function ActiveCast:GetAcceleration(): Vector3
 	assert(getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("GetAcceleration", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
 	return currentTrajectory.Acceleration
@@ -959,11 +958,11 @@ Gets the position of an ActiveCast.
 function ActiveCast:GetPosition(): Vector3
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("GetPosition", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
 	return GetPositionAtTime(self.StateInfo.TotalRuntime - currentTrajectory.StartTime, currentTrajectory.Origin, currentTrajectory.InitialVelocity, currentTrajectory.Acceleration)
@@ -981,11 +980,11 @@ Add velocity to an ActiveCast with the specified Vector3.
 function ActiveCast:AddVelocity(velocity: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("AddVelocity", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self:SetVelocity(self:GetVelocity() + velocity)
 end
@@ -1002,11 +1001,11 @@ Add acceleration to an ActiveCast with the specified Vector3.
 function ActiveCast:AddAcceleration(acceleration: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("AddAcceleration", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self:SetAcceleration(self:GetAcceleration() + acceleration)
 end
@@ -1023,11 +1022,11 @@ Add position to an ActiveCast with the specified Vector3.
 function ActiveCast:AddPosition(position: Vector3)
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("AddPosition", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self:SetPosition(self:GetPosition() + position)
 end
@@ -1043,11 +1042,11 @@ Pauses simulation for an ActiveCast.
 function ActiveCast:Pause()
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("Pause", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self.StateInfo.Paused = true
 end
@@ -1063,11 +1062,11 @@ Resumes simulation for an ActiveCast if it was paused previously.
 function ActiveCast:Resume()
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("Resume", "ActiveCast.new(...)")
+		"ERR_NOT_INSTANCE"
 	)
 	assert(
 		self.StateInfo.UpdateConnection ~= nil, 
-		ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_OBJECT_DISPOSED"
 	)
 	self.StateInfo.Paused = false
 end
@@ -1084,8 +1083,8 @@ This is the equivilant of calling `Active:Destroy()`.
 function ActiveCast:Terminate()
 	assert(
 		getmetatable(self) == ActiveCast, 
-		ErrorMsgs.ERR_NOT_INSTANCE:format("Terminate", "ActiveCast.new(...)"))
-	assert(self.StateInfo.UpdateConnection ~= nil, ErrorMsgs.ERR_OBJECT_DISPOSED
+		"ERR_NOT_INSTANCE")
+	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
 
 	)
 
