@@ -53,6 +53,14 @@ ActiveCast.__type = "ActiveCast"
 
 -- Local functions
 
+local function SafeCall(f: (...any) -> ...any, ...)
+	-- am i tripping
+	if f then
+		return f(...)
+	end
+	return nil
+end
+
 local function DebrisAdd(obj: Instance, Lifetime: number)
 	if not obj then
 		return
@@ -1136,10 +1144,3 @@ function ActiveCast:Terminate()
 end
 
 return ActiveCast
-local function SafeCall(f: (...any) -> ...any, ...)
-	-- am i tripping
-	if f then
-		return f(...)
-	end
-	return nil
-end
