@@ -54,7 +54,6 @@
 	FastCast is the root class of the module and offers the surface level methods required to make it work. This is the object returned from `require(FastCast)`.
 ]=]
 
-
 -- Services
 local HTTPService = game:GetService("HttpService")
 
@@ -70,7 +69,6 @@ local ActiveCast = require(script:WaitForChild("ActiveCast"))
 local ObjectCache = require(script:WaitForChild("ObjectCache"))
 
 --local SharedCasters = require(script:WaitForChild("SharedCasters"))
-
 
 local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
@@ -92,7 +90,7 @@ FastCast.__type = "FastCast"
 
 -- Local functions
 
-local function DestroySignal(signal : Signal.Signal)
+local function DestroySignal(signal: Signal.Signal)
 	if type(signal) == "table" then
 		signal:Destroy()
 	else
@@ -105,7 +103,7 @@ end
 	
 	@return FastCastBehavior
 ]=]
-function FastCast.newBehavior() : TypeDef.FastCastBehavior
+function FastCast.newBehavior(): TypeDef.FastCastBehavior
 	return DefaultConfigs.FastCastBehavior :: TypeDef.FastCastBehavior
 end
 
@@ -122,17 +120,20 @@ local DEFAULT_FASTCAST_BEHAVIOR = FastCast.newBehavior()
 	@within FastCast
 	@return Caster
 ]=]
-function FastCast.new() : TypeDef.Caster
-	return setmetatable({
-		LengthChanged = Signal.new(),
-		RayHit = Signal.new(),
-		RayPierced = Signal.new(),
-		CastTerminating = Signal.new(),
-		CastFire = Signal.new(),
-		WorldRoot = workspace,
-		Dispatcher = nil,
-		AlreadyInit = false
-	} :: any, FastCast) :: TypeDef.Caster
+function FastCast.new(): TypeDef.Caster
+	return setmetatable(
+		{
+			LengthChanged = Signal.new(),
+			RayHit = Signal.new(),
+			RayPierced = Signal.new(),
+			CastTerminating = Signal.new(),
+			CastFire = Signal.new(),
+			WorldRoot = workspace,
+			Dispatcher = nil,
+			AlreadyInit = false,
+		} :: any,
+		FastCast
+	) :: TypeDef.Caster
 end
 
 --[=[
@@ -153,23 +154,23 @@ end
 	@param CacheHolder Instance -- The Instance in which to place cached objects (if enabled)
 ]=]
 function FastCast:Init(
-	numWorkers : number, 
-	newParent : Folder, 
-	newName : string,
-	ContainerParent : Folder,
-	VMContainerName : string,
-	VMname : string,
-	
-	useBulkMoveTo : boolean,
+	numWorkers: number,
+	newParent: Folder,
+	newName: string,
+	ContainerParent: Folder,
+	VMContainerName: string,
+	VMname: string,
 
-	useObjectCache : boolean,
-	Template : BasePart | Model,
-	CacheSize : number,
-	CacheHolder : Instance
+	useBulkMoveTo: boolean,
+
+	useObjectCache: boolean,
+	Template: BasePart | Model,
+	CacheSize: number,
+	CacheHolder: Instance
 )
 	if self.AlreadyInit then
-		 warn("Cannot Init more than 1") 
-		 return 
+		warn("Cannot Init more than 1")
+		return
 	end
 	assert(numWorkers > 1, "numWorker must be more than 1")
 
@@ -177,9 +178,9 @@ function FastCast:Init(
 	DispatcherClone.Parent = newParent
 	DispatcherClone.Name = newName or "FastCastVMs"
 
-	local newDispatcher : Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
+	local newDispatcher: Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
 
-	newDispatcher.Init(ContainerParent,VMContainerName, VMname)
+	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
 	--[[local data = {
 		useBulkMoveTo = useBulkMoveTo,
 		useObjectCache = useObjectCache,
@@ -188,15 +189,17 @@ function FastCast:Init(
 		CacheHolder = CacheHolder
 	}]]
 	self.ObjectCache = useObjectCache and ObjectCache.new(Template, CacheSize, CacheHolder) :: any
-	
+
 	local data = {
 		useBulkMoveTo = useBulkMoveTo,
 		useObjectCache = useObjectCache,
-		CacheHolder = CacheHolder
+		CacheHolder = CacheHolder,
 	}
-	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName : string, ...)
+	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName: string, ...)
 		local f = self[signalName]
-		if not f then return end
+		if not f then
+			return
+		end
 
 		if type(f) == "function" then
 			f(...)
@@ -216,21 +219,24 @@ function FastCast:Init(
 	end]]
 	--print(self.Dispatcher)
 	self.AlreadyInit = true
-	
-	
-	if not useObjectCache then return end
-	
+
+	if not useObjectCache then
+		return
+	end
+
 	local Dispatcher = self.Dispatcher
 
-	repeat task.wait() until #Dispatcher.Threads == numWorkers
+	repeat
+		task.wait()
+	until #Dispatcher.Threads == numWorkers
 	--print("STARTED CONNECTING")
 
 	for i, v in Dispatcher.Threads do
 		-- Please dont change this to FindFirstChild, or else diddy will oil you up
-		local BindableObjectCache : BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
+		local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
 		if BindableObjectCache then
 			--print("CONNECTED")
-			BindableObjectCache.OnInvoke = function(v : CFrame)
+			BindableObjectCache.OnInvoke = function(v: CFrame)
 				--print("INVOKED")
 				return self.ObjectCache:GetPart(v)
 			end -- OH MY GOD
@@ -245,9 +251,13 @@ end
 
 	@param f TypeDef.CanPierceFunction? -- The function to set.
 ]=]
-function FastCast:SetCanPierceFunction(f : TypeDef.CanPierceFunction?)
+function FastCast:SetCanPierceFunction(f: TypeDef.CanPierceFunction?)
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
+	print("im setting the canpiercefunction!")
 	-- darwin was here
-    self.Dispatcher:DispatchAll("SetCanPierceFunction", f)
+	self.Dispatcher:DispatchAll("SetCanPierceFunction", self, f)
 end
 
 --[=[
@@ -261,9 +271,18 @@ end
 	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
 	@return string -- The ActiveCast ID of the fired raycast.
 ]=]
-function FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
-	if not self.AlreadyInit then error("Please Init caster") end
-	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
+function FastCast:RaycastFire(
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
+	if BehaviorData == nil then
+		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
+	end
 	local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	-- BABE RAYCAST!!!!!
@@ -283,9 +302,19 @@ end
 	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
 	@return string -- The ActiveCast ID of the fired raycast.
 ]=]
-function FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
-	if not self.AlreadyInit then error("Please Init caster") end
-	if BehaviorData == nil then BehaviorData = DEFAULT_FASTCAST_BEHAVIOR end
+function FastCast:BlockcastFire(
+	origin: Vector3,
+	Size: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
+	if BehaviorData == nil then
+		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
+	end
 	local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData, ActiveCastID)
@@ -301,7 +330,7 @@ end
 	@param f (any)
 	@return any -- The result of the function call.
 ]=]
-function FastCast:SafeCall(f : (...any) -> (...any), ...)
+function FastCast:SafeCall(f: (...any) -> ...any, ...)
 	-- am i tripping
 	if f then
 		f(...)
@@ -315,7 +344,7 @@ end
 
 	@param enabled boolean
 ]=]
-function FastCast:SetBulkMoveEnabled(enabled : boolean)
+function FastCast:SetBulkMoveEnabled(enabled: boolean)
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
 	end
@@ -335,31 +364,35 @@ end
 
 	@param enabled boolean
 ]=]
-function FastCast:SetObjectCacheEnabled(enabled : boolean, Template : BasePart | Model, CacheSize : number, CacheHolder : Instance)
+function FastCast:SetObjectCacheEnabled(
+	enabled: boolean,
+	Template: BasePart | Model,
+	CacheSize: number,
+	CacheHolder: Instance
+)
 	local Dispatcher = self.Dispatcher
-	
+
 	if enabled then
 		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder)
 		Dispatcher:DispatchAll("BindObjectCache", enabled)
-		
+
 		for i, v in Dispatcher.Threads do
 			-- Please dont change this to FindFirstChild, or else diddy will oil you up
-			local BindableObjectCache : BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
+			local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
 			if BindableObjectCache then
 				--print("CONNECTED")
-				BindableObjectCache.OnInvoke = function(v : CFrame)
+				BindableObjectCache.OnInvoke = function(v: CFrame)
 					--print("INVOKED")
 					return self.ObjectCache:GetPart(v)
 				end -- OH MY GOD
 			end -- KEEP GOING
 		end -- OH YES DADDY
-		
 	else
 		Dispatcher:DispatchAll("BindObjectCache", enabled)
 		if self.ObjectCache then
 			self.ObjectCache:Destroy()
 		end
-		
+
 		if self.ObjectCacheConnection then
 			self.ObjectCacheConnection.OnInvoke = nil
 		end
@@ -368,7 +401,6 @@ function FastCast:SetObjectCacheEnabled(enabled : boolean, Template : BasePart |
 		Thread:SendMessage("BindObjectCache", enabled)
 	end]]
 end
-
 
 --[[function FastCast:SetVisualizeCasts(bool : boolean)
 	Configs.VisualizeCasts = bool
@@ -386,7 +418,7 @@ end]]
 
 	@param obj Instance -- The object to return to the cache.
 ]=]
-function FastCast:ReturnObject(obj : Instance)
+function FastCast:ReturnObject(obj: Instance)
 	self.ObjectCache:ReturnPart(obj)
 end
 
@@ -402,14 +434,14 @@ function FastCast:Destroy()
 	if self.ObjectCacheConnection then
 		self.ObjectCacheConnection.OnInvoke = nil
 	end
-	
+
 	-- I'm making sure that everything is destroyed here lmao
 	DestroySignal(self.LengthChanged)
 	DestroySignal(self.RayHit)
 	DestroySignal(self.RayPierced)
 	DestroySignal(self.CastTerminating)
 	DestroySignal(self.CastFire)
-	
+
 	self.Dispatcher:Destroy()
 	setmetatable(self, nil)
 end

@@ -9,7 +9,7 @@
 local Rep = game:GetService("ReplicatedStorage")
 local FastCast2Module = Rep:WaitForChild("FastCast2")
 
-local TypeDef = require(FastCast2Module:WaitForChild("TypeDefinitions"))
+local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 --local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))
 
 --local parent = script.Parent
@@ -34,7 +34,7 @@ actor:BindToMessage("Raycast", function(
 	origin : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDef.FastCastBehavior,
+	behavior : TypeDefinitions.FastCastBehavior,
 	guid : string
 )
 	--print(behavior)
@@ -46,19 +46,19 @@ end)
 
 --[[actor:BindToMessage("Blockcast", function(
 	casterID : string,
-	caster : TypeDef.ActiveBlockCast,
+	caster : TypeDefinitions.ActiveBlockCast,
 	ID : string,
 	origin : Vector3,
 	size : Vector3,
 	direction : Vector3 | number,
 	velocity : Vector3,
-	behavior : TypeDef.FastCastBehavior?
+	behavior : TypeDefinitions.FastCastBehavior?
 )
 	StoredCasts[casterID][ID] = ActiveBlockcast.new(caster, origin, size, direction, velocity, behavior)
 end)]]
 
-actor:BindToMessage("SetCanPierceFunction", function(f : TypeDef.CanPierceFunction?)
-	BaseCast:SetCanPierceFunction(f)
+actor:BindToMessage("SetCanPierceFunction", function(Caster: TypeDefinitions.Caster, f : TypeDefinitions.CanPierceFunction?)
+	BaseCast:SetCanPierceFunction(Caster, f)
 end)
 
 actor:BindToMessage("Blockcast", function(
@@ -66,7 +66,7 @@ actor:BindToMessage("Blockcast", function(
 	size : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDef.FastCastBehavior
+	behavior : TypeDefinitions.FastCastBehavior
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])

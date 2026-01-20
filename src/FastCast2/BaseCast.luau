@@ -10,10 +10,12 @@ local RS = game:GetService("RunService")
 
 -- Requires
 local FastCastM = script.Parent
+local TypeDefinitions = require(script.Parent.TypeDefinitions)
 local TypeDef = require(FastCastM:WaitForChild("TypeDefinitions"))
 local Signal = require(FastCastM:WaitForChild("Signal"))
 local ActiveCast = require(FastCastM:WaitForChild("ActiveCast"))
 local ActiveBlockcast = require(FastCastM:WaitForChild("ActiveBlockcast"))
+local BaseCastFunction: BindableFunction = nil
 --local ObjectCache = require(FastCastM:WaitForChild("ObjectCache"))
 
 --[=[
@@ -28,7 +30,7 @@ BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
 -- Connections
-local BulkMoveToConnection : RBXScriptConnection = nil
+local BulkMoveToConnection: RBXScriptConnection = nil
 
 -- Variables
 -- Because each different threads have different BaseCast haha
@@ -40,15 +42,17 @@ local ObjectCache = nil
 local CacheHolder = nil
 local CanPierceBindableFunction = nil
 
--- Private functions 
+-- Private functions
 
 local function HandleBulkMoveTo()
-	local Parts : {BasePart} = {}
-	local CFrames : {CFrame} = {}
+	local Parts: { BasePart } = {}
+	local CFrames: { CFrame } = {}
 
 	for _, ActiveCasts in Actives do
 		local ProjectilePart = ActiveCasts.RayInfo.CosmeticBulletObject
-		if not ProjectilePart then continue end
+		if not ProjectilePart then
+			continue
+		end
 		if ProjectilePart:IsA("BasePart") then
 			table.insert(Parts, ProjectilePart)
 			table.insert(CFrames, ActiveCasts.CFrame)
@@ -75,12 +79,12 @@ end
 To initialize a new BaseCast instance.
 
 ]=]
-function BaseCast.Init(BindableOutput : BindableEvent, Data : any)
+function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	local self = setmetatable({}, BaseCast)
 	-- Others
 	--print(BindableOutput.Parent)
 	Actor = BindableOutput.Parent
-	Actives = setmetatable({}, {__mode = 'v'})
+	Actives = setmetatable({}, { __mode = "v" })
 	-- Bindable
 	Output = BindableOutput
 
@@ -95,7 +99,7 @@ function BaseCast.Init(BindableOutput : BindableEvent, Data : any)
 		ObjectCache = BindableObjectCache
 		CacheHolder = Data.CacheHolder
 	end
-	
+
 	if Data.useBulkMoveTo then
 		--print("Connecting PreRender")
 		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
@@ -103,11 +107,11 @@ function BaseCast.Init(BindableOutput : BindableEvent, Data : any)
 
 	ActiveCastCleaner = BindableCleaner
 
-	ActiveCastCleaner.Event:Connect(function(activeCastID : string)
+	ActiveCastCleaner.Event:Connect(function(activeCastID: string)
 		if Actives[activeCastID] then
 			--print("CLEANED ACTIVECAST : " .. activeCastID)
 			Actives[activeCastID] = nil
-			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")-1)
+			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") - 1)
 		end
 	end)
 
@@ -133,21 +137,21 @@ Create a raycast.
 
 ]=]
 function BaseCast:Raycast(
-	Origin : Vector3, 
-	Direction : Vector3, 
-	Velocity : Vector3 | number, 
-	Behavior : TypeDef.FastCastBehavior,
+	Origin: Vector3,
+	Direction: Vector3,
+	Velocity: Vector3 | number,
+	Behavior: TypeDef.FastCastBehavior,
 	GUID: string
 )
 	--table.insert(self.Actives, ActiveCast.new(self, Origin, Direction, Velocity, Behavior))
-	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")+1)
+	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 
 	local activeCastID = GUID
 	Actives[activeCastID] = ActiveCast.new({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCache
-	}, activeCastID, Origin, Direction, Velocity, Behavior)
+		ObjectCache = ObjectCache,
+	}, activeCastID, Origin, Direction, Velocity, Behavior, BaseCastFunction)
 end
 
 --[=[
@@ -160,8 +164,11 @@ end
 Set the can pierce function.
 
 ]=]
-function BaseCast:SetCanPierceFunction(f : TypeDef.CanPierceFunction?)
-       CanPierceBindableFunction.OnInvoke = f
+function BaseCast:SetCanPierceFunction(Caster: TypeDefinitions.Caster, f: TypeDefinitions.CanPierceFunction?)
+	print("i set that")
+	CanPierceBindableFunction.OnInvoke = f
+	BaseCastFunction = CanPierceBindableFunction
+	print(Caster)
 end
 
 --[=[
@@ -180,21 +187,21 @@ Create a Blockcast.
 
 ]=]
 function BaseCast:Blockcast(
-	Origin : Vector3,
-	Size : Vector3, 
-	Direction : Vector3,
-	Velocity : Vector3 | number,
-	Behavior : TypeDef.FastCastBehavior,
-	GUID : string
+	Origin: Vector3,
+	Size: Vector3,
+	Direction: Vector3,
+	Velocity: Vector3 | number,
+	Behavior: TypeDef.FastCastBehavior,
+	GUID: string
 )
-	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks")+1)
+	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 
 	local activeCastID = GUID
 	Actives[activeCastID] = ActiveBlockcast.new({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCache
-	}, activeCastID, Origin, Size, Direction, Velocity, Behavior)
+		ObjectCache = ObjectCache,
+	}, activeCastID, Origin, Size, Direction, Velocity, Behavior, BaseCastFunction)
 end
 
 --[=[
@@ -207,7 +214,7 @@ end
 Enables or disables the BulkMoveTo feature.
 
 ]=]
-function BaseCast:BindBulkMoveTo(bool : boolean)
+function BaseCast:BindBulkMoveTo(bool: boolean)
 	if bool then
 		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
 	else
@@ -228,9 +235,11 @@ end
 Enables or disables the ObjectCache feature.
 
 ]=]
-function BaseCast:BindObjectCache(bool : boolean)
+function BaseCast:BindObjectCache(bool: boolean)
 	if bool then
-		if ObjectCache then return end
+		if ObjectCache then
+			return
+		end
 		local BindableObjectCache = Instance.new("BindableFunction")
 		BindableObjectCache.Parent = Actor
 		BindableObjectCache.Name = "ActiveCastObjectCache"
@@ -258,17 +267,16 @@ function BaseCast:Destroy()
 	end
 
 	if CanPierceBindableFunction then
-      CanPierceBindableFunction.OnInvoke = nil
-      CanPierceBindableFunction = nil
+		CanPierceBindableFunction.OnInvoke = nil
+		CanPierceBindableFunction = nil
 	end
-	
+
 	for k, v in Actives do
 		v:Terminate()
 	end
-	
+
 	Actives = {}
 	setmetatable(self, nil)
 end
-
 
 return BaseCast

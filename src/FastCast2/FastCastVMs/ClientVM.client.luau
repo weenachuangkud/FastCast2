@@ -14,7 +14,7 @@ local FastCast2Module = Rep:WaitForChild("FastCast2")
 local ActiveCast = require(FastCast2Module:WaitForChild("ActiveCast"))
 local ActiveBlockcast = require(FastCast2Module:WaitForChild("ActiveBlockcast"))
 
-local TypeDef = require(FastCast2Module:WaitForChild("TypeDefinitions"))
+local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 --local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))
 
 --local parent = script.Parent
@@ -24,65 +24,72 @@ local BaseCast = require(FastCast2Module:WaitForChild("BaseCast"))
 
 -- Variables
 local actor = script:GetActor()
-if actor == nil then error("The script must placed inside of actor") end
+if actor == nil then
+	error("The script must placed inside of actor")
+end
 
 -- Listeners
 
-actor:BindToMessage("Init", function(Data : any?)
-	BaseCast = BaseCast.Init(
-		script.Parent:WaitForChild("Output"), 
-		Data
+actor:BindToMessage("Init", function(Data: any?)
+	BaseCast = BaseCast.Init(script.Parent:WaitForChild("Output"), Data)
+end)
+
+actor:BindToMessage(
+	"Raycast",
+	function(
+		origin: Vector3,
+		direction: Vector3,
+		velocity: Vector3 | number,
+		behavior: TypeDefinitions.FastCastBehavior,
+		guid: string
 	)
-end)
+		--print(behavior)
+		--print(SharedCasters[casterID])
+		--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
 
-actor:BindToMessage("Raycast", function(
-	origin : Vector3,
-	direction : Vector3,
-	velocity : Vector3 | number,
-	behavior : TypeDef.FastCastBehavior,
-	guid : string
+		BaseCast:Raycast(origin, direction, velocity, behavior, guid)
+	end
 )
-	--print(behavior)
-	--print(SharedCasters[casterID])
-	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
 
-	BaseCast:Raycast(origin, direction, velocity, behavior, guid)
-end)
-
-actor:BindToMessage("SetCanPierceFunction", function(f : TypeDef.CanPierceFunction?)
-	BaseCast:SetCanPierceFunction(f)
-end)
+actor:BindToMessage(
+	"SetCanPierceFunction",
+	function(Caster: TypeDefinitions.Caster, f: TypeDefinitions.CanPierceFunction?)
+		BaseCast:SetCanPierceFunction(Caster, f)
+	end
+)
 
 --[[actor:BindToMessage("Blockcast", function(
 	casterID : string,
-	caster : TypeDef.ActiveBlockCast,
+	caster : TypeDefinitions.ActiveBlockCast,
 	ID : string,
 	origin : Vector3,
 	size : Vector3,
 	direction : Vector3 | number,
 	velocity : Vector3,
-	behavior : TypeDef.FastCastBehavior?
+	behavior : TypeDefinitions.FastCastBehavior?
 )
 	StoredCasts[casterID][ID] = ActiveBlockcast.new(caster, origin, size, direction, velocity, behavior)
 end)]]
 
-actor:BindToMessage("Blockcast", function(
-	origin : Vector3,
-	size : Vector3,
-	direction : Vector3,
-	velocity : Vector3 | number,
-	behavior : TypeDef.FastCastBehavior,
-	GUID : string
+actor:BindToMessage(
+	"Blockcast",
+	function(
+		origin: Vector3,
+		size: Vector3,
+		direction: Vector3,
+		velocity: Vector3 | number,
+		behavior: TypeDefinitions.FastCastBehavior,
+		GUID: string
+	)
+		BaseCast:Blockcast(origin, size, direction, velocity, behavior, GUID)
+	end
 )
 
-	BaseCast:Blockcast(origin, size, direction, velocity, behavior, GUID)
-end)
-
-actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
+actor:BindToMessage("BindBulkMoveTo", function(bool: boolean)
 	BaseCast:BindBulkMoveTo(bool)
 end)
 
-actor:BindToMessage("BindObjectCache", function(bool : boolean)
+actor:BindToMessage("BindObjectCache", function(bool: boolean)
 	BaseCast:BindObjectCache(bool)
 end)
 
