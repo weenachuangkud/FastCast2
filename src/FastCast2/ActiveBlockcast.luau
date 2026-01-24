@@ -2,7 +2,7 @@
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
-	-- Verison : 0.0.4
+	-- Verison : 0.0.5
 ]]
 
 -- Services
@@ -96,7 +96,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-local function ResolveCanPierceCheck(cast: TypeDef.ActiveBlockCast): TypeDef.CanPierceFunction?
+local function ResolveCanPierceCheck(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
 	local canPierceModule = cast.RayInfo.CanPierceModule
 	if canPierceModule == nil then
 		return nil
@@ -107,11 +107,11 @@ local function ResolveCanPierceCheck(cast: TypeDef.ActiveBlockCast): TypeDef.Can
 		return nil
 	end
 
-	return loadedModule.Check
+	return loadedModule.CanPierce
 end
 
 local function RunCanPierceCheck(
-	cast: TypeDef.ActiveBlockCast,
+	cast: TypeDef.ActiveCast,
 	canPierceCheck: TypeDef.CanPierceFunction?,
 	resultOfCast: RaycastResult,
 	segmentVelocity: Vector3
@@ -120,7 +120,22 @@ local function RunCanPierceCheck(
 		return nil
 	end
 
-	return SafeCall(canPierceCheck, cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+	return canPierceCheck(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+end
+
+-- NOTE : OnLengthChanged but better ig
+local function ResolveOnLengthChanged(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
+	local lengthchangedModule = cast.RayInfo.BetterLengthChangedModule
+	if lengthchangedModule == nil then
+		return nil
+	end
+
+	local loadedModule = require(lengthchangedModule)
+	if loadedModule == nil then
+		return nil
+	end
+
+	return loadedModule.OnLengthChanged
 end
 
 local function GetFastCastVisualizationContainer(): Instance
@@ -257,7 +272,7 @@ local function SendLengthChanged(
 	)
 end
 
-local function SendCastFire(
+--[[local function SendCastFire(
 	cast: TypeDef.ActiveCast,
 	origin: Vector3,
 	direction: Vector3,
@@ -265,7 +280,7 @@ local function SendCastFire(
 	behavior: TypeDef.FastCastBehavior
 )
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
-end
+end]]
 
 local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingShortCall: boolean)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
@@ -320,10 +335,12 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
 		latestTrajectory.Acceleration = Vector3.new()
 	end
-
+	
 	cast.CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	task.synchronize()
+	
+	local betterOnLengthChanged : TypeDef.OnLengthChangedFunction? = cast.StateInfo.UseBetterLengthChanged and ResolveOnLengthChanged(cast)
 
 	if cast.StateInfo.UseLengthChanged then
 		SendLengthChanged(
@@ -335,6 +352,18 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 			cast.RayInfo.CosmeticBulletObject
 		)
 	end
+	
+	if betterOnLengthChanged then
+		betterOnLengthChanged(
+			cast,
+			lastPoint,
+			rayDir.Unit,
+			rayDisplacement,
+			segmentVelocity,
+			cast.RayInfo.CosmeticBulletObject
+		)
+	end
+	
 	cast.StateInfo.DistanceCovered += rayDisplacement
 
 	local rayVisualization: BoxHandleAdornment? = nil
@@ -448,10 +477,10 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 							dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR
 						end
 
-					if
-						canPierceCheck == nil
-						or RunCanPierceCheck(cast, canPierceCheck, subResult, subVelocity) == false
-					then
+						if
+							canPierceCheck == nil
+							or RunCanPierceCheck(cast, canPierceCheck, subResult, subVelocity) == false
+						then
 							cast.StateInfo.IsActivelyResimulating = false
 
 							SendRayHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
@@ -490,9 +519,9 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 				end
 
 				cast.StateInfo.IsActivelyResimulating = false
-			--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
-			--		cast:Terminate()
-			--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
+				--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
+				--		cast:Terminate()
+				--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
 			else
 				if DebugLogging.Hit then
 					print("Hit was successful. Terminating.")
@@ -624,7 +653,8 @@ function ActiveCast.new(
 	direction: Vector3,
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
-	canpierce: TypeDef.CanPierceModule?
+	canpierce: TypeDef.CanPierceModule?,
+	onlengthchanged : TypeDef.BetterLengthChangedModule?
 ): TypeDef.ActiveCast
 	if typeof(velocity) == "number" then
 		velocity = direction.Unit * velocity
@@ -664,6 +694,7 @@ function ActiveCast.new(
 				},
 			},
 			UseLengthChanged = behavior.UseLengthChanged,
+			UseBetterLengthChanged = behavior.UseBetterLengthChanged,
 			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
 		},
@@ -674,7 +705,8 @@ function ActiveCast.new(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			CanPierceModule = canpierce
+			CanPierceModule = canpierce,
+			BetterLengthChangedModule = onlengthchanged
 		},
 
 		CFrame = CFrame.new(),
@@ -720,7 +752,7 @@ function ActiveCast.new(
 		end
 	end
 
-	SendCastFire(cast, origin, direction, velocity, behavior)
+	--SendCastFire(cast, origin, direction, velocity, behavior)
 
 	local event
 	if RS:IsClient() then
@@ -823,7 +855,7 @@ function ActiveCast.new(
 			end
 			cast.StateInfo.IsActivelyResimulating = false
 
-			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME then
+			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME and cast.StateInfo then
 				local HighFideSizeAmount = behavior.AdaptivePerformance.HighFidelitySegmentSizeIncrease
 					or HIGH_FIDE_INCREASE_SIZE
 
@@ -841,6 +873,7 @@ function ActiveCast.new(
 			behavior.AutomaticPerformance
 			and behavior.AdaptivePerformance.LowerHighFidelityBehavior
 			and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME
+			and cast.StateInfo
 		then
 			if cast.StateInfo.HighFidelityBehavior > 1 then
 				cast.StateInfo.HighFidelityBehavior -= 1
@@ -1080,7 +1113,7 @@ This is the equivilant of calling `Active:Destroy()`.
 function ActiveCast:Terminate()
 	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
 	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
-)
+	)
 
 	local trajectories = self.StateInfo.Trajectories
 	local lastTrajectory = trajectories[#trajectories]

@@ -40,7 +40,7 @@ actor:BindToMessage("Raycast", function(
 	--print(behavior)
 	--print(SharedCasters[casterID])
 	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
-	
+
 	BaseCast:Raycast(origin, direction, velocity, behavior, guid)
 end)
 
@@ -60,6 +60,13 @@ end)]]
 actor:BindToMessage("SetCanPierceModule", function(Caster: TypeDefinitions.Caster, moduleScript: ModuleScript?)
 	BaseCast:SetCanPierceModule(Caster, moduleScript)
 end)
+
+actor:BindToMessage(
+	"SetBetterLengthChangedModule",
+	function(moduleScript: ModuleScript?)
+		BaseCast:SetBetterLengthChangedModule(moduleScript)
+	end
+)
 
 actor:BindToMessage("Blockcast", function(
 	origin : Vector3,

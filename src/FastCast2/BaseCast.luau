@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.4
+	-- Verison : 0.0.5
 ]]
 
 -- Services
@@ -16,6 +16,7 @@ local Signal = require(FastCastM:WaitForChild("Signal"))
 local ActiveCast = require(FastCastM:WaitForChild("ActiveCast"))
 local ActiveBlockcast = require(FastCastM:WaitForChild("ActiveBlockcast"))
 local CanPierceModuleScript: ModuleScript? = nil
+local BetterLengthChangedModule: ModuleScript? = nil
 --local ObjectCache = require(FastCastM:WaitForChild("ObjectCache"))
 
 --[=[
@@ -41,6 +42,8 @@ local ActiveCastCleaner = nil
 local ObjectCache = nil
 local CacheHolder = nil
 
+local SyncChanges : RBXScriptConnection = nil
+
 -- Private functions
 
 local function HandleBulkMoveTo()
@@ -52,11 +55,13 @@ local function HandleBulkMoveTo()
 		if not ProjectilePart then
 			continue
 		end
+		
+		local resultCFrame = ActiveCasts.CFrame
 		if ProjectilePart:IsA("BasePart") then
 			table.insert(Parts, ProjectilePart)
-			table.insert(CFrames, ActiveCasts.CFrame)
+			table.insert(CFrames, resultCFrame)
 		else
-			ProjectilePart:PivotTo(ActiveCasts.CFrame)
+			ProjectilePart:PivotTo(resultCFrame)
 		end
 	end
 
@@ -64,6 +69,16 @@ local function HandleBulkMoveTo()
 
 	--print("BulkMoveTo parts : ", Parts, "CFrames : ", CFrames)
 	workspace:BulkMoveTo(Parts, CFrames, Enum.BulkMoveMode.FireCFrameChanged)
+end
+
+local function SendCastFire(
+	cast: TypeDef.ActiveCast,
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDef.FastCastBehavior
+)
+	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end
 
 --[=[
@@ -113,6 +128,25 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") - 1)
 		end
 	end)
+	
+	--- NOTE : This is kinda gay ways to doing this
+	---- Nvm I'm a femboy ig
+	
+	SyncChanges = Instance.new("BindableEvent")
+	SyncChanges.Name = "SyncChanges"
+	SyncChanges.Parent = Actor
+	
+	SyncChanges.Event:Connect(function(cast)
+		local ID = cast.ID
+		local TargetCast = Actives[ID]
+		
+		if TargetCast then
+			for i, v in pairs(cast) do
+				TargetCast[i] = v
+			end
+		end
+		
+	end)
 
 	return self
 end
@@ -146,7 +180,9 @@ function BaseCast:Raycast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
-	}, activeCastID, Origin, Direction, Velocity, Behavior, CanPierceModuleScript)
+		SyncChange = SyncChanges
+	}, activeCastID, Origin, Direction, Velocity, Behavior, CanPierceModuleScript, BetterLengthChangedModule)
+	SendCastFire(Actives[activeCastID], Origin, Direction, Velocity, Behavior)
 end
 
 --[=[
@@ -159,8 +195,22 @@ end
 Set the can pierce module.
 
 ]=]
-function BaseCast:SetCanPierceModule(Caster: TypeDefinitions.Caster, moduleScript: ModuleScript?)
+function BaseCast:SetCanPierceModule(moduleScript: ModuleScript?)
 	CanPierceModuleScript = moduleScript
+end
+
+--[=[
+
+@method SetBetterLengthChangedModule
+@within BaseCast
+
+@param moduleScript ModuleScript? -- The module to set as the on length changed module.
+
+Set the on length changed module
+
+]=]
+function BaseCast:SetBetterLengthChangedModule(moduleScript: ModuleScript)
+	BetterLengthChangedModule = moduleScript
 end
 
 --[=[
@@ -193,7 +243,9 @@ function BaseCast:Blockcast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
-	}, activeCastID, Origin, Size, Direction, Velocity, Behavior, CanPierceModuleScript)
+		SyncChange = SyncChanges
+	}, activeCastID, Origin, Size, Direction, Velocity, Behavior, CanPierceModuleScript, BetterLengthChangedModule)
+	SendCastFire(Actives[activeCastID], Origin, Direction, Velocity, Behavior)
 end
 
 --[=[
@@ -259,6 +311,7 @@ function BaseCast:Destroy()
 	end
 
 	CanPierceModuleScript = nil
+	BetterLengthChangedModule = nil
 
 	for k, v in Actives do
 		v:Terminate()
