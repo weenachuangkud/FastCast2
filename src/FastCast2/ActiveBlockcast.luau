@@ -2,7 +2,7 @@
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
-	-- Verison : 0.0.4
+	-- Verison : 0.0.5
 ]]
 
 -- Services
@@ -257,7 +257,7 @@ local function SendLengthChanged(
 	)
 end
 
-local function SendCastFire(
+--[[local function SendCastFire(
 	cast: TypeDef.ActiveCast,
 	origin: Vector3,
 	direction: Vector3,
@@ -265,7 +265,7 @@ local function SendCastFire(
 	behavior: TypeDef.FastCastBehavior
 )
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
-end
+end]]
 
 local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingShortCall: boolean)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
@@ -448,10 +448,10 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 							dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR
 						end
 
-					if
-						canPierceCheck == nil
-						or RunCanPierceCheck(cast, canPierceCheck, subResult, subVelocity) == false
-					then
+						if
+							canPierceCheck == nil
+							or RunCanPierceCheck(cast, canPierceCheck, subResult, subVelocity) == false
+						then
 							cast.StateInfo.IsActivelyResimulating = false
 
 							SendRayHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
@@ -490,9 +490,9 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 				end
 
 				cast.StateInfo.IsActivelyResimulating = false
-			--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
-			--		cast:Terminate()
-			--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
+				--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
+				--		cast:Terminate()
+				--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
 			else
 				if DebugLogging.Hit then
 					print("Hit was successful. Terminating.")
@@ -720,7 +720,7 @@ function ActiveCast.new(
 		end
 	end
 
-	SendCastFire(cast, origin, direction, velocity, behavior)
+	--SendCastFire(cast, origin, direction, velocity, behavior)
 
 	local event
 	if RS:IsClient() then
@@ -823,7 +823,7 @@ function ActiveCast.new(
 			end
 			cast.StateInfo.IsActivelyResimulating = false
 
-			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME then
+			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME and cast.StateInfo then
 				local HighFideSizeAmount = behavior.AdaptivePerformance.HighFidelitySegmentSizeIncrease
 					or HIGH_FIDE_INCREASE_SIZE
 
@@ -841,6 +841,7 @@ function ActiveCast.new(
 			behavior.AutomaticPerformance
 			and behavior.AdaptivePerformance.LowerHighFidelityBehavior
 			and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME
+			and cast.StateInfo
 		then
 			if cast.StateInfo.HighFidelityBehavior > 1 then
 				cast.StateInfo.HighFidelityBehavior -= 1
@@ -1080,7 +1081,7 @@ This is the equivilant of calling `Active:Destroy()`.
 function ActiveCast:Terminate()
 	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
 	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
-)
+	)
 
 	local trajectories = self.StateInfo.Trajectories
 	local lastTrajectory = trajectories[#trajectories]
