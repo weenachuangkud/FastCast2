@@ -51,13 +51,13 @@ ActiveCast.__type = "ActiveCast"
 
 -- Local functions
 
-local function SafeCall(f: (...any) -> ...any, ...)
+--[[local function SafeCall(f: (...any) -> ...any, ...)
 	-- am i tripping
 	if f then
 		return f(...)
 	end
 	return nil
-end
+end]]
 
 local function DebrisAdd(obj: Instance, Lifetime: number)
 	if not obj then
@@ -107,7 +107,7 @@ local function ResolveCanPierceCheck(cast: TypeDef.ActiveCast): TypeDef.CanPierc
 		return nil
 	end
 
-	return loadedModule.Check
+	return loadedModule.CanPierce
 end
 
 local function RunCanPierceCheck(
@@ -120,7 +120,22 @@ local function RunCanPierceCheck(
 		return nil
 	end
 
-	return SafeCall(canPierceCheck, cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+	return canPierceCheck(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+end
+
+-- NOTE : OnLengthChanged but better ig
+local function ResolveOnLengthChanged(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
+	local lengthchangedModule = cast.RayInfo.BetterLengthChangedModule
+	if lengthchangedModule == nil then
+		return nil
+	end
+
+	local loadedModule = require(lengthchangedModule)
+	if loadedModule == nil then
+		return nil
+	end
+
+	return loadedModule.OnLengthChanged
 end
 
 local function GetFastCastVisualizationContainer(): Instance
@@ -328,6 +343,8 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 	cast.CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	task.synchronize()
+	
+	local betterOnLengthChanged : TypeDef.OnLengthChangedFunction? = cast.StateInfo.UseBetterLengthChanged and ResolveOnLengthChanged(cast)
 
 	if cast.StateInfo.UseLengthChanged then
 		SendLengthChanged(
@@ -336,10 +353,21 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 			rayDir.Unit,
 			rayDisplacement,
 			segmentVelocity,
-			cast.RayInfo.CosmeticBulletObject,
-			VisualizeCasts
+			cast.RayInfo.CosmeticBulletObject
 		)
 	end
+	
+	if betterOnLengthChanged then
+		betterOnLengthChanged(
+			cast,
+			lastPoint,
+			rayDir.Unit,
+			rayDisplacement,
+			segmentVelocity,
+			cast.RayInfo.CosmeticBulletObject
+		)
+	end
+	
 	cast.StateInfo.DistanceCovered += rayDisplacement
 
 	local rayVisualization: ConeHandleAdornment? = nil
@@ -644,7 +672,8 @@ function ActiveCast.new(
 	direction: Vector3,
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
-	canpierce: TypeDef.CanPierceModule?
+	canpierce: TypeDef.CanPierceModule?,
+	onlengthchanged: TypeDef.BulkMoveOnLengthChangedModule?
 ): TypeDef.ActiveCast
 	if typeof(velocity) == "number" then
 		velocity = direction.Unit * velocity
@@ -684,6 +713,7 @@ function ActiveCast.new(
 				},
 			},
 			UseLengthChanged = behavior.UseLengthChanged,
+			UseBetterLengthChanged = behavior.UseBetterLengthChanged,
 			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
 		},
@@ -694,10 +724,11 @@ function ActiveCast.new(
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
 			CanPierceModule = canpierce,
+			BetterLengthChangedModule = onlengthchanged,
 		},
 
 		UserData = {},
-
+		
 		CFrame = CFrame.new(),
 		ID = activeCastID
 	} :: any
@@ -874,7 +905,6 @@ function ActiveCast.new(
 			and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME 
 			and cast.StateInfo
 		then
-			warn("Lag")
 			if cast.StateInfo.HighFidelityBehavior > 1 then
 				cast.StateInfo.HighFidelityBehavior -= 1
 			end
