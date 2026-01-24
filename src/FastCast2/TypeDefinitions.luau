@@ -3,7 +3,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.4
+	-- Verison : 0.0.5
 ]]
 
 --[=[
@@ -288,7 +288,7 @@ export type CastRayInfo = {
 	Represents an ActiveCast instance.
 ]=]
 export type ActiveCast = {
-	Caster: Caster,
+	Caster: BaseCastData,
 	StateInfo: CastStateInfo,
 	RayInfo: CastRayInfo,
 	UserData: { [any]: any },
@@ -391,6 +391,7 @@ export type BaseCastData = {
 	ActiveCastCleaner: BindableEvent,
 	ObjectCache: BindableFunction?,
 	CacheHolder: any?,
+	SyncChange : BindableEvent
 }
 
 return {}
