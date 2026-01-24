@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.4
+	-- Verison : 0.0.5
 ]]
 
 -- Services
@@ -41,6 +41,8 @@ local ActiveCastCleaner = nil
 local ObjectCache = nil
 local CacheHolder = nil
 
+local SyncChanges : RBXScriptConnection = nil
+
 -- Private functions
 
 local function HandleBulkMoveTo()
@@ -64,6 +66,16 @@ local function HandleBulkMoveTo()
 
 	--print("BulkMoveTo parts : ", Parts, "CFrames : ", CFrames)
 	workspace:BulkMoveTo(Parts, CFrames, Enum.BulkMoveMode.FireCFrameChanged)
+end
+
+local function SendCastFire(
+	cast: TypeDef.ActiveCast,
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDef.FastCastBehavior
+)
+	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end
 
 --[=[
@@ -113,6 +125,25 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") - 1)
 		end
 	end)
+	
+	--- NOTE : This is kinda gay ways to doing this
+	---- Nvm I'm a femboy ig
+	
+	SyncChanges = Instance.new("BindableEvent")
+	SyncChanges.Name = "SyncChanges"
+	SyncChanges.Parent = Actor
+	
+	SyncChanges.Event:Connect(function(cast)
+		local ID = cast.ID
+		local TargetCast = Actives[ID]
+		
+		if TargetCast then
+			for i, v in pairs(cast) do
+				TargetCast[i] = v
+			end
+		end
+		
+	end)
 
 	return self
 end
@@ -146,7 +177,9 @@ function BaseCast:Raycast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
+		SyncChange = SyncChanges
 	}, activeCastID, Origin, Direction, Velocity, Behavior, CanPierceModuleScript)
+	SendCastFire(Actives[activeCastID], Origin, Direction, Velocity, Behavior)
 end
 
 --[=[
@@ -193,7 +226,9 @@ function BaseCast:Blockcast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
+		SyncChange = SyncChanges
 	}, activeCastID, Origin, Size, Direction, Velocity, Behavior, CanPierceModuleScript)
+	SendCastFire(Actives[activeCastID], Origin, Direction, Velocity, Behavior)
 end
 
 --[=[
