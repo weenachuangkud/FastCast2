@@ -138,7 +138,6 @@ Caster:Init(
 -- Event functions
 local function OnRayHit(cast : FastCastTypes.ActiveCast)
 	print("Hit")
-	FastCast2:SafeCall(cast.Terminate)
 end
 
 local function OnCastTerminating(cast : FastCastTypes.ActiveCast)
