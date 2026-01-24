@@ -37,6 +37,14 @@ export type CanPierceFunction = (
 export type CanPierceModule = ModuleScript
 
 --[=[
+	@type CanPierceModule ModuleScript
+	@within TypeDefinitions
+
+	ModuleScript used to be called when the cast's length changes.
+]=]
+export type BetterLengthChangedModule = ModuleScript
+
+--[=[
 	@type OnRayHitFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
 	@within TypeDefinitions
 
@@ -140,6 +148,7 @@ export type Caster = {
 	) -> (),
 
 	SetCanPierceModule: (self: Caster, moduleScript: ModuleScript?) -> (),
+	SetBetterOnLengthChanged: (moduleScript: ModuleScript) -> (),
 
 	RaycastFire: (
 		Caster,
@@ -207,7 +216,7 @@ export type AdaptivePerformance = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings }
+	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, UseBetterLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -221,14 +230,17 @@ export type FastCastBehavior = {
 	CosmeticBulletTemplate: Instance?,
 	CosmeticBulletContainer: Instance?,
 	AutoIgnoreContainer: boolean,
+	
 	UseLengthChanged: boolean,
+	UseBetterLengthChanged: boolean,
+	
 	SimulateAfterPhysic: boolean,
 
 	AutomaticPerformance: boolean,
 	AdaptivePerformance: AdaptivePerformance,
 
 	VisualizeCasts: boolean,
-	VisualizeCastSettings: VisualizeCastSettings,
+	VisualizeCastSettings: VisualizeCastSettings
 }
 
 --[=[
@@ -279,6 +291,7 @@ export type CastRayInfo = {
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
 	CanPierceModule: CanPierceModule?,
+	BetterLengthChangedModule:  BetterLengthChangedModule?
 }
 
 --[=[
@@ -361,7 +374,7 @@ export type ActiveBlockCast = {
 
 	Destroy: (ActiveCast) -> (),
 	Terminate: (ActiveCast) -> (),
-
+	
 	CFrame: CFrame,
 	ID: string,
 }
