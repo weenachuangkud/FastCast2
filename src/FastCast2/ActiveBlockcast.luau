@@ -96,7 +96,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-local function ResolveCanPierceCheck(cast: TypeDef.ActiveBlockCast): TypeDef.CanPierceFunction?
+local function ResolveCanPierceCheck(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
 	local canPierceModule = cast.RayInfo.CanPierceModule
 	if canPierceModule == nil then
 		return nil
@@ -107,11 +107,11 @@ local function ResolveCanPierceCheck(cast: TypeDef.ActiveBlockCast): TypeDef.Can
 		return nil
 	end
 
-	return loadedModule.Check
+	return loadedModule.CanPierce
 end
 
 local function RunCanPierceCheck(
-	cast: TypeDef.ActiveBlockCast,
+	cast: TypeDef.ActiveCast,
 	canPierceCheck: TypeDef.CanPierceFunction?,
 	resultOfCast: RaycastResult,
 	segmentVelocity: Vector3
@@ -120,7 +120,22 @@ local function RunCanPierceCheck(
 		return nil
 	end
 
-	return SafeCall(canPierceCheck, cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+	return canPierceCheck(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+end
+
+-- NOTE : OnLengthChanged but better ig
+local function ResolveOnLengthChanged(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
+	local lengthchangedModule = cast.RayInfo.BetterLengthChangedModule
+	if lengthchangedModule == nil then
+		return nil
+	end
+
+	local loadedModule = require(lengthchangedModule)
+	if loadedModule == nil then
+		return nil
+	end
+
+	return loadedModule.OnLengthChanged
 end
 
 local function GetFastCastVisualizationContainer(): Instance
@@ -320,10 +335,12 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
 		latestTrajectory.Acceleration = Vector3.new()
 	end
-
+	
 	cast.CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	task.synchronize()
+	
+	local betterOnLengthChanged : TypeDef.OnLengthChangedFunction? = cast.StateInfo.UseBetterLengthChanged and ResolveOnLengthChanged(cast)
 
 	if cast.StateInfo.UseLengthChanged then
 		SendLengthChanged(
@@ -335,6 +352,18 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 			cast.RayInfo.CosmeticBulletObject
 		)
 	end
+	
+	if betterOnLengthChanged then
+		betterOnLengthChanged(
+			cast,
+			lastPoint,
+			rayDir.Unit,
+			rayDisplacement,
+			segmentVelocity,
+			cast.RayInfo.CosmeticBulletObject
+		)
+	end
+	
 	cast.StateInfo.DistanceCovered += rayDisplacement
 
 	local rayVisualization: BoxHandleAdornment? = nil
@@ -624,7 +653,8 @@ function ActiveCast.new(
 	direction: Vector3,
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
-	canpierce: TypeDef.CanPierceModule?
+	canpierce: TypeDef.CanPierceModule?,
+	onlengthchanged : TypeDef.BetterLengthChangedModule?
 ): TypeDef.ActiveCast
 	if typeof(velocity) == "number" then
 		velocity = direction.Unit * velocity
@@ -664,6 +694,7 @@ function ActiveCast.new(
 				},
 			},
 			UseLengthChanged = behavior.UseLengthChanged,
+			UseBetterLengthChanged = behavior.UseBetterLengthChanged,
 			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
 		},
@@ -674,7 +705,8 @@ function ActiveCast.new(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			CanPierceModule = canpierce
+			CanPierceModule = canpierce,
+			BetterLengthChangedModule = onlengthchanged
 		},
 
 		CFrame = CFrame.new(),
