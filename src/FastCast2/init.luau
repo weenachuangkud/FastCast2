@@ -46,7 +46,7 @@
 	- Date : 2025
 ]]
 
--- Verison : 0.0.4
+-- Verison : 0.0.5
 
 --[=[
 	@class FastCast
@@ -256,7 +256,22 @@ function FastCast:SetCanPierceModule(moduleScript: ModuleScript?)
 		error("Please Init caster")
 	end
 	-- darwin was here
-	self.Dispatcher:DispatchAll("SetCanPierceModule", self, moduleScript)
+	self.Dispatcher:DispatchAll("SetCanPierceModule", moduleScript)
+end
+
+--[=[
+	Sets the CanPierceModule for the Caster.
+	@method SetCanPierceModule
+	@within FastCast
+	
+	@param moduleScript ModuleScript? -- The module to set.
+]=]
+function FastCast:SetBetterLengthChangedModule(moduleScript: ModuleScript)
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
+	-- This is so long. can I swallow it 
+	self.Dispatcher:DispatchAll("SetBetterLengthChangedModule", moduleScript)
 end
 
 --[=[
