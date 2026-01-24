@@ -53,8 +53,15 @@ actor:BindToMessage(
 
 actor:BindToMessage(
 	"SetCanPierceModule",
-	function(Caster: TypeDefinitions.Caster, moduleScript: ModuleScript?)
-		BaseCast:SetCanPierceModule(Caster, moduleScript)
+	function(moduleScript: ModuleScript?)
+		BaseCast:SetCanPierceModule(moduleScript)
+	end
+)
+
+actor:BindToMessage(
+	"SetBetterLengthChangedModule",
+	function(moduleScript: ModuleScript?)
+		BaseCast:SetBetterLengthChangedModule(moduleScript)
 	end
 )
 
