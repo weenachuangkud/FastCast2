@@ -16,6 +16,7 @@ local Signal = require(FastCastM:WaitForChild("Signal"))
 local ActiveCast = require(FastCastM:WaitForChild("ActiveCast"))
 local ActiveBlockcast = require(FastCastM:WaitForChild("ActiveBlockcast"))
 local CanPierceModuleScript: ModuleScript? = nil
+local BetterLengthChangedModule: ModuleScript? = nil
 --local ObjectCache = require(FastCastM:WaitForChild("ObjectCache"))
 
 --[=[
@@ -54,11 +55,13 @@ local function HandleBulkMoveTo()
 		if not ProjectilePart then
 			continue
 		end
+		
+		local resultCFrame = ActiveCasts.CFrame
 		if ProjectilePart:IsA("BasePart") then
 			table.insert(Parts, ProjectilePart)
-			table.insert(CFrames, ActiveCasts.CFrame)
+			table.insert(CFrames, resultCFrame)
 		else
-			ProjectilePart:PivotTo(ActiveCasts.CFrame)
+			ProjectilePart:PivotTo(resultCFrame)
 		end
 	end
 
@@ -178,7 +181,7 @@ function BaseCast:Raycast(
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
 		SyncChange = SyncChanges
-	}, activeCastID, Origin, Direction, Velocity, Behavior, CanPierceModuleScript)
+	}, activeCastID, Origin, Direction, Velocity, Behavior, CanPierceModuleScript, BetterLengthChangedModule)
 	SendCastFire(Actives[activeCastID], Origin, Direction, Velocity, Behavior)
 end
 
@@ -192,8 +195,22 @@ end
 Set the can pierce module.
 
 ]=]
-function BaseCast:SetCanPierceModule(Caster: TypeDefinitions.Caster, moduleScript: ModuleScript?)
+function BaseCast:SetCanPierceModule(moduleScript: ModuleScript?)
 	CanPierceModuleScript = moduleScript
+end
+
+--[=[
+
+@method SetBetterLengthChangedModule
+@within BaseCast
+
+@param moduleScript ModuleScript? -- The module to set as the on length changed module.
+
+Set the on length changed module
+
+]=]
+function BaseCast:SetBetterLengthChangedModule(moduleScript: ModuleScript)
+	BetterLengthChangedModule = moduleScript
 end
 
 --[=[
@@ -227,7 +244,7 @@ function BaseCast:Blockcast(
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
 		SyncChange = SyncChanges
-	}, activeCastID, Origin, Size, Direction, Velocity, Behavior, CanPierceModuleScript)
+	}, activeCastID, Origin, Size, Direction, Velocity, Behavior, CanPierceModuleScript, BetterLengthChangedModule)
 	SendCastFire(Actives[activeCastID], Origin, Direction, Velocity, Behavior)
 end
 
@@ -294,6 +311,7 @@ function BaseCast:Destroy()
 	end
 
 	CanPierceModuleScript = nil
+	BetterLengthChangedModule = nil
 
 	for k, v in Actives do
 		v:Terminate()
