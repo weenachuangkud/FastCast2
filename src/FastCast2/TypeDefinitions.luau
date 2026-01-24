@@ -148,7 +148,7 @@ export type Caster = {
 	) -> (),
 
 	SetCanPierceModule: (self: Caster, moduleScript: ModuleScript?) -> (),
-	SetBetterOnLengthChanged: (moduleScript: ModuleScript) -> (),
+	SetBetterOnLengthChanged: (self: Caster, moduleScript: ModuleScript) -> (),
 
 	RaycastFire: (
 		Caster,
