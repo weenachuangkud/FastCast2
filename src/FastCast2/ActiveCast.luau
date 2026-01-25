@@ -673,7 +673,7 @@ function ActiveCast.new(
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
 	canpierce: TypeDef.CanPierceModule?,
-	onlengthchanged: TypeDef.BulkMoveOnLengthChangedModule?
+	onlengthchanged: TypeDef.BetterLengthChangedModule?
 ): TypeDef.ActiveCast
 	if typeof(velocity) == "number" then
 		velocity = direction.Unit * velocity
