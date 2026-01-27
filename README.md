@@ -14,14 +14,18 @@ with **Parallel lua scripting**, **static typing**, **more extensions**, **built
 
 What the benefits of **using** FastCast2 :
 
-* More customizable
-* Able to communicate between the main thread and different threads, with more control over the thread (costs performance)
-* Parallel scripting
-* Easy to use
-* Raycast, Blockcast support
-* BulkMoveTo support
-* Built-in ObjectCache
-* Flexible
+- Highly customizable
+- Supports communication between the main thread and parallel threads, with fine-grained control over threading (at a performance cost)
+- Parallel scripting support
+- Easy to use and integrate
+- Raycast and Blockcast support
+- BulkMoveTo support
+- Built-in ObjectCache
+- Flexible and extensible design
+- Improves development productivity
+- Completely free
+
+FastCast2 is an open-source project, and contributions from the community are welcome.
 
 Follow on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
