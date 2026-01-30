@@ -336,6 +336,19 @@ FastCast:SetBetterLengthChangedModule(moduleScript: ModuleScript)
 ```
 Sets the BetterLengthChangedModule for the Caster.
 
+<br />
+<br />
+
+```lua
+FastCast:SetObjectCacheEnabled(
+	enabled: boolean,
+	Template: BasePart | Model,
+	CacheSize: number,
+	CacheHolder: Instance
+)
+```
+Sets whether ObjectCache is enabled for this Caster.
+
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
 - @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
