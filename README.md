@@ -8,12 +8,11 @@ with **Parallel lua scripting**, **static typing**, **more extensions**, **built
 
 ---
 
-**FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) meant to **simulate** projectiles without any **physic replication**
+**FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on **physics replication**.
 
 <br />
 
-What the benefits of **using** FastCast2 :
-
+# Benefits of using FastCast2
 - Highly customizable
 - Supports communication between the main thread and parallel threads, with fine-grained control over threading (at a performance cost)
 - Parallel scripting support
@@ -23,6 +22,7 @@ What the benefits of **using** FastCast2 :
 - Built-in ObjectCache
 - Flexible and extensible design
 - Improves development productivity
+- High Performance
 - Completely free
 
 FastCast2 is an open-source project, and contributions from the community are welcome.
