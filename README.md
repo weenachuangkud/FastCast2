@@ -70,8 +70,8 @@ Follow on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improv
 
 ```lua
 --[[
-	- Author : Mawin_CK
-	- Date : 2025
+	- Author: Mawin_CK
+	- Date: 2025
 ]]
 
 -- Services
