@@ -320,6 +320,22 @@ Caster.CastFire(
 ```
 Fires if `ActiveCast` is created successfully before the RunService
 
+<br />
+<br />
+
+```lua
+FastCast:SetCanPierceModule(moduleScript: ModuleScript?)
+```
+Sets the CanPierceModule for the Caster
+
+<br />
+<br />
+
+```lua
+FastCast:SetBetterLengthChangedModule(moduleScript: ModuleScript)
+```
+Sets the BetterLengthChangedModule for the Caster.
+
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
 - @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
