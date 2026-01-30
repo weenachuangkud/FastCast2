@@ -129,8 +129,8 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		end
 	end)
 	
-	--- NOTE : This is kinda gay ways to doing this
-	---- Nvm I'm a femboy ig
+	-- NOTE : This is kinda gay ways to doing this
+	-- Nvm I'm a femboy ig
 	
 	SyncChanges = Instance.new("BindableEvent")
 	SyncChanges.Name = "SyncChanges"
