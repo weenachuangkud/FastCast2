@@ -3,10 +3,10 @@
 </p>
 
 # FastCast2 (Unofficial) 
-**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)**  
-with **Parallel lua scripting**, **static typing**, **more extensions**, **built-in object pooling**
+**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**, **A powerful modern projectile** library
 
----
+Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
+
 
 **FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on **physics replication**.
 
