@@ -260,7 +260,7 @@ function FastCast:SetCanPierceModule(moduleScript: ModuleScript?)
 end
 
 --[=[
-	Sets the CanPierceModule for the Caster.
+	Sets the BetterLengthChangedModule for the Caster.
 	@method SetCanPierceModule
 	@within FastCast
 	
