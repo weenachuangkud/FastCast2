@@ -243,7 +243,12 @@ Destroy Caster
 <br />
 
 ```lua
-FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
+FastCast:RaycastFire(
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
 ```
 Create a new `ActiveCast`; it will not work if the `Caster` has not initialized
 
@@ -251,32 +256,48 @@ Create a new `ActiveCast`; it will not work if the `Caster` has not initialized
 <br />
 
 ```lua
-FastCast:BlockcastFire(origin : Vector3, Size : Vector3, direction : Vector3, velocity : Vector3 | number, BehaviorData: TypeDef.FastCastBehavior?)
+FastCast:BlockcastFire(
+	origin : Vector3,
+	Size : Vector3,
+	direction : Vector3,
+	velocity : Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
 ```
 Create a new `ActiveBlockCast`; it will not work if the `Caster` has not initialized
 
 ## Caster Signals
 
 ```lua
-Caster.RayHit(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
+Caster.RayHit(
+	ActiveCast,
+	RaycastResult,
+	segmentVelocity : Vector3,
+	cosmeticBulletObject : Instance?
+)
 ```
 Fires every RayHit 
 
 <br />
 <br />
 
-```lua
-Caster.RayPierceFunction(ActiveCast, RaycastResult, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
-```
-Fires every RayPierceFunction
-
 <br />
 <br />
 
 ```lua
-Caster.LengthChanged(ActiveCast,lastPoint : Vector3, rayDir : Vector3, rayDisplacement : number, segmentVelocity : Vector3, cosmeticBulletObject : Instance?)
+Caster.LengthChanged(
+	ActiveCast,
+	lastPoint : Vector3,
+	rayDir : Vector3,
+	rayDisplacement : number,
+	segmentVelocity : Vector3,
+	cosmeticBulletObject : Instance?
+)
 ```
 Fires every LengthChanged
+> [!WARNING]
+> - Very performance-heavy when many projectiles are active
+> - Deprecated api
 
 <br />
 <br />
@@ -290,7 +311,12 @@ Fires every CastTerminating
 <br />
 
 ```lua
-Caster.CastFire(ActiveCast, Origin : Vector3, Direction : Vector3, Velocity : Vector3, behavior : FastCastBehavior)
+Caster.CastFire(
+	ActiveCast, Origin : Vector3,
+	Direction : Vector3,
+	Velocity : Vector3,
+	behavior : FastCastBehavior
+)
 ```
 Fires if `ActiveCast` is created successfully before the RunService
 
