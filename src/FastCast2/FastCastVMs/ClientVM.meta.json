@@ -2,4 +2,9 @@
   "properties": {
     "Disabled": true
   }
+  "Children": {
+    "FastCast2": {
+      "className": "ObjectValue"
+    }
+  }
 }
