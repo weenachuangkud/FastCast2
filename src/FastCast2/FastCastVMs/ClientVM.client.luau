@@ -5,9 +5,11 @@
 
 -- Modules
 
--- REPLACE WITH ACTUAL PATH
-local Rep = game:GetService("ReplicatedStorage")
-local FastCast2Module = Rep:WaitForChild("FastCast2")
+-- REPLACE WITH ACTUAL PATH (Just use ObjectValue lol)
+--local Rep = game:GetService("ReplicatedStorage")
+--local FastCast2Module = Rep:WaitForChild("FastCast2")
+
+local FastCast2Module = script:WaitForChild("FastCast2").Value
 
 -- Requires
 
