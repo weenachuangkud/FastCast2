@@ -56,11 +56,12 @@ Follow on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improv
 7. Now you will see "FastCast2" inside the workspace. Drag it into ReplicatedStorage
 <img width="201" height="126" alt="Screenshot 2026-01-04 013047" src="https://github.com/user-attachments/assets/88ec449a-ee11-4930-8775-c9deb5453264" />
 
-8. Make sure inside the FastCast2. The "ClientVM" and "ServerVM" path is correct
+<!-- 8. Make sure inside the FastCast2. The "ClientVM" and "ServerVM" path is correct
 <img width="185" height="298" alt="Screenshot 2026-01-04 013134" src="https://github.com/user-attachments/assets/9910a3bd-1705-43ce-8c50-4cab0f096146" />
 <img width="449" height="49" alt="Screenshot 2026-01-04 013203" src="https://github.com/user-attachments/assets/cf4355d9-9faf-432c-9fde-7ed9b8b1675b" />
+-->
 
-9. Insert a part into the workspace and then rename it to "Projectile" and set its size to 1,1,1, and make sure "CanCollide", "CanQuery", "CanTouch" are all unmarked. And drag it into ReplicatedStorage
+8. Insert a part into the workspace and then rename it to "Projectile" and set its size to 1,1,1, and make sure "CanCollide", "CanQuery", "CanTouch" are all unmarked. And drag it into ReplicatedStorage
 <img width="194" height="59" alt="Screenshot 2026-01-04 013358" src="https://github.com/user-attachments/assets/19be90fd-66ce-4cf5-849d-ab84d718edd8" />
 
 (If you dont found FastCast2 in the toolbox, click this link: https://create.roblox.com/store/asset/87459814880446/FastCast2)
