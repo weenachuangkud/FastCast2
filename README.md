@@ -354,7 +354,7 @@ Sets whether ObjectCache is enabled for this Caster.
 <br>
 
 # People behind FastCast2
-- [Mawin CK](https://github.com/weenachuangkud): Main developer
+- [Mawin CK](https://github.com/weenachuangkud): Main developer, Graphic designer 
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, fixes
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
