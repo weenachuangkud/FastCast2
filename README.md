@@ -351,7 +351,9 @@ FastCast:SetObjectCacheEnabled(
 Sets whether ObjectCache is enabled for this Caster.
 
 # People behind FastCast2
-- [Mawin CK](https://github.com/weenachuangkud) : Main developer
+- [Mawin CK](https://github.com/weenachuangkud): Main developer
+- [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, fixes
+- [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
