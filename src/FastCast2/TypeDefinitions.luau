@@ -320,8 +320,6 @@ export type ActiveCast = {
 	Pause: (ActiveCast) -> (),
 	Resume: (ActiveCast) -> (),
 
-	DestroyObject: (ActiveCast, obj: Instance) -> (),
-
 	Destroy: (ActiveCast) -> (),
 	Terminate: (ActiveCast) -> (),
 
@@ -369,8 +367,6 @@ export type ActiveBlockCast = {
 
 	Pause: (ActiveCast) -> (),
 	Resume: (ActiveCast) -> (),
-
-	DestroyObject: (ActiveCast, obj: Instance) -> (),
 
 	Destroy: (ActiveCast) -> (),
 	Terminate: (ActiveCast) -> (),
