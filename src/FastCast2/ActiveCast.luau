@@ -10,6 +10,7 @@
 local RS = game:GetService("RunService")
 
 -- Variables
+
 local FastCastModule = script.Parent
 
 -- Dependencies
