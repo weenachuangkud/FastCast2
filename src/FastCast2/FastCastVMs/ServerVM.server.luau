@@ -11,6 +11,7 @@
 
 local FastCast2Module = script:WaitForChild("FastCast2").Value
 
+
 local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 --local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))
 
@@ -59,14 +60,10 @@ end)
 	StoredCasts[casterID][ID] = ActiveBlockcast.new(caster, origin, size, direction, velocity, behavior)
 end)]]
 
-actor:BindToMessage("SetCanPierceModule", function(Caster: TypeDefinitions.Caster, moduleScript: ModuleScript?)
-	BaseCast:SetCanPierceModule(Caster, moduleScript)
-end)
-
 actor:BindToMessage(
-	"SetBetterLengthChangedModule",
+	"SetFastCastEventsModule",
 	function(moduleScript: ModuleScript?)
-		BaseCast:SetBetterLengthChangedModule(moduleScript)
+		BaseCast:SetFastCastEventsModule(moduleScript)
 	end
 )
 
