@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin_CK
 	- Date : 2025
-	-- Verison : 0.0.5
+	-- Verison : 0.0.6
 ]]
 
 --!strict
@@ -66,6 +66,23 @@ Defaults.FastCastBehavior = {
 		Debug_RayLifetime = 1, 
 		Debug_HitLifetime = 1
 	},
+	
+	FastCastEventsModuleConfig = {
+		UseLengthChanged = false,
+		UseRayHit = true,
+		UseRayPierced = true,
+		UseCastTerminating = true,
+		UseCanRayPierce = true,
+		UseCastFire = true
+	},
+
+	FastCastEventsConfig = {
+		UseLengthChanged = false,
+		UseRayHit = true,
+		UseRayPierced = true,
+		UseCastTerminating = true,
+		UseCastFire = true
+	}
 }
 
 return Defaults
