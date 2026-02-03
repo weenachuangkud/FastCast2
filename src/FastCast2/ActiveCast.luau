@@ -4,6 +4,7 @@
 	- Date : 2025
 	-- Verison : 0.0.5
 ]]
+	
 
 -- Services
 local RS = game:GetService("RunService")
@@ -12,30 +13,63 @@ local RS = game:GetService("RunService")
 local FastCastModule = script.Parent
 
 -- Dependencies
-
 local TypeDefinitions = require(script.Parent.TypeDefinitions)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+
 -- Constants
 local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
 local MAX_CASTING_TIME = 0.2 -- 200ms
-
 local DEFAULT_MAX_DISTANCE = 1000
 
 -- Debugging
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
 local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.286275, 0.329412, 0.247059)
-
 local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
-
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 
 -- Automatic Performance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
+
+-- SoA Data Storage
+local ActiveCastSOA = {
+	-- Main data arrays
+	Caster = table.create(1024),
+	StateInfo_UpdateConnection = table.create(1024),
+	StateInfo_Paused = table.create(1024),
+	StateInfo_TotalRuntime = table.create(1024),
+	StateInfo_DistanceCovered = table.create(1024),
+	StateInfo_HighFidelitySegmentSize = table.create(1024),
+	StateInfo_HighFidelityBehavior = table.create(1024),
+	StateInfo_IsActivelySimulatingPierce = table.create(1024),
+	StateInfo_IsActivelyResimulating = table.create(1024),
+	StateInfo_CancelHighResCast = table.create(1024),
+	StateInfo_Trajectories = table.create(1024),
+	StateInfo_VisualizeCasts = table.create(1024),
+	StateInfo_VisualizeCastSettings = table.create(1024),
+	StateInfo_UseLengthChanged = table.create(1024),
+	StateInfo_UseBetterLengthChanged = table.create(1024),
+
+	RayInfo_Parameters = table.create(1024),
+	RayInfo_WorldRoot = table.create(1024),
+	RayInfo_MaxDistance = table.create(1024),
+	RayInfo_CosmeticBulletObject = table.create(1024),
+	RayInfo_FastCastEventsModule = table.create(1024),
+	RayInfo_CanPierceModule = table.create(1024),
+	RayInfo_BetterLengthChangedModule = table.create(1024),
+
+	UserData = table.create(1024),
+	CFrame = table.create(1024),
+	ID = table.create(1024),
+
+	-- Free indices for reuse
+	FreeIndices = table.create(1024),
+	ActiveCount = 0
+}
 
 --[=[
 	@class ActiveCast
@@ -45,19 +79,11 @@ local HIGH_FIDE_INCREASE_SIZE = 0.5
 ]=]
 
 local ActiveCast = {}
-
-ActiveCast.__index = ActiveCast
 ActiveCast.__type = "ActiveCast"
 
--- Local functions
+local ActiveCastFunctions = {}
 
---[[local function SafeCall(f: (...any) -> ...any, ...)
-	-- am i tripping
-	if f then
-		return f(...)
-	end
-	return nil
-end]]
+-- Local functions
 
 local function DebrisAdd(obj: Instance, Lifetime: number)
 	if not obj then
@@ -96,8 +122,8 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-local function ResolveCanPierceCheck(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
-	local canPierceModule = cast.RayInfo.CanPierceModule
+local function ResolveCanPierceCheck(idx: number): TypeDef.CanPierceFunction?
+	local canPierceModule = ActiveCastSOA.RayInfo_CanPierceModule[idx]
 	if canPierceModule == nil then
 		return nil
 	end
@@ -111,7 +137,7 @@ local function ResolveCanPierceCheck(cast: TypeDef.ActiveCast): TypeDef.CanPierc
 end
 
 local function RunCanPierceCheck(
-	cast: TypeDef.ActiveCast,
+	idx: number,
 	canPierceCheck: TypeDef.CanPierceFunction?,
 	resultOfCast: RaycastResult,
 	segmentVelocity: Vector3
@@ -120,12 +146,58 @@ local function RunCanPierceCheck(
 		return nil
 	end
 
-	return canPierceCheck(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+	local castObject = {
+		Caster = ActiveCastSOA.Caster[idx],
+		StateInfo = {
+			UpdateConnection = ActiveCastSOA.StateInfo_UpdateConnection[idx],
+			Paused = ActiveCastSOA.StateInfo_Paused[idx],
+			TotalRuntime = ActiveCastSOA.StateInfo_TotalRuntime[idx],
+			DistanceCovered = ActiveCastSOA.StateInfo_DistanceCovered[idx],
+			HighFidelitySegmentSize = ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx],
+			HighFidelityBehavior = ActiveCastSOA.StateInfo_HighFidelityBehavior[idx],
+			IsActivelySimulatingPierce = ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx],
+			IsActivelyResimulating = ActiveCastSOA.StateInfo_IsActivelyResimulating[idx],
+			CancelHighResCast = ActiveCastSOA.StateInfo_CancelHighResCast[idx],
+			Trajectories = ActiveCastSOA.StateInfo_Trajectories[idx],
+			VisualizeCasts = ActiveCastSOA.StateInfo_VisualizeCasts[idx],
+			VisualizeCastSettings = ActiveCastSOA.StateInfo_VisualizeCastSettings[idx],
+			UseLengthChanged = ActiveCastSOA.StateInfo_UseLengthChanged[idx],
+			UseBetterLengthChanged = ActiveCastSOA.StateInfo_UseBetterLengthChanged[idx]
+		},
+		RayInfo = {
+			Parameters = ActiveCastSOA.RayInfo_Parameters[idx],
+			WorldRoot = ActiveCastSOA.RayInfo_WorldRoot[idx],
+			MaxDistance = ActiveCastSOA.RayInfo_MaxDistance[idx],
+			CosmeticBulletObject = ActiveCastSOA.RayInfo_CosmeticBulletObject[idx],
+			FastCastEventsModule = ActiveCastSOA.RayInfo_FastCastEventsModule[idx],
+			CanPierceModule = ActiveCastSOA.RayInfo_CanPierceModule[idx],
+			BetterLengthChangedModule = ActiveCastSOA.RayInfo_BetterLengthChangedModule[idx]
+		},
+		UserData = ActiveCastSOA.UserData[idx],
+		CFrame = ActiveCastSOA.CFrame[idx],
+		ID = ActiveCastSOA.ID[idx],
+		_idx = idx
+	}
+
+	castObject.Destroy = function(self) return ActiveCastFunctions.Terminate(self) end
+	castObject.Terminate = ActiveCastFunctions.Terminate
+	castObject.SetVelocity = ActiveCastFunctions.SetVelocity
+	castObject.SetAcceleration = ActiveCastFunctions.SetAcceleration
+	castObject.SetPosition = ActiveCastFunctions.SetPosition
+	castObject.GetVelocity = ActiveCastFunctions.GetVelocity
+	castObject.GetAcceleration = ActiveCastFunctions.GetAcceleration
+	castObject.GetPosition = ActiveCastFunctions.GetPosition
+	castObject.AddVelocity = ActiveCastFunctions.AddVelocity
+	castObject.AddAcceleration = ActiveCastFunctions.AddAcceleration
+	castObject.AddPosition = ActiveCastFunctions.AddPosition
+	castObject.Pause = ActiveCastFunctions.Pause
+	castObject.Resume = ActiveCastFunctions.Resume
+
+	return canPierceCheck(castObject, resultOfCast, segmentVelocity, ActiveCastSOA.RayInfo_CosmeticBulletObject[idx])
 end
 
--- NOTE : OnLengthChanged but better ig
-local function ResolveOnLengthChanged(cast: TypeDef.ActiveCast): TypeDef.CanPierceFunction?
-	local lengthchangedModule = cast.RayInfo.BetterLengthChangedModule
+local function ResolveOnLengthChanged(idx: number): TypeDef.OnLengthChangedFunction?
+	local lengthchangedModule = ActiveCastSOA.RayInfo_BetterLengthChangedModule[idx]
 	if lengthchangedModule == nil then
 		return nil
 	end
@@ -152,13 +224,13 @@ local function GetFastCastVisualizationContainer(): Instance
 end
 
 local function GetTrajectoryInfo(
-	cast: TypeDef.ActiveCast | TypeDef.ActiveBlockCast,
-	index: number
+	idx: number,
+	trajectoryIndex: number
 ): { [number]: Vector3 }
-	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local trajectories = cast.StateInfo.Trajectories
-	local trajectory = trajectories[index]
-	local duration = trajectory.EndTime - trajectory.StartTime
+	assert(ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	local trajectories = ActiveCastSOA.StateInfo_Trajectories[idx]
+	local trajectory = trajectories[trajectoryIndex]
+	local duration = ActiveCastSOA.StateInfo_TotalRuntime[idx] - trajectory.StartTime
 
 	local origin = trajectory.Origin
 	local vel = trajectory.InitialVelocity
@@ -167,17 +239,12 @@ local function GetTrajectoryInfo(
 	return { GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel) }
 end
 
-local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveCast | TypeDef.ActiveBlockCast): { [number]: Vector3 }
-	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
+local function GetLatestTrajectoryEndInfo(idx: number): { [number]: Vector3 }
+	local trajectories = ActiveCastSOA.StateInfo_Trajectories[idx]
+	return GetTrajectoryInfo(idx, #trajectories)
 end
 
 -- Debugging
-
---[[local function PrintDebug(message : string)
-	if Configs.DebugLogging then
-		print(message)
-	end
-end]]
 
 local function DbgVisualizeSegment(
 	castStartCFrame: CFrame,
@@ -213,7 +280,6 @@ local function DbgVisualizeHit(
 	local adornment = Instance.new("SphereHandleAdornment")
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = atCF
-	-- Alert! someone is Mawining it!!!!!
 	adornment.Radius = (wasPierce == false) and VisualizeCastSettings.Debug_HitSize
 		or VisualizeCastSettings.Debug_RayPierceSize
 	adornment.Transparency = (wasPierce == false) and VisualizeCastSettings.Debug_HitTransparency
@@ -229,45 +295,40 @@ end
 -- Send signals
 
 local function SendRayHit(
-	cast: TypeDef.ActiveCast,
+	idx: number,
 	resultOfCast: RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 )
-	--cast.Caster.RayHit:Fire(cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
-	--cast.CasterBindable:Fire("RayHit", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
-	--cast.Definition.OnRayHit(cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
-	cast.Caster.Output:Fire("RayHit", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+	local caster = ActiveCastSOA.Caster[idx]
+	local castObject = CreateCastObject(idx)
+	caster.Output:Fire("RayHit", castObject, resultOfCast, segmentVelocity, cosmeticBulletObject)
 end
 
 local function SendRayPierced(
-	cast: TypeDef.ActiveCast,
+	idx: number,
 	resultOfCast: RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 )
-	--cast.Caster.RayPierced:Fire(cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
-	--cast.CasterBindable:Fire("RayPierced", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
-	--cast.Definition.OnRayPierce(ActiveCast, resultOfCast, segmentVelocity, cosmeticBulletObject)
-	cast.Caster.Output:Fire("RayPierced", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+	local caster = ActiveCastSOA.Caster[idx]
+	local castObject = CreateCastObject(idx)
+	caster.Output:Fire("RayPierced", castObject, resultOfCast, segmentVelocity, cosmeticBulletObject)
 end
 
 local function SendLengthChanged(
-	cast: TypeDef.ActiveCast,
+	idx: number,
 	lastPoint: Vector3,
 	rayDir: Vector3,
 	rayDisplacement: number,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 )
-	--cast.Caster.LengthChanged:Fire(cast, lastPoint, rayDir, rayDisplacement, cosmeticBulletObject)
-	--cast.Definition.OnLengthChanged(ActiveCast, lastPoint, rayDir, rayDisplacement, segmentVelocity, cosmeticBulletObject)
-	--cast.Caster.LengthChanged:Fire(ActiveCast, lastPoint, rayDir, rayDisplacement, segmentVelocity, cosmeticBulletObject)
-
-	--print(cast.Caster.Output)
-	cast.Caster.Output:Fire(
+	local caster = ActiveCastSOA.Caster[idx]
+	local castObject = CreateCastObject(idx)
+	caster.Output:Fire(
 		"LengthChanged",
-		cast,
+		castObject,
 		lastPoint,
 		rayDir,
 		rayDisplacement,
@@ -276,39 +337,26 @@ local function SendLengthChanged(
 	)
 end
 
---[[local function SendCastFire(
-	cast: TypeDef.ActiveCast,
-	origin: Vector3,
-	direction: Vector3,
-	velocity: Vector3 | number,
-	behavior: TypeDef.FastCastBehavior
-)
-	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
-end]]
+local function SimulateCast(idx: number, delta: number, expectingShortCall: boolean)
+	assert(ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
 
-local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingShortCall: boolean)
-	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-
-	--PrintDebug("Casting for frame.")
-	--print("1C")
 	if DebugLogging.Casting then
 		print("Casting for frame.")
 	end
 
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = ActiveCastSOA.StateInfo_Trajectories[idx][#ActiveCastSOA.StateInfo_Trajectories[idx]]
 
 	local origin = latestTrajectory.Origin
-	local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	local totalDelta = ActiveCastSOA.StateInfo_TotalRuntime[idx] - latestTrajectory.StartTime
 	local initialVelocity = latestTrajectory.InitialVelocity
 	local acceleration = latestTrajectory.Acceleration
 
 	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-	--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
-	local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	local lastDelta = ActiveCastSOA.StateInfo_TotalRuntime[idx] - latestTrajectory.StartTime
 
-	cast.StateInfo.TotalRuntime += delta
+	ActiveCastSOA.StateInfo_TotalRuntime[idx] += delta
 
-	totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	totalDelta = ActiveCastSOA.StateInfo_TotalRuntime[idx] - latestTrajectory.StartTime
 
 	local currentTarget = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
 	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
@@ -316,59 +364,52 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 
 	local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * delta
 
-	local targetWorldRoot = cast.RayInfo.WorldRoot
-	local resultOfCast = targetWorldRoot:Raycast(lastPoint, rayDir, cast.RayInfo.Parameters)
+	local targetWorldRoot = ActiveCastSOA.RayInfo_WorldRoot[idx]
+	local resultOfCast = targetWorldRoot:Raycast(lastPoint, rayDir, ActiveCastSOA.RayInfo_Parameters[idx])
 
 	local point = currentTarget
 	local part: Instance? = nil
 	local material = Enum.Material.Air
-	--local normal = Vector3.new()
 
 	if resultOfCast ~= nil then
 		point = resultOfCast.Position
 		part = resultOfCast.Instance
 		material = resultOfCast.Material
-		--normal = resultOfCast.Normal
 	end
 
 	local rayDisplacement = (point - lastPoint).Magnitude
 
-	local VisualizeCasts = cast.StateInfo.VisualizeCasts
-	local VisualizeCastSettings = cast.StateInfo.VisualizeCastSettings
+	local VisualizeCasts = ActiveCastSOA.StateInfo_VisualizeCasts[idx]
+	local VisualizeCastSettings = ActiveCastSOA.StateInfo_VisualizeCastSettings[idx]
 
-	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
-		latestTrajectory.Acceleration = Vector3.new()
-	end
+	ActiveCastSOA.CFrame[idx] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
-	cast.CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+	local betterOnLengthChanged : TypeDef.OnLengthChangedFunction? = ActiveCastSOA.StateInfo_UseBetterLengthChanged[idx] and ResolveOnLengthChanged(idx)
 
-	task.synchronize()
-	
-	local betterOnLengthChanged : TypeDef.OnLengthChangedFunction? = cast.StateInfo.UseBetterLengthChanged and ResolveOnLengthChanged(cast)
-
-	if cast.StateInfo.UseLengthChanged then
+	if ActiveCastSOA.StateInfo_UseLengthChanged[idx] then
 		SendLengthChanged(
-			cast,
+			idx,
 			lastPoint,
 			rayDir.Unit,
 			rayDisplacement,
 			segmentVelocity,
-			cast.RayInfo.CosmeticBulletObject
+			ActiveCastSOA.RayInfo_CosmeticBulletObject[idx]
 		)
 	end
-	
+
 	if betterOnLengthChanged then
+		local castObject = CreateCastObject(idx)
 		betterOnLengthChanged(
-			cast,
+			castObject,
 			lastPoint,
 			rayDir.Unit,
 			rayDisplacement,
 			segmentVelocity,
-			cast.RayInfo.CosmeticBulletObject
+			ActiveCastSOA.RayInfo_CosmeticBulletObject[idx]
 		)
 	end
-	
-	cast.StateInfo.DistanceCovered += rayDisplacement
+
+	ActiveCastSOA.StateInfo_DistanceCovered[idx] += rayDisplacement
 
 	local rayVisualization: ConeHandleAdornment? = nil
 
@@ -381,15 +422,11 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 		)
 	end
 
-	local canPierceCheck = ResolveCanPierceCheck(cast)
+	local canPierceCheck = ResolveCanPierceCheck(idx)
 
-	--print("2C")
-
-	-- I feel so gay
-
-	if part and part ~= cast.RayInfo.CosmeticBulletObject then
+	if part and part ~= ActiveCastSOA.RayInfo_CosmeticBulletObject[idx] then
 		local start = tick()
-		--PrintDebug("Hit something, testing now.")
+
 		if DebugLogging.Hit then
 			print("Hit something, testing now.")
 		end
@@ -400,42 +437,39 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 			end
 		end
 
-		if cast.RayInfo.CanPierceCallback ~= nil then
-			if expectingShortCall == false and cast.StateInfo.IsActivelySimulatingPierce then
-				cast:Terminate()
+		if ActiveCastSOA.RayInfo_CanPierceModule[idx] ~= nil then
+			if expectingShortCall == false and ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx] then
+				local castObject = CreateCastObject(idx)
+				castObject:Terminate()
 				warn(
 					"WARN: The latest call to CanPierceCallback took too long to complete! This cast is going to suffer desyncs which WILL cause unexpected behavior and errors. Please fix your performance problems, or remove statements that yield (e.g. wait() calls)"
 				)
 			end
-			cast.StateInfo.IsActivelySimulatingPierce = true
+			ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx] = true
 		end
 
-		if canPierceCheck == nil or RunCanPierceCheck(cast, canPierceCheck, resultOfCast, segmentVelocity) == false then
-			--PrintDebug("Piercing function is nil or it returned FALSE to not pierce this hit.")
-
+		if canPierceCheck == nil or RunCanPierceCheck(idx, canPierceCheck, resultOfCast, segmentVelocity) == false then
 			if DebugLogging.RayPierce then
 				print("Piercing function is nil or it returned FALSE to not pierce this hit.")
 			end
 
-			cast.StateInfo.IsActivelySimulatingPierce = false
+			ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx] = false
 
 			if
-				cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Automatic
-				and cast.StateInfo.HighFidelitySegmentSize > 0
+				ActiveCastSOA.StateInfo_HighFidelityBehavior[idx] == FastCastEnums.HighFidelityBehavior.Automatic
+				and ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx] > 0
 			then
-				--print("2CR")
-				cast.StateInfo.CancelHighResCast = false
+				ActiveCastSOA.StateInfo_CancelHighResCast[idx] = false
 
-				if cast.StateInfo.IsActivelyResimulating then
-					cast:Terminate()
+				if ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] then
+					local castObject = CreateCastObject(idx)
+					castObject:Terminate()
 					warn(
 						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
 					)
 				end
 
-				cast.StateInfo.IsActivelyResimulating = true
-
-				--PrintDebug("Hit was registered, but recalculation is on for physics based casts. Recalculating to verify a real hit...")
+				ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = true
 
 				if DebugLogging.Calculation then
 					print(
@@ -443,9 +477,8 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 					)
 				end
 
-				local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
+				local numSegmentsDecimal = rayDisplacement / ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx]
 				local numSegmentsReal = math.floor(numSegmentsDecimal)
-				--local realSegmentLength = rayDisplacement / numSegmentsReal
 
 				if numSegmentsReal == 0 then
 					numSegmentsReal = 1
@@ -460,8 +493,8 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 				end
 
 				for segmentIndex = 1, numSegmentsReal do
-					if cast.StateInfo.CancelHighResCast then
-						cast.StateInfo.CancelHighResCast = false
+					if ActiveCastSOA.StateInfo_CancelHighResCast[idx] then
+						ActiveCastSOA.StateInfo_CancelHighResCast[idx] = false
 						break
 					end
 
@@ -474,11 +507,10 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 					local subVelocity =
 						GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
 					local subRayDir = subVelocity * delta
-					local subResult = targetWorldRoot:Raycast(subPosition, subRayDir, cast.RayInfo.Parameters)
+					local subResult = targetWorldRoot:Raycast(subPosition, subRayDir, ActiveCastSOA.RayInfo_Parameters[idx])
 
 					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
-					-- What?
 					if subResult ~= nil then
 						local subDisplacement = (subPosition - subResult.Position).Magnitude
 						local dbgSeg = DbgVisualizeSegment(
@@ -493,12 +525,13 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 
 						if
 							canPierceCheck == nil
-							or RunCanPierceCheck(cast, canPierceCheck, subResult, subVelocity) == false
+							or RunCanPierceCheck(idx, canPierceCheck, subResult, subVelocity) == false
 						then
-							cast.StateInfo.IsActivelyResimulating = false
+							ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = false
 
-							SendRayHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
-							cast:Terminate()
+							SendRayHit(idx, subResult, subVelocity, ActiveCastSOA.RayInfo_CosmeticBulletObject[idx])
+							local castObject = CreateCastObject(idx)
+							castObject:Terminate()
 							local vis = DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 							if vis ~= nil then
 								vis.Color3 = DBG_HIT_SUB_COLOR
@@ -506,12 +539,11 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 
 							return
 						else
-							SendRayPierced(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
+							SendRayPierced(idx, subResult, subVelocity, ActiveCastSOA.RayInfo_CosmeticBulletObject[idx])
 							local vis = DbgVisualizeHit(CFrame.new(point), true, VisualizeCasts, VisualizeCastSettings)
 							if vis ~= nil then
 								vis.Color3 = DBG_RAYPIERCE_SUB_COLOR
 							end
-							--if (dbgSeg ~= nil) then dbgSeg.Color3 = DBG_RAYPIERCE_SEGMENT_COLOR end
 						end
 					else
 						local dbgSeg = DbgVisualizeSegment(
@@ -530,26 +562,19 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 					end
 				end
 
-				cast.StateInfo.IsActivelyResimulating = false
-				--elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
-				--	cast:Terminate()
-				--	error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
+				ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = false
 			else
-				--print("1CR")
-				--PrintDebug("Hit was successful. Terminating.")
-
 				if DebugLogging.Hit then
 					print("Hit was successful. Terminating.")
 				end
 
-				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
-				cast:Terminate()
+				SendRayHit(idx, resultOfCast, segmentVelocity, ActiveCastSOA.RayInfo_CosmeticBulletObject[idx])
+				local castObject = CreateCastObject(idx)
+				castObject:Terminate()
 				DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 				return
 			end
 		else
-			--PrintDebug("Piercing function returned TRUE to pierce this part.")
-
 			if DebugLogging.RayPierce then
 				print("Piercing function returned TRUE to pierce this part.")
 			end
@@ -559,7 +584,7 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 			end
 			DbgVisualizeHit(CFrame.new(point), true, VisualizeCasts, VisualizeCastSettings)
 
-			local params = cast.RayInfo.Parameters
+			local params = ActiveCastSOA.RayInfo_Parameters[idx]
 			local alteredParts = {}
 			local currentPierceTestCount = 0
 			local originalFilter = params.FilterDescendantsInstances
@@ -567,7 +592,8 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 			while true do
 				if resultOfCast.Instance:IsA("Terrain") then
 					if material == Enum.Material.Water then
-						cast:Terminate()
+						local castObject = CreateCastObject(idx)
+						castObject:Terminate()
 						error(
 							"Do not add Water as a piercable material. If you need to pierce water, set cast.RayInfo.Parameters.IgnoreWater = true instead",
 							0
@@ -590,7 +616,7 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 					params.FilterDescendantsInstances = filter
 				end
 
-				SendRayPierced(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+				SendRayPierced(idx, resultOfCast, segmentVelocity, ActiveCastSOA.RayInfo_CosmeticBulletObject[idx])
 
 				resultOfCast = targetWorldRoot:Raycast(lastPoint, rayDir, params)
 
@@ -608,18 +634,16 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 				end
 				currentPierceTestCount = currentPierceTestCount + 1
 
-				if RunCanPierceCheck(cast, canPierceCheck, resultOfCast, segmentVelocity) == false then
+				if RunCanPierceCheck(idx, canPierceCheck, resultOfCast, segmentVelocity) == false then
 					brokeFromSolidObject = true
 					break
 				end
 			end
 
-			cast.RayInfo.Parameters.FilterDescendantsInstances = originalFilter
-			cast.StateInfo.IsActivelySimulatingPierce = false
+			ActiveCastSOA.RayInfo_Parameters[idx].FilterDescendantsInstances = originalFilter
+			ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx] = false
 
 			if brokeFromSolidObject then
-				--PrintDebug("Broke because the ray hit something solid (" .. tostring(resultOfCast.Instance) .. ") while testing for a pierce. Terminating the cast.")
-
 				if DebugLogging.Hit then
 					print(
 						"Broke because the ray hit something solid ("
@@ -628,18 +652,237 @@ local function SimulateCast(cast: TypeDef.ActiveCast, delta: number, expectingSh
 					)
 				end
 
-				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
-				cast:Terminate()
+				SendRayHit(idx, resultOfCast, segmentVelocity, ActiveCastSOA.RayInfo_CosmeticBulletObject[idx])
+				local castObject = CreateCastObject(idx)
+				castObject:Terminate()
 				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false, VisualizeCasts, VisualizeCastSettings)
 				return
 			end
 		end
 	end
 
-	if cast.StateInfo.DistanceCovered >= cast.RayInfo.MaxDistance then
-		cast:Terminate()
+	if ActiveCastSOA.StateInfo_DistanceCovered[idx] >= ActiveCastSOA.RayInfo_MaxDistance[idx] then
+		local castObject = CreateCastObject(idx)
+		castObject:Terminate()
 		DbgVisualizeHit(CFrame.new(currentTarget), false, VisualizeCasts, VisualizeCastSettings)
 	end
+end
+
+local function ModifyTransformation(
+	idx: number,
+	velocity: Vector3?,
+	acceleration: Vector3?,
+	position: Vector3?
+)
+	local trajectories = ActiveCastSOA.StateInfo_Trajectories[idx]
+	local lastTrajectory = trajectories[#trajectories]
+
+	if lastTrajectory.StartTime == ActiveCastSOA.StateInfo_TotalRuntime[idx] then
+		if velocity ~= nil then
+			lastTrajectory.InitialVelocity = velocity
+		end
+		if acceleration ~= nil then
+			lastTrajectory.Acceleration = acceleration
+		end
+		if position ~= nil then
+			lastTrajectory.Origin = position
+		end
+	else
+		lastTrajectory.EndTime = ActiveCastSOA.StateInfo_TotalRuntime[idx]
+
+		local point, velAtPoint = unpack(GetLatestTrajectoryEndInfo(idx))
+
+		local newTrajectory = {
+			StartTime = ActiveCastSOA.StateInfo_TotalRuntime[idx],
+			EndTime = -1,
+			Origin = position or point,
+			InitialVelocity = velocity or velAtPoint,
+			Acceleration = acceleration or lastTrajectory.Acceleration,
+		}
+
+		table.insert(trajectories, newTrajectory)
+		ActiveCastSOA.StateInfo_CancelHighResCast[idx] = true
+	end
+end
+
+
+
+function ActiveCastFunctions.Destroy(self)
+	self:Terminate()
+end
+
+function ActiveCastFunctions.SetVelocity(self, velocity: Vector3)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	ModifyTransformation(idx, velocity, nil, nil)
+end
+
+function ActiveCastFunctions.SetAcceleration(self, acceleration: Vector3)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	ModifyTransformation(idx, nil, acceleration, nil)
+end
+
+function ActiveCastFunctions.SetPosition(self, position: Vector3)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	ModifyTransformation(idx, nil, nil, position)
+end
+
+function ActiveCastFunctions.GetVelocity(self): Vector3
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = ActiveCastSOA.StateInfo_Trajectories[idx][#ActiveCastSOA.StateInfo_Trajectories[idx]]
+	return GetVelocityAtTime(
+		ActiveCastSOA.StateInfo_TotalRuntime[idx] - currentTrajectory.StartTime,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+function ActiveCastFunctions.GetAcceleration(self): Vector3
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = ActiveCastSOA.StateInfo_Trajectories[idx][#ActiveCastSOA.StateInfo_Trajectories[idx]]
+	return currentTrajectory.Acceleration
+end
+
+function ActiveCastFunctions.GetPosition(self): Vector3
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = ActiveCastSOA.StateInfo_Trajectories[idx][#ActiveCastSOA.StateInfo_Trajectories[idx]]
+	return GetPositionAtTime(
+		ActiveCastSOA.StateInfo_TotalRuntime[idx] - currentTrajectory.StartTime,
+		currentTrajectory.Origin,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+function ActiveCastFunctions.AddVelocity(self, velocity: Vector3)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	self:SetVelocity(self:GetVelocity() + velocity)
+end
+
+function ActiveCastFunctions.AddAcceleration(self, acceleration: Vector3)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	self:SetAcceleration(self:GetAcceleration() + acceleration)
+end
+
+function ActiveCastFunctions.AddPosition(self, position: Vector3)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	self:SetPosition(self:GetPosition() + position)
+end
+
+function ActiveCastFunctions.Pause(self)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	ActiveCastSOA.StateInfo_Paused[idx] = true
+end
+
+function ActiveCastFunctions.Resume(self)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+	ActiveCastSOA.StateInfo_Paused[idx] = false
+end
+
+
+function ActiveCastFunctions.Terminate(self)
+	local idx = self._idx
+	assert(idx and ActiveCastSOA.StateInfo_UpdateConnection[idx] ~= nil, "ERR_OBJECT_DISPOSED")
+
+	local trajectories = ActiveCastSOA.StateInfo_Trajectories[idx]
+	if trajectories and #trajectories > 0 then
+		trajectories[#trajectories].EndTime = ActiveCastSOA.StateInfo_TotalRuntime[idx]
+	end
+
+	if ActiveCastSOA.StateInfo_UpdateConnection[idx] then
+		task.synchronize()
+		ActiveCastSOA.StateInfo_UpdateConnection[idx]:Disconnect()
+	end
+
+	-- Fire termination event
+	if ActiveCastSOA.Caster[idx] then
+		ActiveCastSOA.Caster[idx].Output:Fire("CastTerminating", self)
+		ActiveCastSOA.Caster[idx].ActiveCastCleaner:Fire(ActiveCastSOA.ID[idx])
+	end
+
+	-- Clear data
+	ActiveCastSOA.Caster[idx] = nil
+	ActiveCastSOA.StateInfo_UpdateConnection[idx] = nil
+	ActiveCastSOA.StateInfo_Trajectories[idx] = nil
+	ActiveCastSOA.RayInfo_Parameters[idx] = nil
+	ActiveCastSOA.RayInfo_CosmeticBulletObject[idx] = nil
+	ActiveCastSOA.UserData[idx] = nil
+
+	-- Reset simple values
+	ActiveCastSOA.StateInfo_Paused[idx] = false
+	ActiveCastSOA.StateInfo_TotalRuntime[idx] = 0
+	ActiveCastSOA.StateInfo_DistanceCovered[idx] = 0
+	ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx] = 0
+	ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx] = false
+	ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = false
+	ActiveCastSOA.StateInfo_CancelHighResCast[idx] = false
+
+	-- Add to free indices
+	table.insert(ActiveCastSOA.FreeIndices, idx)
+	ActiveCastSOA.ActiveCount -= 1
+end
+
+function CreateCastObject(idx)
+	local castObject = {
+		Caster = ActiveCastSOA.Caster[idx],
+		CFrame = ActiveCastSOA.CFrame[idx],
+		ID = ActiveCastSOA.ID[idx],
+		UserData = ActiveCastSOA.UserData[idx],
+		_idx = idx
+	}
+
+	castObject.StateInfo = {
+		UpdateConnection = ActiveCastSOA.StateInfo_UpdateConnection[idx],
+		Paused = ActiveCastSOA.StateInfo_Paused[idx],
+		TotalRuntime = ActiveCastSOA.StateInfo_TotalRuntime[idx],
+		DistanceCovered = ActiveCastSOA.StateInfo_DistanceCovered[idx],
+		HighFidelitySegmentSize = ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx],
+		HighFidelityBehavior = ActiveCastSOA.StateInfo_HighFidelityBehavior[idx],
+		IsActivelySimulatingPierce = ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx],
+		IsActivelyResimulating = ActiveCastSOA.StateInfo_IsActivelyResimulating[idx],
+		CancelHighResCast = ActiveCastSOA.StateInfo_CancelHighResCast[idx],
+		Trajectories = ActiveCastSOA.StateInfo_Trajectories[idx],
+		VisualizeCasts = ActiveCastSOA.StateInfo_VisualizeCasts[idx],
+		VisualizeCastSettings = ActiveCastSOA.StateInfo_VisualizeCastSettings[idx],
+		UseLengthChanged = ActiveCastSOA.StateInfo_UseLengthChanged[idx],
+		UseBetterLengthChanged = ActiveCastSOA.StateInfo_UseBetterLengthChanged[idx]
+	}
+
+	castObject.RayInfo = {
+		Parameters = ActiveCastSOA.RayInfo_Parameters[idx],
+		WorldRoot = ActiveCastSOA.RayInfo_WorldRoot[idx],
+		MaxDistance = ActiveCastSOA.RayInfo_MaxDistance[idx],
+		CosmeticBulletObject = ActiveCastSOA.RayInfo_CosmeticBulletObject[idx],
+		FastCastEventsModule = ActiveCastSOA.RayInfo_FastCastEventsModule[idx],
+		CanPierceModule = ActiveCastSOA.RayInfo_CanPierceModule[idx],
+		BetterLengthChangedModule = ActiveCastSOA.RayInfo_BetterLengthChangedModule[idx]
+	}
+
+	castObject.Destroy = ActiveCastFunctions.Destroy
+	castObject.Terminate = ActiveCastFunctions.Terminate
+	castObject.SetVelocity = ActiveCastFunctions.SetVelocity
+	castObject.SetAcceleration = ActiveCastFunctions.SetAcceleration
+	castObject.SetPosition = ActiveCastFunctions.SetPosition
+	castObject.GetVelocity = ActiveCastFunctions.GetVelocity
+	castObject.GetAcceleration = ActiveCastFunctions.GetAcceleration
+	castObject.GetPosition = ActiveCastFunctions.GetPosition
+	castObject.AddVelocity = ActiveCastFunctions.AddVelocity
+	castObject.AddAcceleration = ActiveCastFunctions.AddAcceleration
+	castObject.AddPosition = ActiveCastFunctions.AddPosition
+	castObject.Pause = ActiveCastFunctions.Pause
+	castObject.Resume = ActiveCastFunctions.Resume
+
+	return castObject
 end
 
 --[=[
@@ -648,19 +891,6 @@ end
 	@within ActiveCast
 
 	Creates a new ActiveCast instance with the given parameters.
-	Don't use this method! Instead, use [Caster:RaycastFire()](TypeDefinitions#Caster) to create ActiveCasts.
-
-	@param BaseCast TypeDef.BaseCastData -- The base cast data used to initialize the active cast.
-
-	@param activeCastID string -- Unique identifier for this active cast.
-
-	@param origin Vector3 -- The starting position of the cast.
-
-	@param direction Vector3 -- The direction the cast will travel in.
-
-	@param velocity Vector3 | number -- The velocity of the cast (either directional or scalar).
-
-	@param behavior TypeDef.FastCastBehavior -- The FastCast behavior configuration.
 
 	@return ActiveCast -- The newly created ActiveCast instance.
 ]=]
@@ -672,8 +902,7 @@ function ActiveCast.new(
 	direction: Vector3,
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
-	canpierce: TypeDef.CanPierceModule?,
-	onlengthchanged: TypeDef.BetterLengthChangedModule?
+	FastCastEventsModule: TypeDef.FastCastEventsModule
 ): TypeDef.ActiveCast
 	if typeof(velocity) == "number" then
 		velocity = direction.Unit * velocity
@@ -683,98 +912,86 @@ function ActiveCast.new(
 		error("Cannot set FastCastBehavior.HighFidelitySegmentSize <= 0!", 0)
 	end
 
-	-- This world is cruel, and I must accept it.
 	if behavior.HighFidelityBehavior <= 0 then
 		behavior.HighFidelityBehavior = 1
 	elseif behavior.HighFidelityBehavior >= 4 then
 		behavior.HighFidelityBehavior = 3
 	end
 
-	local cast: TypeDefinitions.ActiveCast = {
-		Caster = BaseCast,
-
-		StateInfo = {
-			UpdateConnection = nil,
-			Paused = false,
-			TotalRuntime = 0,
-			DistanceCovered = 0,
-			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,
-			HighFidelityBehavior = behavior.HighFidelityBehavior,
-			IsActivelySimulatingPierce = false,
-			IsActivelyResimulating = false,
-			CancelHighResCast = false,
-			Trajectories = {
-				{
-					StartTime = 0,
-					EndTime = -1,
-					Origin = origin,
-					InitialVelocity = velocity,
-					Acceleration = behavior.Acceleration,
-				},
-			},
-			UseLengthChanged = behavior.UseLengthChanged,
-			UseBetterLengthChanged = behavior.UseBetterLengthChanged,
-			VisualizeCasts = behavior.VisualizeCasts,
-			VisualizeCastSettings = behavior.VisualizeCastSettings,
-		},
-
-		RayInfo = {
-			Parameters = behavior.RaycastParams,
-			WorldRoot = workspace,
-			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
-			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			CanPierceModule = canpierce,
-			BetterLengthChangedModule = onlengthchanged,
-		},
-
-		UserData = {},
-		
-		CFrame = CFrame.new(),
-		ID = activeCastID
-	} :: any
-
-	--[[if cast.StateInfo.HighFidelityBehavior == 2 then
-		cast.StateInfo.HighFidelityBehavior = 3
-	end]]
-
-	if cast.RayInfo.Parameters ~= nil then
-		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
+	-- Get or create index
+	local idx
+	if #ActiveCastSOA.FreeIndices > 0 then
+		idx = table.remove(ActiveCastSOA.FreeIndices)
 	else
-		cast.RayInfo.Parameters = RaycastParams.new()
+		idx = #ActiveCastSOA.Caster + 1
 	end
 
-	-- CosmeticBulletObject GET
+	-- Store data in SoA arrays
+	ActiveCastSOA.Caster[idx] = BaseCast
 
-	local targetContainer: Instance
-	if cast.Caster.ObjectCache then
-		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			warn("ObjectCache already handle that for you, Template Dupe")
-		end
-		-- 1 kebab please
-		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
-		targetContainer = cast.Caster.CacheHolder
+	ActiveCastSOA.StateInfo_Paused[idx] = false
+	ActiveCastSOA.StateInfo_TotalRuntime[idx] = 0
+	ActiveCastSOA.StateInfo_DistanceCovered[idx] = 0
+	ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx] = behavior.HighFidelitySegmentSize
+	ActiveCastSOA.StateInfo_HighFidelityBehavior[idx] = behavior.HighFidelityBehavior
+	ActiveCastSOA.StateInfo_IsActivelySimulatingPierce[idx] = false
+	ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = false
+	ActiveCastSOA.StateInfo_CancelHighResCast[idx] = false
+	ActiveCastSOA.StateInfo_UseLengthChanged[idx] = behavior.UseLengthChanged or false
+	ActiveCastSOA.StateInfo_UseBetterLengthChanged[idx] = behavior.UseBetterLengthChanged or false
+
+	ActiveCastSOA.StateInfo_Trajectories[idx] = {
+		{
+			StartTime = 0,
+			EndTime = -1,
+			Origin = origin,
+			InitialVelocity = velocity,
+			Acceleration = behavior.Acceleration or Vector3.new(),
+		},
+	}
+
+	ActiveCastSOA.StateInfo_VisualizeCasts[idx] = behavior.VisualizeCasts
+	ActiveCastSOA.StateInfo_VisualizeCastSettings[idx] = behavior.VisualizeCastSettings
+
+	if behavior.RaycastParams ~= nil then
+		ActiveCastSOA.RayInfo_Parameters[idx] = CloneCastParams(behavior.RaycastParams)
 	else
-		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			cast.RayInfo.CosmeticBulletObject = cast.RayInfo.CosmeticBulletObject:Clone()
-			cast.RayInfo.CosmeticBulletObject.CFrame = CFrame.new(origin, origin + direction)
-			cast.RayInfo.CosmeticBulletObject.Parent = behavior.CosmeticBulletContainer
+		ActiveCastSOA.RayInfo_Parameters[idx] = RaycastParams.new()
+	end
+
+	ActiveCastSOA.RayInfo_WorldRoot[idx] = workspace
+	ActiveCastSOA.RayInfo_MaxDistance[idx] = behavior.MaxDistance or DEFAULT_MAX_DISTANCE
+	ActiveCastSOA.RayInfo_FastCastEventsModule[idx] = FastCastEventsModule
+	ActiveCastSOA.RayInfo_CanPierceModule[idx] = behavior.CanPierceModule
+	ActiveCastSOA.RayInfo_BetterLengthChangedModule[idx] = behavior.BetterLengthChangedModule
+
+	ActiveCastSOA.UserData[idx] = {}
+	ActiveCastSOA.CFrame[idx] = CFrame.new(origin, origin + direction)
+	ActiveCastSOA.ID[idx] = activeCastID
+
+	-- CosmeticBulletObject GET
+	local targetContainer: Instance
+	if BaseCast.ObjectCache then
+		ActiveCastSOA.RayInfo_CosmeticBulletObject[idx] = BaseCast.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
+		targetContainer = BaseCast.CacheHolder
+	else
+		if behavior.CosmeticBulletTemplate ~= nil then
+			ActiveCastSOA.RayInfo_CosmeticBulletObject[idx] = behavior.CosmeticBulletTemplate:Clone()
+			ActiveCastSOA.RayInfo_CosmeticBulletObject[idx].CFrame = CFrame.new(origin, origin + direction)
+			ActiveCastSOA.RayInfo_CosmeticBulletObject[idx].Parent = behavior.CosmeticBulletContainer
 		end
 		if behavior.CosmeticBulletContainer then
 			targetContainer = behavior.CosmeticBulletContainer
 		end
 	end
 
-	-- the rest? :P
-
 	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
-		local igroneList = cast.RayInfo.Parameters.FilterDescendantsInstances
-		if not table.find(igroneList, targetContainer) then
-			table.insert(igroneList, targetContainer)
-			cast.RayInfo.Parameters.FilterDescendantsInstances = igroneList
+		local ignoreList = ActiveCastSOA.RayInfo_Parameters[idx].FilterDescendantsInstances
+		if not table.find(ignoreList, targetContainer) then
+			table.insert(ignoreList, targetContainer)
+			ActiveCastSOA.RayInfo_Parameters[idx].FilterDescendantsInstances = ignoreList
 		end
 	end
-
-	--SendCastFire(cast, origin, direction, velocity, behavior)
 
 	local event
 	if RS:IsClient() then
@@ -783,14 +1000,12 @@ function ActiveCast.new(
 		event = RS.Heartbeat
 	end
 
-	setmetatable(cast, ActiveCast)
+	local castObject = CreateCastObject(idx)
 
 	local function Stepped(delta: number)
-		if cast.StateInfo.Paused then
+		if ActiveCastSOA.StateInfo_Paused[idx] then
 			return
 		end
-
-		--PrintDebug("Casting for frame.")
 
 		if DebugLogging.Casting then
 			print("Casting for frame.")
@@ -798,39 +1013,33 @@ function ActiveCast.new(
 
 		local Cast_timeAtStart = tick()
 
-		local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
-
-		if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
-			latestTrajectory.Acceleration = Vector3.new()
-		end
+		local latestTrajectory = ActiveCastSOA.StateInfo_Trajectories[idx][#ActiveCastSOA.StateInfo_Trajectories[idx]]
 
 		if
-			cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Always
-			and cast.StateInfo.HighFidelitySegmentSize > 0
+			ActiveCastSOA.StateInfo_HighFidelityBehavior[idx] == FastCastEnums.HighFidelityBehavior.Always
+			and ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx] > 0
 		then
 			local Segment_timeAtStart = tick()
 
-			if cast.StateInfo.IsActivelyResimulating then
-				cast:Terminate()
+			if ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] then
+				castObject:Terminate()
 				warn(
 					"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
 				)
 			end
 
-			cast.StateInfo.IsActivelyResimulating = true
+			ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = true
 
 			local origin = latestTrajectory.Origin
-			local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+			local totalDelta = ActiveCastSOA.StateInfo_TotalRuntime[idx] - latestTrajectory.StartTime
 			local initialVelocity = latestTrajectory.InitialVelocity
 			local acceleration = latestTrajectory.Acceleration
 
 			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-			--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
-			--local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
-			cast.StateInfo.TotalRuntime += delta
+			ActiveCastSOA.StateInfo_TotalRuntime[idx] += delta
 
-			totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+			totalDelta = ActiveCastSOA.StateInfo_TotalRuntime[idx] - latestTrajectory.StartTime
 
 			local currentPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
 			local currentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
@@ -838,8 +1047,8 @@ function ActiveCast.new(
 
 			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
 
-			local targetWorldRoot = cast.RayInfo.WorldRoot
-			local resultOfCast = targetWorldRoot:Raycast(lastPoint, rayDir, cast.RayInfo.Parameters)
+			local targetWorldRoot = ActiveCastSOA.RayInfo_WorldRoot[idx]
+			local resultOfCast = targetWorldRoot:Raycast(lastPoint, rayDir, ActiveCastSOA.RayInfo_Parameters[idx])
 
 			local point = currentPoint
 
@@ -849,9 +1058,9 @@ function ActiveCast.new(
 
 			local rayDisplacement = (point - lastPoint).Magnitude
 
-			cast.StateInfo.TotalRuntime -= delta
+			ActiveCastSOA.StateInfo_TotalRuntime[idx] -= delta
 
-			local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
+			local numSegmentsDecimal = rayDisplacement / ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx]
 			local numSegmentsReal = math.floor(numSegmentsDecimal)
 			if numSegmentsReal == 0 then
 				numSegmentsReal = 1
@@ -864,11 +1073,8 @@ function ActiveCast.new(
 			end
 
 			for segmentIndex = 1, numSegmentsReal do
-				if getmetatable(cast) == nil then
-					return
-				end
-				if cast.StateInfo.CancelHighResCast then
-					cast.StateInfo.CancelHighResCast = false
+				if ActiveCastSOA.StateInfo_CancelHighResCast[idx] then
+					ActiveCastSOA.StateInfo_CancelHighResCast[idx] = false
 					break
 				end
 
@@ -876,16 +1082,12 @@ function ActiveCast.new(
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
-				--PrintDebug("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
-				SimulateCast(cast, timeIncrement, true)
+				SimulateCast(idx, timeIncrement, true)
 			end
 
-			if getmetatable(cast) == nil then
-				return
-			end
-			cast.StateInfo.IsActivelyResimulating = false
+			ActiveCastSOA.StateInfo_IsActivelyResimulating[idx] = false
 
-			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME and cast.StateInfo then
+			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME then
 				local HighFideSizeAmount = behavior.AdaptivePerformance.HighFidelitySegmentSizeIncrease
 					or HIGH_FIDE_INCREASE_SIZE
 
@@ -893,285 +1095,27 @@ function ActiveCast.new(
 					warn("AutomaticPerformance increasing size of HighFidelitySize by : ", HighFideSizeAmount)
 				end
 
-				cast.StateInfo.HighFidelitySegmentSize += HighFideSizeAmount
+				ActiveCastSOA.StateInfo_HighFidelitySegmentSize[idx] += HighFideSizeAmount
 			end
 		else
-			SimulateCast(cast, delta, false)
+			SimulateCast(idx, delta, false)
 		end
-		
+
 		if
 			behavior.AutomaticPerformance
 			and behavior.AdaptivePerformance.LowerHighFidelityBehavior
 			and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME 
-			and cast.StateInfo
 		then
-			if cast.StateInfo.HighFidelityBehavior > 1 then
-				cast.StateInfo.HighFidelityBehavior -= 1
+			if ActiveCastSOA.StateInfo_HighFidelityBehavior[idx] > 1 then
+				ActiveCastSOA.StateInfo_HighFidelityBehavior[idx] -= 1
 			end
 		end
 	end
 
-	cast.StateInfo.UpdateConnection = event:ConnectParallel(Stepped)
+	ActiveCastSOA.StateInfo_UpdateConnection[idx] = event:ConnectParallel(Stepped)
+	ActiveCastSOA.ActiveCount += 1
 
-	return cast
+	return castObject
 end
-
--- ... Wow?
-
-local function ModifyTransformation(
-	cast: TypeDef.ActiveCast,
-	velocity: Vector3?,
-	acceleration: Vector3?,
-	position: Vector3?
-)
-	local trajectories = cast.StateInfo.Trajectories
-	local lastTrajectory = trajectories[#trajectories]
-
-	if lastTrajectory.StartTime == cast.StateInfo.TotalRuntime then
-		if velocity == nil then
-			velocity = lastTrajectory.InitialVelocity
-		end
-		if acceleration == nil then
-			acceleration = lastTrajectory.Acceleration
-		end
-		if position == nil then
-			position = lastTrajectory.Origin
-		end
-
-		lastTrajectory.Origin = position
-		lastTrajectory.InitialVelocity = velocity
-		lastTrajectory.Acceleration = acceleration
-	else
-		lastTrajectory.EndTime = cast.StateInfo.TotalRuntime
-
-		local point, velAtPoint = unpack(GetLatestTrajectoryEndInfo(cast))
-
-		if velocity == nil then
-			velocity = velAtPoint
-		end
-		if acceleration == nil then
-			acceleration = lastTrajectory.Acceleration
-		end
-		if position == nil then
-			position = point
-		end
-		table.insert(cast.StateInfo.Trajectories, {
-			StartTime = cast.StateInfo.TotalRuntime,
-			EndTime = -1,
-			Origin = position,
-			InitialVelocity = velocity,
-			Acceleration = acceleration,
-		})
-		cast.StateInfo.CancelHighResCast = true
-	end
-end
-
---[=[
-
-Destroys an ActiveCast, terminating it's simulation, firing the CastTerminating event, and cleaning up resources. 
-This is the equivilant of calling `ActiveCast:Terminate()`.
-
-@method Destroy
-@within ActiveCast
-
-]=]
-function ActiveCast:Destroy()
-	ActiveCast:Terminate()
-end
-
---[=[
-
-Sets the velocity of an ActiveCast to the specified Vector3.
-
-@method SetVelocity
-@param velocity Vector3 -- The new velocity to set.
-@within ActiveCast
-
-]=]
-function ActiveCast:SetVelocity(velocity: Vector3)
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	ModifyTransformation(self, velocity, nil, nil)
-end
-
---[=[
-
-Sets the acceleration of an ActiveCast to the specified Vector3.
-
-@method SetAcceleration
-@param acceleration Vector3 -- The new acceleration to set.
-@within ActiveCast
-
-]=]
-function ActiveCast:SetAcceleration(acceleration: Vector3)
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	ModifyTransformation(self, nil, acceleration, nil)
-end
-
---[=[
-
-Gets the velocity of an ActiveCast.
-
-@method GetVelocity
-@within ActiveCast
-@return Vector3 -- The current velocity of the ActiveCast.
-]=]
-function ActiveCast:GetVelocity(): Vector3
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
-	return GetVelocityAtTime(
-		self.StateInfo.TotalRuntime - currentTrajectory.StartTime,
-		currentTrajectory.InitialVelocity,
-		currentTrajectory.Acceleration
-	)
-end
-
---[=[
-
-Gets the acceleration of an ActiveCast.
-
-@method GetAcceleration
-@within ActiveCast
-@return Vector3 -- The current acceleration of the ActiveCast.
-
-]=]
-function ActiveCast:GetAcceleration(): Vector3
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
-	return currentTrajectory.Acceleration
-end
-
---[=[
-
-Gets the position of an ActiveCast.
-
-@method GetPosition
-@within ActiveCast
-@return Vector3 -- The current position of the ActiveCast.
-]=]
-function ActiveCast:GetPosition(): Vector3
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local currentTrajectory = self.StateInfo.Trajectories[#self.StateInfo.Trajectories]
-	return GetPositionAtTime(
-		self.StateInfo.TotalRuntime - currentTrajectory.StartTime,
-		currentTrajectory.Origin,
-		currentTrajectory.InitialVelocity,
-		currentTrajectory.Acceleration
-	)
-end
-
---[=[
-
-Add velocity to an ActiveCast with the specified Vector3.
-
-@method AddVelocity
-@param velocity Vector3 -- The new velocity to add.
-@within ActiveCast
-
-]=]
-function ActiveCast:AddVelocity(velocity: Vector3)
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	self:SetVelocity(self:GetVelocity() + velocity)
-end
-
---[=[
-
-Add acceleration to an ActiveCast with the specified Vector3.
-
-@method AddAcceleration
-@param acceleration Vector3 -- The new acceleration to add.
-@within ActiveCast
-
-]=]
-function ActiveCast:AddAcceleration(acceleration: Vector3)
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	self:SetAcceleration(self:GetAcceleration() + acceleration)
-end
-
---[=[
-
-Add position to an ActiveCast with the specified Vector3.
-
-@method AddPosition
-@param position Vector3 -- The new position to add.
-@within ActiveCast
-
-]=]
-function ActiveCast:AddPosition(position: Vector3)
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	self:SetPosition(self:GetPosition() + position)
-end
-
---[=[
-
-Pauses simulation for an ActiveCast.
-
-@method Pause
-@within ActiveCast
-
-]=]
-function ActiveCast:Pause()
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	self.StateInfo.Paused = true
-end
-
---[=[
-
-Resumes simulation for an ActiveCast if it was paused previously.
-
-@method Resume
-@within ActiveCast
-
-]=]
-function ActiveCast:Resume()
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	self.StateInfo.Paused = false
-end
-
---[=[
-
-Terminates an ActiveCast, firing the CastTerminating event, and cleaning up resources. 
-This is the equivilant of calling `Active:Destroy()`.
-
-@method Resume
-@within ActiveCast
-
-]=]
-function ActiveCast:Terminate()
-	assert(getmetatable(self) == ActiveCast, "ERR_NOT_INSTANCE")
-	assert(self.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
-	)
-
-	local trajectories = self.StateInfo.Trajectories
-	local lastTrajectory = trajectories[#trajectories]
-	lastTrajectory.EndTime = self.StateInfo.TotalRuntime
-
-	self.StateInfo.UpdateConnection:Disconnect()
-
-	--self.CasterBindable:Fire("CastTerminating", self)
-	--self.Definition.OnCastTerminating(self)
-
-	self.StateInfo.UpdateConnection = nil
-
-	self.Caster.Output:Fire("CastTerminating", self)
-	self.Caster.ActiveCastCleaner:Fire(self.ID)
-
-	self.Caster = nil
-	self.StateInfo = nil
-	self.RayInfo = nil
-	self.UserData = nil
-	setmetatable(self, nil)
-	--print("DELETED ACTIVECAST")
-end
-
 
 return ActiveCast
