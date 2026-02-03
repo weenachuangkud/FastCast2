@@ -46,7 +46,7 @@
 	- Date : 2025
 ]]
 
--- Verison : 0.0.5
+-- Verison : 0.0.6
 
 --[=[
 	@class FastCast
@@ -55,7 +55,7 @@
 ]=]
 
 -- Services
-local HTTPService = game:GetService("HttpService")
+--local HTTPService = game:GetService("HttpService")
 
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
@@ -65,7 +65,6 @@ local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
 local Configs = require(script:WaitForChild("Configs"))
-local ActiveCast = require(script:WaitForChild("ActiveCast"))
 local ObjectCache = require(script:WaitForChild("ObjectCache"))
 
 --local SharedCasters = require(script:WaitForChild("SharedCasters"))
@@ -74,7 +73,7 @@ local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
 
 -- Types
-type vaildcast = TypeDef.ActiveCast | TypeDef.ActiveBlockCast
+type vaildcast = TypeDef.ActiveCastCompement | TypeDef.ActiveBlockcastCompement
 
 -- FastCast
 
@@ -95,6 +94,89 @@ local function DestroySignal(signal: Signal.Signal)
 		signal:Destroy()
 	else
 		signal = nil
+	end
+end
+
+local function GetPositionAtTime(
+	time: number,
+	origin: Vector3,
+	initialVelocity: Vector3,
+	acceleration: Vector3
+): Vector3
+	local force =
+		Vector3.new((acceleration.X * time ^ 2) / 2, (acceleration.Y * time ^ 2) / 2, (acceleration.Z * time ^ 2) / 2)
+	return origin + (initialVelocity * time) + force
+end
+
+local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
+	return initialVelocity + acceleration * time
+end
+
+local function GetTrajectoryInfo(
+	cast: TypeDef.ActiveCastCompement | TypeDef.ActiveBlockCast,
+	index: number
+): { [number]: Vector3 }
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local trajectories = cast.StateInfo.Trajectories
+	local trajectory = trajectories[index]
+	local duration = trajectory.EndTime - trajectory.StartTime
+
+	local origin = trajectory.Origin
+	local vel = trajectory.InitialVelocity
+	local accel = trajectory.Acceleration
+
+	return { GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel) }
+end
+
+local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveBlockcastCompement): { [number]: Vector3 }
+	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
+end
+
+local function ModifyTransformation(
+	cast: TypeDef.ActiveCastCompement,
+	velocity: Vector3?,
+	acceleration: Vector3?,
+	position: Vector3?
+)
+	local trajectories = cast.StateInfo.Trajectories
+	local lastTrajectory = trajectories[#trajectories]
+
+	if lastTrajectory.StartTime == cast.StateInfo.TotalRuntime then
+		if velocity == nil then
+			velocity = lastTrajectory.InitialVelocity
+		end
+		if acceleration == nil then
+			acceleration = lastTrajectory.Acceleration
+		end
+		if position == nil then
+			position = lastTrajectory.Origin
+		end
+
+		lastTrajectory.Origin = position
+		lastTrajectory.InitialVelocity = velocity
+		lastTrajectory.Acceleration = acceleration
+	else
+		lastTrajectory.EndTime = cast.StateInfo.TotalRuntime
+
+		local point, velAtPoint = unpack(GetLatestTrajectoryEndInfo(cast))
+
+		if velocity == nil then
+			velocity = velAtPoint
+		end
+		if acceleration == nil then
+			acceleration = lastTrajectory.Acceleration
+		end
+		if position == nil then
+			position = point
+		end
+		table.insert(cast.StateInfo.Trajectories, {
+			StartTime = cast.StateInfo.TotalRuntime,
+			EndTime = -1,
+			Origin = position,
+			InitialVelocity = velocity,
+			Acceleration = acceleration,
+		})
+		cast.StateInfo.CancelHighResCast = true
 	end
 end
 
@@ -245,33 +327,21 @@ function FastCast:Init(
 end
 
 --[=[
-	Sets the CanPierceModule for the Caster.
-	@method SetCanPierceModule
-	@within FastCast
+	@type FastCastEventsModule ModuleScript
+	@within TypeDefinitions
 
-	@param moduleScript ModuleScript? -- The module to set.
+	A table of callback functions (events/hooks) used by ActiveCast.
+	These functions are invoked by ActiveCast during a cast lifecycle, (e.g. length updates, pierce checks).
 ]=]
-function FastCast:SetCanPierceModule(moduleScript: ModuleScript?)
-	if not self.AlreadyInit then
-		error("Please Init caster")
-	end
-	-- darwin was here
-	self.Dispatcher:DispatchAll("SetCanPierceModule", moduleScript)
-end
 
 --[=[
-	Sets the BetterLengthChangedModule for the Caster.
-	@method SetCanPierceModule
-	@within FastCast
+	Set the FastCastEventsModule for all BaseCasts created from this Caster.
 	
-	@param moduleScript ModuleScript? -- The module to set.
+	@method SetFastCastEventsModule
+	@param moduleScript ModuleScript -- The FastCastEventsModule to set.
 ]=]
-function FastCast:SetBetterLengthChangedModule(moduleScript: ModuleScript)
-	if not self.AlreadyInit then
-		error("Please Init caster")
-	end
-	-- This is so long. can I swallow it 
-	self.Dispatcher:DispatchAll("SetBetterLengthChangedModule", moduleScript)
+function FastCast:SetFastCastEventsModule(moduleScript: ModuleScript)
+	self.Dispatcher:DispatchAll("SetFastCastEventsModule", moduleScript)
 end
 
 --[=[
@@ -297,11 +367,11 @@ function FastCast:RaycastFire(
 	if BehaviorData == nil then
 		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
 	end
-	local ActiveCastID = HTTPService:GenerateGUID(false)
+	--local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	-- BABE RAYCAST!!!!!
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData, ActiveCastID)
-	return ActiveCastID
+	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
+	--return ActiveCastID
 end
 
 --[=[
@@ -329,10 +399,223 @@ function FastCast:BlockcastFire(
 	if BehaviorData == nil then
 		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
 	end
-	local ActiveCastID = HTTPService:GenerateGUID(false)
+	--local ActiveCastID = HTTPService:GenerateGUID(false)
 
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData, ActiveCastID)
-	return ActiveCastID
+	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
+	--return ActiveCastID
+end
+
+--[=[
+
+Gets the velocity of an ActiveCast.
+
+@method GetVelocityCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@within FastCast
+@return Vector3 -- The current velocity of the ActiveCast.
+]=]
+function FastCast.GetVelocityCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	return GetVelocityAtTime(
+		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+--[=[
+
+Gets the acceleration of an ActiveCast.
+
+@method GetAccelerationCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@within FastCast
+@return Vector3 -- The current acceleration of the ActiveCast.
+
+]=]
+function FastCast.GetAccelerationCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	return GetVelocityAtTime(
+		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+--[=[
+
+Gets the position of an ActiveCast.
+
+@method GetPositionCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@within FastCast
+@return Vector3 -- The current position of the ActiveCast.
+]=]
+function FastCast.GetPositionCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	return GetPositionAtTime(
+		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
+		currentTrajectory.Origin,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+--[=[
+
+Sets the velocity of an ActiveCast to the specified Vector3.
+
+@method SetVelocityCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param velocity Vector3 -- The new velocity to set.
+@within FastCast
+
+]=]
+function FastCast.SetVelocityCast(cast: vaildcast, velocity: Vector3)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	ModifyTransformation(cast, velocity, nil, nil)
+end
+
+--[=[
+
+Sets the acceleration of an ActiveCast to the specified Vector3.
+
+@method SetAccelerationCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param acceleration Vector3 -- The new acceleration to set.
+@within FastCast
+
+]=]
+function FastCast.SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	ModifyTransformation(cast, nil, acceleration, nil)
+end
+
+--[=[
+
+Pauses simulation for an ActiveCast.
+
+@method PauseCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@within FastCast
+
+]=]
+function FastCast.PauseCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	cast.StateInfo.Paused = true
+end
+
+--[=[
+
+Resumes simulation for an ActiveCast if it was paused previously.
+
+@method ResumeCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@within FastCast
+
+]=]
+function FastCast.ResumeCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	cast.StateInfo.Paused = false
+end
+
+--[=[
+
+Add position to an ActiveCast with the specified Vector3.
+
+@method AddPositionCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param position Vector3 -- The new position to add.
+@within FastCast
+
+]=]
+function FastCast.AddPositionCast(cast: vaildcast, position: Vector3)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	return GetPositionAtTime(
+		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
+		currentTrajectory.Origin,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+--[=[
+
+Add velocity to an ActiveCast with the specified Vector3.
+
+@method AddVelocityCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param velocity Vector3 -- The new velocity to add.
+@within FastCast
+
+]=]
+function FastCast.AddVelocityCast(cast: vaildcast, velocity: Vector3)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	FastCast:SetVelocity(cast:GetVelocity() + velocity)
+end
+
+--[=[
+
+Add acceleration to an ActiveCast with the specified Vector3.
+
+@method AddAccelerationCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param acceleration Vector3 -- The new acceleration to add.
+@within FastCast
+
+]=]
+function FastCast.AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	cast:SetAcceleration(cast:GetAcceleration() + acceleration)
+end
+
+--[=[
+
+Synchronize new changes to the ActiveCast.
+
+@method SyncChangesToCast
+@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@within FastCast
+
+]=]
+function FastCast.SyncChangesToCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	cast.Caster.SyncChange:Fire(cast)
+end
+
+-- Terminate function for casts
+
+function FastCast.TerminateCast(cast: vaildcast)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
+	)
+
+	local trajectories = cast.StateInfo.Trajectories
+	local lastTrajectory = trajectories[#trajectories]
+	lastTrajectory.EndTime = cast.StateInfo.TotalRuntime
+
+	cast.StateInfo.UpdateConnection:Disconnect()
+
+	--self.CasterBindable:Fire("CastTerminating", self)
+	--self.Definition.OnCastTerminating(self)
+
+	cast.StateInfo.UpdateConnection = nil
+	
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	local FastCastEventsModuleConfig = cast.StateInfo.FastCastEventsModuleConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
+		cast.Caster.Output:Fire("CastTerminating", cast)
+	end
+	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
+
+	cast.Caster = nil
+	cast.StateInfo = nil
+	cast.RayInfo = nil
+	cast.UserData = nil
+	cast = nil
 end
 
 --[=[
