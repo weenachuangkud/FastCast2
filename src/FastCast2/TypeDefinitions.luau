@@ -15,6 +15,8 @@
 
 local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
 
+type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
+
 --[=[
 	@type CanPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
 	@within TypeDefinitions
@@ -101,14 +103,6 @@ export type OnCastFireFunction = (
 ) -> ()
 
 --[=[
-	@type GenericTable {[any]: any}
-	@within TypeDefinitions
-
-	Represents any table.
-]=]
-export type GenericTable = { [any]: any }
-
---[=[
 	@type Caster { WorldRoot: WorldRoot, LengthChanged: RBXScriptSignal, RayHit: RBXScriptSignal, RayPierced: RBXScriptSignal, CastTerminating: RBXScriptSignal, CastFire: RBXScriptSignal, Dispatcher: Dispatcher.Dispatcher, AlreadyInit: boolean, Init: (Caster, number, Folder, string, Folder, string, string, boolean, boolean, BasePart | Model, number, Instance) -> (), RaycastFire: (Caster, Vector3, Vector3, Vector3 | number, FastCastBehavior) -> string, BlockcastFire: (Caster, Vector3, Vector3, Vector3, Vector3 | number, FastCastBehavior) -> string, SetBulkMoveEnabled: (boolean) -> (), SetObjectCacheEnabled: (boolean, BasePart | Model, number, Instance) -> (), SetVisualizeCasts: (boolean) -> (), ReturnObject: (Instance) -> (), Destroy: (Caster) -> () }
 	@within TypeDefinitions
 
@@ -126,7 +120,7 @@ export type Caster = {
 	--id : string,
 
 	Init: (
-		Caster,
+		self: Caster,
 		numWorkers: number,
 		newParent: Folder,
 		newName: string,
@@ -151,7 +145,7 @@ export type Caster = {
 		Behavior: FastCastBehavior
 	) -> string,
 	BlockcastFire: (
-		Caster,
+		self: Caster,
 		Origin: Vector3,
 		Size: Vector3,
 		Direction: Vector3,
@@ -159,18 +153,40 @@ export type Caster = {
 		Behavior: FastCastBehavior
 	) -> string,
 
-	SetBulkMoveEnabled: (enabled: boolean) -> (),
+	SetBulkMoveEnabled: (self: Caster, enabled: boolean) -> (),
 	SetObjectCacheEnabled: (
+		self: Caster,
 		enabled: boolean,
 		Template: BasePart | Model,
 		CacheSize: number,
 		CacheHolder: Instance
 	) -> (),
+	
+	SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (),
+	
 
-	SetVisualizeCasts: (bool: boolean) -> (),
+	SetVisualizeCasts: (self: Caster, bool: boolean) -> (),
 
-	ReturnObject: (obj: Instance) -> (),
-
+	ReturnObject: (self: Caster, obj: Instance) -> (),
+	
+	AddVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
+	SetVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
+	GetVelocityCast: (cast: vaildcast, velocity: Vector3) -> Vector3,
+	
+	AddAccelerationCast: (cast: vaildcast) -> Vector3,
+	GetAccelerationCast: (cast: vaildcast) -> Vector3,
+	SetAccelerationCast: (cast: vaildcast, acceleration: Vector3) -> (),
+	
+	GetPositionCast: (cast: vaildcast, Position: Vector3) -> Vector3,
+	AddPositionCast: (cast: vaildcast, Position: Vector3) -> (),
+	
+	ResumeCast: (cast: vaildcast) -> (),
+	PauseCast: (cast: vaildcast) -> (),
+	
+	SyncChangesToCast: (cast: vaildcast) -> (),
+	
+	TerminateCast: (cast: vaildcast) -> (),
+	
 	Destroy: (Caster) -> (),
 }
 
