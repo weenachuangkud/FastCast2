@@ -589,7 +589,7 @@ end
 
 -- Terminate function for casts
 
-function FastCast.TerminateCast(cast: vaildcast)
+function FastCast.TerminateCast(cast: vaildcast, castTerminatingFunction: (cast: vaildcast) -> ())
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
 	)
 
@@ -605,10 +605,14 @@ function FastCast.TerminateCast(cast: vaildcast)
 	cast.StateInfo.UpdateConnection = nil
 	
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
-	local FastCastEventsModuleConfig = cast.StateInfo.FastCastEventsModuleConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
 		cast.Caster.Output:Fire("CastTerminating", cast)
 	end
+	
+	if castTerminatingFunction then
+		castTerminatingFunction(cast)
+	end
+	
 	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
 
 	cast.Caster = nil
