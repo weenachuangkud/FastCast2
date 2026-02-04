@@ -724,7 +724,7 @@ function ActiveCast.new(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			FastEventsModule = eventModule,
+			FastCastEventsModule = eventModule,
 		},
 
 		UserData = {},
