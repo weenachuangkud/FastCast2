@@ -30,9 +30,6 @@ Defaults.FastCastBehavior = {
 	CosmeticBulletProvider = nil,
 	CosmeticBulletContainer = nil,
 
-	UseLengthChanged = true,
-	UseBetterLengthChanged = false,
-
 	AutoIgnoreContainer = true,
 
 	SimulateAfterPhysic = true,
