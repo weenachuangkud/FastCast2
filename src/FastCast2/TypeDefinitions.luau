@@ -134,9 +134,6 @@ export type Caster = {
 		CacheHolder: Instance
 	) -> (),
 
-	SetCanPierceModule: (self: Caster, moduleScript: ModuleScript?) -> (),
-	SetBetterLengthChangedModule: (self: Caster, moduleScript: ModuleScript) -> (),
-
 	RaycastFire: (
 		Caster,
 		Origin: Vector3,
@@ -187,7 +184,7 @@ export type Caster = {
 	
 	TerminateCast: (cast: vaildcast) -> (),
 	
-	Destroy: (Caster) -> (),
+	Destroy: (Caster) -> ()
 }
 
 --[=[
