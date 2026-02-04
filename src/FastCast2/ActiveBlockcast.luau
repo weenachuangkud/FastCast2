@@ -97,34 +97,6 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
---[[local function ResolveCanPierceCheck(cast: TypeDef.ActiveBlockcastCompement): TypeDef.CanPierceFunction?
-	local canPierceModule = cast.RayInfo.CanPierceModule
-	if canPierceModule == nil then
-		return nil
-	end
-
-	local loadedModule = require(canPierceModule)
-	if loadedModule == nil then
-		return nil
-	end
-
-	return loadedModule.CanPierce
-end
-
-local function RunCanPierceCheck(
-	cast: TypeDef.ActiveBlockcastCompement,
-	canPierceCheck: TypeDef.CanPierceFunction?,
-	resultOfCast: RaycastResult,
-	segmentVelocity: Vector3
-): boolean?
-	if canPierceCheck == nil then
-		return nil
-	end
-
-	return canPierceCheck(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
-end
-]]
-
 --[[
 -- NOTE : OnLengthChanged but better ig
 local function ResolveOnLengthChanged(cast: TypeDef.ActiveBlockcastCompement): TypeDef.CanPierceFunction?
@@ -429,11 +401,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 
 		if canPierceCheck ~= nil then
 			if expectingShortCall == false and cast.StateInfo.IsActivelySimulatingPierce then
-				FastCast.TerminateCast(cast)
-				
-				if castTerminating then
-					castTerminating(cast)
-				end
+				FastCast.TerminateCast(cast, castTerminating)
 				
 				warn(
 					"WARN: The latest call to CanPierceCallback took too long to complete! This cast is going to suffer desyncs which WILL cause unexpected behavior and errors. Please fix your performance problems, or remove statements that yield (e.g. wait() calls)"
@@ -456,11 +424,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 				cast.StateInfo.CancelHighResCast = false
 
 				if cast.StateInfo.IsActivelyResimulating then
-					FastCast.TerminateCast(cast)
-					
-					if castTerminating then
-						castTerminating(cast)
-					end
+					FastCast.TerminateCast(cast, castTerminating)
 					
 					warn(
 						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
@@ -527,11 +491,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 							cast.StateInfo.IsActivelyResimulating = false
 
 							SendRayHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
-							FastCast.TerminateCast(cast)
-							
-							if castTerminating then
-								castTerminating(cast)
-							end
+							FastCast.TerminateCast(cast, castTerminating)
 							
 							local vis = DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 							if vis ~= nil then
@@ -575,11 +535,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 					print("Hit was successful. Terminating.")
 				end
 				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
-				FastCast.TerminateCast(cast)
-				
-				if castTerminating then
-					castTerminating(cast)
-				end
+				FastCast.TerminateCast(cast, castTerminating)
 				
 				DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 				return
@@ -601,11 +557,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 			while true do
 				if resultOfCast.Instance:IsA("Terrain") then
 					if material == Enum.Material.Water then
-						FastCast.TerminateCast(cast)
-						
-						if castTerminating then
-							castTerminating(cast)
-						end
+						FastCast.TerminateCast(cast, castTerminating)
 						
 						error(
 							"Do not add Water as a piercable material. If you need to pierce water, set cast.RayInfo.Parameters.IgnoreWater = true instead",
@@ -665,11 +617,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 					)
 				end
 				SendRayHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
-				FastCast.TerminateCast(cast)
-				
-				if castTerminating then
-					castTerminating(cast)
-				end
+				FastCast.TerminateCast(cast, castTerminating)
 				
 				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false, VisualizeCasts, VisualizeCastSettings)
 				return
@@ -678,11 +626,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 	end
 
 	if cast.StateInfo.DistanceCovered >= cast.RayInfo.MaxDistance then
-		FastCast.TerminateCast(cast)
-		
-		if castTerminating then
-			castTerminating(cast)
-		end
+		FastCast.TerminateCast(cast, castTerminating)
 		
 		DbgVisualizeHit(CFrame.new(currentTarget), false, VisualizeCasts, VisualizeCastSettings)
 	end
@@ -869,11 +813,7 @@ function ActiveCast.new(
 			
 			local castTerminating: TypeDef.OnCastTerminatingFunction = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating and ResolveEvent(cast, "CastTerminating") or nil
 			if cast.StateInfo.IsActivelyResimulating then
-				FastCast.TerminateCast(cast)
-				
-				if castTerminating then
-					castTerminating(cast)
-				end
+				FastCast.TerminateCast(cast, castTerminating)
 				
 				error(
 					"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
