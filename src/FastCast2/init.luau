@@ -615,11 +615,9 @@ function FastCast.TerminateCast(cast: vaildcast, castTerminatingFunction: (cast:
 	
 	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
 
-	cast.Caster = nil
-	cast.StateInfo = nil
-	cast.RayInfo = nil
-	cast.UserData = nil
-	cast = nil
+	for key, _ in cast do
+		cast[key] = nil
+	end
 end
 
 --[=[
