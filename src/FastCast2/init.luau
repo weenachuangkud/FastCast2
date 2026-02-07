@@ -234,6 +234,7 @@ end
 	@param VMContainerName Folder -- The name to give to the Containers housing each worker VM.
 	@param VMname string -- The name to give each worker VM.
 	@param useBulkMoveTo boolean -- Whether to enable BulkMoveTo for the [CosmeticBulletObjects](TypeDefinitions#CastRayInfo)
+	@param FastCastEventsModule ModuleScript -- The ModuleScript containing the FastCastEvents, A table of callback functions (events/hooks) used by ActiveCast..
 	@param useObjectCache boolean -- Whether to use ObjectCache for the [Caster](TypeDefinitions#Caster)
 	@param Template BasePart | Model -- The template object to use for the ObjectCache (if enabled)
 	@param CacheSize number -- The size of the ObjectCache (if enabled)
