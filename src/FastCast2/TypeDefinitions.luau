@@ -141,6 +141,7 @@ export type Caster = {
 		VMContainerName: string,
 		VMname: string,
 		useBulkMoveTo: boolean,
+		FastCastEventsModule: ModuleScript,
 		useObjectCache: boolean,
 		Template: BasePart | Model,
 		CacheSize: number,
