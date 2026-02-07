@@ -248,7 +248,8 @@ function FastCast:Init(
 	VMname: string,
 
 	useBulkMoveTo: boolean,
-
+	FastCastEventsModule: ModuleScript,
+	
 	useObjectCache: boolean,
 	Template: BasePart | Model,
 	CacheSize: number,
@@ -300,6 +301,9 @@ function FastCast:Init(
 	self.AlreadyInit = true
 	self.ObjectCacheEnabled = useObjectCache
 	self.BulkMoveEnabled = useBulkMoveTo
+	
+	self:SetFastCastEventsModule(FastCastEventsModule)
+	
 
 	if not useObjectCache then
 		return
@@ -340,7 +344,12 @@ end
 	@param moduleScript ModuleScript -- The FastCastEventsModule to set.
 ]=]
 function FastCast:SetFastCastEventsModule(moduleScript: ModuleScript)
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
+	
 	self.Dispatcher:DispatchAll("SetFastCastEventsModule", moduleScript)
+	self.FastCastEventsModule = moduleScript
 end
 
 --[=[
@@ -671,6 +680,9 @@ function FastCast:SetObjectCacheEnabled(
 	CacheSize: number,
 	CacheHolder: Instance
 )
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
 	local Dispatcher = self.Dispatcher
 
 	if enabled then
@@ -690,33 +702,9 @@ function FastCast:SetObjectCacheEnabled(
 		if self.ObjectCache then
 			self.ObjectCache:Destroy()
 		end
-
-		if self.ObjectCacheConnection then
-			self.ObjectCacheConnection.OnInvoke = nil
-		end
 	end
 	
 	self.ObjectCacheEnabled = enabled
-end
-
---[[function FastCast:SetVisualizeCasts(bool : boolean)
-	Configs.VisualizeCasts = bool
-end]]
-
---[=[
-	:::warning
-
-	Don't call this method if you didn't enable ObjectCache in [FastCast:Init()](FastCast#Init) or via [FastCast:SetObjectCacheEnabled()](FastCast#SetObjectCacheEnabled). Doing so will result in an error.
-
-	:::
-	Returns a part to the `ObjectCache` for reuse.
-	@method ReturnObject
-	@within FastCast
-
-	@param obj Instance -- The object to return to the cache.
-]=]
-function FastCast:ReturnObject(obj: Instance)
-	self.ObjectCache:ReturnPart(obj)
 end
 
 --[=[
@@ -727,9 +715,6 @@ end
 function FastCast:Destroy()
 	if self.ObjectCache then
 		self.ObjectCache:Destroy()
-	end
-	if self.ObjectCacheConnection then
-		self.ObjectCacheConnection.OnInvoke = nil
 	end
 
 	-- I'm making sure that everything is destroyed here lmao
