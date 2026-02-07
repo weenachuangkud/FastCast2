@@ -173,9 +173,6 @@ export type Caster = {
 	) -> (),
 	
 	SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (),
-	
-
-	SetVisualizeCasts: (self: Caster, bool: boolean) -> (),
 
 	ReturnObject: (self: Caster, obj: Instance) -> (),
 	
