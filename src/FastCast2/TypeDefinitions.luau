@@ -173,8 +173,6 @@ export type Caster = {
 	) -> (),
 	
 	SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (),
-
-	ReturnObject: (self: Caster, obj: Instance) -> (),
 	
 	AddVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
 	SetVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
