@@ -75,6 +75,10 @@ local Dispatcher = require(DispatcherModule)
 -- Types
 type vaildcast = TypeDef.ActiveCastCompement | TypeDef.ActiveBlockcastCompement
 
+-- CONSTANTS
+local DEFAULT_CACHE_SIZE = 500
+local DEFAULT_CACHE_HOLDER = workspace
+
 -- FastCast
 
 local FastCast = {}
@@ -263,13 +267,15 @@ function FastCast:Init(
 	local newDispatcher: Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
 
 	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
-	--[[local data = {
-		useBulkMoveTo = useBulkMoveTo,
-		useObjectCache = useObjectCache,
-		Template = Template,
-		CacheSize = CacheSize,
-		CacheHolder = CacheHolder
-	}]]
+	
+	if not CacheSize then
+		CacheSize = DEFAULT_CACHE_SIZE
+	end
+	
+	if not CacheHolder then
+		CacheHolder = DEFAULT_CACHE_HOLDER
+	end
+	
 	self.ObjectCache = useObjectCache and ObjectCache.new(Template, CacheSize, CacheHolder) :: any
 
 	local data = {
@@ -290,17 +296,10 @@ function FastCast:Init(
 		end
 	end)
 
-	-- Idk who tf write this
-	--[[if not shared.SharedCasters then
-		shared.SharedCasters = {}
-	end
-	
-	if not shared.SharedCasters[self.id] then
-		shared.SharedCasters[self.id] = {}
-		print("SET ID CASTER")
-	end]]
-	--print(self.Dispatcher)
+
 	self.AlreadyInit = true
+	self.ObjectCacheEnabled = useObjectCache
+	self.BulkMoveEnabled = useBulkMoveTo
 
 	if not useObjectCache then
 		return
@@ -618,6 +617,11 @@ function FastCast.TerminateCast(cast: vaildcast, castTerminatingFunction: (cast:
 	for key, _ in cast do
 		cast[key] = nil
 	end
+	--[[cast.Caster = nil
+	cast.StateInfo = nil
+	cast.RayInfo = nil
+	cast.UserData = nil
+	cast = nil]]
 end
 
 --[=[
@@ -650,10 +654,7 @@ function FastCast:SetBulkMoveEnabled(enabled: boolean)
 	end
 
 	self.Dispatcher:DispatchAll("BindBulkMoveTo", enabled)
-	--[[local Dispatcher = self.Dispatcher
-	for Index, Thread in Dispatcher.Threads do
-		Thread:SendMessage("BindBulkMoveTo", enabled)
-	end]]
+	self.BulkMoveEnabled = enabled
 end
 
 --[=[
@@ -677,16 +678,13 @@ function FastCast:SetObjectCacheEnabled(
 		Dispatcher:DispatchAll("BindObjectCache", enabled)
 
 		for i, v in Dispatcher.Threads do
-			-- Please dont change this to FindFirstChild, or else diddy will oil you up
 			local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
 			if BindableObjectCache then
-				--print("CONNECTED")
 				BindableObjectCache.OnInvoke = function(v: CFrame)
-					--print("INVOKED")
 					return self.ObjectCache:GetPart(v)
-				end -- OH MY GOD
-			end -- KEEP GOING
-		end -- OH YES DADDY
+				end
+			end 
+		end
 	else
 		Dispatcher:DispatchAll("BindObjectCache", enabled)
 		if self.ObjectCache then
@@ -697,9 +695,8 @@ function FastCast:SetObjectCacheEnabled(
 			self.ObjectCacheConnection.OnInvoke = nil
 		end
 	end
-	--[[for Index, Thread in Dispatcher.Threads do
-		Thread:SendMessage("BindObjectCache", enabled)
-	end]]
+	
+	self.ObjectCacheEnabled = enabled
 end
 
 --[[function FastCast:SetVisualizeCasts(bool : boolean)
