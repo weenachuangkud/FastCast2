@@ -270,15 +270,17 @@ function FastCast:Init(
 
 	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
 	
-	if not CacheSize then
-		CacheSize = DEFAULT_CACHE_SIZE
+	if useObjectCache then
+		if not CacheSize then
+			CacheSize = DEFAULT_CACHE_SIZE
+		end
+
+		if not CacheHolder then
+			CacheHolder = DEFAULT_CACHE_HOLDER
+		end
+		
+		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder) :: any
 	end
-	
-	if not CacheHolder then
-		CacheHolder = DEFAULT_CACHE_HOLDER
-	end
-	
-	self.ObjectCache = useObjectCache and ObjectCache.new(Template, CacheSize, CacheHolder) :: any
 
 	local data = {
 		useBulkMoveTo = useBulkMoveTo,
