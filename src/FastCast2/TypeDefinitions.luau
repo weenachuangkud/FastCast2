@@ -102,6 +102,16 @@ export type OnCastFireFunction = (
 	behavior: FastCastBehavior
 ) -> ()
 
+export type ObjectCache = {
+	GetPart: (ObjectCache, PartCFrame: CFrame) -> BasePart,
+	ReturnPart: (ObjectCache, Part: BasePart) -> (),
+	Update: (ObjectCache) -> (),
+	ExpandCache: (ObjectCache, Amount: number) -> (),
+	SetExpandAmount: (ObjectCache, Amount: number) -> (),
+	IsInUse: (ObjectCache, Object: BasePart) -> boolean,
+	Destroy: (ObjectCache) -> ()
+}
+
 --[=[
 	@type Caster { WorldRoot: WorldRoot, LengthChanged: RBXScriptSignal, RayHit: RBXScriptSignal, RayPierced: RBXScriptSignal, CastTerminating: RBXScriptSignal, CastFire: RBXScriptSignal, Dispatcher: Dispatcher.Dispatcher, AlreadyInit: boolean, Init: (Caster, number, Folder, string, Folder, string, string, boolean, boolean, BasePart | Model, number, Instance) -> (), RaycastFire: (Caster, Vector3, Vector3, Vector3 | number, FastCastBehavior) -> string, BlockcastFire: (Caster, Vector3, Vector3, Vector3, Vector3 | number, FastCastBehavior) -> string, SetBulkMoveEnabled: (boolean) -> (), SetObjectCacheEnabled: (boolean, BasePart | Model, number, Instance) -> (), SetVisualizeCasts: (boolean) -> (), ReturnObject: (Instance) -> (), Destroy: (Caster) -> () }
 	@within TypeDefinitions
@@ -117,7 +127,8 @@ export type Caster = {
 	CastFire: RBXScriptSignal,
 	Dispatcher: Dispatcher.Dispatcher,
 	AlreadyInit: boolean,
-	--id : string,
+
+	ObjectCache: ObjectCache,
 
 	Init: (
 		self: Caster,
