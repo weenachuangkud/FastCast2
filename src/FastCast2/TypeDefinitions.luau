@@ -126,9 +126,11 @@ export type Caster = {
 	CastTerminating: RBXScriptSignal,
 	CastFire: RBXScriptSignal,
 	Dispatcher: Dispatcher.Dispatcher,
-	AlreadyInit: boolean,
-
 	ObjectCache: ObjectCache,
+	
+	AlreadyInit: boolean,
+	ObjectCacheEnabled: boolean,
+	BulkMoveEnabled: boolean,
 
 	Init: (
 		self: Caster,
