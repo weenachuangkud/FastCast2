@@ -333,14 +333,6 @@ function FastCast:Init(
 end
 
 --[=[
-	@type FastCastEventsModule ModuleScript
-	@within TypeDefinitions
-
-	A table of callback functions (events/hooks) used by ActiveCast.
-	These functions are invoked by ActiveCast during a cast lifecycle, (e.g. length updates, pierce checks).
-]=]
-
---[=[
 	Set the FastCastEventsModule for all BaseCasts created from this Caster.
 	
 	@method SetFastCastEventsModule
