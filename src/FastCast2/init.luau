@@ -336,6 +336,7 @@ end
 	Set the FastCastEventsModule for all BaseCasts created from this Caster.
 	
 	@method SetFastCastEventsModule
+	@within FastCast
 	@param moduleScript ModuleScript -- The FastCastEventsModule to set.
 ]=]
 function FastCast:SetFastCastEventsModule(moduleScript: ModuleScript)
