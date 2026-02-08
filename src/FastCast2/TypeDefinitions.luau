@@ -396,6 +396,21 @@ export type BaseCastData = {
 
 -- ECS
 
+--[=[
+	@type ActiveCastCompement {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: CastRayInfo,
+	UserData: { [any]: any },
+	
+	Type : "Raycast",
+	CFrame: CFrame,
+	ID: number | string
+	}
+	@within TypeDefinitions	
+	
+	Represents an active cast data.
+]=]
 export type ActiveCastCompement = {
 	Caster: BaseCastData,
 	StateInfo: CastStateInfo,
@@ -407,10 +422,25 @@ export type ActiveCastCompement = {
 	ID: number | string
 }
 
-export type ActiveBlockcastCompement = {
+--[=[
+	@type ActiveCastCompement {
 	Caster: BaseCastData,
 	StateInfo: CastStateInfo,
 	RayInfo: CastRayInfo,
+	UserData: { [any]: any },
+	
+	Type : "Raycast",
+	CFrame: CFrame,
+	ID: number | string
+	}
+	@within TypeDefinitions	
+	
+	Represents an active block cast data.
+]=]
+export type ActiveBlockcastCompement = {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: BlockCastRayInfo,
 	UserData: { [any]: any },
 	
 	Type : "Blockcast",
