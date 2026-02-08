@@ -3,7 +3,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.5
+	-- Verison : 0.0.6
 ]]
 
 --[=[
@@ -15,34 +15,38 @@
 
 local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
 
+type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
+
 --[=[
-	@type CanPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
+	@type FastCastEventsModule ModuleScript
+	@within TypeDefinitions
+
+	A table of callback functions (events/hooks) used by ActiveCast.
+	These functions are invoked by ActiveCast during a lifecycle, (e.g. length updates, pierce checks).
+]=]
+export type FastCastEventsModule = ModuleScript
+
+export type FastCastEvents = {
+	CanRayPierce: CanRayPierceFunction,
+	RayHit: OnRayHitFunction,
+	RayPierced: OnRayPiercedFunction,
+	LengthChanged: OnLengthChangedFunction,
+	CastTerminating: OnCastTerminatingFunction,
+	CastFire: OnCastFireFunction
+}
+
+--[=[
+	@type CanRayPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
 	@within TypeDefinitions
 
 	Callback used to decide whether a cast should pierce and continue after a hit.
 ]=]
-export type CanPierceFunction = (
-	ActiveCast,
+export type CanRayPierceFunction = (
+	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> boolean
-
---[=[
-	@type CanPierceModule ModuleScript
-	@within TypeDefinitions
-
-	ModuleScript used to decide whether a cast should pierce and continue after a hit.
-]=]
-export type CanPierceModule = ModuleScript
-
---[=[
-	@type CanPierceModule ModuleScript
-	@within TypeDefinitions
-
-	ModuleScript used to be called when the cast's length changes.
-]=]
-export type BetterLengthChangedModule = ModuleScript
 
 --[=[
 	@type OnRayHitFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
@@ -51,7 +55,7 @@ export type BetterLengthChangedModule = ModuleScript
 	Callback fired when the cast hits something (non-piercing).
 ]=]
 export type OnRayHitFunction = (
-	ActiveCast,
+	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
@@ -63,8 +67,8 @@ export type OnRayHitFunction = (
 
 	Callback fired when the cast pierces something.
 ]=]
-export type OnRayPierceFunction = (
-	ActiveCast,
+export type OnRayPiercedFunction = (
+	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
@@ -77,7 +81,7 @@ export type OnRayPierceFunction = (
 	Callback fired when the cast's length changes as it updates.
 ]=]
 export type OnLengthChangedFunction = (
-	ActiveCast,
+	ActiveCastCompement,
 	lastPoint: Vector3,
 	rayDir: Vector3,
 	rayDisplacement: number,
@@ -91,29 +95,31 @@ export type OnLengthChangedFunction = (
 
 	Callback fired right as an ActiveCast is terminating.
 ]=]
-export type OnCastTerminatingFunction = (ActiveCast) -> ()
+export type OnCastTerminatingFunction = (ActiveCastCompement) -> ()
 
 --[=[
-	@type OnCastFireFunction (ActiveCast, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
+	@type OnCastFireFunction (ActiveCastCompement, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
 	@within TypeDefinitions
 
 	Callback fired when a cast is initially fired.
 ]=]
 export type OnCastFireFunction = (
-	ActiveCast,
+	ActiveCastCompement,
 	Origin: Vector3,
 	Direction: Vector3,
 	Velocity: Vector3,
 	behavior: FastCastBehavior
 ) -> ()
 
---[=[
-	@type GenericTable {[any]: any}
-	@within TypeDefinitions
-
-	Represents any table.
-]=]
-export type GenericTable = { [any]: any }
+export type ObjectCache = {
+	GetPart: (ObjectCache, PartCFrame: CFrame) -> BasePart,
+	ReturnPart: (ObjectCache, Part: BasePart) -> (),
+	Update: (ObjectCache) -> (),
+	ExpandCache: (ObjectCache, Amount: number) -> (),
+	SetExpandAmount: (ObjectCache, Amount: number) -> (),
+	IsInUse: (ObjectCache, Object: BasePart) -> boolean,
+	Destroy: (ObjectCache) -> ()
+}
 
 --[=[
 	@type Caster { WorldRoot: WorldRoot, LengthChanged: RBXScriptSignal, RayHit: RBXScriptSignal, RayPierced: RBXScriptSignal, CastTerminating: RBXScriptSignal, CastFire: RBXScriptSignal, Dispatcher: Dispatcher.Dispatcher, AlreadyInit: boolean, Init: (Caster, number, Folder, string, Folder, string, string, boolean, boolean, BasePart | Model, number, Instance) -> (), RaycastFire: (Caster, Vector3, Vector3, Vector3 | number, FastCastBehavior) -> string, BlockcastFire: (Caster, Vector3, Vector3, Vector3, Vector3 | number, FastCastBehavior) -> string, SetBulkMoveEnabled: (boolean) -> (), SetObjectCacheEnabled: (boolean, BasePart | Model, number, Instance) -> (), SetVisualizeCasts: (boolean) -> (), ReturnObject: (Instance) -> (), Destroy: (Caster) -> () }
@@ -129,11 +135,15 @@ export type Caster = {
 	CastTerminating: RBXScriptSignal,
 	CastFire: RBXScriptSignal,
 	Dispatcher: Dispatcher.Dispatcher,
+	ObjectCache: ObjectCache,
+	
 	AlreadyInit: boolean,
-	--id : string,
+	ObjectCacheEnabled: boolean,
+	BulkMoveEnabled: boolean,
+	FastCastEventsModule: FastCastEventsModule,
 
 	Init: (
-		Caster,
+		self: Caster,
 		numWorkers: number,
 		newParent: Folder,
 		newName: string,
@@ -141,14 +151,12 @@ export type Caster = {
 		VMContainerName: string,
 		VMname: string,
 		useBulkMoveTo: boolean,
+		FastCastEventsModule: ModuleScript,
 		useObjectCache: boolean,
 		Template: BasePart | Model,
 		CacheSize: number,
 		CacheHolder: Instance
 	) -> (),
-
-	SetCanPierceModule: (self: Caster, moduleScript: ModuleScript?) -> (),
-	SetBetterLengthChangedModule: (self: Caster, moduleScript: ModuleScript) -> (),
 
 	RaycastFire: (
 		Caster,
@@ -158,7 +166,7 @@ export type Caster = {
 		Behavior: FastCastBehavior
 	) -> string,
 	BlockcastFire: (
-		Caster,
+		self: Caster,
 		Origin: Vector3,
 		Size: Vector3,
 		Direction: Vector3,
@@ -166,19 +174,36 @@ export type Caster = {
 		Behavior: FastCastBehavior
 	) -> string,
 
-	SetBulkMoveEnabled: (enabled: boolean) -> (),
+	SetBulkMoveEnabled: (self: Caster, enabled: boolean) -> (),
 	SetObjectCacheEnabled: (
+		self: Caster,
 		enabled: boolean,
 		Template: BasePart | Model,
 		CacheSize: number,
 		CacheHolder: Instance
 	) -> (),
-
-	SetVisualizeCasts: (bool: boolean) -> (),
-
-	ReturnObject: (obj: Instance) -> (),
-
-	Destroy: (Caster) -> (),
+	
+	SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (),
+	
+	AddVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
+	SetVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
+	GetVelocityCast: (cast: vaildcast, velocity: Vector3) -> Vector3,
+	
+	AddAccelerationCast: (cast: vaildcast) -> Vector3,
+	GetAccelerationCast: (cast: vaildcast) -> Vector3,
+	SetAccelerationCast: (cast: vaildcast, acceleration: Vector3) -> (),
+	
+	GetPositionCast: (cast: vaildcast, Position: Vector3) -> Vector3,
+	AddPositionCast: (cast: vaildcast, Position: Vector3) -> (),
+	
+	ResumeCast: (cast: vaildcast) -> (),
+	PauseCast: (cast: vaildcast) -> (),
+	
+	SyncChangesToCast: (cast: vaildcast) -> (),
+	
+	TerminateCast: (cast: vaildcast) -> (),
+	
+	Destroy: (Caster) -> ()
 }
 
 --[=[
@@ -215,6 +240,23 @@ export type AdaptivePerformance = {
 	LowerHighFidelityBehavior: boolean,
 }
 
+export type FastCastEventsModuleConfig = {
+	UseLengthChanged: boolean,
+	UseRayHit: boolean,
+	UseRayPierced: boolean,
+	UseCastTerminating: boolean,
+	UseCanRayPierce: boolean,
+	UseCastFire: boolean
+}
+
+export type FastCastEventsConfig = {
+	UseLengthChanged: boolean,
+	UseRayHit: boolean,
+	UseRayPierced: boolean,
+	UseCastTerminating: boolean,
+	UseCastFire: boolean
+}
+
 --[=[
 	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, UseBetterLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings }
 	@within TypeDefinitions
@@ -231,16 +273,17 @@ export type FastCastBehavior = {
 	CosmeticBulletContainer: Instance?,
 	AutoIgnoreContainer: boolean,
 	
-	UseLengthChanged: boolean,
-	UseBetterLengthChanged: boolean,
-	
 	SimulateAfterPhysic: boolean,
 
 	AutomaticPerformance: boolean,
 	AdaptivePerformance: AdaptivePerformance,
 
 	VisualizeCasts: boolean,
-	VisualizeCastSettings: VisualizeCastSettings
+	VisualizeCastSettings: VisualizeCastSettings,
+	
+	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
+
+	FastCastEventsConfig: FastCastEventsConfig
 }
 
 --[=[
@@ -277,56 +320,35 @@ export type CastStateInfo = {
 	UseLengthChanged: boolean,
 	VisualizeCasts: boolean,
 	VisualizeCastSettings: VisualizeCastSettings,
+	
+	FastCastEventsConfig: {
+		UseLengthChanged: boolean,
+		UseRayHit: boolean,
+		UseRayPierced: boolean,
+		UseCastTerminating: boolean,
+	},
+	
+	FastCastEventsModuleConfig: {
+		UseLengthChanged: boolean,
+		UseRayHit: boolean,
+		UseRayPierced: boolean,
+		UseCastTerminating: boolean,
+		UseCanRayPierce: boolean,
+	}
 }
 
 --[=[
 	@type CastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, CanPierceModule: ModuleScript? }
 	@within TypeDefinitions
 
-	Represents ray info for an ActiveCast.
+	Represents ray info for an ActiveCastCompement.
 ]=]
 export type CastRayInfo = {
 	Parameters: RaycastParams,
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	CanPierceModule: CanPierceModule?,
-	BetterLengthChangedModule:  BetterLengthChangedModule?
-}
-
---[=[
-	@type ActiveCast { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: {[any]: any}, SetVelocity: (ActiveCast, Vector3) -> (), SetAcceleration: (ActiveCast, Vector3) -> (), GetVelocity: (ActiveCast) -> Vector3, GetAcceleration: (ActiveCast) -> Vector3, GetPosition: (ActiveCast) -> Vector3, AddVelocity: (ActiveCast, Vector3) -> (), AddAcceleration: (ActiveCast, Vector3) -> (), AddPosition: (ActiveCast, Vector3) -> (), Pause: (ActiveCast) -> (), Resume: (ActiveCast) -> (), DestroyObject: (ActiveCast, Instance) -> (), Destroy: (ActiveCast) -> (), Terminate: (ActiveCast) -> (), CFrame: CFrame, ID: string }
-	@within TypeDefinitions
-
-	Represents an ActiveCast instance.
-]=]
-export type ActiveCast = {
-	Caster: BaseCastData,
-	StateInfo: CastStateInfo,
-	RayInfo: CastRayInfo,
-	UserData: { [any]: any },
-
-	SetVelocity: (ActiveCast, velocity: Vector3) -> (),
-	SetAcceleration: (ActiveCast, acceleration: Vector3) -> (),
-
-	GetVelocity: (ActiveCast) -> Vector3,
-	GetAcceleration: (ActiveCast) -> Vector3,
-	GetPosition: (ActiveCast) -> Vector3,
-
-	AddVelocity: (ActiveCast, velocity: Vector3) -> (),
-	AddAcceleration: (ActiveCast, acceleration: Vector3) -> (),
-	AddPosition: (ActiveCast, position: Vector3) -> (),
-
-	Pause: (ActiveCast) -> (),
-	Resume: (ActiveCast) -> (),
-
-	DestroyObject: (ActiveCast, obj: Instance) -> (),
-
-	Destroy: (ActiveCast) -> (),
-	Terminate: (ActiveCast) -> (),
-
-	CFrame: CFrame,
-	ID: string,
+	FastCastEventsModule: FastCastEventsModule
 }
 
 --[=[
@@ -340,53 +362,18 @@ export type BlockCastRayInfo = {
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	CanPierceModule: CanPierceModule?,
+	--CanPierceModule: CanPierceModule?,
 	Size: Vector3,
 }
 
 --[=[
-	@type ActiveBlockCast { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: BlockCastRayInfo, UserData: {[any]: any}, SetVelocity: (ActiveCast, Vector3) -> (), SetAcceleration: (ActiveCast, Vector3) -> (), GetVelocity: (ActiveCast) -> Vector3, GetAcceleration: (ActiveCast) -> Vector3, GetPosition: (ActiveCast) -> Vector3, AddVelocity: (ActiveCast, Vector3) -> (), AddAcceleration: (ActiveCast, Vector3) -> (), AddPosition: (ActiveCast, Vector3) -> (), Pause: (ActiveCast) -> (), Resume: (ActiveCast) -> (), DestroyObject: (ActiveCast, Instance) -> (), Destroy: (ActiveCast) -> (), Terminate: (ActiveCast) -> (), CFrame: CFrame, ID: string }
-	@within TypeDefinitions
-
-	Represents an active block-cast instance.
-]=]
-export type ActiveBlockCast = {
-	Caster: BaseCastData,
-	StateInfo: CastStateInfo,
-	RayInfo: BlockCastRayInfo,
-	UserData: { [any]: any },
-
-	SetVelocity: (ActiveCast, velocity: Vector3) -> (),
-	SetAcceleration: (ActiveCast, acceleration: Vector3) -> (),
-
-	GetVelocity: (ActiveCast) -> Vector3,
-	GetAcceleration: (ActiveCast) -> Vector3,
-	GetPosition: (ActiveCast) -> Vector3,
-
-	AddVelocity: (ActiveCast, velocity: Vector3) -> (),
-	AddAcceleration: (ActiveCast, acceleration: Vector3) -> (),
-	AddPosition: (ActiveCast, position: Vector3) -> (),
-
-	Pause: (ActiveCast) -> (),
-	Resume: (ActiveCast) -> (),
-
-	DestroyObject: (ActiveCast, obj: Instance) -> (),
-
-	Destroy: (ActiveCast) -> (),
-	Terminate: (ActiveCast) -> (),
-	
-	CFrame: CFrame,
-	ID: string,
-}
-
---[=[
-	@type BaseCast { Actives: { ActiveCast | ActiveBlockCast }, Output: BindableEvent, ActiveCastCleaner: BindableEvent, ObjectCache: BindableFunction?, CacheHolder: any? }
+	@type BaseCast { Actives: { ActiveCastCompement | ActiveBlockCast }, Output: BindableEvent, ActiveCastCompementCleaner: BindableEvent, ObjectCache: BindableFunction?, CacheHolder: any? }
 	@within TypeDefinitions
 
 	Internal base cast object state.
 ]=]
 export type BaseCast = {
-	Actives: { ActiveCast | ActiveBlockCast },
+	Actives: { ActiveCastCompement | ActiveBlockcastCompement },
 	Output: BindableEvent,
 	ActiveCastCleaner: BindableEvent,
 	ObjectCache: BindableFunction?,
@@ -405,6 +392,60 @@ export type BaseCastData = {
 	ObjectCache: BindableFunction?,
 	CacheHolder: any?,
 	SyncChange : BindableEvent
+}
+
+-- ECS
+
+--[=[
+	@type ActiveCastCompement {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: CastRayInfo,
+	UserData: { [any]: any },
+	
+	Type : "Raycast",
+	CFrame: CFrame,
+	ID: number | string
+	}
+	@within TypeDefinitions	
+	
+	Represents an active cast data.
+]=]
+export type ActiveCastCompement = {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: CastRayInfo,
+	UserData: { [any]: any },
+	
+	Type : "Raycast",
+	CFrame: CFrame,
+	ID: number | string
+}
+
+--[=[
+	@type ActiveCastCompement {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: CastRayInfo,
+	UserData: { [any]: any },
+	
+	Type : "Raycast",
+	CFrame: CFrame,
+	ID: number | string
+	}
+	@within TypeDefinitions	
+	
+	Represents an active block cast data.
+]=]
+export type ActiveBlockcastCompement = {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: BlockCastRayInfo,
+	UserData: { [any]: any },
+	
+	Type : "Blockcast",
+	CFrame: CFrame,
+	ID: number | string
 }
 
 return {}

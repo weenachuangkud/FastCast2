@@ -11,6 +11,7 @@
 
 local FastCast2Module = script:WaitForChild("FastCast2").Value
 
+
 -- Requires
 
 local ActiveCast = require(FastCast2Module:WaitForChild("ActiveCast"))
@@ -20,8 +21,6 @@ local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 --local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))
 
 --local parent = script.Parent
---local bindableEvent = parent:WaitForChild("Output")
-
 local BaseCast = require(FastCast2Module:WaitForChild("BaseCast"))
 
 -- Variables
@@ -54,16 +53,9 @@ actor:BindToMessage(
 )
 
 actor:BindToMessage(
-	"SetCanPierceModule",
+	"SetFastCastEventsModule",
 	function(moduleScript: ModuleScript?)
-		BaseCast:SetCanPierceModule(moduleScript)
-	end
-)
-
-actor:BindToMessage(
-	"SetBetterLengthChangedModule",
-	function(moduleScript: ModuleScript?)
-		BaseCast:SetBetterLengthChangedModule(moduleScript)
+		BaseCast:SetFastCastEventsModule(moduleScript)
 	end
 )
 
