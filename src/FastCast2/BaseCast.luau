@@ -202,7 +202,7 @@ end
 @method SetFastCastEventsModule
 @within BaseCast
 
-@parameter moduleScript ModuleScript -- The FastCastEventsModule to set.
+@param moduleScript ModuleScript -- The FastCastEventsModule to set.
 
 ]=]
 function BaseCast:SetFastCastEventsModule(moduleScript: ModuleScript)
