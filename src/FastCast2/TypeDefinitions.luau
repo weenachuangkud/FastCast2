@@ -18,19 +18,6 @@ local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
 type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
 
 --[=[
-	@type CanPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
-	@within TypeDefinitions
-
-	Callback used to decide whether a cast should pierce and continue after a hit.
-]=]
-export type CanPierceFunction = (
-	ActiveCastCompement,
-	RaycastResult,
-	segmentVelocity: Vector3,
-	cosmeticBulletObject: Instance?
-) -> boolean
-
---[=[
 	@type FastCastEventsModule ModuleScript
 	@within TypeDefinitions
 
@@ -38,6 +25,28 @@ export type CanPierceFunction = (
 	These functions are invoked by ActiveCast during a lifecycle, (e.g. length updates, pierce checks).
 ]=]
 export type FastCastEventsModule = ModuleScript
+
+export type FastCastEvents = {
+	CanRayPierce: CanRayPierceFunction,
+	RayHit: OnRayHitFunction,
+	RayPierced: OnRayPiercedFunction,
+	LengthChanged: OnLengthChangedFunction,
+	CastTerminating: OnCastTerminatingFunction,
+	CastFire: OnCastFireFunction
+}
+
+--[=[
+	@type CanRayPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
+	@within TypeDefinitions
+
+	Callback used to decide whether a cast should pierce and continue after a hit.
+]=]
+export type CanRayPierceFunction = (
+	ActiveCastCompement,
+	RaycastResult,
+	segmentVelocity: Vector3,
+	cosmeticBulletObject: Instance?
+) -> boolean
 
 --[=[
 	@type OnRayHitFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
@@ -58,7 +67,7 @@ export type OnRayHitFunction = (
 
 	Callback fired when the cast pierces something.
 ]=]
-export type OnRayPierceFunction = (
+export type OnRayPiercedFunction = (
 	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
@@ -131,6 +140,7 @@ export type Caster = {
 	AlreadyInit: boolean,
 	ObjectCacheEnabled: boolean,
 	BulkMoveEnabled: boolean,
+	FastCastEventsModule: FastCastEventsModule,
 
 	Init: (
 		self: Caster,
