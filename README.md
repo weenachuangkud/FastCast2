@@ -10,7 +10,7 @@
 
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
-</br>
+<br\>
 
 # Benefits of using FastCast2
 - Highly customizable
@@ -46,7 +46,7 @@ Follow on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improv
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, fixes
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
-</br>
+<br\>
 
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
