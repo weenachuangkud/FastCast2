@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="500" height="225" alt="FastCast2CoverTrans" src="https://github.com/user-attachments/assets/dcb6f17c-0e3e-46c2-b694-432a6ef867ac" />
+	<img width="4000" height="2000" alt="FastCast2Cover" src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb" />
 </p>
 
 # FastCast2 (Unofficial) 
