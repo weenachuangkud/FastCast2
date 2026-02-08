@@ -219,7 +219,6 @@ end
 @param Direction Vector3 -- The direction of the raycast.
 @param Velocity Vector3 | number -- The velocity of the raycast.
 @param Behavior FastCastBehavior -- The behavior data for the raycast.
-@param GUID string -- The unique identifier for the raycast.
 
 Create a Blockcast.
 
