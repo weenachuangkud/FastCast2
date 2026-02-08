@@ -463,7 +463,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 
 						if
 							canPierceCheck == nil
-							or canPierceCheck(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject) == false
+							or canPierceCheck(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject) == false
 						then
 							cast.StateInfo.IsActivelyResimulating = false
 
