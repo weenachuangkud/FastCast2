@@ -46,11 +46,23 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 ---
 # Installation guide
-1. Go to [Releases](https://github.com/weenachuangkud/FastCast2/releases) and then Install the .rbxm from the latest release
-2. Open Roblox Studio, and open any project
-3. Go to File->Import Roblox Model
-4. After installation, FastCast2 will appear in your workspace
-5. Drag it into ReplicatedStorage
+
+1. Go to [Releases](https://github.com/weenachuangkud/FastCast2/releases) and install the `.rbxm` file from the latest release.
+2. Open Roblox Studio and open any project.
+3. Go to **File → Import Roblox Model** and import the `.rbxm` file.
+4. After importing, **FastCast2** will appear in your Workspace.
+5. Drag **FastCast2** into **ReplicatedStorage**.
+6. Create a Part and set:
+   - Size to `1, 1, 1`
+   - `CanTouch` = false  
+   - `CanCollide` = false  
+   - `CanQuery` = false  
+7. Enjoys
+
+--- 
+
+# Code example
+1. Projectile from your head
 
 
 ### Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
