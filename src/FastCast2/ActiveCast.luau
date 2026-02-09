@@ -812,7 +812,7 @@ function ActiveCast.new(
 
 	local event
 	if RS:IsClient() then
-		event = behavior.SimulateAfterPhysic and RS.PostSimulation or RS.PreSimulation
+		event = behavior.SimulateAfterPhysic and RS.Heartbeat or RS.PreSimulation
 	else
 		event = RS.Heartbeat
 	end
