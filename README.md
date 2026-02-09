@@ -28,13 +28,12 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 
 FastCast2 is an open-source project, and contributions from the community are welcome.
 
-Follow on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
 &nbsp;
 
 > [!NOTE]
-> - I still have not finished making the API Usage, README.md 100% yet
-
+> - API usage and parts of the README are still a work in progress.
 
 
 
