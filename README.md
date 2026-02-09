@@ -17,7 +17,7 @@
 
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
-<br/>
+<br>
 
 # Benefits of using FastCast2
 - Highly customizable
