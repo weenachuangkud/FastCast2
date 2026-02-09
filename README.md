@@ -2,6 +2,9 @@
 	<img width="4000" height="2000" alt="FastCast2Cover" src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb" />
 </p>
 
+![Roblox](https://img.shields.io/badge/made%20for-Roblox-blue?style=for-the-badge&logo=roblox)
+![Luau](https://img.shields.io/badge/language-Luau-blueviolet?style=for-the-badge)
+
 # FastCast2
 > Unofficial continuation of FastCast for Roblox
 
