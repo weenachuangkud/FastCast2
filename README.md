@@ -45,15 +45,12 @@ FastCast2 is an open-source project, and contributions from the community are we
 Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
 ---
-# Installation guide(Normal, Recommended)
+# Installation guide
 1. Go to [Releases](https://github.com/weenachuangkud/FastCast2/releases) and then Install the .rbxm from the latest release
 2. Open Roblox Studio, and open any project
 3. Go to File->Import Roblox Model
 4. After installation, FastCast2 will appear in your workspace
 5. Drag it into ReplicatedStorage
-
-# Installation guide(Rojo)
-1. 
 
 
 ### Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
@@ -64,7 +61,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 # People behind FastCast2
 - [Mawin CK](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer 
-- [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, fixes
+- [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
 <br />
