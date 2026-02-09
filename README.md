@@ -1,11 +1,16 @@
 
-<div style={{ textAlign: "center" }}>
+<div style={{ textAlign: "center", marginBottom: 32 }}>
   <img
     src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb"
-    alt="FastCast2Cover"
-    style={{ maxWidth: "900px", width: "100%", height: "auto" }}
+    alt="FastCast2 Cover"
+    style={{
+      width: "100%",
+      maxHeight: "360px",
+      objectFit: "contain"
+    }}
   />
 </div>
+
 
 ![Roblox](https://img.shields.io/badge/made%20for-Roblox-blue?style=for-the-badge&logo=roblox)
 ![Luau](https://img.shields.io/badge/language-Luau-blueviolet?style=for-the-badge)
