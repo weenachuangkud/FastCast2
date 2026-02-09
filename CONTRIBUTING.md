@@ -1,6 +1,6 @@
 # Contributing to FastCast2
 
-Thank you for considering contributing to FastCast2!  
+**Thank you** for considering contributing to FastCast2!  
 This project is open-source and community-driven, and **all kinds of help are welcome** — code, documentation, bug reports, examples, ideas, or even just spreading the word.
 
 ### How to Contribute
@@ -12,7 +12,7 @@ This project is open-source and community-driven, and **all kinds of help are we
 2. **Want to submit code or docs?**
    - Fork the repository
    - Create a new branch for your work  
-     `git checkout -b fix/something` or `git checkout -b feature/new-cool-thing.`
+     `git checkout -b fix/something` or `git checkout -b feature/new-cool-things`
    - Make your changes
    - Commit your changes (see commit message guidelines below)
    - Push to your fork
@@ -30,4 +30,25 @@ All pull requests will go through **code review** before merging.
 
 ### Commit Message Guidelines
 
-Simple and clear format:
+Examples:
+- `fix: prevent nil reference in ObjectCache`
+- `feat: add BulkMoveTo support for parts.`
+- `docs: improve usage example for parallel mode.`
+- `chore: update Luau types in Caster.`
+(It's recommended to follow this Instruction guideline, but you can make lazy commits if you want, because even the main developer still does that)
+
+### Rules
+
+- **Be respectful** — to everyone (maintainers, other contributors, users)
+- No personal attacks, harassment, or toxic behavior
+- Keep discussions technical and constructive
+
+### Questions?
+
+Feel free to ask anything:
+- An **Issue** on GitHub
+- The [DevForum thread](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+- Or ping me directly
+
+Thanks again for helping make FastCast2 better!  
+— Mawin CK
