@@ -66,17 +66,17 @@ Defaults.FastCastBehavior = {
 	
 	FastCastEventsModuleConfig = {
 		UseLengthChanged = false,
-		UseRayHit = true,
-		UseRayPierced = true,
+		UseHit = true,
+		UsePierced = true,
 		UseCastTerminating = true,
-		UseCanRayPierce = true,
+		UseCanPierce = true,
 		UseCastFire = true
 	},
 
 	FastCastEventsConfig = {
 		UseLengthChanged = false,
-		UseRayHit = true,
-		UseRayPierced = true,
+		UseHit = true,
+		UsePierced = true,
 		UseCastTerminating = true,
 		UseCastFire = true
 	}
