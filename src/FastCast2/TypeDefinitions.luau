@@ -21,11 +21,17 @@ type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
 	@type FastCastEventsModule ModuleScript
 	@within TypeDefinitions
 
-	A table of callback functions (events/hooks) used by ActiveCast.
-	These functions are invoked by ActiveCast during a lifecycle, (e.g. length updates, pierce checks).
+	A moduleScript that will be required by ActiveCast
 ]=]
 export type FastCastEventsModule = ModuleScript
 
+--[=[
+	@type FastCastEventsModule ModuleScript
+	@within TypeDefinitions
+
+	A table of callback functions (events/hooks) used by ActiveCast.
+	These functions are invoked by ActiveCast during a lifecycle, (e.g. length updates, pierce checks).
+]=]
 export type FastCastEvents = {
 	CanPierce: CanPierceFunction,
 	Hit: OnHitFunction,
