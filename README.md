@@ -44,17 +44,11 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 FastCast2 is an open-source project, and contributions from the community are welcome. <br />
 Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-<br />
+
+### Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
 
 
-> [!NOTE]
-> - API usage and parts of the README are still a work in progress.
-
-
-
-
-
-<br />
+---
 
 
 # People behind FastCast2
@@ -62,7 +56,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, fixes
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
-<br/>
+---
 
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
