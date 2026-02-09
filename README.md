@@ -2,11 +2,13 @@
 	<img width="4000" height="2000" alt="FastCast2Cover" src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb" />
 </p>
 
-# FastCast2 (Unofficial) 
+# FastCast2
+> Unofficial continuation of FastCast Roblox
+
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br> **A powerful modern projectile** library
 
 
-**FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on **physics replication**.
+**FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on physics replication.
 
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
