@@ -171,7 +171,7 @@ UIS.InputBegan:Connect(function(Input: InputObject, gp: boolean)
 end)
 ```
 
-### Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
+### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
 
 
 ---
