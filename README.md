@@ -57,7 +57,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
    - `CanTouch` = false  
    - `CanCollide` = false  
    - `CanQuery` = false  
-7. Enjoys
+7. Done — you’re ready to use FastCast2.
 
 --- 
 
