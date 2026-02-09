@@ -56,7 +56,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, fixes
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
----
+<br />
 
 # SPECIAL THANKS TO
 - @avibah On Discord: **For helping me make VMDispatcher**
