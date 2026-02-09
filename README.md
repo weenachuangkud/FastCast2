@@ -3,7 +3,7 @@
 </p>
 
 # FastCast2 (Unofficial) 
-**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**, **A powerful modern projectile** library
+**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br> **A powerful modern projectile** library
 
 
 **FastCast2** It's a projectiles library powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on **physics replication**.
