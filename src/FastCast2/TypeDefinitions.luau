@@ -26,14 +26,7 @@ type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
 export type FastCastEventsModule = ModuleScript
 
 --[=[
-	@type FastCastEvents {
-		CanPierce: CanPierceFunction,
-		Hit: OnHitFunction,
-		Pierced: OnPiercedFunction,
-		LengthChanged: OnLengthChangedFunction,
-		CastTerminating: OnCastTerminatingFunction,
-		CastFire: OnCastFireFunction
-	}
+	@type FastCastEvents { CanPierce: CanPierceFunction, Hit: OnHitFunction, Pierced: OnPiercedFunction, LengthChanged: OnLengthChangedFunction, CastTerminating: OnCastTerminatingFunction, CastFire: OnCastFireFunction }
 	@within TypeDefinitions
 
 	A table of callback functions (events/hooks) used by ActiveCast.
