@@ -17,7 +17,7 @@
 
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
-<br>
+<!-- spacing -->
 
 # Benefits of using FastCast2
 - Highly customizable
@@ -35,7 +35,8 @@ FastCast2 is an open-source project, and contributions from the community are we
 
 Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-&nbsp;
+<!-- spacing -->
+
 
 > [!NOTE]
 > - API usage and parts of the README are still a work in progress.
@@ -44,6 +45,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 
 
+<!-- spacing -->
 
 
 # People behind FastCast2
