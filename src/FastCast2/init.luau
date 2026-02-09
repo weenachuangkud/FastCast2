@@ -210,8 +210,8 @@ function FastCast.new(): TypeDef.Caster
 	return setmetatable(
 		{
 			LengthChanged = Signal.new(),
-			RayHit = Signal.new(),
-			RayPierced = Signal.new(),
+			Hit = Signal.new(),
+			Pierced = Signal.new(),
 			CastTerminating = Signal.new(),
 			CastFire = Signal.new(),
 			WorldRoot = workspace,
@@ -337,6 +337,7 @@ end
 	
 	@method SetFastCastEventsModule
 	@within FastCast
+	
 	@param moduleScript ModuleScript -- The FastCastEventsModule to set.
 ]=]
 function FastCast:SetFastCastEventsModule(moduleScript: ModuleScript)

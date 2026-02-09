@@ -27,21 +27,21 @@ type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
 export type FastCastEventsModule = ModuleScript
 
 export type FastCastEvents = {
-	CanRayPierce: CanRayPierceFunction,
-	RayHit: OnRayHitFunction,
-	RayPierced: OnRayPiercedFunction,
+	CanPierce: CanPierceFunction,
+	Hit: OnHitFunction,
+	Pierced: OnPiercedFunction,
 	LengthChanged: OnLengthChangedFunction,
 	CastTerminating: OnCastTerminatingFunction,
 	CastFire: OnCastFireFunction
 }
 
 --[=[
-	@type CanRayPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
+	@type CanPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> boolean
 	@within TypeDefinitions
 
 	Callback used to decide whether a cast should pierce and continue after a hit.
 ]=]
-export type CanRayPierceFunction = (
+export type CanPierceFunction = (
 	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
@@ -49,12 +49,12 @@ export type CanRayPierceFunction = (
 ) -> boolean
 
 --[=[
-	@type OnRayHitFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
+	@type OnHitFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
 	@within TypeDefinitions
 
 	Callback fired when the cast hits something (non-piercing).
 ]=]
-export type OnRayHitFunction = (
+export type OnHitFunction = (
 	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
@@ -62,12 +62,12 @@ export type OnRayHitFunction = (
 ) -> ()
 
 --[=[
-	@type OnRayPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
+	@type OnPierceFunction (ActiveCast, RaycastResult, Vector3, Instance?) -> ()
 	@within TypeDefinitions
 
 	Callback fired when the cast pierces something.
 ]=]
-export type OnRayPiercedFunction = (
+export type OnPiercedFunction = (
 	ActiveCastCompement,
 	RaycastResult,
 	segmentVelocity: Vector3,
@@ -130,8 +130,8 @@ export type ObjectCache = {
 export type Caster = {
 	WorldRoot: WorldRoot,
 	LengthChanged: RBXScriptSignal,
-	RayHit: RBXScriptSignal,
-	RayPierced: RBXScriptSignal,
+	Hit: RBXScriptSignal,
+	Pierced: RBXScriptSignal,
 	CastTerminating: RBXScriptSignal,
 	CastFire: RBXScriptSignal,
 	Dispatcher: Dispatcher.Dispatcher,
@@ -242,17 +242,17 @@ export type AdaptivePerformance = {
 
 export type FastCastEventsModuleConfig = {
 	UseLengthChanged: boolean,
-	UseRayHit: boolean,
-	UseRayPierced: boolean,
+	UseHit: boolean,
+	UsePierced: boolean,
 	UseCastTerminating: boolean,
-	UseCanRayPierce: boolean,
+	UseCanPierce: boolean,
 	UseCastFire: boolean
 }
 
 export type FastCastEventsConfig = {
 	UseLengthChanged: boolean,
-	UseRayHit: boolean,
-	UseRayPierced: boolean,
+	UseHit: boolean,
+	UsePierced: boolean,
 	UseCastTerminating: boolean,
 	UseCastFire: boolean
 }
