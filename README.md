@@ -2,9 +2,6 @@
 	<img width="4000" height="2000" alt="FastCast2Cover" src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb" />
 </p>
 
-![Platform](https://img.shields.io/badge/platform-Roblox-red)
-
-
 # FastCast2
 > Unofficial continuation of FastCast for Roblox
 
