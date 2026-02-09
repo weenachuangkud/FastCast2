@@ -13,10 +13,10 @@
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br> **A powerful modern projectile** library
 
 
-**FastCast2** It's a **Roblox projectile library** powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on physics replication. <br>
+**FastCast2** It's a **Roblox projectile library** powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on physics replication. <br />
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
-<br>
+<br />
 
 # Benefits of using FastCast2
 - Highly customizable
@@ -30,10 +30,10 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - High Performance
 - Completely free
 
-FastCast2 is an open-source project, and contributions from the community are welcome. <br>
+FastCast2 is an open-source project, and contributions from the community are welcome. <br />
 Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-<br>
+<br />
 
 
 > [!NOTE]
@@ -43,7 +43,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 
 
-<br>
+<br />
 
 
 # People behind FastCast2
