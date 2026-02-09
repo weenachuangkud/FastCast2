@@ -14,7 +14,6 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 
 # Benefits of using FastCast2
 - Highly customizable
-- Supports communication between the main thread and parallel threads, with fine-grained control over threading (at a performance cost)
 - Parallel scripting support
 - Easy to use and integrate
 - Raycast and Blockcast support
