@@ -35,6 +35,7 @@ Examples:
 - `feat: add BulkMoveTo support for parts.`
 - `docs: improve usage example for parallel mode.`
 - `chore: update Luau types in Caster.`
+
 (It's recommended to follow this Instruction guideline, but you can make lazy commits if you want, because even the main developer still does that)
 
 ### Rules
