@@ -171,6 +171,8 @@ UIS.InputBegan:Connect(function(Input: InputObject, gp: boolean)
 end)
 ```
 
+<br />
+
 How to set up [FastCastEventsModule](https://weenachuangkud.github.io/FastCast2/api/TypeDefinitions/#FastCastEventsModule)
 ```lua
 -- Services
