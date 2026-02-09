@@ -62,8 +62,114 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 --- 
 
 # Code example
-1. Projectile from your head
+Shooting projectiles from your head
+```lua
+-- Services
+local Rep = game:GetService("ReplicatedStorage")
+local RepFirst = game:GetService("ReplicatedFirst")
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
 
+-- Modules
+local FastCast2 = Rep:WaitForChild("FastCast2")
+
+-- Requires
+local FastCastTypes = require(FastCast2:WaitForChild("TypeDefinitions"))
+local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
+local FastCastM = require(FastCast2)
+
+-- CONSTANTS
+local SPEED = 500
+
+-- Variables
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local Head = character:WaitForChild("Head")
+
+local Mouse = player:GetMouse()
+
+local ProjectileContainer = workspace:WaitForChild("Projectiles")
+local ProjectileTemplate = Rep:WaitForChild("Projectile")
+
+local debounce = false
+local debounce_time = 0.05
+
+-- CastParams
+local CastParams = RaycastParams.new()
+CastParams.FilterDescendantsInstances = {character}
+CastParams.FilterType = Enum.RaycastFilterType.Exclude
+CastParams.IgnoreWater = true
+
+-- Behavior
+local castBehavior: FastCastTypes = FastCastM.newBehavior()
+castBehavior.MaxDistance = 1000 -- Explictly set MaxDistance to 1000
+castBehavior.RaycastParams = CastParams
+castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+castBehavior.HighFidelitySegmentSize = 1
+castBehavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
+castBehavior.AutoIgnoreContainer = true
+castBehavior.CosmeticBulletContainer = ProjectileContainer
+castBehavior.CosmeticBulletTemplate = ProjectileTemplate
+castBehavior.FastCastEventsConfig = {
+	UseHit = true,
+	UseLengthChanged = false, -- Warning: This will make your FPS tank
+	UseCastTerminating = true,
+	UseCastFire = true,
+	UsePierced = false
+}
+
+-- Caster
+local Caster = FastCastM.new()
+Caster:Init(
+	4, -- Roblox limits at 4 :(
+	RepFirst,
+	"CastVMs",
+	RepFirst,
+	"CastVMContainer",
+	"CastVM",
+	true
+)
+
+-- Functions
+
+local function OnCastTerminating(cast: FastCastTypes.ActiveCastCompement)
+	local obj = cast.RayInfo.CosmeticBulletObject
+	if obj then 
+		obj:Destroy()
+	end
+end
+
+local function OnHit()
+	print("Hit!")
+end
+
+local function OnCastFire()
+	print("CastFire!")
+end
+
+-- Connections
+
+Caster.CastTerminating:Connect(OnCastTerminating)
+Caster.Hit:Connect(OnHit)
+Caster.CastFire:Connect(OnCastFire)
+
+UIS.InputBegan:Connect(function(Input: InputObject, gp: boolean)
+	if gp then return end
+	if debounce then return end
+	
+	if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+		debounce = true
+		
+		local Origin = Head.Position
+		local Direction = (Mouse.Hit.Position - Origin).Unit
+		
+		Caster:RaycastFire(Origin, Direction, SPEED, castBehavior)
+		
+		task.wait(debounce_time)
+		debounce = false
+	end
+end)
+```
 
 ### Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
 
