@@ -102,7 +102,7 @@ CastParams.IgnoreWater = true
 
 -- Behavior
 local castBehavior: FastCastTypes = FastCastM.newBehavior()
-castBehavior.MaxDistance = 1000 -- Explictly set MaxDistance to 1000
+castBehavior.MaxDistance = 1000 -- Explicitly set MaxDistance to 1000
 castBehavior.RaycastParams = CastParams
 castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 castBehavior.HighFidelitySegmentSize = 1
