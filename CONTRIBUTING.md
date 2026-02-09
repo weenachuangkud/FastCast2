@@ -14,7 +14,7 @@ This project is open-source and community-driven, and **all kinds of help are we
    - Create a new branch for your work  
      `git checkout -b fix/something` or `git checkout -b feature/new-cool-things`
    - Make your changes
-   - Commit your changes (see commit message guidelines below)
+   - Commit your changes
    - Push to your fork
    - Open a **Pull Request** against the `main` branch
 
