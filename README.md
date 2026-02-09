@@ -3,7 +3,7 @@
 </p>
 
 # FastCast2
-> Unofficial continuation of FastCast Roblox
+> Unofficial continuation of FastCast for Roblox
 
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br> **A powerful modern projectile** library
 
