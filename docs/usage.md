@@ -84,4 +84,13 @@ Caster:GetAccelerationCast(
 ) → Vector3-- The current acceleration of the ActiveCast.
 ```
 
+<br />
+
+Gets the position of an ActiveCast.
+```lua
+FastCast:GetPositionCast(
+  cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
+) → Vector3-- The current position of the ActiveCast.
+```
+
 For usage, please refer to the [API documentation](/api/FastCast#new)!
