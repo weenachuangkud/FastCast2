@@ -103,7 +103,7 @@ CastParams.IgnoreWater = true
 
 -- Behavior
 local castBehavior: FastCastTypes = FastCastM.newBehavior()
-castBehavior.MaxDistance = 1000 -- Explicitly set MaxDistance to 1000
+castBehavior.MaxDistance = 1000
 castBehavior.RaycastParams = CastParams
 castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 castBehavior.HighFidelitySegmentSize = 1
@@ -111,6 +111,7 @@ castBehavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 castBehavior.AutoIgnoreContainer = true
 castBehavior.CosmeticBulletContainer = ProjectileContainer
 castBehavior.CosmeticBulletTemplate = ProjectileTemplate
+castBehavior.UserData = {} -- Initial UserData when ActiveCast created
 castBehavior.FastCastEventsConfig = {
 	UseHit = true,
 	UseLengthChanged = false, -- Warning: Setting this to true will make your FPS tank when there are 100-200+ projectiles
