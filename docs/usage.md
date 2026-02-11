@@ -52,5 +52,18 @@ Caster:RaycastFire(
 ) → string-- The ActiveCast ID of the fired raycast.
 ```
 
+<br />
+
+Blockcasts the Caster with the specified parameters.
+```lua
+FastCast:BlockcastFire(
+  origin: Vector3,-- The origin of the blockcast.
+  Size: Vector3,-- The size of the blockcast.
+  direction: Vector3,-- The direction of the blockcast.
+  velocity: Vector3 | number,-- The velocity of the raycast.
+  BehaviorData: FastCastBehavior?-- The behavior data for the raycast.
+) → string-- The ActiveCast ID of the fired raycast.
+```
+
 
 For usage, please refer to the [API documentation](/api/FastCast#new)!
