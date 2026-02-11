@@ -392,7 +392,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 
 		if canPierceCheckfn ~= nil then
 			if expectingShortCall == false and cast.StateInfo.IsActivelySimulatingPierce then
-				FastCast.TerminateCast(cast, castTerminatingfn)
+				FastCast:TerminateCast(cast, castTerminatingfn)
 				
 				warn(
 					"WARN: The latest call to CanPierceCallback took too long to complete! This cast is going to suffer desyncs which WILL cause unexpected behavior and errors. Please fix your performance problems, or remove statements that yield (e.g. wait() calls)"
@@ -415,7 +415,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 				cast.StateInfo.CancelHighResCast = false
 
 				if cast.StateInfo.IsActivelyResimulating then
-					FastCast.TerminateCast(cast, castTerminatingfn)
+					FastCast:TerminateCast(cast, castTerminatingfn)
 					
 					warn(
 						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
@@ -491,7 +491,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 								)
 							end
 							
-							FastCast.TerminateCast(cast, castTerminatingfn)
+							FastCast:TerminateCast(cast, castTerminatingfn)
 							
 							local vis = DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 							if vis ~= nil then
@@ -536,9 +536,6 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 				end
 
 				cast.StateInfo.IsActivelyResimulating = false
-				--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
-				--		FastCast.TerminateCast(cast)
-				--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
 			else
 				if DebugLogging.Hit then
 					print("Hit was successful. Terminating.")
@@ -553,7 +550,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 					)
 				end
 				
-				FastCast.TerminateCast(cast, castTerminatingfn)
+				FastCast:TerminateCast(cast, castTerminatingfn)
 				
 				DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
 				return
@@ -575,7 +572,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 			while true do
 				if resultOfCast.Instance:IsA("Terrain") then
 					if material == Enum.Material.Water then
-						FastCast.TerminateCast(cast, castTerminatingfn)
+						FastCast:TerminateCast(cast, castTerminatingfn)
 						
 						error(
 							"Do not add Water as a piercable material. If you need to pierce water, set cast.RayInfo.Parameters.IgnoreWater = true instead",
@@ -652,7 +649,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 					)
 				end
 				
-				FastCast.TerminateCast(cast, castTerminatingfn)
+				FastCast:TerminateCast(cast, castTerminatingfn)
 				
 				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false, VisualizeCasts, VisualizeCastSettings)
 				return
@@ -661,7 +658,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 	end
 
 	if cast.StateInfo.DistanceCovered >= cast.RayInfo.MaxDistance then
-		FastCast.TerminateCast(cast, castTerminatingfn)
+		FastCast:TerminateCast(cast, castTerminatingfn)
 		
 		DbgVisualizeHit(CFrame.new(currentTarget), false, VisualizeCasts, VisualizeCastSettings)
 	end
@@ -773,7 +770,7 @@ function ActiveCast.new(
 		UserData = {},
 		ID = activeCastID,
 	}
-
+	
 	if behavior.UserData then
 		cast.UserData = behavior.UserData
 	end
@@ -855,7 +852,7 @@ function ActiveCast.new(
 			
 			local castTerminatingfn: TypeDef.OnCastTerminatingFunction = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating and FastCastEvents.castTerminatingfn or nil
 			if cast.StateInfo.IsActivelyResimulating then
-				FastCast.TerminateCast(cast, castTerminatingfn)
+				FastCast:TerminateCast(cast, castTerminatingfn)
 				
 				error(
 					"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
