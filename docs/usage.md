@@ -3,10 +3,15 @@ sidebar_position: 2
 ---
 
 # Usage
+
+Constructs a new Caster object.
 ```lua
 local Caster = FastCast.new()
 ```
-Constructs a new Caster object.
+
+<br />
+
+Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 
 ```lua
 Caster:Init(
@@ -25,13 +30,14 @@ Caster:Init(
 ) → ()
 Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 ```
-Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 
+<br />
+
+Set the FastCastEventsModule for all BaseCasts created from this Caster.
 ```lua
 FastCast:SetFastCastEventsModule(
 moduleScript: ModuleScript-- The FastCastEventsModule to set.
 ) → ()
 ```
-Set the FastCastEventsModule for all BaseCasts created from this Caster.
 
 For usage, please refer to the [API documentation](/api/FastCast#new)!
