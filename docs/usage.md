@@ -171,6 +171,17 @@ Caster:SyncChangesToCast(
 ) → ()
 ```
 
+<br />
+
+
+Terminate function for casts
+```lua
+FastCast:TerminateCast(
+  cast: ActiveCastCompement | ActiveBlockcastCompement,-- Compement
+  castTerminatingFunction: (cast: vaildcast) → ()-- Function to be called when the cast is terminating
+) → ()
+```
+
 
 <br />
 
