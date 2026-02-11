@@ -70,7 +70,7 @@ Caster:BlockcastFire(
 Gets the velocity of an ActiveCast.
 
 ```lua
-Caster:GetVelocityCast(
+FastCast.GetVelocityCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → Vector3-- The current velocity of the ActiveCast.
 ```
@@ -79,7 +79,7 @@ Caster:GetVelocityCast(
 
 Gets the acceleration of an ActiveCast.
 ```lua
-Caster:GetAccelerationCast(
+FastCast.GetAccelerationCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → Vector3-- The current acceleration of the ActiveCast.
 ```
@@ -88,9 +88,19 @@ Caster:GetAccelerationCast(
 
 Gets the position of an ActiveCast.
 ```lua
-FastCast:GetPositionCast(
+FastCast.GetPositionCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → Vector3-- The current position of the ActiveCast.
+```
+
+<br />
+
+Sets the velocity of an ActiveCast to the specified Vector3.
+```lua
+FastCast.SetVelocityCast(
+  cast: ActiveCastCompement | ActiveBlockcastCompement,-- Compement
+  velocity: Vector3-- The new velocity to set.
+) → ()
 ```
 
 For usage, please refer to the [API documentation](/api/FastCast#new)!
