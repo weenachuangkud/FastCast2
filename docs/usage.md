@@ -198,6 +198,14 @@ Sets whether ObjectCache is enabled for this Caster. It is recommended to interf
 FastCast:SetObjectCacheEnabled(enabled: boolean) → ()
 ```
 
+<br />
+
+
+Destroy's a Caster, cleaning up all resources used by it.
+```lua
+FastCast:Destroy() → ()
+```
+
 
 <br />
 
