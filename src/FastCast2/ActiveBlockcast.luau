@@ -536,9 +536,6 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 				end
 
 				cast.StateInfo.IsActivelyResimulating = false
-				--	elseif (cast.StateInfo.HighFidelityBehavior ~= 1 and cast.StateInfo.HighFidelityBehavior ~= 3) then
-				--		FastCast.TerminateCast(cast)
-				--		error("Invalid value " .. (cast.StateInfo.HighFidelityBehavior) .. " for HighFidelityBehavior.")
 			else
 				if DebugLogging.Hit then
 					print("Hit was successful. Terminating.")
