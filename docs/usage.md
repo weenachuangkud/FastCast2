@@ -65,5 +65,23 @@ FastCast:BlockcastFire(
 ) → string-- The ActiveCast ID of the fired raycast.
 ```
 
+<br />
+
+Gets the velocity of an ActiveCast.
+
+```lua
+FastCast:GetVelocityCast(
+  cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
+) → Vector3-- The current velocity of the ActiveCast.
+```
+
+<br />
+
+Gets the acceleration of an ActiveCast.
+```lua
+FastCast:GetAccelerationCast(
+  cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
+) → Vector3-- The current acceleration of the ActiveCast.
+```
 
 For usage, please refer to the [API documentation](/api/FastCast#new)!
