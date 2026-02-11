@@ -107,7 +107,7 @@ Caster:SetVelocityCast(
 
 Sets the acceleration of an ActiveCast to the specified Vector3.
 ```lua
-FastCast:SetAccelerationCast(
+Caster:SetAccelerationCast(
 cast: ActiveCastCompement | ActiveBlockcastCompement,-- Compement
 acceleration: Vector3-- The new acceleration to set.
 ) → ()
@@ -117,7 +117,7 @@ acceleration: Vector3-- The new acceleration to set.
 
 Pauses simulation for an ActiveCast.
 ```lua
-FastCast:PauseCast(
+Caster:PauseCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → ()
 ```
@@ -126,7 +126,7 @@ FastCast:PauseCast(
 
 Resumes simulation for an ActiveCast if it was paused previously.
 ```lua
-FastCast:ResumeCast(
+Caster:ResumeCast(
 cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → ()
 ```
@@ -135,7 +135,7 @@ cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 
 Add position to an ActiveCast with the specified Vector3.
 ```lua
-FastCast:AddPositionCast(
+Caster:AddPositionCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement,-- Compement
   position: Vector3-- The new position to add.
 ) → ()
@@ -145,7 +145,7 @@ FastCast:AddPositionCast(
 
 Add velocity to an ActiveCast with the specified Vector3.
 ```lua
-FastCast:AddVelocityCast(
+Caster:AddVelocityCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement,-- Compement
   velocity: Vector3-- The new velocity to add.
 ) → ()
@@ -155,7 +155,7 @@ FastCast:AddVelocityCast(
 
 Add acceleration to an ActiveCast with the specified Vector3.
 ```lua
-FastCast:AddAccelerationCast(
+Caster:AddAccelerationCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement,-- Compement
   acceleration: Vector3-- The new acceleration to add.
 ) → ()
@@ -166,7 +166,7 @@ FastCast:AddAccelerationCast(
 
 Synchronize new changes to the ActiveCast.
 ```lua
-FastCast:SyncChangesToCast(
+Caster:SyncChangesToCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → ()
 ```
