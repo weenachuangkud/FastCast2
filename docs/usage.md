@@ -56,7 +56,7 @@ Caster:RaycastFire(
 
 Blockcasts the Caster with the specified parameters.
 ```lua
-FastCast:BlockcastFire(
+Caster:BlockcastFire(
   origin: Vector3,-- The origin of the blockcast.
   Size: Vector3,-- The size of the blockcast.
   direction: Vector3,-- The direction of the blockcast.
@@ -70,7 +70,7 @@ FastCast:BlockcastFire(
 Gets the velocity of an ActiveCast.
 
 ```lua
-FastCast:GetVelocityCast(
+Caster:GetVelocityCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → Vector3-- The current velocity of the ActiveCast.
 ```
@@ -79,7 +79,7 @@ FastCast:GetVelocityCast(
 
 Gets the acceleration of an ActiveCast.
 ```lua
-FastCast:GetAccelerationCast(
+Caster:GetAccelerationCast(
   cast: ActiveCastCompement | ActiveBlockcastCompement-- Compement
 ) → Vector3-- The current acceleration of the ActiveCast.
 ```
