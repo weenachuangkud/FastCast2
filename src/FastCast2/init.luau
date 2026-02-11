@@ -419,7 +419,7 @@ Gets the velocity of an ActiveCast.
 @within FastCast
 @return Vector3 -- The current velocity of the ActiveCast.
 ]=]
-function FastCast.GetVelocityCast(cast: vaildcast)
+function FastCast:GetVelocityCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 	return GetVelocityAtTime(
@@ -439,7 +439,7 @@ Gets the acceleration of an ActiveCast.
 @return Vector3 -- The current acceleration of the ActiveCast.
 
 ]=]
-function FastCast.GetAccelerationCast(cast: vaildcast)
+function FastCast:GetAccelerationCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 	return GetVelocityAtTime(
@@ -458,7 +458,7 @@ Gets the position of an ActiveCast.
 @within FastCast
 @return Vector3 -- The current position of the ActiveCast.
 ]=]
-function FastCast.GetPositionCast(cast: vaildcast)
+function FastCast:GetPositionCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 	return GetPositionAtTime(
@@ -479,7 +479,7 @@ Sets the velocity of an ActiveCast to the specified Vector3.
 @within FastCast
 
 ]=]
-function FastCast.SetVelocityCast(cast: vaildcast, velocity: Vector3)
+function FastCast:SetVelocityCast(cast: vaildcast, velocity: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	ModifyTransformation(cast, velocity, nil, nil)
 end
@@ -494,7 +494,7 @@ Sets the acceleration of an ActiveCast to the specified Vector3.
 @within FastCast
 
 ]=]
-function FastCast.SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
+function FastCast:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	ModifyTransformation(cast, nil, acceleration, nil)
 end
@@ -508,7 +508,7 @@ Pauses simulation for an ActiveCast.
 @within FastCast
 
 ]=]
-function FastCast.PauseCast(cast: vaildcast)
+function FastCast:PauseCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	cast.StateInfo.Paused = true
 end
@@ -522,7 +522,7 @@ Resumes simulation for an ActiveCast if it was paused previously.
 @within FastCast
 
 ]=]
-function FastCast.ResumeCast(cast: vaildcast)
+function FastCast:ResumeCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	cast.StateInfo.Paused = false
 end
@@ -537,7 +537,7 @@ Add position to an ActiveCast with the specified Vector3.
 @within FastCast
 
 ]=]
-function FastCast.AddPositionCast(cast: vaildcast, position: Vector3)
+function FastCast:AddPositionCast(cast: vaildcast, position: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 	return GetPositionAtTime(
@@ -558,7 +558,7 @@ Add velocity to an ActiveCast with the specified Vector3.
 @within FastCast
 
 ]=]
-function FastCast.AddVelocityCast(cast: vaildcast, velocity: Vector3)
+function FastCast:AddVelocityCast(cast: vaildcast, velocity: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	FastCast:SetVelocity(cast:GetVelocity() + velocity)
 end
@@ -573,7 +573,7 @@ Add acceleration to an ActiveCast with the specified Vector3.
 @within FastCast
 
 ]=]
-function FastCast.AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
+function FastCast:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	cast:SetAcceleration(cast:GetAcceleration() + acceleration)
 end
@@ -587,14 +587,19 @@ Synchronize new changes to the ActiveCast.
 @within FastCast
 
 ]=]
-function FastCast.SyncChangesToCast(cast: vaildcast)
+function FastCast:SyncChangesToCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	cast.Caster.SyncChange:Fire(cast)
 end
 
--- Terminate function for casts
-
-function FastCast.TerminateCast(cast: vaildcast, castTerminatingFunction: (cast: vaildcast) -> ())
+--[=[
+	Terminate function for casts
+	@method TerminateCast
+	@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+	@param castTerminatingFunction (cast: vaildcast) -> () -- Function to be called when the cast is terminating
+	@within FastCast
+]=]
+function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: (cast: vaildcast) -> ())
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
 	)
 
