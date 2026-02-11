@@ -182,6 +182,22 @@ FastCast:TerminateCast(
 ) → ()
 ```
 
+<br />
+
+
+Sets whether BulkMoveTo is enabled for this Caster.
+```lua
+Caster:SetBulkMoveEnabled(enabled: boolean) → ()
+```
+
+<br />
+
+
+Sets whether ObjectCache is enabled for this Caster. It is recommended to interface with this via FastCast:Init() instead.
+```lua
+FastCast:SetObjectCacheEnabled(enabled: boolean) → ()
+```
+
 
 <br />
 
