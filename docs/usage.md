@@ -35,9 +35,22 @@ Initializes the Caster with the given parameters. This is required before firing
 
 Set the FastCastEventsModule for all BaseCasts created from this Caster.
 ```lua
-FastCast:SetFastCastEventsModule(
+Caster:SetFastCastEventsModule(
 moduleScript: ModuleScript-- The FastCastEventsModule to set.
 ) → ()
 ```
+
+<br />
+
+Raycasts the Caster with the specified parameters.
+```lua
+Caster:RaycastFire(
+  origin: Vector3,-- The origin of the raycast.
+  direction: Vector3,-- The direction of the raycast.
+  velocity: Vector3 | number,-- The velocity of the raycast.
+  BehaviorData: FastCastBehavior?-- The behavior data for the raycast.
+) → string-- The ActiveCast ID of the fired raycast.
+```
+
 
 For usage, please refer to the [API documentation](/api/FastCast#new)!
