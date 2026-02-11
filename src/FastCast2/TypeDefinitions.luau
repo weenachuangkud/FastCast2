@@ -1,9 +1,9 @@
 --!strict
 
 --[[
-	- Author: Mawin CK
-	- Date: 2025
-	-- Version: 0.0.6
+	- Author : Mawin CK
+	- Date : 2025
+	-- Verison : 0.0.7
 ]]
 
 --[=[
@@ -21,17 +21,11 @@ type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
 	@type FastCastEventsModule ModuleScript
 	@within TypeDefinitions
 
-	A moduleScript that will be required by ActiveCast
+	A table of callback functions (events/hooks) used by ActiveCast.
+	These functions are invoked by ActiveCast during a lifecycle, (e.g. length updates, pierce checks).
 ]=]
 export type FastCastEventsModule = ModuleScript
 
---[=[
-	@type FastCastEvents { CanPierce: CanPierceFunction, Hit: OnHitFunction, Pierced: OnPiercedFunction, LengthChanged: OnLengthChangedFunction, CastTerminating: OnCastTerminatingFunction, CastFire: OnCastFireFunction }
-	@within TypeDefinitions
-
-	A table of callback functions (events/hooks) used by ActiveCast.
-	These functions are invoked by ActiveCast during a lifecycle (e.g., length updates, pierce checks).
-]=]
 export type FastCastEvents = {
 	CanPierce: CanPierceFunction,
 	Hit: OnHitFunction,
@@ -264,7 +258,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, UseBetterLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings }
+	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, UseBetterLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -289,7 +283,8 @@ export type FastCastBehavior = {
 	
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
 
-	FastCastEventsConfig: FastCastEventsConfig
+	FastCastEventsConfig: FastCastEventsConfig,
+	UserData: any
 }
 
 --[=[
