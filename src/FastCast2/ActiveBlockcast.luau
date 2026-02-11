@@ -2,7 +2,7 @@
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
-	-- Verison : 0.0.6
+	-- Verison : 0.0.7
 ]]
 
 -- Services
@@ -773,6 +773,10 @@ function ActiveCast.new(
 		UserData = {},
 		ID = activeCastID,
 	}
+
+	if behavior.UserData then
+		cast.UserData = behavior.UserData
+	end
 
 	if cast.RayInfo.Parameters ~= nil then
 		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
