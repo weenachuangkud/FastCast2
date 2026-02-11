@@ -766,9 +766,9 @@ function ActiveCast.new(
 		ID = activeCastID
 	} :: any
 
-	--[[if cast.StateInfo.HighFidelityBehavior == 2 then
-		cast.StateInfo.HighFidelityBehavior = 3
-	end]]
+	if behavior.UserData then
+		cast.UserData = behavior.UserData
+	end
 
 	if cast.RayInfo.Parameters ~= nil then
 		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
