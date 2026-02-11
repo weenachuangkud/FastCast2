@@ -1,9 +1,9 @@
 --!strict
 
 --[[
-	- Author: Mawin CK
-	- Date: 2025
-	-- Version: 0.0.7
+	- Author : Mawin CK
+	- Date : 2025
+	-- Verison : 0.0.7
 ]]
 
 --[=[
@@ -191,23 +191,23 @@ export type Caster = {
 	
 	SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (),
 	
-	AddVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
-	SetVelocityCast: (cast: vaildcast, velocity: Vector3) -> (),
-	GetVelocityCast: (cast: vaildcast, velocity: Vector3) -> Vector3,
+	AddVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> (),
+	SetVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> (),
+	GetVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> Vector3,
 	
-	AddAccelerationCast: (cast: vaildcast) -> Vector3,
-	GetAccelerationCast: (cast: vaildcast) -> Vector3,
-	SetAccelerationCast: (cast: vaildcast, acceleration: Vector3) -> (),
+	AddAccelerationCast: (Caster, cast: vaildcast) -> Vector3,
+	GetAccelerationCast: (Caster, cast: vaildcast) -> Vector3,
+	SetAccelerationCast: (Caster, cast: vaildcast, acceleration: Vector3) -> (),
 	
-	GetPositionCast: (cast: vaildcast, Position: Vector3) -> Vector3,
-	AddPositionCast: (cast: vaildcast, Position: Vector3) -> (),
+	GetPositionCast: (Caster, cast: vaildcast, Position: Vector3) -> Vector3,
+	AddPositionCast: (Caster, cast: vaildcast, Position: Vector3) -> (),
 	
-	ResumeCast: (cast: vaildcast) -> (),
-	PauseCast: (cast: vaildcast) -> (),
+	ResumeCast: (Caster, cast: vaildcast) -> (),
+	PauseCast: (Caster, cast: vaildcast) -> (),
 	
-	SyncChangesToCast: (cast: vaildcast) -> (),
+	SyncChangesToCast: (Caster, cast: vaildcast) -> (),
 	
-	TerminateCast: (cast: vaildcast) -> (),
+	TerminateCast: (Caster, cast: vaildcast) -> (),
 	
 	Destroy: (Caster) -> ()
 }
@@ -264,7 +264,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, UseBetterLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings }
+	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, UseLengthChanged: boolean, UseBetterLengthChanged: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
