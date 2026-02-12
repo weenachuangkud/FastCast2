@@ -38,13 +38,6 @@ local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412)
 -- AutomaticPerformance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
 
---[=[
-	@class ActiveBlockCast
-
-	An ActiveBlockCast represents a BlockCast fired by a parent [Caster](Caster). It contains methods of accessing the physics 
-	data of this specific BlockCast at any given time, as well as methods to alter its trajectory during runtime.
-]=]
-
 local ActiveCast = {}
 
 --ActiveCast.__index = ActiveCast
@@ -664,30 +657,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 	end
 end
 
---[=[
-	@function new
-	@private
-	@within ActiveBlockCast
 
-	Creates a new ActiveBlockCast instance with the given parameters.
-	This is the fancy part where numbers and vectors start cooperating.
-
-	@param BaseCast TypeDef.BaseCastData -- The base cast data used to initialize the active cast.
-
-	@param activeCastID string -- Unique identifier for this active cast.
-
-	@param origin Vector3 -- The starting position of the cast.
-
-	@param size Vector3 -- The size of the cast volume.
-
-	@param direction Vector3 -- The direction the cast will travel in.
-
-	@param velocity Vector3 | number -- The velocity of the cast (either directional or scalar).
-
-	@param eventModule TypeDef.FastCastEventsModule -- The event module to use for this cast.	
-
-	@return ActiveBlockcastCompement -- The newly created ActiveBlockcastCompement.
-]=]
 function ActiveCast.new(
 	BaseCast: TypeDef.BaseCastData,
 	activeCastID: number,
