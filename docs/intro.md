@@ -12,6 +12,7 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 
 # Benefits of using FastCast2
 - Highly customizable
+- Versatile projectile library
 - Parallel scripting support
 - Easy to use and integrate
 - Raycast and Blockcast support
