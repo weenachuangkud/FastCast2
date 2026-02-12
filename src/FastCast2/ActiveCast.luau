@@ -36,12 +36,6 @@ local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 -- Automatic Performance setting
 local HIGH_FIDE_INCREASE_SIZE = 0.5
 
---[=[
-	@class ActiveCast
-
-	An ActiveCast represents a bullet fired by a parent [Caster](Caster). It contains methods of accessing the physics 
-	data of this specific bullet at any given time, as well as methods to alter its trajectory during runtime.
-]=]
 
 local ActiveCast = {}
 
@@ -659,30 +653,7 @@ local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, ex
 	end
 end
 
---[=[
-	@function new
-	@private
-	@within ActiveCast
 
-	Creates a new ActiveCast instance with the given parameters.
-	Don't use this method! Instead, use [Caster:RaycastFire()](TypeDefinitions#Caster) to create ActiveCasts.
-
-	@param BaseCast TypeDef.BaseCastData -- The base cast data used to initialize the active cast.
-
-	@param activeCastID string -- Unique identifier for this active cast.
-
-	@param origin Vector3 -- The starting position of the cast.
-
-	@param direction Vector3 -- The direction the cast will travel in.
-
-	@param velocity Vector3 | number -- The velocity of the cast (either directional or scalar).
-
-	@param behavior TypeDef.FastCastBehavior -- The FastCast behavior configuration.
-	
-	@param eventModule TypeDef.FastCastEventsModule -- The event module to use for this cast.	
-
-	@return ActiveCastCompement -- The newly created ActiveCastCompement.
-]=]
 function ActiveCast.new(
 	BaseCast: TypeDef.BaseCastData,
 	activeCastID: number,
