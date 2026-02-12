@@ -387,21 +387,7 @@ export type BlockCastRayInfo = {
 }
 
 --[=[
-	@type BaseCast { Actives: { ActiveCastCompement | ActiveBlockCast }, Output: BindableEvent, ActiveCastCompementCleaner: BindableEvent, ObjectCache: BindableFunction?, CacheHolder: any? }
-	@within TypeDefinitions
-
-	Internal base cast object state.
-]=]
-export type BaseCast = {
-	Actives: { ActiveCastCompement | ActiveBlockcastCompement },
-	Output: BindableEvent,
-	ActiveCastCleaner: BindableEvent,
-	ObjectCache: BindableFunction?,
-	CacheHolder: any?,
-}
-
---[=[
-	@type BaseCastData { Output: BindableEvent, ActiveCastCleaner: BindableEvent, ObjectCache: BindableFunction?, CacheHolder: any? }
+	@type BaseCastData { Output: BindableEvent, ActiveCastCleaner: BindableEvent, ObjectCache: BindableFunction?, CacheHolder: any?, SyncChange : BindableEvent }
 	@within TypeDefinitions
 
 	Data stored on the caster that ActiveCasts reference.
