@@ -9,12 +9,13 @@ local HTTPS = game:GetService("HttpService")
 local RS = game:GetService("RunService")
 
 -- Requires
-local FastCastM = script.Parent
+local FastCast2 = script.Parent
+local FastCastM = require(FastCast2)
 local TypeDefinitions = require(script.Parent.TypeDefinitions)
-local TypeDef = require(FastCastM:WaitForChild("TypeDefinitions"))
-local Signal = require(FastCastM:WaitForChild("Signal"))
-local ActiveCast = require(FastCastM:WaitForChild("ActiveCast"))
-local ActiveBlockcast = require(FastCastM:WaitForChild("ActiveBlockcast"))
+local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
+local Signal = require(FastCast2:WaitForChild("Signal"))
+local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
+local ActiveBlockcast = require(FastCast2:WaitForChild("ActiveBlockcast"))
 local FastCastEventsModule: ModuleScript? = nil
 
 
@@ -316,7 +317,7 @@ function BaseCast:Destroy()
 	FastCastEventsModule = nil
 
 	for k, v in Actives do
-		v:Terminate()
+		FastCastM:TerminateCast(v)
 	end
 
 	Actives = {}
