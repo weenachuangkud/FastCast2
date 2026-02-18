@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[484],{84410:s=>{s.exports=JSON.parse('{"sourceUrl":"https://github.com/weenachuangkud/FastCast2/blob/main","baseUrl":"/FastCast2/","classOrder":[],"apiCategories":[]}')}}]);
