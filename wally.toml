@@ -1,5 +1,5 @@
 [package]
-name = "weenachuangkud/fastcast2" # Replace with your Roblox username and project name
+name = "weenachuangkud/FastCast2" # Replace with your Roblox username and project name
 description = "An improved version of FastCast with Parallel scripting, more extensions, and statically typed"
 author = ["Mawin Chuangkud"]
 version = "0.0.7"
