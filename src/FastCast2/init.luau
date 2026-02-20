@@ -56,6 +56,7 @@
 
 -- Services
 --local HTTPService = game:GetService("HttpService")
+local RS = game:GetService("RunService")
 
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
@@ -729,5 +730,6 @@ function FastCast:Destroy()
 	self.Dispatcher:Destroy()
 	setmetatable(self, nil)
 end
+
 
 return FastCast
