@@ -1,6 +1,11 @@
 {
 	"name": "FastCast2",
 	"tree": {
-		"$path": "src/FastCast2"
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"FastCast2": {
+				"$path": "src/FastCast2"
+			}
+		}
 	}
 }

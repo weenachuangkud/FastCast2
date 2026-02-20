@@ -1,7 +1,8 @@
 {
+  "className": "Script",
   "properties": {
     "Disabled": true
-  }
+  },
   "children": {
     "FastCast2": {
       "className": "ObjectValue"
