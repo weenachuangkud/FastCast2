@@ -359,7 +359,6 @@ end
 	@param direction Vector3 -- The direction of the raycast.
 	@param velocity Vector3 | number -- The velocity of the raycast.
 	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
-	@return string -- The ActiveCast ID of the fired raycast.
 ]=]
 function FastCast:RaycastFire(
 	origin: Vector3,
@@ -373,11 +372,9 @@ function FastCast:RaycastFire(
 	if BehaviorData == nil then
 		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
 	end
-	--local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	-- BABE RAYCAST!!!!!
 	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
-	--return ActiveCastID
 end
 
 --[=[
@@ -388,9 +385,8 @@ end
 	@param origin Vector3 -- The origin of the blockcast.
 	@param Size Vector3 -- The size of the blockcast.
 	@param direction Vector3 -- The direction of the blockcast.
-	@param velocity Vector3 | number -- The velocity of the raycast.
-	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
-	@return string -- The ActiveCast ID of the fired raycast.
+	@param velocity Vector3 | number -- The velocity of the blockcast.
+	@param BehaviorData FastCastBehavior? -- The behavior data for the blockcast.
 ]=]
 function FastCast:BlockcastFire(
 	origin: Vector3,
@@ -405,10 +401,36 @@ function FastCast:BlockcastFire(
 	if BehaviorData == nil then
 		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
 	end
-	--local ActiveCastID = HTTPService:GenerateGUID(false)
 
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
-	--return ActiveCastID
+end
+
+--[=[
+	Spherecasts the Caster with the specified parameters.
+	@method SpherecastFire
+	@within FastCast
+
+	@param origin Vector3 -- The origin of the spherecast.
+	@param Radius number -- The radius of the spherecast.
+	@param direction Vector3 -- The direction of the spherecast.
+	@param velocity Vector3 | number -- The velocity of the spherecast.
+	@param BehaviorData FastCastBehavior? -- The behavior data for the spherecast.
+]=]
+function FastCast:SpherecastFire(
+	origin: Vector3,
+	Radius: number,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
+	if not self.AlreadyInit then
+		error("Please Init caster")
+	end
+	if BehaviorData == nil then
+		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
+	end
+	
+	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -733,3 +755,4 @@ end
 
 
 return FastCast
+	
