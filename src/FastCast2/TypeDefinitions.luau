@@ -3,7 +3,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Verison : 0.0.7
+	-- Verison : 0.0.8
 ]]
 
 --[=[
@@ -21,7 +21,7 @@ local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
 
 	A type that can be either an ActiveCast or an ActiveBlockcast.
 ]=]
-type vaildcast = ActiveCastCompement | ActiveBlockcastCompement
+type vaildcast = ActiveCastCompement | ActiveBlockcastCompement | ActiveSpherecastCompement
 
 --[=[
 	@type FastCastEventsModule ModuleScript
@@ -182,16 +182,25 @@ export type Caster = {
 		Origin: Vector3,
 		Direction: Vector3,
 		Velocity: Vector3 | number,
-		Behavior: FastCastBehavior
-	) -> string,
+		Behavior: FastCastBehavior?
+	) -> (),
 	BlockcastFire: (
 		self: Caster,
 		Origin: Vector3,
 		Size: Vector3,
 		Direction: Vector3,
 		Velocity: Vector3 | number,
-		Behavior: FastCastBehavior
-	) -> string,
+		Behavior: FastCastBehavior?
+	) -> (),
+	
+	SpherecastFire: (
+		self: Caster,
+		Origin: Vector3,
+		Radius: number,
+		Direction: Vector3,
+		Velocity: Vector3 | number,
+		Behavior: FastCastBehavior?
+	) -> (),
 
 	SetBulkMoveEnabled: (self: Caster, enabled: boolean) -> (),
 	SetObjectCacheEnabled: (
@@ -361,7 +370,7 @@ export type CastStateInfo = {
 	@type CastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, CanPierceModule: ModuleScript? }
 	@within TypeDefinitions
 
-	Represents ray info for an ActiveCastCompement.
+	Ray info for ray-cast variants.
 ]=]
 export type CastRayInfo = {
 	Parameters: RaycastParams,
@@ -384,6 +393,21 @@ export type BlockCastRayInfo = {
 	CosmeticBulletObject: Instance?,
 	--CanPierceModule: CanPierceModule?,
 	Size: Vector3,
+}
+
+--[=[
+	@type BlockCastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, CanPierceModule: ModuleScript?, Size: Vector3 }
+	@within TypeDefinitions
+
+	Ray info for sphere-cast variants.
+]=]
+export type SphereCastRayInfo = {
+	Parameters: RaycastParams,
+	WorldRoot: WorldRoot,
+	MaxDistance: number,
+	CosmeticBulletObject: Instance?,
+	--CanPierceModule: CanPierceModule?,
+	Radius: number,
 }
 
 --[=[
@@ -432,6 +456,23 @@ export type ActiveBlockcastCompement = {
 	UserData: { [any]: any },
 	
 	Type : "Blockcast",
+	CFrame: CFrame,
+	ID: number | string
+}
+
+--[=[
+	@type ActiveCastCompement { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Raycast", CFrame: CFrame, ID: number }
+	@within TypeDefinitions	
+	
+	Represents an active sphere cast data.
+]=]
+export type ActiveSpherecastCompement = {
+	Caster: BaseCastData,
+	StateInfo: CastStateInfo,
+	RayInfo: SphereCastRayInfo,
+	UserData: { [any]: any },
+
+	Type : "Spherecast",
 	CFrame: CFrame,
 	ID: number | string
 }
