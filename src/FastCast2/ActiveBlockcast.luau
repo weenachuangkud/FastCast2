@@ -138,7 +138,7 @@ local function DbgVisualizeSegment(
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = castStartCFrame
 	--adornment.Height = castLength
-	adornment.Size = Vector3.new(size.X, size.Y, size.Z + castLength)
+	adornment.Size = Vector3.new(size.X, size.Y, size.Z)
 	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
 	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
 
