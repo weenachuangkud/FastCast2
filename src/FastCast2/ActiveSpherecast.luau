@@ -1,0 +1,930 @@
+-- Mozilla Public License 2.0 (files originally from FastCast)
+--[[
+	- Modified by: Mawin CK 
+	- Date : 2025
+	-- Verison : 0.0.7
+]]
+
+-- Services
+local RS = game:GetService("RunService")
+
+-- Variables
+local FastCastModule = script.Parent
+
+-- Requires
+local FastCast = require(FastCastModule)
+local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
+local Configs = require(FastCastModule:WaitForChild("Configs"))
+local DebugLogging = Configs.DebugLogging
+local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+
+-- CONSTs
+local MAX_PIERCE_TEST_COUNT = 100
+local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
+local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
+local MAX_CASTING_TIME = 0.2 -- 200ms
+
+local DEFAULT_MAX_DISTANCE = 1000
+
+-- DEBUG
+local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
+local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.286275, 0.329412, 0.247059)
+
+local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
+
+local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
+local DBG_RAYPIERCE_SEGMENT_COLOR = Color3.new(0.305882, 0.243137, 0.329412)
+
+-- AutomaticPerformance setting
+local HIGH_FIDE_INCREASE_SIZE = 0.5
+
+--[=[
+	@class ActiveSphereCast
+
+	An ActiveSphereCast represents a Spherecast fired by a parent [Caster](Caster). It contains methods of accessing the physics 
+	data of this specific Spherecast at any given time, as well as methods to alter its trajectory during runtime.
+]=]
+
+local ActiveCast = {}
+
+-- Local Functions
+
+local function DebrisAdd(obj: Instance, Lifetime: number)
+	if not obj then
+		return
+	end
+	if Lifetime <= 0 then
+		obj:Destroy()
+	end
+
+	task.delay(Lifetime, function()
+		obj:Destroy()
+	end)
+end
+
+local function GetPositionAtTime(
+	time: number,
+	origin: Vector3,
+	initialVelocity: Vector3,
+	acceleration: Vector3
+): Vector3
+	local force =
+		Vector3.new((acceleration.X * time ^ 2) / 2, (acceleration.Y * time ^ 2) / 2, (acceleration.Z * time ^ 2) / 2)
+	return origin + (initialVelocity * time) + force
+end
+
+local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
+	return initialVelocity + acceleration * time
+end
+
+local function CloneCastParams(params: RaycastParams): RaycastParams
+	local clone: RaycastParams = RaycastParams.new()
+	clone.CollisionGroup = params.CollisionGroup
+	clone.FilterType = params.FilterType
+	clone.FilterDescendantsInstances = params.FilterDescendantsInstances
+	clone.IgnoreWater = params.IgnoreWater
+	return clone
+end
+
+
+local function GetFastCastVisualizationContainer(): Instance
+	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
+	if fcVisualizationObjects then
+		return fcVisualizationObjects
+	end
+
+	fcVisualizationObjects = Instance.new("Folder")
+	fcVisualizationObjects.Name = FC_VIS_OBJ_NAME
+	fcVisualizationObjects.Archivable = false
+	fcVisualizationObjects.Parent = workspace.Terrain
+	return fcVisualizationObjects
+end
+
+--[[
+local function GetTrajectoryInfo(
+	cast: TypeDef.ActiveSpherecastCompement,
+	index: number
+): { [number]: Vector3 }
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local trajectories = cast.StateInfo.Trajectories
+	local trajectory = trajectories[index]
+	local duration = trajectory.EndTime - trajectory.StartTime
+
+	local origin = trajectory.Origin
+	local vel = trajectory.InitialVelocity
+	local accel = trajectory.Acceleration
+
+	return { GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel) }
+end
+
+
+local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveSpherecastCompement): { [number]: Vector3 }
+	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
+end
+]]
+
+-- Debug Functions
+
+local function DbgVisualizeSegment(
+	castStartCFrame: CFrame,
+	radius: number,
+	castLength: number,
+	VisualizeCasts: boolean,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings
+): SphereHandleAdornment?
+	print(VisualizeCasts)
+	if not VisualizeCasts then
+		return
+	end
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	--adornment.Height = castLength
+	adornment.Radius = radius
+	--adornment.Size = Vector3.new(size.X, size.Y, size.Z + castLength)
+	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
+	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
+
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	print("DEBUG")
+	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeHit(
+	atCF: CFrame,
+	wasPierce: boolean,
+	VisualizeCasts: boolean,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings
+): SphereHandleAdornment?
+	if not VisualizeCasts then
+		return
+	end
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = atCF
+	-- Alert! someone is Mawining it!!!!!
+	adornment.Radius = (wasPierce == false) and VisualizeCastSetting.Debug_HitSize
+		or VisualizeCastSetting.Debug_RayPierceSize
+	adornment.Transparency = (wasPierce == false) and VisualizeCastSetting.Debug_HitTransparency
+		or VisualizeCastSetting.Debug_RayPierceTransparency
+	adornment.Color3 = (wasPierce == false) and VisualizeCastSetting.Debug_HitColor
+		or VisualizeCastSetting.Debug_RayPierceColor
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
+	return adornment
+end
+
+-- Send signals
+
+local function SendHit(
+	cast: TypeDef.ActiveSpherecastCompement,
+	resultOfCast: RaycastResult,
+	segmentVelocity: Vector3,
+	cosmeticBulletObject: Instance?
+)
+	--cast.Caster.RayHit:Fire(cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+	--cast.CasterBindable:Fire("RayHit", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+	--cast.Definition.OnRayHit(cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseHit == false then return end
+	cast.Caster.Output:Fire("Hit", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+end
+
+local function SendPierced(
+	cast: TypeDef.ActiveSpherecastCompement,
+	resultOfCast: RaycastResult,
+	segmentVelocity: Vector3,
+	cosmeticBulletObject: Instance?
+)
+	--cast.Caster.RayPierced:Fire(cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+	--cast.CasterBindable:Fire("RayPierced", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+	--cast.Definition.OnRayPierce(ActiveCast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UsePierced == false then return end
+	cast.Caster.Output:Fire("Pierced", cast, resultOfCast, segmentVelocity, cosmeticBulletObject)
+end
+
+local function SendLengthChanged(
+	cast: TypeDef.ActiveSpherecastCompement,
+	lastPoint: Vector3,
+	rayDir: Vector3,
+	rayDisplacement: number,
+	segmentVelocity: Vector3,
+	cosmeticBulletObject: Instance?
+)
+	--cast.Caster.LengthChanged:Fire(cast, lastPoint, rayDir, rayDisplacement, cosmeticBulletObject)
+	--cast.Definition.OnLengthChanged(ActiveCast, lastPoint, rayDir, rayDisplacement, segmentVelocity, cosmeticBulletObject)
+	--cast.Caster.LengthChanged:Fire(ActiveCast, lastPoint, rayDir, rayDisplacement, segmentVelocity, cosmeticBulletObject)
+
+	--print(cast.Caster.Output)
+
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseLengthChanged == false then return end
+	cast.Caster.Output:Fire(
+		"LengthChanged",
+		cast,
+		lastPoint,
+		rayDir,
+		rayDisplacement,
+		segmentVelocity,
+		cosmeticBulletObject
+	)
+end
+
+--[[local function SendCastFire(
+	cast: TypeDef.ActiveCast,
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDef.FastCastBehavior
+)
+	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
+end]]
+
+local function SimulateCast(cast: TypeDef.ActiveSpherecastCompement, delta: number, expectingShortCall: boolean, FastCastEvents: TypeDef.FastCastEvents)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+
+	if DebugLogging.Casting then
+		print("Casting for frame.")
+	end
+
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+
+	local origin = latestTrajectory.Origin
+	local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	local initialVelocity = latestTrajectory.InitialVelocity
+	local acceleration = latestTrajectory.Acceleration
+
+	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+	local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+
+	cast.StateInfo.TotalRuntime += delta
+
+	totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+
+	local currentTarget = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	local totalDisplacement = currentTarget - lastPoint
+
+	local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * delta
+
+	local targetWorldRoot = cast.RayInfo.WorldRoot
+	local resultOfCast = targetWorldRoot:Spherecast(lastPoint, cast.RayInfo.Radius, rayDir, cast.RayInfo.Parameters)
+
+	local point = currentTarget
+	local part: Instance? = nil
+	local material = Enum.Material.Air
+	local normal = Vector3.new()
+
+	if resultOfCast ~= nil then
+		point = resultOfCast.Position
+		part = resultOfCast.Instance
+		material = resultOfCast.Material
+		normal = resultOfCast.Normal
+	end
+
+	local rayDisplacement = (point - lastPoint).Magnitude
+	local SphercastRadius = cast.RayInfo.Radius
+
+	local VisualizeCasts = cast.StateInfo.VisualizeCasts
+	local VisualizeCastSettings = cast.StateInfo.VisualizeCastSettings
+
+	local FastCastEventsModuleConfig = cast.StateInfo.FastCastEventsModuleConfig
+
+	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
+		latestTrajectory.Acceleration = Vector3.new()
+	end
+
+	cast.CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+
+	task.synchronize()
+
+	local LengthChangedfn: TypeDef.OnLengthChangedFunction = nil
+	local canPierceCheckfn: TypeDef.CanPierceFunction = nil
+	local castTerminatingfn: TypeDef.OnCastTerminatingFunction = nil
+	local Hitfn: TypeDef.OnHitFunction = nil
+	local Piercedfn: TypeDef.OnPiercedFunction = nil
+
+	if FastCastEvents then
+		canPierceCheckfn = FastCastEventsModuleConfig.UseCanPierce and FastCastEvents.CanPierce or nil
+		castTerminatingfn = FastCastEventsModuleConfig.UseCastTerminating and FastCastEvents.CastTerminating or nil
+		Hitfn = FastCastEventsModuleConfig.UseHit and FastCastEvents.Hit or nil
+		Piercedfn = FastCastEventsModuleConfig.UsePierced and FastCastEvents.Pierced or nil
+		LengthChangedfn = FastCastEventsModuleConfig.UseLengthChanged and FastCastEvents.LengthChanged or nil
+	end
+
+	SendLengthChanged(
+		cast,
+		lastPoint,
+		rayDir.Unit,
+		rayDisplacement,
+		segmentVelocity,
+		cast.RayInfo.CosmeticBulletObject
+	)
+
+	if LengthChangedfn then
+		LengthChangedfn(
+			cast,
+			lastPoint,
+			rayDir.Unit,
+			rayDisplacement,
+			segmentVelocity,
+			cast.RayInfo.CosmeticBulletObject
+		)
+	end
+
+	cast.StateInfo.DistanceCovered += rayDisplacement
+
+	local rayVisualization: BoxHandleAdornment? = nil
+
+	if delta > 0 then
+		rayVisualization = DbgVisualizeSegment(
+			CFrame.new(lastPoint, lastPoint + rayDir),
+			SphercastRadius,
+			rayDisplacement,
+			VisualizeCasts,
+			VisualizeCastSettings
+		)
+	end
+
+	-- Look at those statements boi
+
+	if part and part ~= cast.RayInfo.CosmeticBulletObject then
+		local start = tick()
+		if DebugLogging.Hit then
+			print("Hit something, testing now.")
+		end
+
+		if DebugLogging.RayPierce and canPierceCheckfn == nil then
+			print("No piercing function set, proceeding to hit processing.")
+		end
+
+		if canPierceCheckfn ~= nil then
+			if expectingShortCall == false and cast.StateInfo.IsActivelySimulatingPierce then
+				FastCast:TerminateCast(cast, castTerminatingfn)
+
+				warn(
+					"WARN: The latest call to CanPierceCallback took too long to complete! This cast is going to suffer desyncs which WILL cause unexpected behavior and errors. Please fix your performance problems, or remove statements that yield (e.g. wait() calls)"
+				)
+			end
+			cast.StateInfo.IsActivelySimulatingPierce = true
+		end
+
+		if canPierceCheckfn == nil or canPierceCheckfn(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject) == false then
+			if DebugLogging.RayPierce then
+				print("Piercing function is nil or it returned FALSE to not pierce this hit.")
+			end
+
+			cast.StateInfo.IsActivelySimulatingPierce = false
+
+			if
+				cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Automatic
+				and cast.StateInfo.HighFidelitySegmentSize > 0
+			then
+				cast.StateInfo.CancelHighResCast = false
+
+				if cast.StateInfo.IsActivelyResimulating then
+					FastCast:TerminateCast(cast, castTerminatingfn)
+
+					warn(
+						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
+					)
+				end
+
+				cast.StateInfo.IsActivelyResimulating = true
+
+				if DebugLogging.Calculation then
+					print(
+						"Hit was registered, but recalculation is on for physics based casts. Recalculating to verify a real hit..."
+					)
+				end
+
+				local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
+				local numSegmentsReal = math.floor(numSegmentsDecimal)
+				--local realSegmentLength = rayDisplacement / numSegmentsReal
+
+				local timeIncrement = delta / numSegmentsReal
+
+				if DebugLogging.Calculation then
+					print(
+						"Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal
+					)
+				end
+
+				for segmentIndex = 1, numSegmentsReal do
+					if cast.StateInfo.CancelHighResCast then
+						cast.StateInfo.CancelHighResCast = false
+						break
+					end
+
+					local subPosition = GetPositionAtTime(
+						lastDelta + (timeIncrement * segmentIndex),
+						origin,
+						initialVelocity,
+						acceleration
+					)
+					local subVelocity =
+						GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
+					local subRayDir = subVelocity * delta
+					local subResult =
+						targetWorldRoot:Spherecast(subPosition, subRayDir, cast.RayInfo.Parameters)
+
+					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
+
+					-- Mama may i have some cookies
+					if subResult ~= nil then
+						local subDisplacement = (subPosition - subResult.Position).Magnitude
+						local dbgSeg = DbgVisualizeSegment(
+							CFrame.new(subPosition, subPosition + subVelocity),
+							subDisplacement,
+							VisualizeCasts,
+							VisualizeCastSettings
+						)
+						if dbgSeg ~= nil then
+							dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR
+						end
+
+						if
+							canPierceCheckfn == nil
+							or canPierceCheckfn(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject) == false
+						then
+							cast.StateInfo.IsActivelyResimulating = false
+
+							SendHit(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
+							if Hitfn then
+								Hitfn(
+									cast,
+									subResult,
+									subVelocity,
+									cast.RayInfo.CosmeticBulletObject
+								)
+							end
+
+							FastCast:TerminateCast(cast, castTerminatingfn)
+
+							local vis = DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
+							if vis ~= nil then
+								vis.Color3 = DBG_HIT_SUB_COLOR
+							end
+
+							return
+						else
+							SendPierced(cast, subResult, subVelocity, cast.RayInfo.CosmeticBulletObject)
+							if Piercedfn then
+								Piercedfn(
+									cast,
+									subResult,
+									subVelocity,
+									cast.RayInfo.CosmeticBulletObject
+								)
+							end
+
+							local vis = DbgVisualizeHit(CFrame.new(point), true, VisualizeCasts, VisualizeCastSettings)
+							if vis ~= nil then
+								vis.Color3 = DBG_RAYPIERCE_SUB_COLOR
+							end
+							if dbgSeg ~= nil then
+								dbgSeg.Color3 = DBG_RAYPIERCE_SEGMENT_COLOR
+							end
+						end
+					else
+						local dbgSeg = DbgVisualizeSegment(
+							CFrame.new(subPosition, subPosition + subVelocity),
+							subDisplacement,
+							VisualizeCasts,
+							VisualizeCastSettings
+						)
+						if dbgSeg ~= nil then
+							dbgSeg.Color3 = DBG_SEGMENT_SUB_COLOR2
+						end
+					end
+
+					if DebugLogging.Segment then
+						print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
+					end
+				end
+
+				cast.StateInfo.IsActivelyResimulating = false
+			else
+				if DebugLogging.Hit then
+					print("Hit was successful. Terminating.")
+				end
+				SendHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+				if Hitfn then
+					Hitfn(
+						cast,
+						resultOfCast,
+						segmentVelocity,
+						cast.RayInfo.CosmeticBulletObject
+					)
+				end
+
+				FastCast:TerminateCast(cast, castTerminatingfn)
+
+				DbgVisualizeHit(CFrame.new(point), false, VisualizeCasts, VisualizeCastSettings)
+				return
+			end
+		else
+			if DebugLogging.RayPierce then
+				print("Piercing function returned TRUE to pierce this part.")
+			end
+			if rayVisualization ~= nil then
+				rayVisualization.Color3 = Color3.new(0.4, 0.05, 0.05)
+			end
+			DbgVisualizeHit(CFrame.new(point), true, VisualizeCasts, VisualizeCastSettings)
+
+			local params = cast.RayInfo.Parameters
+			local alteredParts = {}
+			local currentPierceTestCount = 0
+			local originalFilter = params.FilterDescendantsInstances
+			local brokeFromSolidObject = false
+			while true do
+				if resultOfCast.Instance:IsA("Terrain") then
+					if material == Enum.Material.Water then
+						FastCast:TerminateCast(cast, castTerminatingfn)
+
+						error(
+							"Do not add Water as a piercable material. If you need to pierce water, set cast.RayInfo.Parameters.IgnoreWater = true instead",
+							0
+						)
+					end
+					warn(
+						"WARNING: The pierce callback for this cast returned TRUE on Terrain! This can cause severely adverse effects."
+					)
+				end
+
+				if params.FilterType == Enum.RaycastFilterType.Exclude then
+					local filter = params.FilterDescendantsInstances
+					table.insert(filter, resultOfCast.Instance)
+					table.insert(alteredParts, resultOfCast.Instance)
+					params.FilterDescendantsInstances = filter
+				else
+					local filter = params.FilterDescendantsInstances
+					table.removeObject(filter, resultOfCast.Instance)
+					table.insert(alteredParts, resultOfCast.Instance)
+					params.FilterDescendantsInstances = filter
+				end
+
+				SendPierced(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+				if Piercedfn then
+					Piercedfn(
+						cast,
+						resultOfCast,
+						segmentVelocity,
+						cast.RayInfo.CosmeticBulletObject
+					)
+				end
+
+				resultOfCast = targetWorldRoot:Raycast(lastPoint, rayDir, params)
+
+				if resultOfCast == nil then
+					break
+				end
+
+				if currentPierceTestCount >= MAX_PIERCE_TEST_COUNT then
+					warn(
+						"WARNING: Exceeded maximum pierce test budget for a single ray segment (attempted to test the same segment "
+							.. MAX_PIERCE_TEST_COUNT
+							.. " times!)"
+					)
+					break
+				end
+				currentPierceTestCount = currentPierceTestCount + 1
+
+				if canPierceCheckfn and canPierceCheckfn(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject) == false then
+					brokeFromSolidObject = true
+					break
+				end
+			end
+
+			cast.RayInfo.Parameters.FilterDescendantsInstances = originalFilter
+			cast.StateInfo.IsActivelySimulatingPierce = false
+
+			if brokeFromSolidObject then
+				if DebugLogging.Hit then
+					print(
+						"Broke because the ray hit something solid ("
+							.. tostring(resultOfCast.Instance)
+							.. ") while testing for a pierce. Terminating the cast."
+					)
+				end
+				SendHit(cast, resultOfCast, segmentVelocity, cast.RayInfo.CosmeticBulletObject)
+				if Hitfn then
+					Hitfn(
+						cast,
+						resultOfCast,
+						segmentVelocity,
+						cast.RayInfo.CosmeticBulletObject
+					)
+				end
+
+				FastCast:TerminateCast(cast, castTerminatingfn)
+
+				DbgVisualizeHit(CFrame.new(resultOfCast.Position), false, VisualizeCasts, VisualizeCastSettings)
+				return
+			end
+		end
+	end
+
+	if cast.StateInfo.DistanceCovered >= cast.RayInfo.MaxDistance then
+		FastCast:TerminateCast(cast, castTerminatingfn)
+
+		DbgVisualizeHit(CFrame.new(currentTarget), false, VisualizeCasts, VisualizeCastSettings)
+	end
+end
+
+--[=[
+	@function new
+	@private
+	@within ActiveBlockCast
+
+	Creates a new ActiveBlockCast instance with the given parameters.
+	This is the fancy part where numbers and vectors start cooperating.
+
+	@param BaseCast TypeDef.BaseCastData -- The base cast data used to initialize the active cast.
+
+	@param activeCastID string -- Unique identifier for this active cast.
+
+	@param origin Vector3 -- The starting position of the cast.
+
+	@param radius number -- The radius of the sphere.
+
+	@param direction Vector3 -- The direction the cast will travel in.
+
+	@param velocity Vector3 | number -- The velocity of the cast (either directional or scalar).
+
+	@param eventModule TypeDef.FastCastEventsModule -- The event module to use for this cast.	
+
+	@return ActiveSpherecastCompement -- The newly created ActiveSpherecastCompement.
+]=]
+function ActiveCast.new(
+	BaseCast: TypeDef.BaseCastData,
+	activeCastID: number,
+	origin: Vector3,
+	radius: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDef.FastCastBehavior,
+	eventModule: TypeDef.FastCastEventsModule?
+): TypeDef.ActiveSpherecastCompement
+	if typeof(velocity) == "number" then
+		velocity = direction.Unit * velocity
+	end
+
+	if behavior.HighFidelitySegmentSize <= 0 then
+		error("Cannot set FastCastBehavior.HighFidelitySegmentSize <= 0!", 0)
+	end
+
+	-- This world is cruel, and I must accept it.
+	if behavior.HighFidelityBehavior <= 0 then
+		behavior.HighFidelityBehavior = 1
+	elseif behavior.HighFidelityBehavior >= 4 then
+		behavior.HighFidelityBehavior = 3
+	end
+
+	local cast = {
+		Caster = BaseCast,
+
+		StateInfo = {
+			UpdateConnection = nil,
+			Paused = false,
+			TotalRuntime = 0,
+			DistanceCovered = 0,
+			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,
+			HighFidelityBehavior = behavior.HighFidelityBehavior,
+			IsActivelySimulatingPierce = false,
+			IsActivelyResimulating = false,
+			CancelHighResCast = false,
+			Trajectories = {
+				{
+					StartTime = 0,
+					EndTime = -1,
+					Origin = origin,
+					InitialVelocity = velocity,
+					Acceleration = behavior.Acceleration,
+				},
+			},
+			UseLengthChanged = behavior.UseLengthChanged,
+			UseBetterLengthChanged = behavior.UseBetterLengthChanged,
+			VisualizeCasts = behavior.VisualizeCasts,
+			VisualizeCastSettings = behavior.VisualizeCastSettings,
+
+			FastCastEventsModuleConfig = {
+				UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
+				UseHit = behavior.FastCastEventsModuleConfig.UseHit,
+				UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
+				UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
+				UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
+			},
+
+			FastCastEventsConfig = {
+				UseLengthChanged = behavior.FastCastEventsConfig.UseLengthChanged,
+				UseHit = behavior.FastCastEventsConfig.UseHit,
+				UsePierced = behavior.FastCastEventsConfig.UsePierced,
+				UseCastTerminating = behavior.FastCastEventsConfig.UseCastTerminating,
+			}
+		},
+
+		RayInfo = {
+			Radius = radius,
+			Parameters = behavior.RaycastParams,
+			WorldRoot = workspace,
+			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
+			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
+			FastCastEventsModule = eventModule
+		},
+
+		Type = "Spherecast",
+		CFrame = CFrame.new(),
+		UserData = {},
+		ID = activeCastID,
+	}
+
+	if behavior.UserData then
+		cast.UserData = behavior.UserData
+	end
+
+	if cast.RayInfo.Parameters ~= nil then
+		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
+	else
+		cast.RayInfo.Parameters = RaycastParams.new()
+	end
+
+	-- CosmeticBulletObject GET
+
+	local targetContainer: Instance
+	if cast.Caster.ObjectCache then
+		--[[if cast.RayInfo.CosmeticBulletObject ~= nil then
+			warn("ObjectCache already handle that for you, Template Dupe")
+		end]]
+
+		-- 1 kebab please
+		-- i love my kebabs - darwin
+		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
+		targetContainer = cast.Caster.CacheHolder
+	else
+		if cast.RayInfo.CosmeticBulletObject ~= nil then
+			cast.RayInfo.CosmeticBulletObject = cast.RayInfo.CosmeticBulletObject:Clone()
+			cast.RayInfo.CosmeticBulletObject.CFrame = CFrame.new(origin, origin + direction)
+			cast.RayInfo.CosmeticBulletObject.Parent = behavior.CosmeticBulletContainer
+		end
+		if behavior.CosmeticBulletContainer then
+			targetContainer = behavior.CosmeticBulletContainer
+		end
+	end
+
+	-- the rest? :P
+
+	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
+		local igroneList = cast.RayInfo.Parameters.FilterDescendantsInstances
+		if not table.find(igroneList, targetContainer) then
+			table.insert(igroneList, targetContainer)
+			cast.RayInfo.Parameters.FilterDescendantsInstances = igroneList
+		end
+	end
+
+	--SendCastFire(cast, origin, direction, velocity, behavior)
+
+	local event
+	if RS:IsClient() then
+		event = behavior.SimulateAfterPhysic and RS.Heartbeat or RS.PreSimulation
+	else
+		event = RS.Heartbeat
+	end
+
+	local FastCastEvents: TypeDef.FastCastEvents = eventModule and require(eventModule)
+
+	--setmetatable(cast, ActiveCast)
+
+	local function Stepped(delta: number)
+		if cast.StateInfo.Paused then
+			return
+		end
+
+		if DebugLogging.Casting then
+			print("Casting for frame.")
+		end
+
+		local Cast_timeAtStart = tick()
+
+		local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+
+		if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
+			latestTrajectory.Acceleration = Vector3.new()
+		end
+
+		if
+			cast.StateInfo.HighFidelityBehavior == FastCastEnums.HighFidelityBehavior.Always
+			and cast.StateInfo.HighFidelitySegmentSize > 0
+		then
+			local Segment_timeAtStart = tick()
+
+			local castTerminatingfn: TypeDef.OnCastTerminatingFunction = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating and FastCastEvents.castTerminatingfn or nil
+			if cast.StateInfo.IsActivelyResimulating then
+				FastCast:TerminateCast(cast, castTerminatingfn)
+
+				error(
+					"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
+				)
+			end
+
+			cast.StateInfo.IsActivelyResimulating = true
+
+			local origin = latestTrajectory.Origin
+			local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+			local initialVelocity = latestTrajectory.InitialVelocity
+			local acceleration = latestTrajectory.Acceleration
+
+			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+			local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+
+			cast.StateInfo.TotalRuntime += delta
+
+			totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+
+			local currentPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+			local currentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			local totalDisplacement = currentPoint - lastPoint
+
+			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
+
+			local targetWorldRoot = cast.RayInfo.WorldRoot
+			local resultOfCast =
+				targetWorldRoot:Spherecast(lastPoint, cast.RayInfo.Radius, rayDir, cast.RayInfo.Parameters)
+
+			local point = currentPoint
+
+			if resultOfCast ~= nil then
+				point = resultOfCast.Position
+			end
+
+			local rayDisplacement = (point - lastPoint).Magnitude
+
+			cast.StateInfo.TotalRuntime -= delta
+
+			local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
+			local numSegmentsReal = math.floor(numSegmentsDecimal)
+			if numSegmentsReal == 0 then
+				numSegmentsReal = 1
+			end
+
+			local timeIncrement = delta / numSegmentsReal
+
+			for segmentIndex = 1, numSegmentsReal do
+				if cast == nil or next(cast) == nil then
+					return
+				end
+				if cast.StateInfo.CancelHighResCast then
+					cast.StateInfo.CancelHighResCast = false
+					break
+				end
+				if DebugLogging.Segment then
+					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
+				end
+				SimulateCast(cast, timeIncrement, true)
+			end
+
+			if cast == nil or next(cast) == nil then
+				return
+			end
+			cast.StateInfo.IsActivelyResimulating = false
+
+			if behavior.AutomaticPerformance and (tick() - Segment_timeAtStart) > MAX_SEGMENT_CAL_TIME and cast.StateInfo then
+				local HighFideSizeAmount = behavior.AdaptivePerformance.HighFidelitySegmentSizeIncrease
+					or HIGH_FIDE_INCREASE_SIZE
+
+				if DebugLogging.AutomaticPerformance then
+					warn("AutomaticPerformance increasing size of HighFidelitySize by : ", HighFideSizeAmount)
+				end
+
+				cast.StateInfo.HighFidelitySegmentSize += HighFideSizeAmount
+			end
+		else
+			SimulateCast(cast, delta, false)
+		end
+
+		if
+			behavior.AutomaticPerformance
+			and behavior.AdaptivePerformance.LowerHighFidelityBehavior
+			and (tick() - Cast_timeAtStart) > MAX_CASTING_TIME
+			and cast.StateInfo
+		then
+			if cast.StateInfo.HighFidelityBehavior > 1 then
+				cast.StateInfo.HighFidelityBehavior -= 1
+			end
+		end
+	end
+
+	cast.StateInfo.UpdateConnection = event:ConnectParallel(Stepped)
+
+	return cast
+end
+
+return ActiveCast
