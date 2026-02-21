@@ -444,7 +444,7 @@ export type ActiveCastCompement = {
 }
 
 --[=[
-	@type ActiveCastCompement { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Raycast", CFrame: CFrame, ID: number }
+	@type ActiveCastCompement { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Blockcast", CFrame: CFrame, ID: number }
 	@within TypeDefinitions	
 	
 	Represents an active block cast data.
@@ -461,7 +461,7 @@ export type ActiveBlockcastCompement = {
 }
 
 --[=[
-	@type ActiveCastCompement { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Raycast", CFrame: CFrame, ID: number }
+	@type ActiveCastCompement { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Spherecast", CFrame: CFrame, ID: number }
 	@within TypeDefinitions	
 	
 	Represents an active sphere cast data.
