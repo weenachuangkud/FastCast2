@@ -47,9 +47,6 @@ local HIGH_FIDE_INCREASE_SIZE = 0.5
 
 local ActiveCast = {}
 
---ActiveCast.__index = ActiveCast
---ActiveCast.__type = "ActiveBlockCast"
-
 -- Local Functions
 
 local function DebrisAdd(obj: Instance, Lifetime: number)
@@ -63,14 +60,6 @@ local function DebrisAdd(obj: Instance, Lifetime: number)
 	task.delay(Lifetime, function()
 		obj:Destroy()
 	end)
-end
-
-local function SafeCall(f: (...any) -> ...any, ...)
-	-- am i tripping
-	if f then
-		return f(...)
-	end
-	return nil
 end
 
 local function GetPositionAtTime(
@@ -96,23 +85,6 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	clone.IgnoreWater = params.IgnoreWater
 	return clone
 end
-
---[[
--- NOTE : OnLengthChanged but better ig
-local function ResolveOnLengthChanged(cast: TypeDef.ActiveBlockcastCompement): TypeDef.CanPierceFunction?
-	local lengthchangedModule = cast.RayInfo.BetterLengthChangedModule
-	if lengthchangedModule == nil then
-		return nil
-	end
-
-	local loadedModule = require(lengthchangedModule)
-	if loadedModule == nil then
-		return nil
-	end
-
-	return loadedModule.OnLengthChanged
-end
-]]
 
 local function GetFastCastVisualizationContainer(): Instance
 	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
@@ -270,7 +242,7 @@ end
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end]]
 
-local function SimulateCast(cast: TypeDef.ActiveCastCompement, delta: number, expectingShortCall: boolean, FastCastEvents: TypeDef.FastCastEvents)
+local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: number, expectingShortCall: boolean, FastCastEvents: TypeDef.FastCastEvents)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 
 	if DebugLogging.Casting then
@@ -697,7 +669,7 @@ function ActiveCast.new(
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?
-): TypeDef.ActiveCast
+): TypeDef.ActiveBlockcastCompement
 	if typeof(velocity) == "number" then
 		velocity = direction.Unit * velocity
 	end
