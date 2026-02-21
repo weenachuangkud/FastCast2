@@ -35,22 +35,18 @@ actor:BindToMessage("Init", function(Data: any?)
 	BaseCast = BaseCast.Init(script.Parent:WaitForChild("Output"), Data)
 end)
 
-actor:BindToMessage(
-	"Raycast",
-	function(
-		origin: Vector3,
-		direction: Vector3,
-		velocity: Vector3 | number,
-		behavior: TypeDefinitions.FastCastBehavior,
-		guid: string
-	)
+actor:BindToMessage("Raycast", function(
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDefinitions.FastCastBehavior
+)
 		--print(behavior)
 		--print(SharedCasters[casterID])
 		--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
 
-		BaseCast:Raycast(origin, direction, velocity, behavior, guid)
-	end
-)
+	BaseCast:Raycast(origin, direction, velocity, behavior)
+end)
 
 actor:BindToMessage(
 	"SetFastCastEventsModule",
@@ -72,19 +68,25 @@ actor:BindToMessage(
 	StoredCasts[casterID][ID] = ActiveBlockcast.new(caster, origin, size, direction, velocity, behavior)
 end)]]
 
-actor:BindToMessage(
-	"Blockcast",
-	function(
-		origin: Vector3,
-		size: Vector3,
-		direction: Vector3,
-		velocity: Vector3 | number,
-		behavior: TypeDefinitions.FastCastBehavior,
-		GUID: string
-	)
-		BaseCast:Blockcast(origin, size, direction, velocity, behavior, GUID)
-	end
+actor:BindToMessage("Blockcast", function(
+	origin: Vector3,
+	size: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDefinitions.FastCastBehavior
 )
+	BaseCast:Blockcast(origin, size, direction, velocity, behavior)
+end)
+
+actor:BindToMessage("Spherecast", function(
+	origin : Vector3,
+	radius : number,
+	direction : Vector3,
+	velocity : Vector3 | number,
+	behavior : TypeDefinitions.FastCastBehavior
+)
+	BaseCast:SphereCast(origin, radius, direction, velocity, behavior)
+end)
 
 actor:BindToMessage("BindBulkMoveTo", function(bool: boolean)
 	BaseCast:BindBulkMoveTo(bool)

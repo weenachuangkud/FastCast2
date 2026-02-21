@@ -7,6 +7,15 @@ and this project adheres to Semantic Versioning (https://semver.org/).
 
 ---
 
+## [0.0.8] — 2026-02-22
+### Added
+- Spherecast feature — adds sphere-based casting for broader collision detection and hits testing.
+
+### Changed
+- Blockcast visualization no longer stretched by cast length.
+- Cleaned up code and performed minor refactors for readability.
+- Updated documentation comments for clarity.
+
 ## [0.0.7] - 2026-02-11
 
 ### Added

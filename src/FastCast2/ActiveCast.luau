@@ -2,7 +2,7 @@
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
-	-- Verison : 0.0.7
+	-- Verison : 0.0.8
 ]]
 
 -- Services
@@ -44,19 +44,6 @@ local HIGH_FIDE_INCREASE_SIZE = 0.5
 ]=]
 
 local ActiveCast = {}
-
---ActiveCast.__index = ActiveCast
---ActiveCast.__type = "ActiveCast"
-
--- Local functions
-
---[[local function SafeCall(f: (...any) -> ...any, ...)
-	-- am i tripping
-	if f then
-		return f(...)
-	end
-	return nil
-end]]
 
 local function DebrisAdd(obj: Instance, Lifetime: number)
 	if not obj then

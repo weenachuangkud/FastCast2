@@ -37,14 +37,13 @@ actor:BindToMessage("Raycast", function(
 	origin : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior,
-	guid : string
+	behavior : TypeDefinitions.FastCastBehavior
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])
 	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
 
-	BaseCast:Raycast(origin, direction, velocity, behavior, guid)
+	BaseCast:Raycast(origin, direction, velocity, behavior)
 end)
 
 --[[actor:BindToMessage("Blockcast", function(
@@ -79,6 +78,16 @@ actor:BindToMessage("Blockcast", function(
 	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
 
 	BaseCast:Blockcast(origin, size, direction, velocity, behavior)
+end)
+
+actor:BindToMessage("Spherecast", function(
+	origin : Vector3,
+	radius : number,
+	direction : Vector3,
+	velocity : Vector3 | number,
+	behavior : TypeDefinitions.FastCastBehavior
+)
+	BaseCast:SphereCast(origin, radius, direction, velocity, behavior)
 end)
 
 actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
