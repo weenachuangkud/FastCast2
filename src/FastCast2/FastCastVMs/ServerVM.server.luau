@@ -22,7 +22,9 @@ local BaseCast = require(FastCast2Module:WaitForChild("BaseCast"))
 
 -- Variables
 local actor = script:GetActor()
-if actor == nil then error("The script must placed inside of actor") end
+if actor == nil then 
+	error("The script must placed inside of actor")
+end
 
 -- Listeners
 
