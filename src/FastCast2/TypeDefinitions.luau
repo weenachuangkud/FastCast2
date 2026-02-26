@@ -54,7 +54,7 @@ export type FastCastEvents = {
 	Callback used to decide whether a cast should pierce and continue after a hit.
 ]=]
 export type CanPierceFunction = (
-	ActiveCastCompement,
+	vaildcast,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
@@ -67,7 +67,7 @@ export type CanPierceFunction = (
 	Callback fired when the cast hits something (non-piercing).
 ]=]
 export type OnHitFunction = (
-	ActiveCastCompement,
+	vaildcast,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
@@ -80,7 +80,7 @@ export type OnHitFunction = (
 	Callback fired when the cast pierces something.
 ]=]
 export type OnPiercedFunction = (
-	ActiveCastCompement,
+	vaildcast,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
@@ -93,7 +93,7 @@ export type OnPiercedFunction = (
 	Callback fired when the cast's length changes as it updates.
 ]=]
 export type OnLengthChangedFunction = (
-	ActiveCastCompement,
+	vaildcast,
 	lastPoint: Vector3,
 	rayDir: Vector3,
 	rayDisplacement: number,
@@ -107,7 +107,7 @@ export type OnLengthChangedFunction = (
 
 	Callback fired right as an ActiveCast is terminating.
 ]=]
-export type OnCastTerminatingFunction = (ActiveCastCompement) -> ()
+export type OnCastTerminatingFunction = (vaildcast) -> ()
 
 --[=[
 	@type OnCastFireFunction (ActiveCastCompement, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
@@ -279,8 +279,7 @@ export type FastCastEventsModuleConfig = {
 	UseHit: boolean,
 	UsePierced: boolean,
 	UseCastTerminating: boolean,
-	UseCanPierce: boolean,
-	UseCastFire: boolean
+	UseCanPierce: boolean
 }
 
 --[=[
@@ -293,8 +292,7 @@ export type FastCastEventsConfig = {
 	UseLengthChanged: boolean,
 	UseHit: boolean,
 	UsePierced: boolean,
-	UseCastTerminating: boolean,
-	UseCastFire: boolean
+	UseCastTerminating: boolean
 }
 
 --[=[
@@ -321,10 +319,10 @@ export type FastCastBehavior = {
 	VisualizeCasts: boolean,
 	VisualizeCastSettings: VisualizeCastSettings,
 	
-	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
+	FastCastEventsModuleConfig: FastCastEventsModuleConfig & { UseCastFire: boolean},
 
-	FastCastEventsConfig: FastCastEventsConfig,
-	UserData: any
+	FastCastEventsConfig: FastCastEventsConfig & { UseCastFire: boolean },
+	UserData: any?
 }
 
 --[=[
@@ -348,7 +346,7 @@ export type CastTrajectory = {
 	Represents cast state tracking data.
 ]=]
 export type CastStateInfo = {
-	UpdateConnection: RBXScriptSignal,
+	UpdateConnection: RBXScriptConnection?,
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
 	Paused: boolean,
@@ -377,7 +375,7 @@ export type CastRayInfo = {
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	FastCastEventsModule: FastCastEventsModule
+	FastCastEventsModule: FastCastEventsModule?
 }
 
 --[=[
@@ -391,7 +389,7 @@ export type BlockCastRayInfo = {
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	--CanPierceModule: CanPierceModule?,
+	FastCastEventsModule: FastCastEventsModule?,
 	Size: Vector3,
 }
 
@@ -406,7 +404,7 @@ export type SphereCastRayInfo = {
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	--CanPierceModule: CanPierceModule?,
+	FastCastEventsModule: FastCastEventsModule?,
 	Radius: number,
 }
 
@@ -420,7 +418,7 @@ export type BaseCastData = {
 	Output: BindableEvent,
 	ActiveCastCleaner: BindableEvent,
 	ObjectCache: BindableFunction?,
-	CacheHolder: any?,
+	CacheHolder: Instance?,
 	SyncChange : BindableEvent
 }
 

@@ -5,7 +5,7 @@
 ]]
 
 -- Services
-local HTTPS = game:GetService("HttpService")
+--local HTTPS = game:GetService("HttpService")
 local RS = game:GetService("RunService")
 
 -- Requires
@@ -13,7 +13,7 @@ local FastCast2 = script.Parent
 local FastCastM = require(FastCast2)
 local TypeDefinitions = require(script.Parent.TypeDefinitions)
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-local Signal = require(FastCast2:WaitForChild("Signal"))
+--local Signal = require(FastCast2:WaitForChild("Signal"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local ActiveBlockcast = require(FastCast2:WaitForChild("ActiveBlockcast"))
 local FastCastEventsModule: ModuleScript? = nil
@@ -31,19 +31,19 @@ BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
 -- Connections
-local BulkMoveToConnection: RBXScriptConnection = nil
+local BulkMoveToConnection: RBXScriptConnection? = nil
 
 -- Variables
 -- Because each different threads have different BaseCast haha
 local Actives: any = {}
 local Actor = nil
 local Output = nil
-local ActiveCastCleaner = nil
-local ObjectCache = nil
+local ActiveCastCleaner: BindableEvent = nil
+local ObjectCache: BindableEvent? = nil
 local CacheHolder = nil
 local NextProjectileID = 0
 
-local SyncChanges : RBXScriptConnection = nil
+local SyncChanges: BindableEvent = nil
 
 -- Private functions
 
@@ -73,7 +73,7 @@ local function HandleBulkMoveTo()
 end
 
 local function SendCastFire(
-	cast: TypeDef.ActiveCast,
+	cast: TypeDefinitions.ActiveCastCompement,
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
@@ -316,7 +316,7 @@ function BaseCast:Destroy()
 
 	FastCastEventsModule = nil
 
-	for k, v in Actives do
+	for _, v in Actives do
 		FastCastM:TerminateCast(v)
 	end
 

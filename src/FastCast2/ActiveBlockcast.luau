@@ -127,7 +127,6 @@ end
 local function DbgVisualizeSegment(
 	castStartCFrame: CFrame,
 	size: Vector3,
-	castLength: number,
 	VisualizeCasts: boolean,
 	VisualizeCastSetting: TypeDef.VisualizeCastSettings
 ): BoxHandleAdornment?
@@ -257,7 +256,7 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 	local acceleration = latestTrajectory.Acceleration
 
 	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-	local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
 	cast.StateInfo.TotalRuntime += delta
@@ -277,13 +276,13 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 	local point = currentTarget
 	local part: Instance? = nil
 	local material = Enum.Material.Air
-	local normal = Vector3.new()
+	--local normal = Vector3.new()
 
 	if resultOfCast ~= nil then
 		point = resultOfCast.Position
 		part = resultOfCast.Instance
 		material = resultOfCast.Material
-		normal = resultOfCast.Normal
+		--normal = resultOfCast.Normal
 	end
 
 	local rayDisplacement = (point - lastPoint).Magnitude
@@ -302,11 +301,11 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 
 	task.synchronize()
 	
-	local LengthChangedfn: TypeDef.OnLengthChangedFunction = nil
-	local canPierceCheckfn: TypeDef.CanPierceFunction = nil
-	local castTerminatingfn: TypeDef.OnCastTerminatingFunction = nil
-	local Hitfn: TypeDef.OnHitFunction = nil
-	local Piercedfn: TypeDef.OnPiercedFunction = nil
+	local LengthChangedfn: TypeDef.OnLengthChangedFunction? = nil
+	local canPierceCheckfn: TypeDef.CanPierceFunction? = nil
+	local castTerminatingfn: TypeDef.OnCastTerminatingFunction? = nil
+	local Hitfn: TypeDef.OnHitFunction? = nil
+	local Piercedfn: TypeDef.OnPiercedFunction? = nil
 
 	if FastCastEvents then
 		canPierceCheckfn = FastCastEventsModuleConfig.UseCanPierce and FastCastEvents.CanPierce or nil
@@ -344,7 +343,6 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 		rayVisualization = DbgVisualizeSegment(
 			CFrame.new(lastPoint, lastPoint + rayDir),
 			BlockcastSize,
-			rayDisplacement,
 			VisualizeCasts,
 			VisualizeCastSettings
 		)
@@ -353,7 +351,7 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 	-- Look at those statements boi
 
 	if part and part ~= cast.RayInfo.CosmeticBulletObject then
-		local start = tick()
+		--local start = tick()
 		if DebugLogging.Hit then
 			print("Hit something, testing now.")
 		end
@@ -436,10 +434,10 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 
 					-- Mama may i have some cookies
 					if subResult ~= nil then
-						local subDisplacement = (subPosition - subResult.Position).Magnitude
+						subDisplacement = (subPosition - subResult.Position).Magnitude
 						local dbgSeg = DbgVisualizeSegment(
 							CFrame.new(subPosition, subPosition + subVelocity),
-							subDisplacement,
+							BlockcastSize,
 							VisualizeCasts,
 							VisualizeCastSettings
 						)
@@ -493,7 +491,7 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 					else
 						local dbgSeg = DbgVisualizeSegment(
 							CFrame.new(subPosition, subPosition + subVelocity),
-							subDisplacement,
+							BlockcastSize,
 							VisualizeCasts,
 							VisualizeCastSettings
 						)
@@ -563,7 +561,7 @@ local function SimulateCast(cast: TypeDef.ActiveBlockcastCompement, delta: numbe
 					params.FilterDescendantsInstances = filter
 				else
 					local filter = params.FilterDescendantsInstances
-					table.removeObject(filter, resultOfCast.Instance)
+					table.remove(filter, resultOfCast.Instance)
 					table.insert(alteredParts, resultOfCast.Instance)
 					params.FilterDescendantsInstances = filter
 				end
@@ -707,8 +705,6 @@ function ActiveCast.new(
 					Acceleration = behavior.Acceleration,
 				},
 			},
-			UseLengthChanged = behavior.UseLengthChanged,
-			UseBetterLengthChanged = behavior.UseBetterLengthChanged,
 			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
 			
@@ -755,7 +751,7 @@ function ActiveCast.new(
 
 	-- CosmeticBulletObject GET
 
-	local targetContainer: Instance
+	local targetContainer: Instance?
 	if cast.Caster.ObjectCache then
 		--[[if cast.RayInfo.CosmeticBulletObject ~= nil then
 			warn("ObjectCache already handle that for you, Template Dupe")
@@ -767,9 +763,12 @@ function ActiveCast.new(
 		targetContainer = cast.Caster.CacheHolder
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			cast.RayInfo.CosmeticBulletObject = cast.RayInfo.CosmeticBulletObject:Clone()
-			cast.RayInfo.CosmeticBulletObject.CFrame = CFrame.new(origin, origin + direction)
-			cast.RayInfo.CosmeticBulletObject.Parent = behavior.CosmeticBulletContainer
+			local basePart = cast.RayInfo.CosmeticBulletObject
+			basePart = basePart:Clone()
+			basePart.CFrame = CFrame.new(origin, origin + direction)
+			basePart.Parent = behavior.CosmeticBulletContainer
+
+			cast.RayInfo.CosmeticBulletObject = basePart
 		end
 		if behavior.CosmeticBulletContainer then
 			targetContainer = behavior.CosmeticBulletContainer
@@ -795,7 +794,7 @@ function ActiveCast.new(
 		event = RS.Heartbeat
 	end
 	
-	local FastCastEvents: TypeDef.FastCastEvents = eventModule and require(eventModule)
+	local FastCastEvents: TypeDef.FastCastEvents = eventModule and require(eventModule) or nil
 
 	--setmetatable(cast, ActiveCast)
 
@@ -822,7 +821,7 @@ function ActiveCast.new(
 		then
 			local Segment_timeAtStart = tick()
 			
-			local castTerminatingfn: TypeDef.OnCastTerminatingFunction = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating and FastCastEvents.castTerminatingfn or nil
+			local castTerminatingfn: TypeDef.OnCastTerminatingFunction? = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating and FastCastEvents.CastTerminating or nil
 			if cast.StateInfo.IsActivelyResimulating then
 				FastCast:TerminateCast(cast, castTerminatingfn)
 				
@@ -839,8 +838,8 @@ function ActiveCast.new(
 			local acceleration = latestTrajectory.Acceleration
 
 			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-			local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
-			local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+			--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			--local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 
 			cast.StateInfo.TotalRuntime += delta
 
@@ -885,7 +884,7 @@ function ActiveCast.new(
 				if DebugLogging.Segment then
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
-				SimulateCast(cast, timeIncrement, true)
+				SimulateCast(cast, timeIncrement, true, FastCastEvents)
 			end
 
 			if cast == nil or next(cast) == nil then
@@ -904,7 +903,7 @@ function ActiveCast.new(
 				cast.StateInfo.HighFidelitySegmentSize += HighFideSizeAmount
 			end
 		else
-			SimulateCast(cast, delta, false)
+			SimulateCast(cast, delta, false, FastCastEvents)
 		end
 
 		if
