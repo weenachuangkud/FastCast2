@@ -794,7 +794,7 @@ function ActiveCast.new(
 		event = RS.Heartbeat
 	end
 	
-	local FastCastEvents: TypeDef.FastCastEvents = eventModule and require(eventModule)
+	local FastCastEvents: TypeDef.FastCastEvents = eventModule and require(eventModule) or nil
 
 	--setmetatable(cast, ActiveCast)
 
