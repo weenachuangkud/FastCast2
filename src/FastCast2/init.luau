@@ -55,8 +55,9 @@
 ]=]
 
 -- Services
+
 --local HTTPService = game:GetService("HttpService")
-local RS = game:GetService("RunService")
+--local RS = game:GetService("RunService")
 
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
@@ -65,7 +66,7 @@ local RS = game:GetService("RunService")
 local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
-local Configs = require(script:WaitForChild("Configs"))
+--local Configs = require(script:WaitForChild("Configs"))
 local ObjectCache = require(script:WaitForChild("ObjectCache"))
 
 --local SharedCasters = require(script:WaitForChild("SharedCasters"))
@@ -74,7 +75,7 @@ local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
 
 -- Types
-type vaildcast = TypeDef.ActiveCastCompement | TypeDef.ActiveBlockcastCompement
+type vaildcast = TypeDef.ActiveCastCompement | TypeDef.ActiveBlockcastCompement | TypeDef.ActiveSpherecastCompement
 
 -- CONSTANTS
 local DEFAULT_CACHE_SIZE = 500
@@ -94,7 +95,7 @@ FastCast.__type = "FastCast"
 
 -- Local functions
 
-local function DestroySignal(signal: Signal.Signal)
+local function DestroySignal<T>(signal: Signal.Signal<T>?)
 	if type(signal) == "table" then
 		signal:Destroy()
 	else
@@ -118,7 +119,7 @@ local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceler
 end
 
 local function GetTrajectoryInfo(
-	cast: TypeDef.ActiveCastCompement | TypeDef.ActiveBlockCast,
+	cast: vaildcast,
 	index: number
 ): { [number]: Vector3 }
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
@@ -133,12 +134,12 @@ local function GetTrajectoryInfo(
 	return { GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel) }
 end
 
-local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveBlockcastCompement): { [number]: Vector3 }
+local function GetLatestTrajectoryEndInfo(cast: vaildcast): { [number]: Vector3 }
 	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
 end
 
 local function ModifyTransformation(
-	cast: TypeDef.ActiveCastCompement,
+	cast: vaildcast,
 	velocity: Vector3?,
 	acceleration: Vector3?,
 	position: Vector3?
@@ -191,7 +192,7 @@ end
 	@return FastCastBehavior
 ]=]
 function FastCast.newBehavior(): TypeDef.FastCastBehavior
-	return DefaultConfigs.FastCastBehavior :: TypeDef.FastCastBehavior
+	return DefaultConfigs.FastCastBehavior
 end
 
 local DEFAULT_FASTCAST_BEHAVIOR = FastCast.newBehavior()
@@ -313,21 +314,21 @@ function FastCast:Init(
 		return
 	end
 
-	local Dispatcher = self.Dispatcher
+	local vmDispatcher = self.Dispatcher
 
 	repeat
 		task.wait()
-	until #Dispatcher.Threads == numWorkers
+	until #vmDispatcher.Threads == numWorkers
 	--print("STARTED CONNECTING")
 
-	for i, v in Dispatcher.Threads do
+	for _, v in vmDispatcher.Threads do
 		-- Please dont change this to FindFirstChild, or else diddy will oil you up
 		local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
 		if BindableObjectCache then
 			--print("CONNECTED")
-			BindableObjectCache.OnInvoke = function(v: CFrame)
+			BindableObjectCache.OnInvoke = function(targetCFrame: CFrame)
 				--print("INVOKED")
-				return self.ObjectCache:GetPart(v)
+				return self.ObjectCache:GetPart(targetCFrame)
 			end -- OH MY GOD
 		end -- KEEP GOING
 	end -- OH YES DADDY
@@ -562,13 +563,7 @@ Add position to an ActiveCast with the specified Vector3.
 ]=]
 function FastCast:AddPositionCast(cast: vaildcast, position: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
-	return GetPositionAtTime(
-		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
-		currentTrajectory.Origin,
-		currentTrajectory.InitialVelocity,
-		currentTrajectory.Acceleration
-	)
+	self:SetPosition(cast, self:GetPosition(cast) + position)
 end
 
 --[=[
@@ -583,7 +578,7 @@ Add velocity to an ActiveCast with the specified Vector3.
 ]=]
 function FastCast:AddVelocityCast(cast: vaildcast, velocity: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	FastCast:SetVelocity(cast:GetVelocity() + velocity)
+	self:SetVelocity(cast, self:GetVelocity(cast) + velocity)
 end
 
 --[=[
@@ -598,7 +593,7 @@ Add acceleration to an ActiveCast with the specified Vector3.
 ]=]
 function FastCast:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	cast:SetAcceleration(cast:GetAcceleration() + acceleration)
+	self:SetAcceleration(cast, self:GetAcceleration(cast) + acceleration)
 end
 
 --[=[
@@ -622,20 +617,18 @@ end
 	@param castTerminatingFunction (cast: vaildcast) -> () -- Function to be called when the cast is terminating
 	@within FastCast
 ]=]
-function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: (cast: vaildcast) -> ())
-	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED"
-	)
+function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: (cast: vaildcast) -> ()?)
+	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 
 	local trajectories = cast.StateInfo.Trajectories
 	local lastTrajectory = trajectories[#trajectories]
 	lastTrajectory.EndTime = cast.StateInfo.TotalRuntime
 
-	cast.StateInfo.UpdateConnection:Disconnect()
 
-	--self.CasterBindable:Fire("CastTerminating", self)
-	--self.Definition.OnCastTerminating(self)
-
-	cast.StateInfo.UpdateConnection = nil
+	if cast.StateInfo.UpdateConnection then
+		cast.StateInfo.UpdateConnection:Disconnect()
+		cast.StateInfo.UpdateConnection = nil
+	end
 	
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
@@ -648,14 +641,9 @@ function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: (cast:
 	
 	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
 
-	for key, _ in cast do
+	for key, _ in (cast :: any) do
 		cast[key] = nil
 	end
-	--[[cast.Caster = nil
-	cast.StateInfo = nil
-	cast.RayInfo = nil
-	cast.UserData = nil
-	cast = nil]]
 end
 
 --[=[
@@ -708,24 +696,25 @@ function FastCast:SetObjectCacheEnabled(
 	if not self.AlreadyInit then
 		error("Please Init caster")
 	end
-	local Dispatcher = self.Dispatcher
+	local vmDispatcher = self.Dispatcher
 
 	if enabled then
 		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder)
-		Dispatcher:DispatchAll("BindObjectCache", enabled)
+		vmDispatcher:DispatchAll("BindObjectCache", enabled)
 
-		for i, v in Dispatcher.Threads do
+		for _, v in vmDispatcher.Threads do
 			local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
 			if BindableObjectCache then
-				BindableObjectCache.OnInvoke = function(v: CFrame)
-					return self.ObjectCache:GetPart(v)
+				BindableObjectCache.OnInvoke = function(targetCFrame: CFrame)
+					return self.ObjectCache:GetPart(targetCFrame)
 				end
 			end 
 		end
 	else
-		Dispatcher:DispatchAll("BindObjectCache", enabled)
+		vmDispatcher:DispatchAll("BindObjectCache", enabled)
 		if self.ObjectCache then
 			self.ObjectCache:Destroy()
+			self.ObjectCache = nil
 		end
 	end
 	
@@ -755,4 +744,3 @@ end
 
 
 return FastCast
-	

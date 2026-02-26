@@ -8,6 +8,7 @@
 
 -- Requires
 
+local TypeDefinitions = require(script.Parent.TypeDefinitions)
 local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 
 -- Defaults
@@ -80,6 +81,6 @@ Defaults.FastCastBehavior = {
 		UseCastTerminating = true,
 		UseCastFire = true
 	}
-}
+} :: TypeDefinitions.FastCastBehavior
 
 return Defaults
