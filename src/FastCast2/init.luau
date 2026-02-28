@@ -186,16 +186,27 @@ local function ModifyTransformation(
 	end
 end
 
+local function deepCopyTable(tbl: {any}): {any}
+	local newTable = {}
+	for i, v in tbl do
+		if type(v) == "table" then
+			newTable[i] = deepCopyTable(v)
+		else
+			newTable[i] = v
+		end
+	end
+	return newTable
+end
+
 --[=[
 	Creates a new FastCastBehavior, which contains information necessary to Fire the cast properly.
 	
 	@return FastCastBehavior
 ]=]
 function FastCast.newBehavior(): TypeDef.FastCastBehavior
-	return DefaultConfigs.FastCastBehavior
+	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
 end
 
-local DEFAULT_FASTCAST_BEHAVIOR = FastCast.newBehavior()
 
 --[=[
 	:::warning
@@ -371,7 +382,7 @@ function FastCast:RaycastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	-- BABE RAYCAST!!!!!
@@ -400,7 +411,7 @@ function FastCast:BlockcastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
@@ -428,7 +439,7 @@ function FastCast:SpherecastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = DEFAULT_FASTCAST_BEHAVIOR
+		BehaviorData = FastCast.newBehavior()
 	end
 	
 	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
