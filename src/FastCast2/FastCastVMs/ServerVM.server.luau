@@ -13,10 +13,6 @@ local FastCast2Module = script:WaitForChild("FastCast2").Value
 
 
 local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
---local SharedCasters = require(FastCast2Module:WaitForChild("SharedCasters"))
-
---local parent = script.Parent
---local bindableEvent = parent:WaitForChild("Output")
 
 local BaseCast = require(FastCast2Module:WaitForChild("BaseCast"))
 
@@ -89,7 +85,7 @@ actor:BindToMessage("Spherecast", function(
 	velocity : Vector3 | number,
 	behavior : TypeDefinitions.FastCastBehavior
 )
-	BaseCast:SphereCast(origin, radius, direction, velocity, behavior)
+	BaseCast:Spherecast(origin, radius, direction, velocity, behavior)
 end)
 
 actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
