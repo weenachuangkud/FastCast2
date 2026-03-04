@@ -17,24 +17,10 @@
                     ],
                     "children": [
                         {
-                            "name": "ActiveBlockcast",
-                            "className": "ModuleScript",
-                            "filePaths": [
-                                "src/FastCast2/ActiveBlockcast.luau"
-                            ]
-                        },
-                        {
                             "name": "ActiveCast",
                             "className": "ModuleScript",
                             "filePaths": [
                                 "src/FastCast2/ActiveCast.luau"
-                            ]
-                        },
-                        {
-                            "name": "ActiveSpherecast",
-                            "className": "ModuleScript",
-                            "filePaths": [
-                                "src/FastCast2/ActiveSpherecast.luau"
                             ]
                         },
                         {
