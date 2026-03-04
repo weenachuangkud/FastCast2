@@ -39,8 +39,8 @@ local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 -- Types
 type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.ActiveSpherecastData
 
-type BlockcastVariant = { CastType: numer, size: Vector3}
-type SpherecastVariant = { CastType: number, radius: number }
+type BlockcastVariant = { CastType: number, Size: Vector3}
+type SpherecastVariant = { CastType: number, Radius: number }
 type CastVariants = BlockcastVariant | SpherecastVariant
 
 type RayVisualizerVariant = { castLength: number}
@@ -179,7 +179,7 @@ local function DbgVisualizeRaySegment(
 	castStartCFrame: CFrame,
 	VisualizeCasts: boolean,
 	VisualizeCastSettings: TypeDef.VisualizeCastSettings,
-	variant: CastVisualizerVariants
+	variant: RayVisualizerVariant
 ): ConeHandleAdornment?
 	if not VisualizeCasts then
 		return
@@ -201,7 +201,7 @@ local function DbgVisualizeBlockSegment(
 	castStartCFrame: CFrame,
 	VisualizeCasts: boolean,
 	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
-	variant: BlockcastVariant
+	variant: BlockVisualizerVariant
 ): BoxHandleAdornment?
 	if not VisualizeCasts then
 		return
@@ -210,7 +210,7 @@ local function DbgVisualizeBlockSegment(
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = castStartCFrame
 	--adornment.Height = castLength
-		
+
 	adornment.Size = variant.size
 	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
 	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
@@ -384,11 +384,11 @@ local function SimulateCast(
 	local totalDisplacement = currentTarget - lastPoint
 
 	local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * delta
-	
+
 	local CastType = variant.CastType
 
 	local targetWorldRoot = cast.RayInfo.WorldRoot
-	
+
 	local CastHandler = castHandlers[CastType]
 	local Visualizer = Visualizers[CastType]
 
@@ -416,9 +416,9 @@ local function SimulateCast(
 	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
 		latestTrajectory.Acceleration = Vector3.new()
 	end
-	
+
 	local VisualizeVariant = {}
-	
+
 	if CastType == EnumCastTypes.Raycast then
 		VisualizeVariant.castLength = rayDisplacement
 	elseif CastType == EnumCastTypes.Blockcast then
@@ -472,12 +472,12 @@ local function SimulateCast(
 	end
 
 	-- I feel so good
-	
+
 	-- NOTE: Please dont remove "part and"
 	-- Why? basically when part doesn't exist it will do nothing, but removing "part and" will break the logic
 	-- You can't do anything about it
 	if part and part ~= cast.RayInfo.CosmeticBulletObject then
-		
+
 		if DebugLogging.Hit then
 			print("Hit something, testing now.")
 		end
@@ -565,10 +565,10 @@ local function SimulateCast(
 					local subVelocity =
 						GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
 					local subRayDir = subVelocity * delta
-					local subResult = CastHandler(targetWorldRoot, subPosition, subRayDir, cast.RayInfo.Parameters)
+					local subResult = CastHandler(targetWorldRoot, subPosition, subRayDir, cast.RayInfo.Parameters, variant)
 
 					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
-					
+
 					if CastType == EnumCastTypes.Raycast then
 						VisualizeVariant.castLength = subDisplacement
 					end
@@ -764,7 +764,7 @@ local function SimulateCast(
 end
 
 --[=[
-	@function new
+	@function createCastData
 	@private
 	@within ActiveCast
 
@@ -867,7 +867,7 @@ function ActiveCast.createCastData(
 		CFrame = CFrame.new(),
 		ID = activeCastID,
 	} :: any
-	
+
 	if variant.CastType == EnumCastTypes.Blockcast then
 		cast.RayInfo.Size = variant.Size
 	elseif variant.CastType == EnumCastTypes.Spherecast then
@@ -904,7 +904,7 @@ function ActiveCast.createCastData(
 
 			cast.RayInfo.CosmeticBulletObject = basePart
 		end
-		
+
 		if behavior.CosmeticBulletContainer then
 			targetContainer = behavior.CosmeticBulletContainer
 		end
@@ -958,9 +958,12 @@ function ActiveCast.createCastData(
 		then
 			local Segment_timeAtStart = tick()
 
-			local castTerminatingfn: TypeDef.OnCastTerminatingFunction? = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating
-				and FastCastEvents.CastTerminating
-				or nil
+			local castTerminatingfn: TypeDef.OnCastTerminatingFunction? = nil
+			if FastCastEvents then
+				castTerminatingfn = cast.StateInfo.FastCastEventsModuleConfig.UseCastTerminating
+					and FastCastEvents.CastTerminating
+					or nil
+			end
 			if cast.StateInfo.IsActivelyResimulating then
 				FastCast:TerminateCast(cast, castTerminatingfn)
 
@@ -991,10 +994,10 @@ function ActiveCast.createCastData(
 			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
 
 			local targetWorldRoot = cast.RayInfo.WorldRoot
-			
+
 			-- Is this how it works?
 			local CastHandler = castHandlers[variant.CastType]
-			
+
 			local resultOfCast = CastHandler(targetWorldRoot, lastPoint, rayDir, cast.RayInfo.Parameters, variant)
 
 			local point = currentPoint
