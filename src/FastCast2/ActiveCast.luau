@@ -350,7 +350,7 @@ end
 end]]
 
 local function SimulateCast(
-	cast: vaildcast,
+	cast: any,
 	delta: number,
 	expectingShortCall: boolean,
 	FastCastEvents: TypeDef.FastCastEvents,
@@ -865,13 +865,13 @@ function ActiveCast.createCastData(
 
 		Type = CastVariantTypes[variant.CastType],
 		CFrame = CFrame.new(),
-		ID = activeCastID,
+		ID = activeCastID
 	} :: any
 
 	if variant.CastType == EnumCastTypes.Blockcast then
-		cast.RayInfo.Size = variant.Size
+		cast.RayInfo.Size = (variant :: BlockcastVariant).Size
 	elseif variant.CastType == EnumCastTypes.Spherecast then
-		cast.RayInfo.Radius = variant.Radius
+		cast.RayInfo.Radius = (variant :: SpherecastVariant).Radius
 	end
 
 	if behavior.UserData then

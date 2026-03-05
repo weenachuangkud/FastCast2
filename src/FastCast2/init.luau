@@ -46,7 +46,7 @@
 	- Date : 2025
 ]]
 
--- Verison : 0.0.8
+-- Verison : 0.0.9
 
 --[=[
 	@class FastCast
@@ -75,7 +75,7 @@ local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
 
 -- Types
-type vaildcast = TypeDef.ActiveCastCompement | TypeDef.ActiveBlockcastCompement | TypeDef.ActiveSpherecastCompement
+type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.ActiveSpherecastData
 
 -- CONSTANTS
 local DEFAULT_CACHE_SIZE = 500
@@ -628,7 +628,7 @@ end
 	@param castTerminatingFunction (cast: vaildcast) -> () -- Function to be called when the cast is terminating
 	@within FastCast
 ]=]
-function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: (cast: vaildcast) -> ()?)
+function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 
 	local trajectories = cast.StateInfo.Trajectories
@@ -647,7 +647,7 @@ function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: (cast:
 	end
 	
 	if castTerminatingFunction then
-		castTerminatingFunction(cast)
+		castTerminatingFunction((cast :: any))
 	end
 	
 	cast.Caster.ActiveCastCleaner:Fire(cast.ID)

@@ -5,13 +5,13 @@
 -- Modded by Mawin_CK
 -- Desc : I make it more customizable and more easy to use :P
 
--- Services --
+-- Services
 
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ServerScriptService = game:GetService("ServerScriptService")
 local RunService = game:GetService("RunService")
 
--- Types --
+-- Types
 
 local IS_SERVER = RunService:IsServer()
 
@@ -28,18 +28,18 @@ export type Dispatcher = {
 	Destroy : (Dispatcher) -> ()
 }
 
---- Paths ---
+-- Paths
 
 local ServerScript : Script = script:FindFirstChild("ServerVM")
 
 local LocalScript : LocalScript = script:FindFirstChild("ClientVM")
 
---- Default settings ---
+-- Default settings
 
 local ClientContainerParent = ReplicatedFirst
 local ServerContainerParent = ServerScriptService
 
---- Constants ---
+-- Constants
 
 local Dispatcher = {}
 Dispatcher.__index = Dispatcher
@@ -52,12 +52,12 @@ local ControllerName = ""
 local ContainerName = ""
 local ContainerParent = (IS_SERVER and ServerContainerParent or ClientContainerParent)
 
---- Variables ---
+-- Variables
 
 local AlreadyInit = false
 
 
--- Public Functions --
+-- Public Functions
 
 --[[
 	<p>

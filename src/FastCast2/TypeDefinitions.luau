@@ -14,7 +14,6 @@
 ]=]
 
 local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
-local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 
 --[=[
 	@type vaildcast ActiveCastData | ActiveBlockcastData
@@ -49,52 +48,52 @@ export type FastCastEvents = {
 }
 
 --[=[
-	@type CanPierceFunction (ActiveCastData, RaycastResult, Vector3, Instance?) -> boolean
+	@type CanPierceFunction (vaildcast, RaycastResult, Vector3, Instance?) -> boolean
 	@within TypeDefinitions
 
 	Callback used to decide whether a cast should pierce and continue after a hit.
 ]=]
 export type CanPierceFunction = (
-	ActiveCastData,
+	vaildcast,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> boolean
 
 --[=[
-	@type OnHitFunction (ActiveCastData, RaycastResult, Vector3, Instance?) -> ()
+	@type OnHitFunction (vaildcast, RaycastResult, Vector3, Instance?) -> ()
 	@within TypeDefinitions
 
 	Callback fired when the cast hits something (non-piercing).
 ]=]
 export type OnHitFunction = (
-	ActiveCastData,
+	vaildcast,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> ()
 
 --[=[
-	@type OnPierceFunction (ActiveCastData, RaycastResult, Vector3, Instance?) -> ()
+	@type OnPierceFunction (vaildcast, RaycastResult, Vector3, Instance?) -> ()
 	@within TypeDefinitions
 
 	Callback fired when the cast pierces something.
 ]=]
 export type OnPiercedFunction = (
-	ActiveCastData,
+	vaildcast,
 	RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> ()
 
 --[=[
-	@type OnLengthChangedFunction (ActiveCastData, Vector3, Vector3, number, Vector3, Instance?) -> ()
+	@type OnLengthChangedFunction (vaildcast, Vector3, Vector3, number, Vector3, Instance?) -> ()
 	@within TypeDefinitions
 
 	Callback fired when the cast's length changes as it updates.
 ]=]
 export type OnLengthChangedFunction = (
-	ActiveCastData,
+	vaildcast,
 	lastPoint: Vector3,
 	rayDir: Vector3,
 	rayDisplacement: number,
@@ -103,21 +102,21 @@ export type OnLengthChangedFunction = (
 ) -> ()
 
 --[=[
-	@type OnCastTerminatingFunction (ActiveCastData) -> ()
+	@type OnCastTerminatingFunction (vaildcast) -> ()
 	@within TypeDefinitions
 
 	Callback fired right as an ActiveCast is terminating.
 ]=]
-export type OnCastTerminatingFunction = (ActiveCastData) -> ()
+export type OnCastTerminatingFunction = (vaildcast) -> ()
 
 --[=[
-	@type OnCastFireFunction (ActiveCastData, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
+	@type OnCastFireFunction (vaildcast, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
 	@within TypeDefinitions
 
 	Callback fired when a cast is initially fired.
 ]=]
 export type OnCastFireFunction = (
-	ActiveCastData,
+	vaildcast,
 	Origin: Vector3,
 	Direction: Vector3,
 	Velocity: Vector3,
@@ -349,7 +348,7 @@ export type CastTrajectory = {
 	Represents cast state tracking data.
 ]=]
 export type CastStateInfo = {
-	UpdateConnection: RBXScriptSignal,
+	UpdateConnection: RBXScriptConnection?,
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
 	Paused: boolean,
@@ -425,7 +424,7 @@ export type BaseCastData = {
 	SyncChange : BindableEvent
 }
 
----- ECS
+-- ECS
 
 --[=[
 	@type ActiveCastData {Caster: BaseCastData,StateInfo: CastStateInfo,RayInfo: CastRayInfo,UserData: { [any]: any }, Type : "Raycast",CFrame: CFrame,ID: number}
