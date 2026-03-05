@@ -35,7 +35,7 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Versatile projectile library
 - Parallel scripting support
 - Easy to use and integrate
-- Raycast and Blockcast support
+- Raycast and Blockcast, Spherecast support
 - BulkMoveTo support
 - Built-in ObjectCache
 - Flexible and extensible design
@@ -250,7 +250,11 @@ return module
 
 <br />
 
-# SPECIAL THANKS TO
-- @avibah On Discord: **For helping me make VMDispatcher**
-- @ace9b472eeec4f53ba9e8d91bo87c636 On Discord: **For advice/ideas**
+# Special Thanks
 
+Thanks to the following people from the **Suphi Kaner Discord Server**:
+
+
+- **@avibah** — For helping me create **VMDispatcher**
+- **@ace9b472eeec4f53ba9e8d91bo87c636** — For advice and ideas
+- **@23sinek345** — For code review and improvement suggestions
