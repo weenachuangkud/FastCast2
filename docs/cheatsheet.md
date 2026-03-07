@@ -23,11 +23,21 @@ Caster:Init(
 
 
 -- Functions
-FastCast:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: FastCastBehavior?) → () -- Raycasts the Caster with the specified parameters.
-FastCast:BlockcastFire(origin: Vector3, Size: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: FastCastBehavior?) -> () -- Blockcasts the Caster with the specified parameters.
-FastCast:SpherecastFire(origin: Vector3, Radius: number, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior? ) -> () -- Spherecasts the Caster with the specified parameters.
+Caster:RaycastFire(origin: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: FastCastBehavior?) → () -- Raycasts the Caster with the specified parameters.
+Caster:BlockcastFire(origin: Vector3, Size: Vector3, direction: Vector3, velocity: Vector3 | number, BehaviorData: FastCastBehavior?) -> () -- Blockcasts the Caster with the specified parameters.
+Caster:SpherecastFire(origin: Vector3, Radius: number, direction: Vector3, velocity: Vector3 | number, BehaviorData: TypeDef.FastCastBehavior? ) -> () -- Spherecasts the Caster with the specified parameters.
 
-FastCast:SetFastCastEventsModule(moduleScript: ModuleScript) → () -- Set the FastCastEventsModule for all BaseCasts created from this Caster.
+Caster:SetFastCastEventsModule(moduleScript: ModuleScript) → () -- Set the FastCastEventsModule for all BaseCasts created from this Caster.
+
+Caster:SetBulkMoveEnabled(enabled: boolean) -- Sets whether BulkMoveTo is enabled for this Caster.
+Caster:SetObjectCacheEnabled(
+    enabled: boolean, -- Is enabled
+    Template: BasePart | Model, -- Projectile template
+    CacheSize: number, -- Pre allocate size
+    CacheHolder: Instance -- Where ObjectCache are stored
+) -- Sets whether ObjectCache is enabled for this Caster.
+
+Caster:Destroy() → () -- Destroy's a Caster, cleaning up all resources used by it.
 
 FastCast:GetVelocityCast(cast: vaildcast) -- Gets the velocity of an ActiveCast.
 FastCast:GetAccelerationCast(cast: vaildcast) -- Gets the acceleration of an ActiveCast.
@@ -46,14 +56,7 @@ FastCast:AddAccelerationCast(cast: vaildcast, acceleration: Vector3) -- Add acce
 FastCast:SyncChangesToCast(cast: vaildcast) -- Synchronize new changes to the ActiveCast.
 FastCast:TerminateCast(cast: vaildcast) -- Terminate function for casts
 
-FastCast:SetBulkMoveEnabled(enabled: boolean) -- Sets whether BulkMoveTo is enabled for this Caster.
-FastCast:SetObjectCacheEnabled(
-    enabled: boolean, -- Is enabled
-    Template: BasePart | Model, -- Projectile template
-    CacheSize: number, -- Pre allocate size
-    CacheHolder: Instance -- Where ObjectCache are stored
-) -- Sets whether ObjectCache is enabled for this Caster.
+-- Field
 
-FastCast:Destroy() → () -- Destroy's a Caster, cleaning up all resources used by it.
 
 ```
