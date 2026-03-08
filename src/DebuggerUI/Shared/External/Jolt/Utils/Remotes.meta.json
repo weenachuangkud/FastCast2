@@ -1,0 +1,10 @@
+{
+    "children": {
+        "Jolt_Reliable": {
+            "className": "RemoteEvent"
+        },
+        "Jolt_Unreliable": {
+            "className": "UnreliableRemoteEvent"
+        }
+    }
+}
