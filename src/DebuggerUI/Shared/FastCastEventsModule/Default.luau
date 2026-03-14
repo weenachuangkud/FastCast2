@@ -37,7 +37,7 @@ module.Hit = function()
 	print("Hit!")
 end
 
-module.CanPierce = function(_, resultOfCast : RaycastResult, segmentVelocity, CosmeticBulletObject)
+module.CanPierce = function(_, resultOfCast : RaycastResult)
 	local CanPierce = false
 	if resultOfCast.Instance:GetAttribute("CanPierce") == true then
 		CanPierce = true
