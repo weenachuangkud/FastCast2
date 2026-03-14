@@ -69,19 +69,19 @@ CastBehaviorServer.HighFidelitySegmentSize = 1
 
 CastBehaviorServer.FastCastEventsConfig = {
 	UseLengthChanged = false,
-	UseRayHit = true,
+	UseHit = true,
 	UseCastTerminating = true,
 	UseCastFire = false,
-	UseRayPierced = false,
+	UsePierced = false,
 }
 
 CastBehaviorServer.FastCastEventsModuleConfig = {
 	UseLengthChanged = false,
-	UseRayHit = true,
+	UseHit = true,
 	UseCastTerminating = true,
 	UseCastFire = false,
-	UseRayPierced = false,
-	UseCanRayPierce = false,
+	UsePierced = false,
+	UseCanPierce = false,
 }
 
 -- ============================================================
@@ -101,7 +101,7 @@ Caster.CastFire = function()
 	print("[IrisServer] CastFire")
 end
 
-Caster.Hit = function(_cast: FastCastTypes.ActiveCastCompement, _result: RaycastResult)
+Caster.Hit = function(_cast: FastCastTypes.ActiveCastData, _result: RaycastResult)
 	print("[IrisServer] RayHit")
 end
 
