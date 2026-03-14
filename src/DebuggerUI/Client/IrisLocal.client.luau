@@ -1,4 +1,3 @@
---!strict
 --[[
 	Author: Mawin_CK
 	Date: 2025
