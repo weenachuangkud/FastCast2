@@ -16,7 +16,7 @@
 		},
 
 		"StarterPlayer":{
-			"StarterPlayerScripts":{
+			"StarterCharacterScripts":{
 				"$path": "src/Debugger/Client"
 			}
 		}
