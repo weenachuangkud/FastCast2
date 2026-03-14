@@ -2,11 +2,23 @@
 	"name": "FastCast2",
 	"tree": {
 		"$className": "DataModel",
+		"$ignoreUnknownInstances": true,
+
 		"ReplicatedStorage": {
 			"FastCast2": {
 				"$path": "src/FastCast2"
 			},
 			"$path": "src/DebuggerUI/Shared"
+		},
+
+		"ServerScriptService":{
+			"$path": "src/DebuggerUI/Server"
+		},
+
+		"StarterPlayer":{
+			"StarterPlayerScripts":{
+				"$path": "src/Debugger/Client"
+			}
 		}
 	}
 }
