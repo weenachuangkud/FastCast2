@@ -146,28 +146,40 @@ IntCountEvent:Connect(function(amount: number)
 	ClientProjectileCount += amount
 end)
 
-local function onCastTerminating(cast: FastCastTypes.ActiveCastCompement)
-	local obj = cast.RayInfo.CosmeticBulletObject
-	if obj then obj:Destroy() end
+local function onCastTerminating(cast: FastCastTypes.ActiveCastData)
+	local obj: Instance? = cast.RayInfo.CosmeticBulletObject :: Instance?
+	if obj then 
+		obj:Destroy()
+ 	end
 	ClientProjectileCount -= 1
 end
 
-local function onCastTerminatingObjectCache(cast: FastCastTypes.ActiveCastCompement)
-	local obj = cast.RayInfo.CosmeticBulletObject
-	if obj then Caster.ObjectCache:ReturnObject(obj) end
+local function onCastTerminatingObjectCache(cast: FastCastTypes.ActiveCastData)
+	local obj: Instance? = cast.RayInfo.CosmeticBulletObject :: Instance?
+	if obj then 
+		Caster.ObjectCache:ReturnObject(obj) 
+	end
 	ClientProjectileCount -= 1
 end
 
 Caster.CastTerminating = onCastTerminating
-Caster.CastFire = function() print("[IrisLocal] CastFire") end
-Caster.Hit = function() print("[IrisLocal] Hit") end
+Caster.CastFire = function() 
+	print("[IrisLocal] CastFire") 
+end
+Caster.Hit = function() 
+	print("[IrisLocal] Hit") 
+end
 Caster.LengthChanged = function()
 	if debounce_lc then return end
 	debounce_lc = true
 	print("[IrisLocal] LengthChanged")
-	task.delay(DEBOUNCE_LC_TIME, function() debounce_lc = false end)
+	task.delay(DEBOUNCE_LC_TIME, function() 
+		debounce_lc = false 
+	end)
 end
-Caster.Pierced = function() print("[IrisLocal] Pierced") end
+Caster.Pierced = function() 
+	print("[IrisLocal] Pierced") 
+end
 
 -- ============================================================
 -- Iris States
