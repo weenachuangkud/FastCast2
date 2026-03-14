@@ -15,7 +15,7 @@ local module: TypeDef.FastCastEvents = {}
 local debounce = false
 local debounce_time = 0.2
 
-module.LengthChanged = function(cast : TypeDef.ActiveCast)
+module.LengthChanged = function()
 	if not debounce then
 		debounce = true
 		print("OnLengthChanged Test")
@@ -33,11 +33,11 @@ module.CastTerminating = function()
 	print("CastTerminating!")
 end
 
-module.RayHit = function()
+module.Hit = function()
 	print("Hit!")
 end
 
-module.CanPierce = function(cast, resultOfCast : RaycastResult, segmentVelocity, CosmeticBulletObject)
+module.CanPierce = function(_, resultOfCast : RaycastResult, segmentVelocity, CosmeticBulletObject)
 	local CanPierce = false
 	if resultOfCast.Instance:GetAttribute("CanPierce") == true then
 		CanPierce = true
