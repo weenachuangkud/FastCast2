@@ -5,7 +5,8 @@
 		"ReplicatedStorage": {
 			"FastCast2": {
 				"$path": "src/FastCast2"
-			}
+			},
+			"$path": "src/DebuggerUI/Shared"
 		}
 	}
 }
