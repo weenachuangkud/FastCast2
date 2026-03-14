@@ -452,7 +452,7 @@ iris:Connect(function()
 
 	if P_TestValue.value then
 		if P_ClientTestValue.value and ClientProjectileCount < ClientProjectileLimitValue.value then
-			casterFire(CastTypeState.value, OriginValue.value, nil, DirectionValue.value, VelocityValue.value, CastBehaviorClient)
+			casterFire(CastTypeState.value, OriginValue.value, castArg, DirectionValue.value, VelocityValue.value, CastBehaviorClient)
 			ClientProjectileCount += 1
 		end
 		if P_ServerTestValue.value then
