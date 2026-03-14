@@ -150,7 +150,7 @@ local function onCastTerminating(cast: FastCastTypes.ActiveCastData)
 	local obj: Instance? = cast.RayInfo.CosmeticBulletObject :: Instance?
 	if obj then 
 		obj:Destroy()
- 	end
+	end
 	ClientProjectileCount -= 1
 end
 
@@ -261,10 +261,22 @@ local function buildClientBehavior()
 	CastBehaviorClient.CosmeticBulletTemplate  = UseCosmeticBulletTemplate.value and ProjectileTemplate or nil
 	CastBehaviorClient.SimulateAfterPhysic     = SimulateAfterPhysicState.value
 	CastBehaviorClient.AutomaticPerformance    = AutomaticPerformanceState.value
-	for key, v in FastCastEventsConfigStates       do CastBehaviorClient.FastCastEventsConfig[key]       = v.value end
-	for key, v in FastCastEventsModuleConfigStates do CastBehaviorClient.FastCastEventsModuleConfig[key] = v.value end
-	for key, v in AdaptivePerformanceStates        do CastBehaviorClient.AdaptivePerformance[key]        = v.value end
-	for key, v in VisualizeCastSettingSt           do CastBehaviorClient.VisualizeCastSettings[key]      = v.value end
+
+	for key, v in FastCastEventsConfigStates do 
+		CastBehaviorClient.FastCastEventsConfig[key] = v.value 
+	end
+	
+	for key, v in FastCastEventsModuleConfigStates do 
+		CastBehaviorClient.FastCastEventsModuleConfig[key] = v.value 
+	end
+
+	for key, v in AdaptivePerformanceStates        do 
+		CastBehaviorClient.AdaptivePerformance[key] = v.value 
+	end
+
+	for key, v in VisualizeCastSettingSt           do 
+		CastBehaviorClient.VisualizeCastSettings[key] = v.value 
+	end
 end
 
 local function buildServerBehavior()
@@ -430,9 +442,13 @@ iris:Connect(function()
 
 	iris.Checkbox({ "BulkMoveTo" }, { isChecked = BulkMoveEnabledValue })
 	if BulkMoveEnabledValue.value then
-		if not Caster.BulkMoveEnabled then Caster:SetBulkMoveEnabled(true) end
+		if not Caster.BulkMoveEnabled then 
+			Caster:SetBulkMoveEnabled(true) 
+		end
 	else
-		if Caster.BulkMoveEnabled then Caster:SetBulkMoveEnabled(false) end
+		if Caster.BulkMoveEnabled then 
+			Caster:SetBulkMoveEnabled(false) 
+		end
 	end
 	iris.End()
 
