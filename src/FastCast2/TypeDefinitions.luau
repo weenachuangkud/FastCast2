@@ -113,7 +113,7 @@ export type OnLengthChangedFunction = (
 export type OnCastTerminatingFunction = (cast:  vaildcast) -> ()
 
 --[=[
-	@type OnCastFireFunction (vaildcast, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
+	@type OnCastFireFunction (cast: vaildcast, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
 	@within TypeDefinitions
 
 	Callback fired when a cast is initially fired.
