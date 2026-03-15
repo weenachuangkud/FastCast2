@@ -113,7 +113,7 @@ export type OnLengthChangedFunction = (
 export type OnCastTerminatingFunction = (cast:  vaildcast) -> ()
 
 --[=[
-	@type OnCastFireFunction (cast: vaildcast, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
+	@type OnCastFireFunction (cast: vaildcast, lastPoint: Vector3, rayDir: Vector3, segmentVelocity: Vector3, behavior: FastCastBehavior) -> ()
 	@within TypeDefinitions
 
 	Callback fired when a cast is initially fired.
@@ -409,7 +409,7 @@ export type SphereCastRayInfo = {
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	
+
 	Radius: number,
 }
 
