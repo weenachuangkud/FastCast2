@@ -110,7 +110,7 @@ export type OnLengthChangedFunction = (
 
 	Callback fired right as an ActiveCast is terminating.
 ]=]
-export type OnCastTerminatingFunction = (vaildcast) -> ()
+export type OnCastTerminatingFunction = (cast:  vaildcast) -> ()
 
 --[=[
 	@type OnCastFireFunction (vaildcast, Vector3, Vector3, Vector3, FastCastBehavior) -> ()
