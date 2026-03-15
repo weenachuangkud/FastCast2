@@ -57,8 +57,8 @@ export type FastCastEvents = {
 	Callback used to decide whether a cast should pierce and continue after a hit.
 ]=]
 export type CanPierceFunction = (
-	vaildcast,
-	RaycastResult,
+	cast: vaildcast,
+	result: RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> boolean
@@ -70,8 +70,8 @@ export type CanPierceFunction = (
 	Callback fired when the cast hits something (non-piercing).
 ]=]
 export type OnHitFunction = (
-	vaildcast,
-	RaycastResult,
+	cast: vaildcast,
+	result: RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> ()
@@ -83,8 +83,8 @@ export type OnHitFunction = (
 	Callback fired when the cast pierces something.
 ]=]
 export type OnPiercedFunction = (
-	vaildcast,
-	RaycastResult,
+	cast: vaildcast,
+	result: RaycastResult,
 	segmentVelocity: Vector3,
 	cosmeticBulletObject: Instance?
 ) -> ()
@@ -96,7 +96,7 @@ export type OnPiercedFunction = (
 	Callback fired when the cast's length changes as it updates.
 ]=]
 export type OnLengthChangedFunction = (
-	vaildcast,
+	cast: vaildcast,
 	lastPoint: Vector3,
 	rayDir: Vector3,
 	rayDisplacement: number,
@@ -119,7 +119,7 @@ export type OnCastTerminatingFunction = (vaildcast) -> ()
 	Callback fired when a cast is initially fired.
 ]=]
 export type OnCastFireFunction = (
-	vaildcast,
+	cast: vaildcast,
 	Origin: Vector3,
 	Direction: Vector3,
 	Velocity: Vector3,
