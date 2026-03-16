@@ -510,6 +510,7 @@ local function SimulateCast(
 					warn(
 						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
 					)
+					return
 				end
 
 				cast.StateInfo.IsActivelyResimulating = true
