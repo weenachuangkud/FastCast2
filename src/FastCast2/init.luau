@@ -604,7 +604,8 @@ Add acceleration to an ActiveCast with the specified Vector3.
 ]=]
 function FastCast:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	self:SetAccelerationCast(cast, self:GetAcceleration(cast) + acceleration)
+    local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+    return currentTrajectory.Acceleration
 end
 
 --[=[
