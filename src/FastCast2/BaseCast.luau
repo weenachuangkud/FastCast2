@@ -45,8 +45,8 @@ local ActiveCastCleaner: BindableEvent = nil
 local ObjectCache: BindableEvent? = nil
 local CacheHolder = nil
 local NextProjectileID = 0
-
 local SyncChanges: BindableEvent = nil
+local CastFireFunc = nil
 
 -- Private functions
 
@@ -196,9 +196,8 @@ function BaseCast:Raycast(
 		SendCastFire(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
 	end
 	if Behavior.FastCastEventsModuleConfig.UseCastFire then
-		local CastFireFunction = GetCastFireFunction()
-		if CastFireFunction then
-			CastFireFunction(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
+		if CastFireFunc then
+			CastFireFunc(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
 		end
 	end
 end
@@ -213,6 +212,7 @@ end
 ]=]
 function BaseCast:SetFastCastEventsModule(moduleScript: ModuleScript)
 	FastCastEventsModule = moduleScript
+	CastFireFunc = require(moduleScript).CastFire
 end
 
 --[=[
@@ -253,9 +253,8 @@ function BaseCast:Blockcast(
 		SendCastFire(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
 	end
 	if Behavior.FastCastEventsModuleConfig.UseCastFire then
-		local CastFireFunction = GetCastFireFunction()
-		if CastFireFunction then
-			CastFireFunction(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
+		if CastFireFunc then
+			CastFireFunc(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
 		end
 	end
 end
@@ -298,9 +297,8 @@ function BaseCast:Spherecast(
 		SendCastFire(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
 	end
 	if Behavior.FastCastEventsModuleConfig.UseCastFire then
-		local CastFireFunction = GetCastFireFunction()
-		if CastFireFunction then
-			CastFireFunction(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
+		if CastFireFunc then
+			CastFireFunc(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
 		end
 	end
 end
