@@ -744,8 +744,8 @@ function FastCast:Destroy()
 
 	-- I'm making sure that everything is destroyed here lmao
 	DestroySignal(self.LengthChanged)
-	DestroySignal(self.RayHit)
-	DestroySignal(self.RayPierced)
+	DestroySignal(self.Hit)
+	DestroySignal(self.Pierced)
 	DestroySignal(self.CastTerminating)
 	DestroySignal(self.CastFire)
 
