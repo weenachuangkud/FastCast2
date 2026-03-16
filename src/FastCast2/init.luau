@@ -531,6 +531,19 @@ function FastCast:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
 end
 
 --[=[
+	Sets the position of an ActiveCast to the specified Vector3.
+
+	@method SetPositionCast
+	@param cast ActiveCastData | ActiveBlockcastData | ActiveSpherecastData -- The active cast to modify.
+	@param position Vector3 -- The new position to set.
+	@within FastCast
+]=]
+function FastCast:SetPositionCast(cast: vaildcast, position: Vector3)
+    assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+    ModifyTransformation(cast, nil, nil, position)
+end
+
+--[=[
 
 Pauses simulation for an ActiveCast.
 
