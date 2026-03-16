@@ -450,7 +450,7 @@ end
 Gets the velocity of an ActiveCast.
 
 @method GetVelocityCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to get the velocity of.
 @within FastCast
 @return Vector3 -- The current velocity of the ActiveCast.
 ]=]
@@ -469,7 +469,7 @@ end
 Gets the acceleration of an ActiveCast.
 
 @method GetAccelerationCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to get the acceleration of.
 @within FastCast
 @return Vector3 -- The current acceleration of the ActiveCast.
 
@@ -485,7 +485,7 @@ end
 Gets the position of an ActiveCast.
 
 @method GetPositionCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to get the position of.
 @within FastCast
 @return Vector3 -- The current position of the ActiveCast.
 ]=]
@@ -505,7 +505,7 @@ end
 Sets the velocity of an ActiveCast to the specified Vector3.
 
 @method SetVelocityCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to modify.
 @param velocity Vector3 -- The new velocity to set.
 @within FastCast
 
@@ -520,7 +520,7 @@ end
 Sets the acceleration of an ActiveCast to the specified Vector3.
 
 @method SetAccelerationCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to modify.
 @param acceleration Vector3 -- The new acceleration to set.
 @within FastCast
 
@@ -534,7 +534,7 @@ end
 	Sets the position of an ActiveCast to the specified Vector3.
 
 	@method SetPositionCast
-	@param cast ActiveCastData | ActiveBlockcastData | ActiveSpherecastData -- The active cast to modify.
+	@param cast vaildcast -- The active cast to modify.
 	@param position Vector3 -- The new position to set.
 	@within FastCast
 ]=]
@@ -552,23 +552,9 @@ Pauses simulation for an ActiveCast.
 @within FastCast
 
 ]=]
-function FastCast:PauseCast(cast: vaildcast)
+function FastCast:PauseCast(cast: vaildcast, value: boolean)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	cast.StateInfo.Paused = true
-end
-
---[=[
-
-Resumes simulation for an ActiveCast if it was paused previously.
-
-@method ResumeCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
-@within FastCast
-
-]=]
-function FastCast:ResumeCast(cast: vaildcast)
-	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	cast.StateInfo.Paused = false
+	cast.StateInfo.Paused = value
 end
 
 --[=[
@@ -576,7 +562,7 @@ end
 Add position to an ActiveCast with the specified Vector3.
 
 @method AddPositionCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to modify.
 @param position Vector3 -- The new position to add.
 @within FastCast
 
@@ -591,7 +577,7 @@ end
 Add velocity to an ActiveCast with the specified Vector3.
 
 @method AddVelocityCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to modify.
 @param velocity Vector3 -- The new velocity to add.
 @within FastCast
 
@@ -606,7 +592,7 @@ end
 Add acceleration to an ActiveCast with the specified Vector3.
 
 @method AddAccelerationCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to modify.
 @param acceleration Vector3 -- The new acceleration to add.
 @within FastCast
 
@@ -621,7 +607,7 @@ end
 Synchronize new changes to the ActiveCast.
 
 @method SyncChangesToCast
-@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
+@param cast vaildcast -- The active cast to synchronize.
 @within FastCast
 
 ]=]
@@ -633,8 +619,8 @@ end
 --[=[
 	Terminate function for casts
 	@method TerminateCast
-	@param cast ActiveCastCompement | ActiveBlockcastCompement -- Compement
-	@param castTerminatingFunction (cast: vaildcast) -> () -- Function to be called when the cast is terminating
+	@param cast vaildcast -- The active cast to terminate.
+	@param castTerminatingFunction (cast: vaildcast) -> ())? -- Optional callback invoked just before the cast is terminated.
 	@within FastCast
 ]=]
 function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
