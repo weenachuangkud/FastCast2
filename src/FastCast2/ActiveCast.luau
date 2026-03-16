@@ -929,7 +929,7 @@ function ActiveCast.createCastData(
 			end
 
 			for segmentIndex = 1, numSegmentsReal do
-				if cast == nil or next(cast) == nil then
+				if next(cast) == nil then
 					return
 				end
 				if cast.StateInfo.CancelHighResCast then
@@ -945,7 +945,7 @@ function ActiveCast.createCastData(
 				SimulateCast(cast, timeIncrement, FastCastEvents, variant)
 			end
 
-			if cast == nil or next(cast) == nil then
+			if next(cast) == nil then
 				return
 			end
 			cast.StateInfo.IsActivelyResimulating = false
