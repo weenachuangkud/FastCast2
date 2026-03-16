@@ -1,1 +1,4 @@
 std = "roblox"
+exclude = [
+    "src/DebuggerUI/Shared/RemoteTableLight/Shared/Util.luau"
+]
