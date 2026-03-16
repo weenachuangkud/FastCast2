@@ -317,7 +317,9 @@ Enables or disables the BulkMoveTo feature.
 ]=]
 function BaseCast:BindBulkMoveTo(bool: boolean)
 	if bool then
-		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
+		if not BulkMoveToConnection then
+    		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
+		end
 	else
 		if BulkMoveToConnection then
 			BulkMoveToConnection:Disconnect()
