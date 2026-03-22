@@ -5,6 +5,10 @@
 	-- Verison : 0.0.9
 ]]
 
+-- NOTE: Please don't modify or changing anything
+-- You don't even know, what's going on
+-- (I also don't know what am I writing)
+
 -- Services
 local RS = game:GetService("RunService")
 
