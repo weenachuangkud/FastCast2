@@ -773,7 +773,7 @@ function ActiveCast.createCastData(
 		UserData = {},
 
 		Type = CastVariantTypes[variant.CastType],
-		CFrame = CFrame.new(),
+		CFrame = CFrame.new(origin) :: CFrame,
 		ID = activeCastID
 	} :: any
 
