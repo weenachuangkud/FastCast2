@@ -297,8 +297,7 @@ function FastCast:Init(
 
 	local data = {
 		useBulkMoveTo = useBulkMoveTo,
-		useObjectCache = useObjectCache,
-		CacheHolder = CacheHolder,
+		useObjectCache = useObjectCache
 	}
 	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName: string, ...)
 		local f = self[signalName]
