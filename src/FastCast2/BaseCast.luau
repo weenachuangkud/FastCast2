@@ -43,7 +43,6 @@ local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
 local ObjectCache: BindableEvent? = nil
-local CacheHolder = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
 local CastFireFunc = nil
@@ -115,7 +114,6 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		BindableObjectCache.Parent = Actor
 		BindableObjectCache.Name = "ActiveCastObjectCache"
 		ObjectCache = BindableObjectCache
-		CacheHolder = Data.CacheHolder
 	end
 
 	if Data.useBulkMoveTo then

@@ -5,6 +5,10 @@
 	-- Verison : 0.0.9
 ]]
 
+-- NOTE: Please don't modify or changing anything
+-- You don't even know, what's going on
+-- (I also don't know what am I writing)
+
 -- Services
 local RS = game:GetService("RunService")
 
@@ -18,7 +22,6 @@ local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 -- Constants
-local MAX_PIERCE_TEST_COUNT = 100
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
 local MAX_CASTING_TIME = 0.2 -- 200ms
@@ -770,7 +773,7 @@ function ActiveCast.createCastData(
 		UserData = {},
 
 		Type = CastVariantTypes[variant.CastType],
-		CFrame = CFrame.new(),
+		CFrame = CFrame.new(origin) :: CFrame,
 		ID = activeCastID
 	} :: any
 
