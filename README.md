@@ -251,7 +251,6 @@ After this, add this piece of code below the `FastCast:Init(...)`:
 
 # People behind FastCast2
 - [Mawin CK](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer (Disconnected)
-> This project is stable and no longer actively developed. I will review and merge pull requests, especially for bug fixes or improvements. Feel free to fork and build upon it.
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
