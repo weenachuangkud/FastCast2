@@ -250,7 +250,7 @@ After this, add this piece of code below the `FastCast:Init(...)`:
 ---
 
 # People behind FastCast2
-- [Mawin CK](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer (Disconnected)
+- [Mawin CK](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 
