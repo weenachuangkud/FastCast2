@@ -1,6 +1,7 @@
-- [ ] Supports both parallel/nonParallel
-- [ ] ActiveCast should exposes AoS to users, and Internally using SoA for performances
-- [ ] Consider using 1 RunService for each cores instead of using multiple
-- [ ] Add Motor6D Transform feature
-- [ ] Documentation updates
+- [ ] Support both parallel and non-parallel modes  
+  - FastCast2 currently has parallel Luau overhead; it should instead let users choose  
+- [ ] ActiveCast should expose AoS to users while internally using SoA for performance  
+- [ ] Consider using one RunService per core instead of multiple instances  
+- [ ] Add Motor6D transform feature  
+- [ ] Update documentation  
 - [ ] Add benchmarks
