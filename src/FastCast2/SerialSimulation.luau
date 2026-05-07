@@ -3,8 +3,9 @@
 	- Date : 2025
 	-- Version : 0.0.9
 
-	SerialSimulation manages all active casts with a single RunService connection.
-	Uses SoA (Structure of Arrays) for better cache performance.
+	SerialSimulation - Single RunService handling multiple ActiveCastSerial
+	Uses SoA pattern for performance, queue technique for events
+	Like SwiftCast implementation
 ]]
 
 local RS = game:GetService("RunService")
@@ -14,104 +15,83 @@ local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+local ActiveCastSerial = require(FastCastModule:WaitForChild("ActiveCastSerial"))
 
 local EnumCastTypes = FastCastEnums.CastType
-
+local HIGH_FIDE_INCREASE_SIZE = 0.5
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5
 local MAX_CASTING_TIME = 0.2
 local DEFAULT_MAX_DISTANCE = 1000
-local HIGH_FIDE_INCREASE_SIZE = 0.5
-
 local EPSILON = 1e-6
+local RAY_SEARCH_OFFSET = 0.001
 
--- Cast handlers
+local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
+local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.454902, 0.933333, 0.011765)
+local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
+local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
+
 local castHandlers = {
-	[EnumCastTypes.Raycast] = function(
-		targetWorldRoot: WorldRoot,
-		origin: Vector3,
-		direction: Vector3,
-		parameters: RaycastParams
-	)
-		return targetWorldRoot:Raycast(origin, direction, parameters)
+	[EnumCastTypes.Raycast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, params: RaycastParams)
+		return targetWorldRoot:Raycast(origin, direction, params)
 	end,
-	[EnumCastTypes.Blockcast] = function(
-		targetWorldRoot: WorldRoot,
-		origin: Vector3,
-		direction: Vector3,
-		parameters: RaycastParams,
-		size: Vector3
-	)
-		return targetWorldRoot:Blockcast(CFrame.new(origin), size, direction, parameters)
+	[EnumCastTypes.Blockcast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, params: RaycastParams, size: Vector3)
+		return targetWorldRoot:Blockcast(CFrame.new(origin), size, direction, params)
 	end,
-	[EnumCastTypes.Spherecast] = function(
-		targetWorldRoot: WorldRoot,
-		origin: Vector3,
-		direction: Vector3,
-		parameters: RaycastParams,
-		radius: number
-	)
-		return targetWorldRoot:Spherecast(origin, radius, direction, parameters)
+	[EnumCastTypes.Spherecast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, params: RaycastParams, radius: number)
+		return targetWorldRoot:Spherecast(origin, radius, direction, params)
 	end
 }
 
--- SoA structure for active casts
-type SerialSimulation = {
-	ActiveCasts: { any },
-	StepConnection: RBXScriptConnection,
-	IsRunning: boolean,
+local function GetPositionAtTime(t: number, origin: Vector3, velocity: Vector3, accel: Vector3): Vector3
+	local force = Vector3.new(
+		(accel.X * t ^ 2) / 2,
+		(accel.Y * t ^ 2) / 2,
+		(accel.Z * t ^ 2) / 2
+	)
+	return origin + (velocity * t) + force
+end
 
-	Register: (self: SerialSimulation, cast: any) -> (),
-	Unregister: (self: SerialSimulation, castID: number) -> (),
-	Start: (self: SerialSimulation) -> (),
-	Stop: (self: SerialSimulation) -> (),
-}
+local function GetVelocityAtTime(time: number, velocity: Vector3, accel: Vector3): Vector3
+	return velocity + accel * time
+end
 
-local SerialSimulation = {}
-SerialSimulation.__index = SerialSimulation
+local function OnError(err: string)
+	warn(debug.traceback(err, 2))
+end
 
--- SoA arrays for cast data
+-- SoA Arrays
 local castCount = 0
-local castIDs = {} :: { number }
-local castOrigin = {} :: { Vector3 }
-local castDirection = {} :: { Vector3 }
-local castVelocity = {} :: { Vector3 }
-local castAcceleration = {} :: { Vector3 }
-local castTotalRuntime = {} :: { number }
-local castDistanceCovered = {} :: { number }
-local castMaxDistance = {} :: { number }
-local castPaused = {} :: { boolean }
-local castHighFidelitySegmentSize = {} :: { number }
-local castHighFidelityBehavior = {} :: { number }
-local castIsActivelyResimulating = {} :: { boolean }
-local castCancelHighResCast = {} :: { boolean }
-local castCFrame = {} :: { CFrame }
-local castWorldRoot = {} :: { WorldRoot }
-local castRaycastParams = {} :: { RaycastParams }
-local castCosmeticBulletObject = {} :: { Instance? }
-local castCastType = {} :: { number }
-local castSize = {} :: { Vector3? }
-local castRadius = {} :: { number? }
-local castVisualizeCasts = {} :: { boolean }
-local castCaster = {} :: { any }
+local casts = {} :: { [number]: any }
+local castIDs = {} :: { [number]: number }
+local castOrigin = {} :: { [number]: Vector3 }
+local castVelocity = {} :: { [number]: Vector3 }
+local castAcceleration = {} :: { [number]: Vector3 }
+local castTotalRuntime = {} :: { [number]: number }
+local castDistanceCovered = {} :: { [number]: number }
+local castMaxDistance = {} :: { [number]: number }
+local castPaused = {} :: { [number]: boolean }
+local castHighFidelitySegmentSize = {} :: { [number]: number }
+local castHighFidelityBehavior = {} :: { [number]: number }
+local castIsActivelyResimulating = {} :: { [number]: boolean }
+local castCancelHighResCast = {} :: { [number]: boolean }
+local castCFrame = {} :: { [number]: CFrame }
+local castWorldRoot = {} :: { [number]: WorldRoot }
+local castRaycastParams = {} :: { [number]: RaycastParams }
+local castCosmeticBullet = {} :: { [number]: Instance? }
+local castCastType = {} :: { [number]: number }
+local castSize = {} :: { [number]: Vector3? }
+local castRadius = {} :: { [number]: number? }
+local castVisualize = {} :: { [number]: boolean }
+local castVisualizeSettings = {} :: { [number]: any }
+local castCaster = {} :: { [number]: any }
 
 -- Event queue
-local QueuedEvents = {} :: { any }
+local QueuedEvents = {} :: { { Callback: any, Args: { any } } }
 
-local function GetPositionAtTime(t: number, origin: Vector3, initialVelocity: Vector3, acceleration: Vector3): Vector3
-	local force = Vector3.new(
-		(acceleration.X * t ^ 2) / 2,
-		(acceleration.Y * t ^ 2) / 2,
-		(acceleration.Z * t ^ 2) / 2
-	)
-	return origin + (initialVelocity * t) + force
-end
-
-local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
-	return initialVelocity + acceleration * time
-end
-
-local function OnError(errorMessage: string)
-	warn(debug.traceback(errorMessage, 2))
+local function QueueEvent(callback: any, ...)
+	if callback then
+		table.insert(QueuedEvents, { Callback = callback, Args = { ... } })
+	end
 end
 
 local function DispatchEvent(callback: any, ...)
@@ -124,12 +104,6 @@ local function DispatchEvent(callback: any, ...)
 	end
 end
 
-local function QueueEvent(callback: any, ...)
-	if callback then
-		table.insert(QueuedEvents, { Callback = callback, Args = { ... } })
-	end
-end
-
 local function DispatchAllEvents()
 	for _, event in QueuedEvents do
 		DispatchEvent(event.Callback, unpack(event.Args))
@@ -137,20 +111,24 @@ local function DispatchAllEvents()
 	table.clear(QueuedEvents)
 end
 
-function SerialSimulation.new(): SerialSimulation
-	local self = setmetatable({}, SerialSimulation)
-	self.ActiveCasts = {}
-	self.IsRunning = false
-	return self
+local function QueueFire(caster: any, eventName: string, ...)
+	if caster and caster.Output then
+		caster.Output:Fire(eventName, ...)
+	end
 end
 
-function SerialSimulation:Register(cast: any)
+local SerialSimulation = {
+	IsRunning = false,
+	StepConnection = nil
+}
+
+function SerialSimulation.Register(cast: any)
 	castCount += 1
 	local id = castCount
 
+	casts[id] = cast
 	castIDs[id] = cast.ID
 	castOrigin[id] = cast.StateInfo.Trajectories[1].Origin
-	castDirection[id] = cast.StateInfo.Trajectories[1].InitialVelocity.Unit
 	castVelocity[id] = cast.StateInfo.Trajectories[1].InitialVelocity
 	castAcceleration[id] = cast.StateInfo.Trajectories[1].Acceleration
 	castTotalRuntime[id] = 0
@@ -164,9 +142,10 @@ function SerialSimulation:Register(cast: any)
 	castCFrame[id] = cast.CFrame
 	castWorldRoot[id] = cast.RayInfo.WorldRoot
 	castRaycastParams[id] = cast.RayInfo.Parameters
-	castCosmeticBulletObject[id] = cast.RayInfo.CosmeticBulletObject
-	castCastType[id] = cast.StateInfo.Trajectories[1].CastType or 1
-	castVisualizeCasts[id] = cast.StateInfo.VisualizeCasts
+	castCosmeticBullet[id] = cast.RayInfo.CosmeticBulletObject
+	castCastType[id] = cast.Type == "Blockcast" and EnumCastTypes.Blockcast or (cast.Type == "Spherecast" and EnumCastTypes.Spherecast or EnumCastTypes.Raycast)
+	castVisualize[id] = cast.StateInfo.VisualizeCasts
+	castVisualizeSettings[id] = cast.StateInfo.VisualizeCastSettings
 	castCaster[id] = cast.Caster
 
 	if cast.RayInfo.Size then
@@ -177,97 +156,106 @@ function SerialSimulation:Register(cast: any)
 	end
 
 	cast.ID = id
-	self.ActiveCasts[id] = cast
 end
 
-function SerialSimulation:Unregister(castID: number)
-	if not self.ActiveCasts[castID] then return end
+function SerialSimulation.Unregister(id: number)
+	if not casts[id] then return end
 
-	local lastID = castCount
-	if castID ~= lastID then
-		-- Swap with last element
-		castIDs[castID] = castIDs[lastID]
-		castOrigin[castID] = castOrigin[lastID]
-		castDirection[castID] = castDirection[lastID]
-		castVelocity[castID] = castVelocity[lastID]
-		castAcceleration[castID] = castAcceleration[lastID]
-		castTotalRuntime[castID] = castTotalRuntime[lastID]
-		castDistanceCovered[castID] = castDistanceCovered[lastID]
-		castMaxDistance[castID] = castMaxDistance[lastID]
-		castPaused[castID] = castPaused[lastID]
-		castHighFidelitySegmentSize[castID] = castHighFidelitySegmentSize[lastID]
-		castHighFidelityBehavior[castID] = castHighFidelityBehavior[lastID]
-		castIsActivelyResimulating[castID] = castIsActivelyResimulating[lastID]
-		castCancelHighResCast[castID] = castCancelHighResCast[lastID]
-		castCFrame[castID] = castCFrame[lastID]
-		castWorldRoot[castID] = castWorldRoot[lastID]
-		castRaycastParams[castID] = castRaycastParams[lastID]
-		castCosmeticBulletObject[castID] = castCosmeticBulletObject[lastID]
-		castCastType[castID] = castCastType[lastID]
-		castSize[castID] = castSize[lastID]
-		castRadius[castID] = castRadius[lastID]
-		castVisualizeCasts[castID] = castVisualizeCasts[castID]
-		castCaster[castID] = castCaster[lastID]
+	local lastId = castCount
+	if id ~= lastId then
+		castIDs[id] = castIDs[lastId]
+		castOrigin[id] = castOrigin[lastId]
+		castVelocity[id] = castVelocity[lastId]
+		castAcceleration[id] = castAcceleration[lastId]
+		castTotalRuntime[id] = castTotalRuntime[lastId]
+		castDistanceCovered[id] = castDistanceCovered[lastId]
+		castMaxDistance[id] = castMaxDistance[lastId]
+		castPaused[id] = castPaused[lastId]
+		castHighFidelitySegmentSize[id] = castHighFidelitySegmentSize[lastId]
+		castHighFidelityBehavior[id] = castHighFidelityBehavior[lastId]
+		castIsActivelyResimulating[id] = castIsActivelyResimulating[lastId]
+		castCancelHighResCast[id] = castCancelHighResCast[lastId]
+		castCFrame[id] = castCFrame[lastId]
+		castWorldRoot[id] = castWorldRoot[lastId]
+		castRaycastParams[id] = castRaycastParams[lastId]
+		castCosmeticBullet[id] = castCosmeticBullet[lastId]
+		castCastType[id] = castCastType[lastId]
+		castSize[id] = castSize[lastId]
+		castRadius[id] = castRadius[lastId]
+		castVisualize[id] = castVisualize[lastId]
+		castVisualizeSettings[id] = castVisualizeSettings[lastId]
+		castCaster[id] = castCaster[lastId]
 
-		local movedCast = self.ActiveCasts[lastID]
-		if movedCast then
-			movedCast.ID = castID
+		if casts[lastId] then
+			casts[lastId].ID = id
 		end
 	end
 
-	-- Clear last slot
-	castIDs[lastID] = nil
-	castOrigin[lastID] = nil
-	castDirection[lastID] = nil
-	castVelocity[lastID] = nil
-	castAcceleration[lastID] = nil
-	castTotalRuntime[lastID] = nil
-	castDistanceCovered[lastID] = nil
-	castMaxDistance[lastID] = nil
-	castPaused[lastID] = nil
-	castHighFidelitySegmentSize[lastID] = nil
-	castHighFidelityBehavior[lastID] = nil
-	castIsActivelyResimulating[lastID] = nil
-	castCancelHighResCast[lastID] = nil
-	castCFrame[lastID] = nil
-	castWorldRoot[lastID] = nil
-	castRaycastParams[lastID] = nil
-	castCosmeticBulletObject[lastID] = nil
-	castCastType[lastID] = nil
-	castSize[lastID] = nil
-	castRadius[lastID] = nil
-	castVisualizeCasts[lastID] = nil
-	castCaster[lastID] = nil
+	castIDs[lastId] = nil
+	castOrigin[lastId] = nil
+	castVelocity[lastId] = nil
+	castAcceleration[lastId] = nil
+	castTotalRuntime[lastId] = nil
+	castDistanceCovered[lastId] = nil
+	castMaxDistance[lastId] = nil
+	castPaused[lastId] = nil
+	castHighFidelitySegmentSize[lastId] = nil
+	castHighFidelityBehavior[lastId] = nil
+	castIsActivelyResimulating[lastId] = nil
+	castCancelHighResCast[lastId] = nil
+	castCFrame[id] = nil
+	castWorldRoot[lastId] = nil
+	castRaycastParams[lastId] = nil
+	castCosmeticBullet[lastId] = nil
+	castCastType[lastId] = nil
+	castSize[lastId] = nil
+	castRadius[lastId] = nil
+	castVisualize[lastId] = nil
+	castVisualizeSettings[lastId] = nil
+	castCaster[lastId] = nil
 
-	self.ActiveCasts[castID] = nil
-	castCount = lastID - 1
+	casts[id] = nil
+	castCount = lastId - 1
 end
 
-local function UpdateAllCasts(deltaTime: number)
+function SerialSimulation.PauseCast(id: number, paused: boolean)
+	castPaused[id] = paused
+end
+
+function SerialSimulation.Terminate(id: number)
+	local bullet = castCosmeticBullet[id]
+	if bullet then
+		bullet:Destroy()
+	end
+	SerialSimulation.Unregister(id)
+end
+
+local function UpdateCasts(deltaTime: number)
 	if castCount == 0 then return end
 
-	local destroyedCastIDs = {} :: { number }
+	local destroyedIds = {} :: { number }
 
 	for i = 1, castCount do
 		if castPaused[i] then continue end
 
+		local caster = castCaster[i]
 		local castType = castCastType[i]
 		local CastHandler = castHandlers[castType]
 
 		local origin = castOrigin[i]
 		local totalDelta = castTotalRuntime[i]
-		local initialVelocity = castVelocity[i]
+		local velocity = castVelocity[i]
 		local acceleration = castAcceleration[i]
 
-		local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-
+		local lastPosition = GetPositionAtTime(totalDelta, origin, velocity, acceleration)
 		castTotalRuntime[i] += deltaTime
 		totalDelta = castTotalRuntime[i]
 
-		local currentTarget = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-		local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
-		local totalDisplacement = currentTarget - lastPoint
-		local rayDir = totalDisplacement.Unit * segmentVelocity.Magnitude * deltaTime
+		local currentPosition = GetPositionAtTime(totalDelta, origin, velocity, acceleration)
+		local currentVelocity = GetVelocityAtTime(totalDelta, velocity, acceleration)
+		local displacement = currentPosition - lastPosition
+
+		local rayDir = displacement.Unit * currentVelocity.Magnitude * deltaTime
 
 		local variant = {}
 		if castType == EnumCastTypes.Blockcast then
@@ -276,83 +264,70 @@ local function UpdateAllCasts(deltaTime: number)
 			variant.Radius = castRadius[i]
 		end
 
-		local resultOfCast = CastHandler(castWorldRoot[i], lastPoint, rayDir, castRaycastParams[i], variant)
+		local result = CastHandler(castWorldRoot[i], lastPosition, rayDir, castRaycastParams[i], variant)
 
-		local point = currentTarget
-		if resultOfCast ~= nil then
-			point = resultOfCast.Position
+		local hitPoint = currentPosition
+		local hitPart = nil
+		if result then
+			hitPoint = result.Position
+			hitPart = result.Instance
 		end
 
-		local rayDisplacement = (point - lastPoint).Magnitude
+		local rayDisplacement = (hitPoint - lastPosition).Magnitude
 		castDistanceCovered[i] += rayDisplacement
-		castCFrame[i] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
-		-- Fire LengthChanged event
-		local caster = castCaster[i]
-		if caster and caster.Output then
-			caster.Output:Fire(
-				"LengthChanged",
-				self.ActiveCasts[i],
-				lastPoint,
-				rayDir.Unit,
-				rayDisplacement,
-				segmentVelocity,
-				castCosmeticBulletObject[i]
-			)
-		end
+		local newCFrame = CFrame.new(lastPosition, lastPosition + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+		castCFrame[i] = newCFrame
 
 		-- Update cosmetic bullet
-		local bullet = castCosmeticBulletObject[i]
+		local bullet = castCosmeticBullet[i]
 		if bullet then
 			if bullet:IsA("BasePart") then
-				bullet.CFrame = castCFrame[i]
+				bullet.CFrame = newCFrame
 			else
-				bullet:PivotTo(castCFrame[i])
+				bullet:PivotTo(newCFrame)
 			end
 		end
 
-		-- Handle hit
-		if resultOfCast ~= nil and resultOfCast.Instance ~= castCosmeticBulletObject[i] then
-			local caster = castCaster[i]
-			if caster and caster.Output then
-				caster.Output:Fire("Hit", self.ActiveCasts[i], resultOfCast, segmentVelocity, castCosmeticBulletObject[i])
-			end
+		-- Fire LengthChanged
+		QueueFire(caster, "LengthChanged", casts[i], lastPosition, rayDir.Unit, rayDisplacement, currentVelocity, bullet)
 
-			-- Destroy cast
-			table.insert(destroyedCastIDs, i)
+		-- Handle hit
+		if result and hitPart ~= bullet then
+			QueueFire(caster, "Hit", casts[i], result, currentVelocity, bullet)
+			table.insert(destroyedIds, i)
 		end
 
 		-- Check max distance
 		if castDistanceCovered[i] >= castMaxDistance[i] then
-			table.insert(destroyedCastIDs, i)
+			table.insert(destroyedIds, i)
 		end
 	end
 
-	-- Remove destroyed casts
-	for _, id in destroyedCastIDs do
-		local cast = self.ActiveCasts[id]
-		if cast and cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-			cast.RayInfo.CosmeticBulletObject:Destroy()
-		end
-		self:Unregister(id)
+	-- Process destroyed casts
+	for _, id in destroyedIds do
+		SerialSimulation.Terminate(id)
 	end
 
 	DispatchAllEvents()
 end
 
-function SerialSimulation:Start()
-	if self.IsRunning then return end
-	self.IsRunning = true
-	self.StepConnection = RS.Heartbeat:Connect(UpdateAllCasts)
+function SerialSimulation.Start()
+	if SerialSimulation.IsRunning then return end
+	SerialSimulation.IsRunning = true
+	SerialSimulation.StepConnection = RS.Heartbeat:Connect(UpdateCasts)
 end
 
-function SerialSimulation:Stop()
-	if not self.IsRunning then return end
-	self.IsRunning = false
-	if self.StepConnection then
-		self.StepConnection:Disconnect()
-		self.StepConnection = nil
+function SerialSimulation.Stop()
+	if not SerialSimulation.IsRunning then return end
+	SerialSimulation.IsRunning = false
+	if SerialSimulation.StepConnection then
+		SerialSimulation.StepConnection:Disconnect()
+		SerialSimulation.StepConnection = nil
 	end
 end
+
+-- Auto-start
+SerialSimulation.Start()
 
 return SerialSimulation
