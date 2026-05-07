@@ -7,3 +7,4 @@
 - [ ] Add benchmarks
 - [ ] Refactor
 - [ ] Fix HighFidelityBehavior = 2 bug, where projectile passes through walls
+- [ ] ActiveCast.Trajectories, wastes memory. change it to ActiveCast.Trajectory
