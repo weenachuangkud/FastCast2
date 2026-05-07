@@ -55,10 +55,6 @@ local function GetVelocityAtTime(time: number, velocity: Vector3, accel: Vector3
 	return velocity + accel * time
 end
 
-local function OnError(err: string)
-	warn(debug.traceback(err, 2))
-end
-
 -- SoA Arrays
 local castCount = 0
 local casts = {} :: { [number]: any }
@@ -96,11 +92,7 @@ end
 
 local function DispatchEvent(callback: any, ...)
 	if callback then
-		if Configs.UseProtectedCalls then
-			xpcall(callback, OnError, ...)
-		else
-			callback(...)
-		end
+		callback(...)
 	end
 end
 
