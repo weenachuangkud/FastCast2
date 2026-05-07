@@ -13,7 +13,7 @@
 		YOU SHOULD ONLY CREATE ONE CASTER PER GUN.
 		YOU SHOULD >>>NEVER<<< CREATE A NEW CASTER EVERY TIME THE GUN NEEDS TO BE FIRED.
 		
-		A caster (created with FastCastParallel.new()) represents a "gun".
+		A caster (created with FastCast.new() or FastCastParallel.new()) represents a "gun".
 		When you consider a gun, you think of stats like accuracy, bullet speed, etc. This is the info a caster stores. 
 	
 	--
