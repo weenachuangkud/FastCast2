@@ -69,6 +69,7 @@ local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
 --local Configs = require(script:WaitForChild("Configs"))
 local ObjectCache = require(script:WaitForChild("ObjectCache"))
+local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
 
 --local SharedCasters = require(script:WaitForChild("SharedCasters"))
 
@@ -210,6 +211,17 @@ end
 	@return FastCastBehavior
 ]=]
 function FastCastParallel.newBehavior(): TypeDef.FastCastBehavior
+	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
+end
+
+--[=[
+	Creates a new FastCastBehavior for Serial Caster.
+	@function newBehavior
+	@within FastCastSerial
+
+	@return FastCastBehavior
+]=]
+function FastCastSerial.newBehavior(): TypeDef.FastCastBehavior
 	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
 end
 
@@ -689,6 +701,308 @@ function FastCastParallel:SetObjectCacheEnabled(
 	end
 	
 	self.ObjectCacheEnabled = enabled
+end
+
+-- Serial Caster Methods
+
+--[=[
+	Initialize the Serial Caster.
+	@method Init
+	@within FastCastSerial
+
+	@param useBulkMoveTo boolean -- Whether to use BulkMoveTo for projectile movement.
+	@param useObjectCache boolean -- Whether to use ObjectCache.
+	@param Template BasePart | Model? -- Template for ObjectCache.
+	@param CacheSize number? -- Size of ObjectCache.
+	@param CacheHolder Instance? -- Parent for cached objects.
+]=]
+function FastCastSerial:Init(
+	useBulkMoveTo: boolean,
+	useObjectCache: boolean,
+	Template: BasePart | Model?,
+	CacheSize: number?,
+	CacheHolder: Instance?
+)
+	if self.BaseCast then
+		warn("Serial Caster already initialized")
+		return
+	end
+
+	local BindableOutput = Instance.new("BindableEvent")
+	BindableOutput.Name = "Output"
+	BindableOutput.Parent = script
+
+	local data = {
+		useBulkMoveTo = useBulkMoveTo,
+		useObjectCache = useObjectCache
+	}
+
+	self.BaseCast = BaseCastSerial.Init(BindableOutput, data, self)
+
+	self.Output = BindableOutput
+
+	if useObjectCache then
+		if not CacheSize then
+			CacheSize = DEFAULT_CACHE_SIZE
+		end
+		if not CacheHolder then
+			CacheHolder = DEFAULT_CACHE_HOLDER
+		end
+		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder) :: any
+		self.ObjectCacheEnabled = true
+	end
+
+	self.BulkMoveEnabled = useBulkMoveTo
+	self.Initialized = true
+end
+
+--[=[
+	@method RaycastFire
+	@within FastCastSerial
+]=]
+function FastCastSerial:RaycastFire(
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
+	if not self.Initialized or not self.BaseCast then
+		error("Please Init caster first")
+	end
+	if BehaviorData == nil then
+		BehaviorData = FastCastParallel.newBehavior()
+	end
+
+	self.BaseCast:Raycast(origin, direction, velocity, BehaviorData)
+end
+
+--[=[
+	@method BlockcastFire
+	@within FastCastSerial
+]=]
+function FastCastSerial:BlockcastFire(
+	origin: Vector3,
+	Size: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
+	if not self.Initialized or not self.BaseCast then
+		error("Please Init caster first")
+	end
+	if BehaviorData == nil then
+		BehaviorData = FastCastParallel.newBehavior()
+	end
+
+	self.BaseCast:Blockcast(origin, Size, direction, velocity, BehaviorData)
+end
+
+--[=[
+	@method SpherecastFire
+	@within FastCastSerial
+]=]
+function FastCastSerial:SpherecastFire(
+	origin: Vector3,
+	Radius: number,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	BehaviorData: TypeDef.FastCastBehavior?
+)
+	if not self.Initialized or not self.BaseCast then
+		error("Please Init caster first")
+	end
+	if BehaviorData == nil then
+		BehaviorData = FastCastParallel.newBehavior()
+	end
+
+	self.BaseCast:Spherecast(origin, Radius, direction, velocity, BehaviorData)
+end
+
+--[=[
+	@method GetVelocityCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:GetVelocityCast(cast: vaildcast): Vector3
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	return latestTrajectory.InitialVelocity
+end
+
+--[=[
+	@method GetAccelerationCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:GetAccelerationCast(cast: vaildcast): Vector3
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	return latestTrajectory.Acceleration
+end
+
+--[=[
+	@method GetPositionCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:GetPositionCast(cast: vaildcast): Vector3
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	local origin = latestTrajectory.Origin
+	local initialVelocity = latestTrajectory.InitialVelocity
+	local acceleration = latestTrajectory.Acceleration
+
+	return GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+end
+
+--[=[
+	@method SetVelocityCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:SetVelocityCast(cast: vaildcast, velocity: Vector3)
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	latestTrajectory.InitialVelocity = velocity
+end
+
+--[=[
+	@method SetAccelerationCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	latestTrajectory.Acceleration = acceleration
+end
+
+--[=[
+	@method SetPositionCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:SetPositionCast(cast: vaildcast, position: Vector3)
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	latestTrajectory.Origin = position
+end
+
+--[=[
+	@method PauseCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:PauseCast(cast: vaildcast, value: boolean)
+	cast.StateInfo.Paused = value
+end
+
+--[=[
+	@method AddPositionCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:AddPositionCast(cast: vaildcast, position: Vector3)
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	latestTrajectory.Origin += position
+end
+
+--[=[
+	@method AddVelocityCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:AddVelocityCast(cast: vaildcast, velocity: Vector3)
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	latestTrajectory.InitialVelocity += velocity
+end
+
+--[=[
+	@method AddAccelerationCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
+	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	latestTrajectory.Acceleration += acceleration
+end
+
+--[=[
+	@method SyncChangesToCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:SyncChangesToCast(cast: vaildcast)
+	if self.BaseCast.SyncChange then
+		self.BaseCast.SyncChange:Fire(cast)
+	end
+end
+
+--[=[
+	@method TerminateCast
+	@within FastCastSerial
+]=]
+function FastCastSerial:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	if cast.StateInfo.UpdateConnection ~= nil then
+		cast.StateInfo.UpdateConnection:Disconnect()
+		cast.StateInfo.UpdateConnection = nil
+	end
+
+	if cast.RayInfo.CosmeticBulletObject then
+		cast.RayInfo.CosmeticBulletObject:Destroy()
+		cast.RayInfo.CosmeticBulletObject = nil
+	end
+
+	if castTerminatingFunction then
+		castTerminatingFunction(cast)
+	end
+
+	self.Output:Fire("CastTerminating", cast)
+end
+
+--[=[
+	@method BindBulkMoveTo
+	@within FastCastSerial
+]=]
+function FastCastSerial:BindBulkMoveTo(enabled: boolean)
+	if self.BaseCast then
+		self.BaseCast:BindBulkMoveTo(enabled)
+	end
+	self.BulkMoveEnabled = enabled
+end
+
+--[=[
+	@method SetObjectCacheEnabled
+	@within FastCastSerial
+]=]
+function FastCastSerial:SetObjectCacheEnabled(enabled: boolean)
+	if not self.BaseCast then return end
+
+	if enabled then
+		if not self.ObjectCache then
+			warn("ObjectCache not initialized. Call Init with useObjectCache = true first.")
+			return
+		end
+		self.BaseCast:BindObjectCache(true)
+	else
+		self.BaseCast:BindObjectCache(false)
+		if self.ObjectCache then
+			self.ObjectCache:Destroy()
+			self.ObjectCache = nil
+		end
+	end
+
+	self.ObjectCacheEnabled = enabled
+end
+
+--[=[
+	@method Destroy
+	@within FastCastSerial
+]=]
+function FastCastSerial:Destroy()
+	if self.ObjectCache then
+		self.ObjectCache:Destroy()
+	end
+
+	if self.BaseCast then
+		self.BaseCast:Destroy()
+	end
+
+	DestroySignal(self.LengthChanged)
+	DestroySignal(self.Hit)
+	DestroySignal(self.Pierced)
+	DestroySignal(self.CastTerminating)
+	DestroySignal(self.CastFire)
+
+	if self.Output then
+		self.Output:Destroy()
+	end
+
+	setmetatable(self, nil)
 end
 
 --[=[
