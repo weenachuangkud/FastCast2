@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Version : 0.0.9
+	
 
 	BaseCastSerial - Uses SerialSimulation with SoA pattern
 ]]

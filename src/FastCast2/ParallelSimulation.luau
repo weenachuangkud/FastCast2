@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Version : 0.0.9
+	
 
 	ParallelSimulation - SoA pattern for Parallel mode
 	Each Actor has its own instance of this for parallel processing

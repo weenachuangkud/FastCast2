@@ -2,7 +2,7 @@
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
-	-- Verison : 0.0.9
+	
 ]]
 
 -- NOTE: Please don't modify or changing anything

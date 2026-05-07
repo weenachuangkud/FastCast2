@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Version : 0.0.9
+	
 
 	Motor6D Pool for efficient projectile movement using Transform mode.
 	Like SwiftCast implementation.

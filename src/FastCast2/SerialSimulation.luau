@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Version : 0.0.9
+	
 
 	SerialSimulation - Single RunService handling multiple ActiveCastSerial
 	Uses SoA pattern for performance, queue technique for events

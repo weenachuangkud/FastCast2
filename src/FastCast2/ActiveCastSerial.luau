@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	-- Version : 0.0.9
+	
 
 	ActiveCastSerial - Serial mode with single RunService, SoA pattern, queue technique
 	Similar to SwiftCast implementation
