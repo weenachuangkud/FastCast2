@@ -134,14 +134,12 @@ function ActiveCastSerial.new(caster: any, castData: any): any
 			HighFidelityBehavior = castData.HighFidelityBehavior,
 			IsActivelyResimulating = false,
 			CancelHighResCast = false,
-			Trajectories = {
-				{
-					StartTime = 0,
-					EndTime = -1,
-					Origin = castData.Origin,
-					InitialVelocity = castData.Velocity,
-					Acceleration = castData.Acceleration,
-				}
+			Trajectory = {
+				StartTime = 0,
+				EndTime = -1,
+				Origin = castData.Origin,
+				InitialVelocity = castData.Velocity,
+				Acceleration = castData.Acceleration,
 			},
 			VisualizeCasts = castData.VisualizeCasts,
 			VisualizeCastSettings = castData.VisualizeCastSettings

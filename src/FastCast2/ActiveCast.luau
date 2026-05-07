@@ -160,7 +160,7 @@ local function GetTrajectoryInfo(
 	index: number
 ): { [number]: Vector3 }
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local trajectories = cast.StateInfo.Trajectories
+	local trajectories = cast.StateInfo.Trajectory
 	local trajectory = trajectories[index]
 	local duration = trajectory.EndTime - trajectory.StartTime
 
@@ -172,7 +172,7 @@ local function GetTrajectoryInfo(
 end
 
 local function GetLatestTrajectoryEndInfo(cast: TypeDef.ActiveCastData): { [number]: Vector3 }
-	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
+	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectory)
 end
 ]]
 
@@ -364,16 +364,16 @@ local function SimulateCast(
 		print("Casting for frame.")
 	end
 
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local trajectory = cast.StateInfo.Trajectory
 
-	local origin = latestTrajectory.Origin
-	local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
-	local initialVelocity = latestTrajectory.InitialVelocity
-	local acceleration = latestTrajectory.Acceleration
+	local origin = trajectory.Origin
+	local totalDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
+	local initialVelocity = trajectory.InitialVelocity
+	local acceleration = trajectory.Acceleration
 
 	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
 	--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
-	local lastDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	local lastDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
 
 	cast.StateInfo.TotalRuntime += delta
 
@@ -731,14 +731,12 @@ function ActiveCast.createCastData(
 			IsActivelySimulatingPierce = false,
 			IsActivelyResimulating = false,
 			CancelHighResCast = false,
-			Trajectories = {
-				{
-					StartTime = 0,
-					EndTime = -1,
-					Origin = origin,
-					InitialVelocity = velocity,
-					Acceleration = behavior.Acceleration,
-				},
+			Trajectory = {
+				StartTime = 0,
+				EndTime = -1,
+				Origin = origin,
+				InitialVelocity = velocity,
+				Acceleration = behavior.Acceleration,
 			},
 			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
@@ -852,10 +850,10 @@ function ActiveCast.createCastData(
 
 		local Cast_timeAtStart = tick()
 
-		local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+		local trajectory = cast.StateInfo.Trajectory
 
-		if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
-			latestTrajectory.Acceleration = Vector3.new()
+		if typeof(trajectory.Acceleration) ~= "Vector3" then
+			trajectory.Acceleration = Vector3.new()
 		end
 
 		if

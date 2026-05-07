@@ -130,7 +130,7 @@ local function GetTrajectoryInfo(
 	index: number
 ): { [number]: Vector3 }
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local trajectories = cast.StateInfo.Trajectories
+	local trajectories = cast.StateInfo.Trajectory
 	local trajectory = trajectories[index]
 	local duration = trajectory.EndTime - trajectory.StartTime
 
@@ -142,7 +142,7 @@ local function GetTrajectoryInfo(
 end
 
 local function GetLatestTrajectoryEndInfo(cast: vaildcast): { [number]: Vector3 }
-	return GetTrajectoryInfo(cast, #cast.StateInfo.Trajectories)
+	return GetTrajectoryInfo(cast, 1)
 end
 
 local function ModifyTransformation(
@@ -151,15 +151,14 @@ local function ModifyTransformation(
 	acceleration: Vector3?,
 	position: Vector3?
 )
-	local trajectories = cast.StateInfo.Trajectories
-	local lastTrajectory = trajectories[#trajectories]
+	local trajectory = cast.StateInfo.Trajectory
 
-	if lastTrajectory.StartTime == cast.StateInfo.TotalRuntime then
+	if trajectory.StartTime == cast.StateInfo.TotalRuntime then
 		if velocity == nil then
-			velocity = lastTrajectory.InitialVelocity
+			velocity = trajectory.InitialVelocity
 		end
 		if acceleration == nil then
-			acceleration = lastTrajectory.Acceleration
+			acceleration = trajectory.Acceleration
 		end
 		if position == nil then
 			position = lastTrajectory.Origin
@@ -182,7 +181,7 @@ local function ModifyTransformation(
 		if position == nil then
 			position = point
 		end
-		table.insert(cast.StateInfo.Trajectories, {
+		table.insert(cast.StateInfo.Trajectory, {
 			StartTime = cast.StateInfo.TotalRuntime,
 			EndTime = -1,
 			Origin = position,
@@ -448,7 +447,7 @@ Gets the velocity of an ActiveCast.
 ]=]
 function FastCastParallel:GetVelocityCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local currentTrajectory = cast.StateInfo.Trajectory
 	return GetVelocityAtTime(
 		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
 		currentTrajectory.InitialVelocity,
@@ -468,7 +467,7 @@ Gets the acceleration of an ActiveCast.
 ]=]
 function FastCastParallel:GetAccelerationCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-    local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+    local currentTrajectory = cast.StateInfo.Trajectory
     return currentTrajectory.Acceleration
 end
 
@@ -483,7 +482,7 @@ Gets the position of an ActiveCast.
 ]=]
 function FastCastParallel:GetPositionCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local currentTrajectory = cast.StateInfo.Trajectory
 	return GetPositionAtTime(
 		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
 		currentTrajectory.Origin,
@@ -617,27 +616,18 @@ end
 	@within FastCastParallel
 ]=]
 function FastCastParallel:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
+	local trajectory = cast.StateInfo.Trajectory
+	trajectory.EndTime = cast.StateInfo.TotalRuntime
 
-	local trajectories = cast.StateInfo.Trajectories
-	local lastTrajectory = trajectories[#trajectories]
-	lastTrajectory.EndTime = cast.StateInfo.TotalRuntime
-
-
-	if cast.StateInfo.UpdateConnection then
-		cast.StateInfo.UpdateConnection:Disconnect()
-		cast.StateInfo.UpdateConnection = nil
-	end
-	
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
 		cast.Caster.Output:Fire("CastTerminating", cast)
 	end
-	
+
 	if castTerminatingFunction then
 		castTerminatingFunction((cast :: any))
 	end
-	
+
 	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
 
 	for key, _ in (cast :: any) do
@@ -823,7 +813,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:GetVelocityCast(cast: vaildcast): Vector3
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	return latestTrajectory.InitialVelocity
 end
 
@@ -832,7 +822,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:GetAccelerationCast(cast: vaildcast): Vector3
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	return latestTrajectory.Acceleration
 end
 
@@ -841,7 +831,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:GetPositionCast(cast: vaildcast): Vector3
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
 	local origin = latestTrajectory.Origin
 	local initialVelocity = latestTrajectory.InitialVelocity
@@ -855,7 +845,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:SetVelocityCast(cast: vaildcast, velocity: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	latestTrajectory.InitialVelocity = velocity
 end
 
@@ -864,7 +854,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	latestTrajectory.Acceleration = acceleration
 end
 
@@ -873,7 +863,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:SetPositionCast(cast: vaildcast, position: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	latestTrajectory.Origin = position
 end
 
@@ -890,7 +880,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:AddPositionCast(cast: vaildcast, position: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	latestTrajectory.Origin += position
 end
 
@@ -899,7 +889,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:AddVelocityCast(cast: vaildcast, velocity: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	latestTrajectory.InitialVelocity += velocity
 end
 
@@ -908,7 +898,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
+	local latestTrajectory = cast.StateInfo.Trajectory
 	latestTrajectory.Acceleration += acceleration
 end
 

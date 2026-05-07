@@ -120,9 +120,9 @@ function SerialSimulation.Register(cast: any)
 
 	casts[id] = cast
 	castIDs[id] = cast.ID
-	castOrigin[id] = cast.StateInfo.Trajectories[1].Origin
-	castVelocity[id] = cast.StateInfo.Trajectories[1].InitialVelocity
-	castAcceleration[id] = cast.StateInfo.Trajectories[1].Acceleration
+	castOrigin[id] = cast.StateInfo.Trajectory.Origin
+	castVelocity[id] = cast.StateInfo.Trajectory.InitialVelocity
+	castAcceleration[id] = cast.StateInfo.Trajectory.Acceleration
 	castTotalRuntime[id] = 0
 	castDistanceCovered[id] = 0
 	castMaxDistance[id] = cast.RayInfo.MaxDistance

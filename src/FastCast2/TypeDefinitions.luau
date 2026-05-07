@@ -345,7 +345,7 @@ export type CastTrajectory = {
 }
 
 --[=[
-	@type CastStateInfo { UpdateConnection: RBXScriptSignal, HighFidelityBehavior: number, HighFidelitySegmentSize: number, Paused: boolean, TotalRuntime: number, DistanceCovered: number, IsActivelySimulatingPierce: boolean, IsActivelyResimulating: boolean, CancelHighResCast: boolean, Trajectories: { [number]: CastTrajectory }, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, FastCastEventsConfig: FastCastEventsConfig, FastCastEventsModuleConfig: FastCastEventsModuleConfig }
+	@type CastStateInfo { UpdateConnection: RBXScriptSignal, HighFidelityBehavior: number, HighFidelitySegmentSize: number, Paused: boolean, TotalRuntime: number, DistanceCovered: number, IsActivelySimulatingPierce: boolean, IsActivelyResimulating: boolean, CancelHighResCast: boolean, Trajectory: CastTrajectory, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, FastCastEventsConfig: FastCastEventsConfig, FastCastEventsModuleConfig: FastCastEventsModuleConfig }
 	@within TypeDefinitions
 
 	Represents cast state tracking data.
@@ -360,7 +360,7 @@ export type CastStateInfo = {
 	IsActivelySimulatingPierce: boolean,
 	IsActivelyResimulating: boolean,
 	CancelHighResCast: boolean,
-	Trajectories: { [number]: CastTrajectory },
+	Trajectory: CastTrajectory,
 	VisualizeCasts: boolean,
 	VisualizeCastSettings: VisualizeCastSettings,
 
