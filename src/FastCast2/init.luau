@@ -215,33 +215,6 @@ end
 
 
 --[=[
-	:::warning
-
-	You must [initialize](FastCastParallel#Init) the Caster before using it. Failing to do so will result in nothing happening when attempting to fire!
-
-	:::
-	Contructs a new Caster object.
-	@function new
-	@within FastCastParallel
-	@return Caster
-]=]
-function FastCastParallel.new(): TypeDef.Caster
-	return setmetatable(
-		{
-			LengthChanged = Signal.new(),
-			Hit = Signal.new(),
-			Pierced = Signal.new(),
-			CastTerminating = Signal.new(),
-			CastFire = Signal.new(),
-			WorldRoot = workspace,
-			Dispatcher = nil,
-			AlreadyInit = false,
-		} :: any,
-		FastCastParallel
-	) :: TypeDef.Caster
-end
-
---[=[
 	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 	@method Init
 	@within FastCastParallel
@@ -741,6 +714,19 @@ end
 
 -- Constructors
 
+--[=[
+	Creates a new Serial Caster. A Serial Caster runs all cast simulations on the main thread
+	and is simpler to use but less performant than [FastCast.newParallel](FastCast#newParallel).
+
+	:::tip
+	For most use cases, especially when you need high performance, consider using [FastCast.newParallel](FastCast#newParallel) instead.
+	:::
+
+	@function new
+	@within FastCast
+
+	@return Caster
+]=]
 function FastCast.new()
 	local fs = {
 		LengthChanged = Signal.new(),
@@ -753,6 +739,20 @@ function FastCast.new()
 	setmetatable(fs, FastCastSerial)
 end
 
+--[=[
+	Creates a new Parallel Caster. A Parallel Caster runs cast simulations on separate worker VMs
+	in parallel, providing better performance for high-frequency raycasting scenarios.
+
+	:::warning
+	You must [initialize](FastCastParallel#Init) the Parallel Caster before using it!
+	Failing to do so will result in nothing happening when attempting to fire!
+	:::
+
+	@function newParallel
+	@within FastCast
+
+	@return Caster
+]=]
 function FastCast.newParallel()
 	local fp = {
 		LengthChanged = Signal.new(),
