@@ -554,7 +554,7 @@ local function SimulateCast(
 					)
 					local subVelocity =
 						GetVelocityAtTime(lastDelta + (timeIncrement * segmentIndex), initialVelocity, acceleration)
-					local subRayDir = subVelocity * delta
+					local subRayDir = subVelocity * timeIncrement
 					local subResult = CastHandler(targetWorldRoot, subPosition, subRayDir, cast.RayInfo.Parameters, variant)
 
 					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
