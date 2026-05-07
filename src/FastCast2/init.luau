@@ -13,7 +13,7 @@
 		YOU SHOULD ONLY CREATE ONE CASTER PER GUN.
 		YOU SHOULD >>>NEVER<<< CREATE A NEW CASTER EVERY TIME THE GUN NEEDS TO BE FIRED.
 		
-		A caster (created with FastCast.new()) represents a "gun".
+		A caster (created with FastCastParallel.new()) represents a "gun".
 		When you consider a gun, you think of stats like accuracy, bullet speed, etc. This is the info a caster stores. 
 	
 	--
@@ -31,7 +31,7 @@
 	Unfortunately, while reliable in terms of saying if something got hit or not, this method alone cannot be used if you wish
 	to implement bullet travel time into a weapon. As a result of that, I made this library - an excellent remedy to this dilemma.
 	
-	FastCast is intended to be require()'d once in a script, as you can create as many casters as you need with FastCast.new()
+	FastCastParallel is intended to be require()'d once in a script, as you can create as many casters as you need with FastCastParallel.new()
 	This is generally handy since you can store settings and information in these casters, and even send them out to other scripts via events
 	for use.
 	
@@ -39,7 +39,7 @@
 	Make the caster once, then use the caster to fire your bullets. Do not make a caster for each bullet.
 --]]
 
--- Mozilla Public License 2.0 (files originally from FastCast)
+-- Mozilla Public License 2.0 (files originally from FastCastParallel)
 
 --[[
 	- Modified by: Mawin CK 
@@ -49,9 +49,9 @@
 -- Verison : 0.0.9
 
 --[=[
-	@class FastCast
+	@class FastCastParallel
 
-	FastCast is the root class of the module and offers the surface level methods required to make it work. This is the object returned from `require(FastCast)`.
+	FastCastParallel is the root class of the module and offers the surface level methods required to make it work. This is the object returned from `require(FastCastParallel)`.
 ]=]
 
 -- Services
@@ -63,6 +63,7 @@
 --local BaseCast = script:WaitForChild("BaseCast")
 
 -- Requires
+local FastCastEnums = require(script.FastCastEnums)
 local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
@@ -84,14 +85,19 @@ local DEFAULT_CACHE_HOLDER = workspace
 -- FastCast
 
 local FastCast = {}
+local FastCastSerial = {}
+local FastCastParallel = {}
 
 --[[
 If true, verbose debug logging will be used, 
 	printing detailed information about what's going on during processing to the output.
 ]]
 
-FastCast.__index = FastCast
-FastCast.__type = "FastCast"
+FastCastSerial.__index = FastCastSerial
+FastCastSerial.__type = "FastCastSerial"
+
+FastCastParallel.__index = FastCastParallel
+FastCastParallel.__type = "FastCastParallel"
 
 -- Local functions
 
@@ -203,7 +209,7 @@ end
 	
 	@return FastCastBehavior
 ]=]
-function FastCast.newBehavior(): TypeDef.FastCastBehavior
+function FastCastParallel.newBehavior(): TypeDef.FastCastBehavior
 	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
 end
 
@@ -211,15 +217,15 @@ end
 --[=[
 	:::warning
 
-	You must [initialize](FastCast#Init) the Caster before using it. Failing to do so will result in nothing happening when attempting to fire!
+	You must [initialize](FastCastParallel#Init) the Caster before using it. Failing to do so will result in nothing happening when attempting to fire!
 
 	:::
 	Contructs a new Caster object.
 	@function new
-	@within FastCast
+	@within FastCastParallel
 	@return Caster
 ]=]
-function FastCast.new(): TypeDef.Caster
+function FastCastParallel.new(): TypeDef.Caster
 	return setmetatable(
 		{
 			LengthChanged = Signal.new(),
@@ -231,14 +237,14 @@ function FastCast.new(): TypeDef.Caster
 			Dispatcher = nil,
 			AlreadyInit = false,
 		} :: any,
-		FastCast
+		FastCastParallel
 	) :: TypeDef.Caster
 end
 
 --[=[
 	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 	@method Init
-	@within FastCast
+	@within FastCastParallel
 
 	@param numWorkers number -- The number of worker VMs to create for this Caster. Must be greater than 1.
 	@param newParent Folder -- The Folder in which to place the FastCastVMs Folder
@@ -253,7 +259,7 @@ end
 	@param CacheSize number -- The size of the ObjectCache (if enabled)
 	@param CacheHolder Instance -- The Instance in which to place cached objects (if enabled)
 ]=]
-function FastCast:Init(
+function FastCastParallel:Init(
 	numWorkers: number,
 	newParent: Folder,
 	newName: string,
@@ -350,11 +356,11 @@ end
 	Set the FastCastEventsModule for all BaseCasts created from this Caster.
 	
 	@method SetFastCastEventsModule
-	@within FastCast
+	@within FastCastParallel
 	
 	@param moduleScript ModuleScript -- The FastCastEventsModule to set.
 ]=]
-function FastCast:SetFastCastEventsModule(moduleScript: ModuleScript)
+function FastCastParallel:SetFastCastEventsModule(moduleScript: ModuleScript)
 	if not self.AlreadyInit then
 		error("Please Init caster")
 	end
@@ -366,14 +372,14 @@ end
 --[=[
 	Raycasts the Caster with the specified parameters.
 	@method RaycastFire
-	@within FastCast
+	@within FastCastParallel
 
 	@param origin Vector3 -- The origin of the raycast.
 	@param direction Vector3 -- The direction of the raycast.
 	@param velocity Vector3 | number -- The velocity of the raycast.
 	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
 ]=]
-function FastCast:RaycastFire(
+function FastCastParallel:RaycastFire(
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
@@ -383,7 +389,7 @@ function FastCast:RaycastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCast.newBehavior()
+		BehaviorData = FastCastParallel.newBehavior()
 	end
 
 	-- BABE RAYCAST!!!!!
@@ -393,7 +399,7 @@ end
 --[=[
 	Blockcasts the Caster with the specified parameters.
 	@method BlockcastFire
-	@within FastCast
+	@within FastCastParallel
 
 	@param origin Vector3 -- The origin of the blockcast.
 	@param Size Vector3 -- The size of the blockcast.
@@ -401,7 +407,7 @@ end
 	@param velocity Vector3 | number -- The velocity of the blockcast.
 	@param BehaviorData FastCastBehavior? -- The behavior data for the blockcast.
 ]=]
-function FastCast:BlockcastFire(
+function FastCastParallel:BlockcastFire(
 	origin: Vector3,
 	Size: Vector3,
 	direction: Vector3,
@@ -412,7 +418,7 @@ function FastCast:BlockcastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCast.newBehavior()
+		BehaviorData = FastCastParallel.newBehavior()
 	end
 
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
@@ -421,7 +427,7 @@ end
 --[=[
 	Spherecasts the Caster with the specified parameters.
 	@method SpherecastFire
-	@within FastCast
+	@within FastCastParallel
 
 	@param origin Vector3 -- The origin of the spherecast.
 	@param Radius number -- The radius of the spherecast.
@@ -429,7 +435,7 @@ end
 	@param velocity Vector3 | number -- The velocity of the spherecast.
 	@param BehaviorData FastCastBehavior? -- The behavior data for the spherecast.
 ]=]
-function FastCast:SpherecastFire(
+function FastCastParallel:SpherecastFire(
 	origin: Vector3,
 	Radius: number,
 	direction: Vector3,
@@ -440,7 +446,7 @@ function FastCast:SpherecastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCast.newBehavior()
+		BehaviorData = FastCastParallel.newBehavior()
 	end
 	
 	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
@@ -452,10 +458,10 @@ Gets the velocity of an ActiveCast.
 
 	@method GetVelocityCast
 	@param cast vaildcast -- The active cast to get the velocity of.
-	@within FastCast
+	@within FastCastParallel
 	@return Vector3 -- The current velocity of the ActiveCast.
 ]=]
-function FastCast:GetVelocityCast(cast: vaildcast)
+function FastCastParallel:GetVelocityCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 	return GetVelocityAtTime(
@@ -471,11 +477,11 @@ Gets the acceleration of an ActiveCast.
 
 	@method GetAccelerationCast
 	@param cast vaildcast -- The active cast to get the acceleration of.
-	@within FastCast
+	@within FastCastParallel
 	@return Vector3 -- The current acceleration of the ActiveCast.
 
 ]=]
-function FastCast:GetAccelerationCast(cast: vaildcast)
+function FastCastParallel:GetAccelerationCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
     local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
     return currentTrajectory.Acceleration
@@ -487,10 +493,10 @@ Gets the position of an ActiveCast.
 
 	@method GetPositionCast
 	@param cast vaildcast -- The active cast to get the position of.
-	@within FastCast
+	@within FastCastParallel
 	@return Vector3 -- The current position of the ActiveCast.
 ]=]
-function FastCast:GetPositionCast(cast: vaildcast)
+function FastCastParallel:GetPositionCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	local currentTrajectory = cast.StateInfo.Trajectories[#cast.StateInfo.Trajectories]
 	return GetPositionAtTime(
@@ -508,10 +514,10 @@ Sets the velocity of an ActiveCast to the specified Vector3.
 	@method SetVelocityCast
 	@param cast vaildcast -- The active cast to modify.
 	@param velocity Vector3 -- The new velocity to set.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:SetVelocityCast(cast: vaildcast, velocity: Vector3)
+function FastCastParallel:SetVelocityCast(cast: vaildcast, velocity: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	ModifyTransformation(cast, velocity, nil, nil)
 end
@@ -523,10 +529,10 @@ Sets the acceleration of an ActiveCast to the specified Vector3.
 	@method SetAccelerationCast
 	@param cast vaildcast -- The active cast to modify.
 	@param acceleration Vector3 -- The new acceleration to set.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
+function FastCastParallel:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	ModifyTransformation(cast, nil, acceleration, nil)
 end
@@ -537,9 +543,9 @@ end
 	@method SetPositionCast
 	@param cast vaildcast -- The active cast to modify.
 	@param position Vector3 -- The new position to set.
-	@within FastCast
+	@within FastCastParallel
 ]=]
-function FastCast:SetPositionCast(cast: vaildcast, position: Vector3)
+function FastCastParallel:SetPositionCast(cast: vaildcast, position: Vector3)
     assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
     ModifyTransformation(cast, nil, nil, position)
 end
@@ -551,10 +557,10 @@ Pauses or resumes simulation for an ActiveCast.
 	@method PauseCast
 	@param cast vaildcast -- The active cast to modify.
 	@param value boolean -- Whether to pause (true) or resume (false) the cast.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:PauseCast(cast: vaildcast, value: boolean)
+function FastCastParallel:PauseCast(cast: vaildcast, value: boolean)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	cast.StateInfo.Paused = value
 end
@@ -566,10 +572,10 @@ Add position to an ActiveCast with the specified Vector3.
 	@method AddPositionCast
 	@param cast vaildcast -- The active cast to modify.
 	@param position Vector3 -- The new position to add.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:AddPositionCast(cast: vaildcast, position: Vector3)
+function FastCastParallel:AddPositionCast(cast: vaildcast, position: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	self:SetPositionCast(cast, self:GetPositionCast(cast) + position)
 end
@@ -581,10 +587,10 @@ Add velocity to an ActiveCast with the specified Vector3.
 	@method AddVelocityCast
 	@param cast vaildcast -- The active cast to modify.
 	@param velocity Vector3 -- The new velocity to add.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:AddVelocityCast(cast: vaildcast, velocity: Vector3)
+function FastCastParallel:AddVelocityCast(cast: vaildcast, velocity: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	self:SetVelocityCast(cast, self:GetVelocityCast(cast) + velocity)
 end
@@ -596,10 +602,10 @@ Add acceleration to an ActiveCast with the specified Vector3.
 	@method AddAccelerationCast
 	@param cast vaildcast -- The active cast to modify.
 	@param acceleration Vector3 -- The new acceleration to add.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
+function FastCastParallel:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	self:SetAccelerationCast(cast, self:GetAccelerationCast(cast) + acceleration)
 end
@@ -610,10 +616,10 @@ Synchronize new changes to the ActiveCast.
 
 	@method SyncChangesToCast
 	@param cast vaildcast -- The active cast to synchronize.
-	@within FastCast
+	@within FastCastParallel
 
 ]=]
-function FastCast:SyncChangesToCast(cast: vaildcast)
+function FastCastParallel:SyncChangesToCast(cast: vaildcast)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 	cast.Caster.SyncChange:Fire(cast)
 end
@@ -623,9 +629,9 @@ end
 	@method TerminateCast
 	@param cast vaildcast -- The active cast to terminate.
 	@param castTerminatingFunction (cast: vaildcast) -> ())? -- Optional callback invoked just before the cast is terminated.
-	@within FastCast
+	@within FastCastParallel
 ]=]
-function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+function FastCastParallel:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
 	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
 
 	local trajectories = cast.StateInfo.Trajectories
@@ -657,11 +663,11 @@ end
 --[=[
 	Sets whether BulkMoveTo is enabled for this Caster.
 	@method SetBulkMoveEnabled
-	@within FastCast
+	@within FastCastParallel
 
 	@param enabled boolean
 ]=]
-function FastCast:SetBulkMoveEnabled(enabled: boolean)
+function FastCastParallel:SetBulkMoveEnabled(enabled: boolean)
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
 	end
@@ -672,13 +678,13 @@ end
 
 --[=[
 	Sets whether ObjectCache is enabled for this Caster.
-	It is recommended to interface with this via [`FastCast:Init()`](FastCast#Init) instead.
+	It is recommended to interface with this via [`FastCastParallel:Init()`](FastCastParallel#Init) instead.
 	@method SetObjectCacheEnabled
-	@within FastCast
+	@within FastCastParallel
 
 	@param enabled boolean
 ]=]
-function FastCast:SetObjectCacheEnabled(
+function FastCastParallel:SetObjectCacheEnabled(
 	enabled: boolean,
 	Template: BasePart | Model,
 	CacheSize: number,
@@ -715,9 +721,9 @@ end
 --[=[
 	Destroy's a Caster, cleaning up all resources used by it.
 	@method Destroy
-	@within FastCast
+	@within FastCastParallel
 ]=]
-function FastCast:Destroy()
+function FastCastParallel:Destroy()
 	if self.ObjectCache then
 		self.ObjectCache:Destroy()
 	end
@@ -733,5 +739,32 @@ function FastCast:Destroy()
 	setmetatable(self, nil)
 end
 
+-- Constructors
+
+function FastCast.new()
+	local fs = {
+		LengthChanged = Signal.new(),
+		Hit = Signal.new(),
+		Pierced = Signal.new(),
+        CastTerminating = Signal.new(),
+		CastFire = Signal.new(),
+		WorldRoot = workspace,
+	}
+	setmetatable(fs, FastCastSerial)
+end
+
+function FastCast.newParallel()
+	local fp = {
+		LengthChanged = Signal.new(),
+		Hit = Signal.new(),
+		Pierced = Signal.new(),
+		CastTerminating = Signal.new(),
+		CastFire = Signal.new(),
+		WorldRoot = workspace,
+		Dispatcher = nil,
+		AlreadyInit = false
+	}
+	setmetatable(fp, FastCastParallel)
+end
 
 return FastCast
