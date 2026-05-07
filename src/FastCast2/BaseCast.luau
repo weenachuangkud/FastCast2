@@ -14,8 +14,8 @@ local FastCastM = require(FastCast2)
 
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
---local Signal = require(FastCast2:WaitForChild("Signal"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
+local ParallelSimulation = require(FastCast2:WaitForChild("ParallelSimulation"))
 local FastCastEventsModule: ModuleScript? = nil
 
 -- Enums
@@ -169,12 +169,10 @@ function BaseCast:Raycast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	--table.insert(self.Actives, ActiveCast.new(self, Origin, Direction, Velocity, Behavior))
 	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
-
 	NextProjectileID += 1
 
-	Actives[NextProjectileID] = ActiveCast.createCastData({
+	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
@@ -183,13 +181,13 @@ function BaseCast:Raycast(
 		CastType = EnumCastTypes.Raycast
 	} :: any)
 
+	ParallelSimulation.Register(cast)
+
 	if Behavior.FastCastEventsConfig.UseCastFire then
-		SendCastFire(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
+		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
 	end
-	if Behavior.FastCastEventsModuleConfig.UseCastFire then
-		if CastFireFunc then
-			CastFireFunc(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
-		end
+	if Behavior.FastCastEventsModuleConfig.UseCastFire and CastFireFunc then
+		CastFireFunc(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -237,7 +235,7 @@ function BaseCast:Blockcast(
 	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 	NextProjectileID += 1
 
-	Actives[NextProjectileID] = ActiveCast.createCastData({
+	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
@@ -247,13 +245,13 @@ function BaseCast:Blockcast(
 		Size = Size
 	} :: any)
 
+	ParallelSimulation.Register(cast)
+
 	if Behavior.FastCastEventsConfig.UseCastFire then
-		SendCastFire(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
+		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
 	end
-	if Behavior.FastCastEventsModuleConfig.UseCastFire then
-		if CastFireFunc then
-			CastFireFunc(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
-		end
+	if Behavior.FastCastEventsModuleConfig.UseCastFire and CastFireFunc then
+		CastFireFunc(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -281,7 +279,7 @@ function BaseCast:Spherecast(
 	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 	NextProjectileID += 1
 
-	Actives[NextProjectileID] = ActiveCast.createCastData({
+	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCache,
@@ -291,13 +289,13 @@ function BaseCast:Spherecast(
 		Radius = Radius
 	} :: any)
 
+	ParallelSimulation.Register(cast)
+
 	if Behavior.FastCastEventsConfig.UseCastFire then
-		SendCastFire(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
+		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
 	end
-	if Behavior.FastCastEventsModuleConfig.UseCastFire then
-		if CastFireFunc then
-			CastFireFunc(Actives[NextProjectileID], Origin, Direction, Velocity, Behavior)
-		end
+	if Behavior.FastCastEventsModuleConfig.UseCastFire and CastFireFunc then
+		CastFireFunc(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
