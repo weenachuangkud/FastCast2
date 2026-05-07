@@ -149,7 +149,8 @@ function ActiveCastSerial.new(caster: any, castData: any): any
 			Parameters = castData.RaycastParams,
 			WorldRoot = workspace,
 			MaxDistance = castData.MaxDistance or DEFAULT_MAX_DISTANCE,
-			CosmeticBulletObject = castData.CosmeticBulletObject
+			CosmeticBulletObject = castData.CosmeticBulletObject,
+			MovementMethod = castData.MovementMethod or "BulkMoveTo"
 		},
 
 		Type = CastVariantTypes[castData.CastType],

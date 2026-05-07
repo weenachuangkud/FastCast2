@@ -16,6 +16,7 @@ local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 local ActiveCastSerial = require(FastCastModule:WaitForChild("ActiveCastSerial"))
+local Motor6DPool = require(FastCastModule:WaitForChild("Motor6DPool"))
 
 local EnumCastTypes = FastCastEnums.CastType
 local HIGH_FIDE_INCREASE_SIZE = 0.5
@@ -80,6 +81,7 @@ local castRadius = {} :: { [number]: number? }
 local castVisualize = {} :: { [number]: boolean }
 local castVisualizeSettings = {} :: { [number]: any }
 local castCaster = {} :: { [number]: any }
+local castMotor6D = {} :: { [number]: Motor6D? }
 
 -- Event queue
 local QueuedEvents = {} :: { { Callback: any, Args: { any } } }
@@ -147,6 +149,12 @@ function SerialSimulation.Register(cast: any)
 		castRadius[id] = cast.RayInfo.Radius
 	end
 
+	castMotor6D[id] = nil
+	if cast.RayInfo.MovementMethod == "Transform" then
+		Motor6DPool.Initialize()
+		castMotor6D[id] = Motor6DPool.Connect(id, cast.RayInfo.CosmeticBulletObject :: any)
+	end
+
 	cast.ID = id
 end
 
@@ -177,10 +185,16 @@ function SerialSimulation.Unregister(id: number)
 		castVisualize[id] = castVisualize[lastId]
 		castVisualizeSettings[id] = castVisualizeSettings[lastId]
 		castCaster[id] = castCaster[lastId]
+		castMotor6D[id] = castMotor6D[lastId]
 
 		if casts[lastId] then
 			casts[lastId].ID = id
 		end
+	end
+
+	-- Return motor6d to pool
+	if castMotor6D[id] then
+		Motor6DPool.Disconnect(castMotor6D[id])
 	end
 
 	castIDs[lastId] = nil
@@ -205,6 +219,7 @@ function SerialSimulation.Unregister(id: number)
 	castVisualize[lastId] = nil
 	castVisualizeSettings[lastId] = nil
 	castCaster[lastId] = nil
+	castMotor6D[lastId] = nil
 
 	casts[id] = nil
 	castCount = lastId - 1
@@ -273,8 +288,11 @@ local function UpdateCasts(deltaTime: number)
 
 		-- Update cosmetic bullet
 		local bullet = castCosmeticBullet[i]
+		local motor6d = castMotor6D[i]
 		if bullet then
-			if bullet:IsA("BasePart") then
+			if motor6d then
+				motor6d.Transform = newCFrame
+			elseif bullet:IsA("BasePart") then
 				bullet.CFrame = newCFrame
 			else
 				bullet:PivotTo(newCFrame)

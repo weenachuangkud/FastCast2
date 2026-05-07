@@ -102,7 +102,8 @@ function BaseCastSerial:Raycast(
 		VisualizeCasts = Behavior.VisualizeCasts,
 		VisualizeCastSettings = Behavior.VisualizeCastSettings,
 		HighFidelitySegmentSize = Behavior.HighFidelitySegmentSize,
-		HighFidelityBehavior = Behavior.HighFidelityBehavior
+		HighFidelityBehavior = Behavior.HighFidelityBehavior,
+		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
 	local cast = ActiveCastSerial.new(ParentCaster, castData)
@@ -157,7 +158,8 @@ function BaseCastSerial:Blockcast(
 		VisualizeCasts = Behavior.VisualizeCasts,
 		VisualizeCastSettings = Behavior.VisualizeCastSettings,
 		HighFidelitySegmentSize = Behavior.HighFidelitySegmentSize,
-		HighFidelityBehavior = Behavior.HighFidelityBehavior
+		HighFidelityBehavior = Behavior.HighFidelityBehavior,
+		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
 	local cast = ActiveCastSerial.new(ParentCaster, castData)
@@ -212,7 +214,8 @@ function BaseCastSerial:Spherecast(
 		VisualizeCasts = Behavior.VisualizeCasts,
 		VisualizeCastSettings = Behavior.VisualizeCastSettings,
 		HighFidelitySegmentSize = Behavior.HighFidelitySegmentSize,
-		HighFidelityBehavior = Behavior.HighFidelityBehavior
+		HighFidelityBehavior = Behavior.HighFidelityBehavior,
+		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
 	local cast = ActiveCastSerial.new(ParentCaster, castData)

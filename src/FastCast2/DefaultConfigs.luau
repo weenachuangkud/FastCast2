@@ -27,6 +27,8 @@ Defaults.FastCastBehavior = {
 	HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default,
 	HighFidelitySegmentSize = 0.5,
 
+	MovementMethod = "BulkMoveTo", -- "BulkMoveTo" or "Transform"
+
 	CosmeticBulletTemplate = nil,
 	CosmeticBulletProvider = nil,
 	CosmeticBulletContainer = nil,
