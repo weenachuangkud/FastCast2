@@ -13,6 +13,7 @@ local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+local SerialSimulation = require(FastCastModule:WaitForChild("SerialSimulation"))
 
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5
@@ -20,6 +21,10 @@ local MAX_CASTING_TIME = 0.2
 local DEFAULT_MAX_DISTANCE = 1000
 
 local EnumCastTypes = FastCastEnums.CastType
+
+-- Shared simulation for all serial casts
+local SharedSimulation = SerialSimulation.new()
+SharedSimulation:Start()
 
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
 local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.454902, 0.933333, 0.011765)
