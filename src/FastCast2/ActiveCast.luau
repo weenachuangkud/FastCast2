@@ -358,8 +358,6 @@ local function SimulateCast(
 	FastCastEvents: TypeDef.FastCastEvents,
 	variant: CastVariants
 )
-	assert(cast.StateInfo.UpdateConnection ~= nil, "ERR_OBJECT_DISPOSED")
-
 	--PrintDebug("Casting for frame.")
 	--print("1C")
 	if DebugLogging.Casting then
@@ -725,7 +723,6 @@ function ActiveCast.createCastData(
 		Caster = BaseCast,
 
 		StateInfo = {
-			UpdateConnection = nil,
 			Paused = false,
 			TotalRuntime = 0,
 			DistanceCovered = 0,
@@ -984,11 +981,7 @@ function ActiveCast.createCastData(
 		end
 	end
 
-	cast.StateInfo.UpdateConnection = event:ConnectParallel(Stepped)
-
 	return cast
 end
-
--- Will I ever be free
 
 return ActiveCast

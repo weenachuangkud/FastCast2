@@ -49,9 +49,6 @@ local castHandlers = {
 }
 
 local ActiveCastSerial = {}
-ActiveCastSerial.__index = ActiveCastSerial
-
-local Simulation = nil :: any
 
 local function GetPositionAtTime(t: number, origin: Vector3, initialVelocity: Vector3, acceleration: Vector3): Vector3
 	local force = Vector3.new(
@@ -127,49 +124,40 @@ local RAY_SEARCH_OFFSET = 0.001
 local FIXED_DELTA_TIME = 1 / 240
 
 function ActiveCastSerial.new(caster: any, castData: any): any
-	local self = setmetatable({}, ActiveCastSerial)
-
-	self.Caster = caster
-	self.StateInfo = {
-		UpdateConnection = nil,
-		Paused = false,
-		TotalRuntime = 0,
-		DistanceCovered = 0,
-		HighFidelitySegmentSize = castData.HighFidelitySegmentSize,
-		HighFidelityBehavior = castData.HighFidelityBehavior,
-		IsActivelyResimulating = false,
-		CancelHighResCast = false,
-		Trajectories = {
-			{
-				StartTime = 0,
-				EndTime = -1,
-				Origin = castData.Origin,
-				InitialVelocity = castData.Velocity,
-				Acceleration = castData.Acceleration,
-			}
+	return {
+		Caster = caster,
+		StateInfo = {
+			Paused = false,
+			TotalRuntime = 0,
+			DistanceCovered = 0,
+			HighFidelitySegmentSize = castData.HighFidelitySegmentSize,
+			HighFidelityBehavior = castData.HighFidelityBehavior,
+			IsActivelyResimulating = false,
+			CancelHighResCast = false,
+			Trajectories = {
+				{
+					StartTime = 0,
+					EndTime = -1,
+					Origin = castData.Origin,
+					InitialVelocity = castData.Velocity,
+					Acceleration = castData.Acceleration,
+				}
+			},
+			VisualizeCasts = castData.VisualizeCasts,
+			VisualizeCastSettings = castData.VisualizeCastSettings
 		},
-		VisualizeCasts = castData.VisualizeCasts,
-		VisualizeCastSettings = castData.VisualizeCastSettings
+
+		RayInfo = {
+			Parameters = castData.RaycastParams,
+			WorldRoot = workspace,
+			MaxDistance = castData.MaxDistance or DEFAULT_MAX_DISTANCE,
+			CosmeticBulletObject = castData.CosmeticBulletObject
+		},
+
+		Type = CastVariantTypes[castData.CastType],
+		CFrame = CFrame.new(castData.Origin),
+		ID = castData.ID
 	}
-
-	self.RayInfo = {
-		Parameters = castData.RaycastParams,
-		WorldRoot = workspace,
-		MaxDistance = castData.MaxDistance or DEFAULT_MAX_DISTANCE,
-		CosmeticBulletObject = castData.CosmeticBulletObject
-	}
-
-	self.Type = CastVariantTypes[castData.CastType]
-	self.CFrame = CFrame.new(castData.Origin)
-	self.ID = castData.ID
-
-	if castData.CastType == EnumCastTypes.Blockcast then
-		self.RayInfo.Size = castData.Size
-	elseif castData.CastType == EnumCastTypes.Spherecast then
-		self.RayInfo.Radius = castData.Radius
-	end
-
-	return self
 end
 
 return ActiveCastSerial
