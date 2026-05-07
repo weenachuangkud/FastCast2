@@ -1,10 +1,17 @@
-- [ ] Support both parallel and non-parallel modes  
-  - FastCast2 currently has parallel Luau overhead; it should instead let users choose  
-- [ ] ActiveCast should expose AoS to users while internally using SoA for performance  
-- [ ] Consider using one RunService per core instead of multiple instances  
-- [ ] Add Motor6D transform feature  
-- [ ] Update documentation  
+- [x] Support both parallel and non-parallel modes
+  - FastCast2 now has FastCast.new() for Serial and FastCast.newParallel() for Parallel
+- [x] ActiveCast should expose AoS to users while internally using SoA for performance
+  - ActiveCast uses pure data structures (AoS), SerialSimulation/ParallelSimulation use SoA internally
+- [x] Consider using one RunService per core instead of multiple instances
+  - Serial: 1 global RunService for all casts, Parallel: 1 RunService per Actor
+- [x] Add Motor6D transform feature
+  - Added MovementMethod to FastCastBehavior (BulkMoveTo/Transform)
+  - Motor6DPool for efficient pooling
+- [ ] Update documentation
 - [ ] Add benchmarks
-- [ ] Refactor
+- [x] Refactor
+  - Removed metatable from ActiveCast, removed UpdateConnection
+  - Changed Trajectories to Trajectory
+  - Removed xpcall/pcall from hot path
 - [ ] Fix HighFidelityBehavior = 2 bug, where projectile passes through walls
-- [ ] ActiveCast.Trajectories, wastes memory. change it to ActiveCast.Trajectory
+- [x] ActiveCast.Trajectories, wastes memory. change it to ActiveCast.Trajectory
