@@ -65,22 +65,15 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 # Code example
 
-Shooting projectiles from your head
+Shooting projectiles from your head (Serial mode - simpler, main thread):
 
 ```lua
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
-local RepFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-
--- Modules
-local FastCast2 = Rep:WaitForChild("FastCast2")
 
 -- Requires
-local FastCastTypes = require(FastCast2:WaitForChild("TypeDefinitions"))
-local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
-local FastCastM = require(FastCast2)
+local FastCast2 = require(Rep:WaitForChild("FastCast2"))
 
 -- CONSTANTS
 local SPEED = 500
@@ -89,14 +82,10 @@ local SPEED = 500
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local Head = character:WaitForChild("Head")
-
 local Mouse = player:GetMouse()
 
 local ProjectileContainer = workspace:WaitForChild("Projectiles")
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
-
-local debounce = false
-local debounce_time = 0.05
 
 -- CastParams
 local CastParams = RaycastParams.new()
@@ -104,76 +93,68 @@ CastParams.FilterDescendantsInstances = {character}
 CastParams.FilterType = Enum.RaycastFilterType.Exclude
 CastParams.IgnoreWater = true
 
--- Behavior
-local castBehavior: FastCastTypes = FastCastM.newBehavior()
-castBehavior.MaxDistance = 1000
-castBehavior.RaycastParams = CastParams
-castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
-castBehavior.HighFidelitySegmentSize = 1
-castBehavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
-castBehavior.AutoIgnoreContainer = true
-castBehavior.CosmeticBulletContainer = ProjectileContainer
-castBehavior.CosmeticBulletTemplate = ProjectileTemplate
-castBehavior.UserData = {} -- Initial UserData when ActiveCast created
-castBehavior.FastCastEventsConfig = {
-	UseHit = true,
-	UseLengthChanged = false, -- Warning: Setting this to true will make your FPS tank when there are 100-200+ projectiles
-	UseCastTerminating = true,
-	UseCastFire = true,
-	UsePierced = false
-}
+-- Behavior (FastCastBehavior)
+local behavior = FastCast2.newBehavior()
+behavior.MaxDistance = 1000
+behavior.RaycastParams = CastParams
+behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+behavior.HighFidelitySegmentSize = 1
+behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
+behavior.CosmeticBulletContainer = ProjectileContainer
+behavior.CosmeticBulletTemplate = ProjectileTemplate
 
--- Caster
-local Caster = FastCastM.new()
-Caster:Init(
-	4,
-	RepFirst,
-	"CastVMs",
-	RepFirst,
-	"CastVMContainer",
-	"CastVM",
-	true
-)
+-- MovementMethod: "BulkMoveTo" (default) or "Transform" (Motor6D)
+behavior.MovementMethod = "BulkMoveTo"
 
--- Functions
+-- Serial Caster (runs on main thread, simpler)
+local Caster = FastCast2.new()
+Caster:Init(true, false) -- useBulkMoveTo, useObjectCache
 
-local function OnCastTerminating(cast: FastCastTypes.ActiveCastData)
+-- Events
+Caster.CastTerminating:Connect(function(cast)
 	local obj = cast.RayInfo.CosmeticBulletObject
-	if obj then 
-		obj:Destroy()
-	end
+	if obj then obj:Destroy() end
+end)
+
+Caster.Hit:Connect(function(cast, result, velocity, bullet)
+	print("Hit: " .. result.Instance.Name)
+end)
+
+-- Fire
+local function fire()
+	local origin = Head.Position
+	local direction = (Mouse.Hit.Position - origin).Unit
+	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
 
-local function OnHit()
-	print("Hit!")
-end
-
-local function OnCastFire()
-	print("CastFire!")
-end
-
--- Connections
-
-Caster.CastTerminating:Connect(OnCastTerminating)
-Caster.Hit:Connect(OnHit)
-Caster.CastFire:Connect(OnCastFire)
-
-UIS.InputBegan:Connect(function(Input: InputObject, gp: boolean)
-	if gp then return end
-	if debounce then return end
-	
-	if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-		debounce = true
-		
-		local Origin = Head.Position
-		local Direction = (Mouse.Hit.Position - Origin).Unit
-		
-		Caster:RaycastFire(Origin, Direction, SPEED, castBehavior)
-		
-		task.wait(debounce_time)
-		debounce = false
+-- Input
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		fire()
 	end
 end)
+```
+
+Parallel mode (for high-performance with multiple VMs):
+
+```lua
+-- Parallel Caster (requires Init with worker count)
+local Caster = FastCast2.newParallel()
+Caster:Init(
+	4,              -- numWorkers (thread count)
+	workspace,      -- newParent (VM folder parent)
+	"FastCastVMs",  -- VM folder name
+	workspace,      -- ContainerParent
+	"VMContainer", -- Container name
+	"VM",           -- VM name
+	true,           -- useBulkMoveTo
+	nil,            -- FastCastEventsModule
+	false           -- useObjectCache
+)
+
+-- Fire same as serial
+Caster:RaycastFire(origin, direction, speed, behavior)
 ```
 
 <br />
