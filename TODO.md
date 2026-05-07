@@ -10,6 +10,6 @@
   - Motor6DPool for efficient pooling
 - [x] Fix HighFidelityBehavior = 2 bug - subRayDir used delta instead of timeIncrement
 - [x] ActiveCast.Trajectories -> ActiveCast.Trajectory
-- [ ] Documentation updates
-- [ ] Add benchmarks
+- [x] Documentation updates
+- [x] Add benchmarks
 - [x] Refactor - Removed metatable, UpdateConnection, xpcall from hot path

@@ -11,6 +11,37 @@ and this project adheres to Semantic Versioning (https://semver.org/).
 
 ---
 
+## [0.1.0] — 2026-05-07
+
+### Added
+- **Serial Mode** (`FastCast.new()`) - Main thread projectile simulation, simpler API
+- **Parallel Mode** (`FastCast.newParallel()`) - Worker VM based parallel simulation
+- **Motor6D Transform** - New movement method using Motor6D for better performance
+  - Set `behavior.MovementMethod = "Transform"` to use
+- **SerialSimulation** - Single RunService with SoA pattern for Serial casts
+- **ParallelSimulation** - Per-Actor SoA pattern for Parallel casts
+- **Motor6DPool** - Object pooling for Motor6D instances
+
+### Changed
+- **API Restructure**:
+  - `.new()` now creates Serial caster (requires `Init(useBulkMoveTo, useObjectCache)`)
+  - `.newParallel()` creates Parallel caster (requires `Init(numWorkers, ...)`)
+  - Removed `FastCastParallel.new()` - use `.newParallel()` instead
+- **ActiveCast** - Changed from OOP to pure data structure (AoS for users, SoA internally)
+- **Trajectories** → **Trajectory** - Single object instead of array (saves memory)
+- Removed **UpdateConnection** - No longer uses per-cast RunService connections
+- Removed **xpcall/pcall** from hot path for performance
+- Removed **FastCastEventsModule** from Serial mode (Parallel only)
+
+### Fixed
+- **HighFidelityBehavior = 2 bug** - Fixed subRayDir calculation using `delta` instead of `timeIncrement`
+
+### Performance
+- Serial: 1 global RunService handling all casts with SoA arrays
+- Parallel: 1 RunService per Actor with SoA arrays within each
+
+---
+
 ## [0.0.9] — 2026-03-03
 
 ### Changed
