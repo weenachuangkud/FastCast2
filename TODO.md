@@ -6,3 +6,4 @@
 - [ ] Update documentation  
 - [ ] Add benchmarks
 - [ ] Refactor
+- [ ] Fix HighFidelityBehavior = 2 bug, where projectile passes through walls
