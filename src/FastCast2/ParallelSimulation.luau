@@ -82,6 +82,9 @@ local castVisualizeSettings = {} :: { [number]: any }
 local castCaster = {} :: { [number]: any }
 local castMotor6D = {} :: { [number]: Motor6D? }
 local castCanPierceFn = {} :: { [number]: any? }
+local castEventsConfig = {} :: { [number]: any? }
+local castEventsModuleConfig = {} :: { [number]: any? }
+local castEventsModule = {} :: { [number]: ModuleScript? }
 
 -- Event queue
 local QueuedEvents = {} :: { { Callback: any, Args: { any } } }
@@ -105,10 +108,43 @@ local function DispatchAllEvents()
 	table.clear(QueuedEvents)
 end
 
-local function QueueFire(caster: any, eventName: string, ...)
+local function ShouldFireEvent(eventsConfig: any?, eventName: string): boolean
+	if not eventsConfig then return true end
+	if eventName == "Hit" then return eventsConfig.UseHit ~= false end
+	if eventName == "Pierced" then return eventsConfig.UsePierced ~= false end
+	if eventName == "LengthChanged" then return eventsConfig.UseLengthChanged ~= false end
+	if eventName == "CastTerminating" then return eventsConfig.UseCastTerminating ~= false end
+	if eventName == "CastFire" then return eventsConfig.UseCastFire ~= false end
+	return true
+end
+
+local function QueueFire(caster: any, eventsConfig: any?, eventsModuleConfig: any?, eventsModule: ModuleScript?, eventName: string, ...)
+	if not ShouldFireEvent(eventsConfig, eventName) then return end
+
+	if eventsModuleConfig and eventsModuleConfig["Use" .. eventName] == false then return end
+
+	if eventsModule then
+		local mod = require(eventsModule)
+		local fn = mod[eventName]
+		if fn then fn(...) end
+	end
+
 	if caster and caster.Output then
 		caster.Output:Fire(eventName, ...)
 	end
+end
+
+local function DispatchEvent(callback: any, ...)
+	if callback then
+		callback(...)
+	end
+end
+
+local function DispatchAllEvents()
+	for _, event in QueuedEvents do
+		DispatchEvent(event.Callback, unpack(event.Args))
+	end
+	table.clear(QueuedEvents)
 end
 
 local ParallelSimulation = {
@@ -146,6 +182,10 @@ function ParallelSimulation.Register(cast: any)
 		castCanPierceFn[id] = cast.CanPierce
 	end
 
+	castEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
+	castEventsModuleConfig[id] = cast.StateInfo.FastCastEventsModuleConfig
+	castEventsModule[id] = cast.RayInfo.FastCastEventsModule
+
 	if cast.RayInfo.Size then
 		castSize[id] = cast.RayInfo.Size
 	end
@@ -160,6 +200,8 @@ function ParallelSimulation.Register(cast: any)
 	end
 
 	cast.ID = id
+
+	QueueFire(cast.Caster, cast.StateInfo.FastCastEventsConfig, cast.StateInfo.FastCastEventsModuleConfig, cast.RayInfo.FastCastEventsModule, "CastFire", cast, castOrigin[id], castVelocity[id], castAcceleration[id])
 end
 
 function ParallelSimulation.Unregister(id: number)
@@ -191,6 +233,9 @@ function ParallelSimulation.Unregister(id: number)
 		castCaster[id] = castCaster[lastId]
 		castMotor6D[id] = castMotor6D[lastId]
 		castCanPierceFn[id] = castCanPierceFn[lastId]
+		castEventsConfig[id] = castEventsConfig[lastId]
+		castEventsModuleConfig[id] = castEventsModuleConfig[lastId]
+		castEventsModule[id] = castEventsModule[lastId]
 
 		if casts[lastId] then
 			casts[lastId].ID = id
@@ -226,6 +271,9 @@ function ParallelSimulation.Unregister(id: number)
 	castCaster[lastId] = nil
 	castMotor6D[lastId] = nil
 	castCanPierceFn[lastId] = nil
+	castEventsConfig[lastId] = nil
+	castEventsModuleConfig[lastId] = nil
+	castEventsModule[lastId] = nil
 
 	casts[id] = nil
 	castCount = lastId - 1
@@ -240,6 +288,9 @@ function ParallelSimulation.Terminate(id: number)
 	if bullet then
 		bullet:Destroy()
 	end
+
+	QueueFire(castCaster[id], castEventsConfig[id], castEventsModuleConfig[id], castEventsModule[id], "CastTerminating", casts[id])
+
 	ParallelSimulation.Unregister(id)
 end
 
@@ -311,7 +362,7 @@ local function UpdateCasts(deltaTime: number)
 		end
 
 		-- Fire LengthChanged
-		QueueFire(caster, "LengthChanged", casts[i], lastPosition, rayDir.Unit, rayDisplacement, currentVelocity, bullet)
+		QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "LengthChanged", casts[i], lastPosition, rayDir.Unit, rayDisplacement, currentVelocity, bullet)
 
 		-- Handle hit with HighFidelity and Piercing
 		if result and hitPart ~= bullet then
@@ -368,7 +419,7 @@ local function UpdateCasts(deltaTime: number)
 								end
 							end
 
-							QueueFire(caster, "Pierced", casts[i], subResult, subHitVelocity, bullet)
+							QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Pierced", casts[i], subResult, subHitVelocity, bullet)
 							subLastPoint = subResult.Position
 						else
 							castIsActivelyResimulating[i] = false
@@ -389,7 +440,7 @@ local function UpdateCasts(deltaTime: number)
 								end
 							end
 
-							QueueFire(caster, "Hit", casts[i], subResult, subHitVelocity, bullet)
+							QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Hit", casts[i], subResult, subHitVelocity, bullet)
 							table.insert(destroyedIds, i)
 							break
 						end
@@ -406,9 +457,9 @@ local function UpdateCasts(deltaTime: number)
 
 				if canPierce then
 					castDistanceCovered[i] += rayDisplacement
-					QueueFire(caster, "Pierced", casts[i], result, currentVelocity, bullet)
+					QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Pierced", casts[i], result, currentVelocity, bullet)
 				else
-					QueueFire(caster, "Hit", casts[i], result, currentVelocity, bullet)
+					QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Hit", casts[i], result, currentVelocity, bullet)
 					table.insert(destroyedIds, i)
 				end
 			end
