@@ -120,10 +120,6 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-local EPSILON = 1e-6
-local RAY_SEARCH_OFFSET = 0.001
-local FIXED_DELTA_TIME = 1 / 240
-
 function ActiveCastSerial.new(caster: any, castData: any): any
 	return {
 		Caster = caster,
