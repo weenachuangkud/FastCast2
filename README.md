@@ -175,7 +175,7 @@ Caster:Init(
 )
 
 -- Fire same as serial
-Caster:RaycastFire(origin, direction, speed, behavior)
+Caster:RaycastFire(origin, direction, SPEED, behavior)
 ```
 
 <br />
