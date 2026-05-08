@@ -63,7 +63,7 @@
 --local BaseCast = script:WaitForChild("BaseCast")
 
 -- Requires
-local FastCastEnums = require(script.FastCastEnums)
+-- local FastCastEnums = require(script.FastCastEnums)
 local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
@@ -141,9 +141,11 @@ local function GetTrajectoryInfo(
 	return { GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel) }
 end
 
+--[[
 local function GetLatestTrajectoryEndInfo(cast: vaildcast): { [number]: Vector3 }
 	return GetTrajectoryInfo(cast, 1)
 end
+--]]
 
 local function ModifyTransformation(
 	cast: vaildcast,
