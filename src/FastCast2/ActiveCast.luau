@@ -381,7 +381,7 @@ local function SimulateCast(
 
 	cast.StateInfo.TotalRuntime += delta
 
-	totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+	totalDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
 
 	local currentTarget = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
 	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
