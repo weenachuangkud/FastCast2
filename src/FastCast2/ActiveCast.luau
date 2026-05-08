@@ -413,8 +413,8 @@ local function SimulateCast(
 
 	local FastCastEventsModuleConfig = cast.StateInfo.FastCastEventsModuleConfig
 
-	if typeof(latestTrajectory.Acceleration) ~= "Vector3" then
-		latestTrajectory.Acceleration = Vector3.new()
+	if typeof(trajectory.Acceleration) ~= "Vector3" then
+		trajectory.Acceleration = Vector3.new()
 	end
 
 	local VisualizeVariant = {}
@@ -880,10 +880,10 @@ function ActiveCast.createCastData(
 
 			cast.StateInfo.IsActivelyResimulating = true
 
-			local origin = latestTrajectory.Origin
-			local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
-			local initialVelocity = latestTrajectory.InitialVelocity
-			local acceleration = latestTrajectory.Acceleration
+			local origin = trajectory.Origin
+			local totalDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
+			local initialVelocity = trajectory.InitialVelocity
+			local acceleration = trajectory.Acceleration
 
 			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
 			--local lastVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
@@ -891,7 +891,7 @@ function ActiveCast.createCastData(
 
 			cast.StateInfo.TotalRuntime += delta
 
-			totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
+totalDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
 
 			local currentPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
 			local currentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)

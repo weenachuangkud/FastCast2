@@ -44,12 +44,10 @@ local function Initialize()
 end
 
 local function Get(): Motor6D
-	if #FreeMotor6Ds > 0 then
-		return table.remove(FreeMotor6Ds) :: Motor6D
-	else
+	if #FreeMotor6Ds == 0 then
 		GrowPool(PoolSize * GROWTH_RATE)
-		return Get()
 	end
+	return table.remove(FreeMotor6Ds) :: Motor6D
 end
 
 local function Return(motor6d: Motor6D)

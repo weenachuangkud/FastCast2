@@ -150,7 +150,9 @@ function ActiveCastSerial.new(caster: any, castData: any): any
 			WorldRoot = workspace,
 			MaxDistance = castData.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = castData.CosmeticBulletObject,
-			MovementMethod = castData.MovementMethod or "BulkMoveTo"
+			MovementMethod = castData.MovementMethod or "BulkMoveTo",
+			Size = castData.Size,
+			Radius = castData.Radius
 		},
 
 		Type = CastVariantTypes[castData.CastType],

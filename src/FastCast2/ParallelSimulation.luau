@@ -186,11 +186,12 @@ function ParallelSimulation.Unregister(id: number)
 
 		if casts[lastId] then
 			casts[lastId].ID = id
+			casts[id] = casts[lastId]
 		end
 	end
 
-	if castMotor6D[id] then
-		Motor6DPool.Disconnect(castMotor6D[id])
+	if id ~= lastId and castMotor6D[lastId] then
+		Motor6DPool.Disconnect(castMotor6D[lastId])
 	end
 
 	castIDs[lastId] = nil
@@ -310,17 +311,21 @@ local function UpdateCasts(deltaTime: number)
 		end
 	end
 
-	-- Process destroyed casts
-	for _, id in destroyedIds do
-		ParallelSimulation.Terminate(id)
+	-- Process destroyed casts (iterate in reverse to avoid index invalidation)
+	for i = #destroyedIds, 1, -1 do
+		ParallelSimulation.Terminate(destroyedIds[i])
 	end
 
 	DispatchAllEvents()
 end
 
 function ParallelSimulation.Start()
-	if ParallelSimulation.StepConnection then return end
-	ParallelSimulation.StepConnection = RS.PreRender:ConnectParallel(UpdateCasts)
+	if SerialSimulation.StepConnection then return end
+	if RS:IsClient() then
+		ParallelSimulation.StepConnection = RS.PreRender:ConnectParallel(UpdateCasts)
+	else
+		ParallelSimulation.StepConnection = RS.Heartbeat:Connect(UpdateCasts)
+	end
 end
 
 function ParallelSimulation.Stop()

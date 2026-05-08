@@ -104,17 +104,21 @@ UIS.InputBegan:Connect(function(input, gp)
 		print(string.format("Firing %d casts...", AMOUNT))
 		
 		for i = 1, AMOUNT do
+			local direction = Vector3.new(
+				math.random() * 2 - 1,
+				math.random() * 2 - 1,
+				math.random() * 2 - 1
+			)
+			if direction.Magnitude == 0 then
+				direction = Vector3.new(0, 0, 1)
+			end
 			Caster:RaycastFire(
 				Vector3.new(
-					math.random(-1, 1) * 5000,
-					math.random(-1, 1) * 5000,
-					math.random(-1, 1) * 5000
-				),
-				Vector3.new(
-					math.random(-1, 1) * 5000,
-					math.random(-1, 1) * 5000,
-					math.random(-1, 1) * 5000
-				),
+					math.random() * 2 - 1,
+					math.random() * 2 - 1,
+					math.random() * 2 - 1
+				) * 5000,
+				direction,
 				35,
 				castBehavior
 			)

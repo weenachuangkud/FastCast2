@@ -182,6 +182,7 @@ function BaseCast:Raycast(
 	} :: any)
 
 	ParallelSimulation.Register(cast)
+	Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire then
 		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
@@ -246,6 +247,7 @@ function BaseCast:Blockcast(
 	} :: any)
 
 	ParallelSimulation.Register(cast)
+	Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire then
 		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
@@ -290,6 +292,7 @@ function BaseCast:Spherecast(
 	} :: any)
 
 	ParallelSimulation.Register(cast)
+	Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire then
 		SendCastFire(cast, Origin, Direction, Velocity, Behavior)

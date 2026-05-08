@@ -314,9 +314,9 @@ local function UpdateCasts(deltaTime: number)
 		end
 	end
 
-	-- Process destroyed casts
-	for _, id in destroyedIds do
-		SerialSimulation.Terminate(id)
+	-- Process destroyed casts (iterate in reverse to avoid index invalidation)
+	for i = #destroyedIds, 1, -1 do
+		SerialSimulation.Terminate(destroyedIds[i])
 	end
 
 	DispatchAllEvents()

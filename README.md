@@ -218,7 +218,7 @@ module.CastTerminating = function()
 	print("CastTerminating!")
 end
 
-module.RayHit = function()
+module.Hit = function()
 	print("Hit!")
 end
 

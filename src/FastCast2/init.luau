@@ -645,6 +645,7 @@ end
 function FastCastParallel:SetBulkMoveEnabled(enabled: boolean)
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
+		return
 	end
 
 	self.Dispatcher:DispatchAll("BindBulkMoveTo", enabled)
@@ -927,6 +928,10 @@ function FastCastSerial:TerminateCast(cast: vaildcast, castTerminatingFunction: 
 		cast.RayInfo.CosmeticBulletObject = nil
 	end
 
+	if self.BaseCast then
+		self.BaseCast:TerminateCast(cast, castTerminatingFunction)
+	end
+
 	if castTerminatingFunction then
 		castTerminatingFunction(cast)
 	end
@@ -1041,6 +1046,7 @@ function FastCast.new()
 		WorldRoot = workspace,
 	}
 	setmetatable(fs, FastCastSerial)
+	return fs
 end
 
 --[=[
@@ -1069,6 +1075,7 @@ function FastCast.newParallel()
 		AlreadyInit = false
 	}
 	setmetatable(fp, FastCastParallel)
+	return fp
 end
 
 return FastCast
