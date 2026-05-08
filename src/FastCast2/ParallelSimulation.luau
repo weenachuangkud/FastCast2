@@ -320,7 +320,7 @@ local function UpdateCasts(deltaTime: number)
 end
 
 function ParallelSimulation.Start()
-	if SerialSimulation.StepConnection then return end
+	if ParallelSimulation.StepConnection then return end
 	if RS:IsClient() then
 		ParallelSimulation.StepConnection = RS.PreRender:ConnectParallel(UpdateCasts)
 	else
