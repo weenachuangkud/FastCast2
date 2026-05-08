@@ -110,6 +110,7 @@ local function DebrisAdd(obj: Instance, Lifetime: number)
 	end
 	if Lifetime <= 0 then
 		obj:Destroy()
+		return
 	end
 
 	task.delay(Lifetime, function()
