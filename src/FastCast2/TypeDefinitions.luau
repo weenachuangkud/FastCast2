@@ -317,6 +317,7 @@ export type FastCastBehavior = {
 	AutoIgnoreContainer: boolean,
 
 	SimulateAfterPhysic: boolean,
+	MovementMethod: "BulkMoveTo" | "Transform",
 
 	AutomaticPerformance: boolean,
 	AdaptivePerformance: AdaptivePerformance,
