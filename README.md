@@ -70,7 +70,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
    ```bash
    git clone https://github.com/weenachuangkud/FastCast2.git
    cd FastCast2
-   rm -rf FastCast2/.git
+   rm -rf .git
    ```
 3. Sync to Roblox:
    ```bash
