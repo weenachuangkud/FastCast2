@@ -353,6 +353,7 @@ end
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end]]
 
+--[[
 local function SimulateCast(
 	cast: any,
 	delta: number,
@@ -673,6 +674,7 @@ local function SimulateCast(
 		DbgVisualizeHit(CFrame.new(currentTarget), false, VisualizeCasts, VisualizeCastSettings)
 	end
 end
+--]]
 
 --[=[
 	@function createCastData
@@ -841,7 +843,7 @@ function ActiveCast.createCastData(
 	local FastCastEvents: TypeDef.FastCastEvents = eventModule and require(eventModule) or nil
 
 	--setmetatable(cast, ActiveCast)
-
+    --[[
 	local function Stepped(delta: number)
 		if cast.StateInfo.Paused then
 			return
@@ -983,6 +985,7 @@ totalDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
 			end
 		end
 	end
+    --]]
 
 	return cast
 end
