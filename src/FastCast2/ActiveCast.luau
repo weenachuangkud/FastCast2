@@ -366,6 +366,9 @@ local function SimulateCast(
 	end
 
 	local trajectory = cast.StateInfo.Trajectory
+	if typeof(trajectory.Acceleration) ~= "Vector3" then
+		trajectory.Acceleration = Vector3.new()
+	end
 
 	local origin = trajectory.Origin
 	local totalDelta = cast.StateInfo.TotalRuntime - trajectory.StartTime
