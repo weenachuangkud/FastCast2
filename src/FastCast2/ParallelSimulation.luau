@@ -32,6 +32,83 @@ local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.454902, 0.933333, 0.011765)
 local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 
+local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
+
+local function GetVisualizationContainer(): Instance
+	local container = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
+	if not container then
+		container = Instance.new("Folder")
+		container.Name = FC_VIS_OBJ_NAME
+		container.Archivable = false
+		container.Parent = workspace.Terrain
+	end
+	return container
+end
+
+local function DebrisVisualization(obj: Instance?, lifetime: number)
+	if not obj then return end
+	if lifetime <= 0 then
+		obj:Destroy()
+		return
+	end
+	task.delay(lifetime, function()
+		if obj then obj:Destroy() end
+	end)
+end
+
+local function VisualizeRaySegment(cframe: CFrame, length: number, visualizeSettings: any, lifetime: number): ConeHandleAdornment?
+	if not visualizeSettings then return nil end
+	local adornment = Instance.new("ConeHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = cframe
+	adornment.Height = length
+	adornment.Color3 = visualizeSettings.Debug_SegmentColor
+	adornment.Radius = visualizeSettings.Debug_SegmentSize
+	adornment.Transparency = visualizeSettings.Debug_SegmentTransparency
+	adornment.Parent = GetVisualizationContainer()
+	DebrisVisualization(adornment, lifetime)
+	return adornment
+end
+
+local function VisualizeBlockSegment(cframe: CFrame, size: Vector3, visualizeSettings: any, lifetime: number): BoxHandleAdornment?
+	if not visualizeSettings then return nil end
+	local adornment = Instance.new("BoxHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = cframe
+	adornment.Size = size
+	adornment.Color3 = visualizeSettings.Debug_SegmentColor
+	adornment.Transparency = visualizeSettings.Debug_SegmentTransparency
+	adornment.Parent = GetVisualizationContainer()
+	DebrisVisualization(adornment, lifetime)
+	return adornment
+end
+
+local function VisualizeSphereSegment(cframe: CFrame, radius: number, visualizeSettings: any, lifetime: number): SphereHandleAdornment?
+	if not visualizeSettings then return nil end
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = cframe
+	adornment.Radius = radius
+	adornment.Color3 = visualizeSettings.Debug_SegmentColor
+	adornment.Transparency = visualizeSettings.Debug_SegmentTransparency
+	adornment.Parent = GetVisualizationContainer()
+	DebrisVisualization(adornment, lifetime)
+	return adornment
+end
+
+local function VisualizeHit(cframe: CFrame, wasPierce: boolean, visualizeSettings: any, lifetime: number): SphereHandleAdornment?
+	if not visualizeSettings then return nil end
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = cframe
+	adornment.Radius = wasPierce and visualizeSettings.Debug_RayPierceSize or visualizeSettings.Debug_HitSize
+	adornment.Transparency = wasPierce and visualizeSettings.Debug_RayPierceTransparency or visualizeSettings.Debug_HitTransparency
+	adornment.Color3 = wasPierce and visualizeSettings.Debug_RayPierceColor or visualizeSettings.Debug_HitColor
+	adornment.Parent = GetVisualizationContainer()
+	DebrisVisualization(adornment, lifetime)
+	return adornment
+end
+
 local castHandlers = {
 	[EnumCastTypes.Raycast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, params: RaycastParams)
 		return targetWorldRoot:Raycast(origin, direction, params)
@@ -371,6 +448,21 @@ local function UpdateCasts(deltaTime: number)
 			end
 		end
 
+		-- Visualization (requires task.synchronize for cross-thread)
+		local visualize = castVisualize[i]
+		local visualizeSettings = castVisualizeSettings[i]
+		if visualize and visualizeSettings and deltaTime > 0 then
+			task.synchronize()
+			local lifetime = visualizeSettings.Debug_RayLifetime or 1
+			if castType == EnumCastTypes.Raycast then
+				VisualizeRaySegment(CFrame.new(lastPosition, lastPosition + rayDir), rayDisplacement, visualizeSettings, lifetime)
+			elseif castType == EnumCastTypes.Blockcast then
+				VisualizeBlockSegment(CFrame.new(lastPosition, lastPosition + rayDir), castSize[i], visualizeSettings, lifetime)
+			elseif castType == EnumCastTypes.Spherecast then
+				VisualizeSphereSegment(CFrame.new(lastPosition, lastPosition + rayDir), castRadius[i], visualizeSettings, lifetime)
+			end
+		end
+
 		-- Fire LengthChanged
 		QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "LengthChanged", casts[i], lastPosition, rayDir.Unit, rayDisplacement, currentVelocity, bullet)
 
@@ -451,6 +543,15 @@ local function UpdateCasts(deltaTime: number)
 
 							QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Pierced", casts[i], subResult, subHitVelocity, bullet)
 							subLastPoint = subResult.Position
+
+							if visualize and visualizeSettings then
+								task.synchronize()
+								local lifetime = visualizeSettings.Debug_RayLifetime or 1
+								local hitVis = VisualizeHit(CFrame.new(subResult.Position), true, visualizeSettings, lifetime)
+								if hitVis then
+									hitVis.Color3 = DBG_RAYPIERCE_SUB_COLOR
+								end
+							end
 						else
 							if DebugLogging.RayPierce then
 								print("Piercing function is nil or it returned FALSE to not pierce this hit.")
@@ -475,6 +576,16 @@ local function UpdateCasts(deltaTime: number)
 							end
 
 							QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Hit", casts[i], subResult, subHitVelocity, bullet)
+
+							if visualize and visualizeSettings then
+								task.synchronize()
+								local lifetime = visualizeSettings.Debug_RayLifetime or 1
+								local hitVis = VisualizeHit(CFrame.new(subResult.Position), false, visualizeSettings, lifetime)
+								if hitVis then
+									hitVis.Color3 = DBG_HIT_SUB_COLOR
+								end
+							end
+
 							table.insert(destroyedIds, i)
 							break
 						end
@@ -496,6 +607,11 @@ local function UpdateCasts(deltaTime: number)
 
 					castDistanceCovered[i] += rayDisplacement
 					QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Pierced", casts[i], result, currentVelocity, bullet)
+
+					if visualize and visualizeSettings then
+						task.synchronize()
+						VisualizeHit(CFrame.new(result.Position), true, visualizeSettings, visualizeSettings.Debug_HitLifetime or 1)
+					end
 				else
 					if DebugLogging.RayPierce then
 						print("Piercing function is nil or it returned FALSE to not pierce this hit.")
@@ -506,6 +622,12 @@ local function UpdateCasts(deltaTime: number)
 					end
 
 					QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Hit", casts[i], result, currentVelocity, bullet)
+
+					if visualize and visualizeSettings then
+						task.synchronize()
+						VisualizeHit(CFrame.new(result.Position), false, visualizeSettings, visualizeSettings.Debug_HitLifetime or 1)
+					end
+
 					table.insert(destroyedIds, i)
 				end
 			end
