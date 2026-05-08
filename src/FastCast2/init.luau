@@ -125,6 +125,7 @@ local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceler
 	return initialVelocity + acceleration * time
 end
 
+--[[
 local function GetTrajectoryInfo(
 	cast: vaildcast,
 	index: number
@@ -140,6 +141,7 @@ local function GetTrajectoryInfo(
 
 	return { GetPositionAtTime(duration, origin, vel, accel), GetVelocityAtTime(duration, vel, accel) }
 end
+--]]
 
 --[[
 local function GetLatestTrajectoryEndInfo(cast: vaildcast): { [number]: Vector3 }
