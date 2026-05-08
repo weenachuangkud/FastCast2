@@ -246,7 +246,7 @@ table.clear(QueuedEvents)
 - `Dispatch()` - Sends to least-loaded Actor
 - `DispatchAll()` - Broadcasts to all Actors
 
-### `FastCastVMs/ServerVM.server.luau` - Server Actor
+### `FastCastVMs/ServerVM.server.luau` and `FastCastVMs/ClientVM.client.luau` - Actors
 - Handles messages from Dispatcher
 - Initializes BaseCast on `Init` message
 - Processes Raycast/Blockcast/Spherecast
