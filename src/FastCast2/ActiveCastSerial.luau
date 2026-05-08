@@ -147,7 +147,7 @@ function ActiveCastSerial.new(caster: any, castData: any): any
 		},
 
 		RayInfo = {
-			Parameters = castData.RaycastParams,
+			Parameters = castData.RaycastParams and CloneCastParams(castData.RaycastParams) or RaycastParams.new(),
 			WorldRoot = workspace,
 			MaxDistance = castData.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = castData.CosmeticBulletObject,

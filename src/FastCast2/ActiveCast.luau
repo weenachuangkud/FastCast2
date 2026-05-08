@@ -759,7 +759,7 @@ function ActiveCast.createCastData(
 		},
 
 		RayInfo = {
-			Parameters = behavior.RaycastParams,
+			Parameters = behavior.RaycastParams and CloneCastParams(behavior.RaycastParams) or RaycastParams.new(),
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
