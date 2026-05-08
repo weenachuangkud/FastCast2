@@ -83,6 +83,7 @@ local castVisualize = {} :: { [number]: boolean }
 local castVisualizeSettings = {} :: { [number]: any }
 local castCaster = {} :: { [number]: any }
 local castMotor6D = {} :: { [number]: Motor6D? }
+local castCanPierceFn = {} :: { [number]: any? }
 
 -- Event queue
 local QueuedEvents = {} :: { { Callback: any, Args: { any } } }
@@ -142,6 +143,11 @@ function SerialSimulation.Register(cast: any)
 	castVisualize[id] = cast.StateInfo.VisualizeCasts
 	castVisualizeSettings[id] = cast.StateInfo.VisualizeCastSettings
 	castCaster[id] = cast.Caster
+	castCanPierceFn[id] = nil
+
+	if cast.CanPierce then
+		castCanPierceFn[id] = cast.CanPierce
+	end
 
 	if cast.RayInfo.Size then
 		castSize[id] = cast.RayInfo.Size
@@ -187,6 +193,7 @@ function SerialSimulation.Unregister(id: number)
 		castVisualizeSettings[id] = castVisualizeSettings[lastId]
 		castCaster[id] = castCaster[lastId]
 		castMotor6D[id] = castMotor6D[lastId]
+		castCanPierceFn[id] = castCanPierceFn[lastId]
 
 		if casts[lastId] then
 			casts[lastId].ID = id
@@ -221,6 +228,7 @@ function SerialSimulation.Unregister(id: number)
 	castVisualizeSettings[lastId] = nil
 	castCaster[lastId] = nil
 	castMotor6D[lastId] = nil
+	castCanPierceFn[lastId] = nil
 
 	casts[id] = nil
 	castCount = lastId - 1
@@ -251,6 +259,7 @@ local function UpdateCasts(deltaTime: number)
 		local CastHandler = castHandlers[castType]
 		local highFidelityBehavior = castHighFidelityBehavior[i]
 		local highFidelitySegmentSize = castHighFidelitySegmentSize[i]
+		local canPierceFn = castCanPierceFn[i]
 
 		local origin = castOrigin[i]
 		local totalDelta = castTotalRuntime[i]
@@ -307,7 +316,7 @@ local function UpdateCasts(deltaTime: number)
 		-- Fire LengthChanged
 		QueueFire(caster, "LengthChanged", casts[i], lastPosition, rayDir.Unit, rayDisplacement, currentVelocity, bullet)
 
-		-- Handle hit with HighFidelity
+		-- Handle hit with HighFidelity and Piercing
 		if result and hitPart ~= bullet then
 			if
 				highFidelityBehavior == HighFidelityBehavior.Automatic
@@ -327,6 +336,7 @@ local function UpdateCasts(deltaTime: number)
 				local timeIncrement = deltaTime / numSegmentsReal
 
 				local subLastPoint = lastPosition
+				local subHitResult = nil
 				for segmentIndex = 1, numSegmentsReal do
 					if castCancelHighResCast[i] then
 						castCancelHighResCast[i] = false
@@ -344,38 +354,67 @@ local function UpdateCasts(deltaTime: number)
 						local subDisplacement = (subLastPoint - subResult.Position).Magnitude
 						local subHitVelocity = GetVelocityAtTime(subTime, velocity, acceleration)
 
-						castIsActivelyResimulating[i] = false
+						local canPierce = canPierceFn and canPierceFn(casts[i], subResult, subHitVelocity, bullet)
 
-						castTotalRuntime[i] = totalDelta
-						castDistanceCovered[i] += subDisplacement
+						if canPierce then
+							castDistanceCovered[i] += subDisplacement
 
-						local subCFrame = CFrame.new(subLastPoint, subLastPoint + subRayDir) * CFrame.new(0, 0, -subDisplacement / 2)
-						castCFrame[i] = subCFrame
+							local subCFrame = CFrame.new(subLastPoint, subLastPoint + subRayDir) * CFrame.new(0, 0, -subDisplacement / 2)
+							castCFrame[i] = subCFrame
 
-						if bullet then
-							if motor6d then
-								motor6d.Transform = subCFrame
-							elseif bullet:IsA("BasePart") then
-								bullet.CFrame = subCFrame
-							else
-								bullet:PivotTo(subCFrame)
+							if bullet then
+								if motor6d then
+									motor6d.Transform = subCFrame
+								elseif bullet:IsA("BasePart") then
+									bullet.CFrame = subCFrame
+								else
+									bullet:PivotTo(subCFrame)
+								end
 							end
+
+							QueueFire(caster, "Pierced", casts[i], subResult, subHitVelocity, bullet)
+							subLastPoint = subResult.Position
+						else
+							castIsActivelyResimulating[i] = false
+
+							castTotalRuntime[i] = totalDelta
+							castDistanceCovered[i] += subDisplacement
+
+							local subCFrame = CFrame.new(subLastPoint, subLastPoint + subRayDir) * CFrame.new(0, 0, -subDisplacement / 2)
+							castCFrame[i] = subCFrame
+
+							if bullet then
+								if motor6d then
+									motor6d.Transform = subCFrame
+								elseif bullet:IsA("BasePart") then
+									bullet.CFrame = subCFrame
+								else
+									bullet:PivotTo(subCFrame)
+								end
+							end
+
+							QueueFire(caster, "Hit", casts[i], subResult, subHitVelocity, bullet)
+							table.insert(destroyedIds, i)
+							break
 						end
-
-						QueueFire(caster, "Hit", casts[i], subResult, subHitVelocity, bullet)
-						table.insert(destroyedIds, i)
-						break
+					else
+						subLastPoint = subPosition
 					end
-
-					subLastPoint = subPosition
 				end
 
 				if castIsActivelyResimulating[i] then
 					castIsActivelyResimulating[i] = false
 				end
 			else
-				QueueFire(caster, "Hit", casts[i], result, currentVelocity, bullet)
-				table.insert(destroyedIds, i)
+				local canPierce = canPierceFn and canPierceFn(casts[i], result, currentVelocity, bullet)
+
+				if canPierce then
+					castDistanceCovered[i] += rayDisplacement
+					QueueFire(caster, "Pierced", casts[i], result, currentVelocity, bullet)
+				else
+					QueueFire(caster, "Hit", casts[i], result, currentVelocity, bullet)
+					table.insert(destroyedIds, i)
+				end
 			end
 		end
 
