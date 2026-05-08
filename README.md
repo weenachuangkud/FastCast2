@@ -63,6 +63,27 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 ---
 
+## Install with Rojo
+
+1. Install the [Rojo CLI](https://rojo.space/docs/installation/) for your system.
+2. Clone this repository:
+   ```bash
+   git clone https://github.com/weenachuangkud/FastCast2.git
+   cd FastCast2
+   rm -rf FastCast2/.git
+   ```
+3. Sync to Roblox:
+   ```bash
+   rojo sync -o <place-name>
+   ```
+   Or serve live with:
+   ```bash
+   rojo serve
+   ```
+   Then connect in Roblox Studio via **Studio → Plugins → Rojo**.
+
+---
+
 # Code example
 
 Shooting projectiles from your head (Serial mode - simpler, main thread):
