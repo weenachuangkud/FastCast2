@@ -14,6 +14,8 @@ local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
 local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+local Configs = require(FastCastModule:WaitForChild("Configs"))
+local DebugLogging = Configs.DebugLogging
 local Motor6DPool = require(FastCastModule:WaitForChild("Motor6DPool"))
 
 local EnumCastTypes = FastCastEnums.CastType
@@ -301,6 +303,10 @@ end
 local function UpdateCasts(deltaTime: number)
 	if castCount == 0 then return end
 
+	if DebugLogging.Casting then
+		print("Casting for frame.")
+	end
+
 	local destroyedIds = {} :: { number }
 
 	for i = 1, castCount do
@@ -370,6 +376,14 @@ local function UpdateCasts(deltaTime: number)
 
 		-- Handle hit with HighFidelity and Piercing
 		if result and hitPart ~= bullet then
+			if DebugLogging.Hit then
+				print("Hit something, testing now.")
+			end
+
+			if DebugLogging.RayPierce and not canPierceFn then
+				print("No piercing function set, proceeding to hit processing.")
+			end
+
 			if
 				highFidelityBehavior == HighFidelityBehavior.Automatic
 				and highFidelitySegmentSize > 0
@@ -387,11 +401,19 @@ local function UpdateCasts(deltaTime: number)
 
 				local timeIncrement = deltaTime / numSegmentsReal
 
+				if DebugLogging.Calculation then
+					print("Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal)
+				end
+
 				local subLastPoint = lastPosition
 				for segmentIndex = 1, numSegmentsReal do
 					if castCancelHighResCast[i] then
 						castCancelHighResCast[i] = false
 						break
+					end
+
+					if DebugLogging.Segment then
+						print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 					end
 
 					local subTime = totalDelta - deltaTime + (timeIncrement * segmentIndex)
@@ -408,6 +430,10 @@ local function UpdateCasts(deltaTime: number)
 						local canPierce = canPierceFn and canPierceFn(casts[i], subResult, subHitVelocity, bullet)
 
 						if canPierce then
+							if DebugLogging.RayPierce then
+								print("Piercing function returned TRUE to pierce this part.")
+							end
+
 							castDistanceCovered[i] += subDisplacement
 
 							local subCFrame = CFrame.new(subLastPoint, subLastPoint + subRayDir) * CFrame.new(0, 0, -subDisplacement / 2)
@@ -426,6 +452,10 @@ local function UpdateCasts(deltaTime: number)
 							QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Pierced", casts[i], subResult, subHitVelocity, bullet)
 							subLastPoint = subResult.Position
 						else
+							if DebugLogging.RayPierce then
+								print("Piercing function is nil or it returned FALSE to not pierce this hit.")
+							end
+
 							castIsActivelyResimulating[i] = false
 
 							castTotalRuntime[i] = totalDelta
@@ -460,9 +490,21 @@ local function UpdateCasts(deltaTime: number)
 				local canPierce = canPierceFn and canPierceFn(casts[i], result, currentVelocity, bullet)
 
 				if canPierce then
+					if DebugLogging.RayPierce then
+						print("Piercing function returned TRUE to pierce this part.")
+					end
+
 					castDistanceCovered[i] += rayDisplacement
 					QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Pierced", casts[i], result, currentVelocity, bullet)
 				else
+					if DebugLogging.RayPierce then
+						print("Piercing function is nil or it returned FALSE to not pierce this hit.")
+					end
+
+					if DebugLogging.Hit then
+						print("Hit was successful. Terminating.")
+					end
+
 					QueueFire(caster, castEventsConfig[i], castEventsModuleConfig[i], castEventsModule[i], "Hit", casts[i], result, currentVelocity, bullet)
 					table.insert(destroyedIds, i)
 				end
