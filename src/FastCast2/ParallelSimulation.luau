@@ -17,6 +17,7 @@ local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 local Motor6DPool = require(FastCastModule:WaitForChild("Motor6DPool"))
 
 local EnumCastTypes = FastCastEnums.CastType
+local HighFidelityBehavior = FastCastEnums.HighFidelityBehavior
 local HIGH_FIDE_INCREASE_SIZE = 0.5
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5
 local MAX_CASTING_TIME = 0.2
@@ -245,6 +246,8 @@ local function UpdateCasts(deltaTime: number)
 		local caster = castCaster[i]
 		local castType = castCastType[i]
 		local CastHandler = castHandlers[castType]
+		local highFidelityBehavior = castHighFidelityBehavior[i]
+		local highFidelitySegmentSize = castHighFidelitySegmentSize[i]
 
 		local origin = castOrigin[i]
 		local totalDelta = castTotalRuntime[i]
@@ -272,9 +275,11 @@ local function UpdateCasts(deltaTime: number)
 
 		local hitPoint = currentPosition
 		local hitPart = nil
+		local hitNormal = Vector3.new()
 		if result then
 			hitPoint = result.Position
 			hitPart = result.Instance
+			hitNormal = result.Normal
 		end
 
 		local rayDisplacement = (hitPoint - lastPosition).Magnitude
@@ -299,10 +304,76 @@ local function UpdateCasts(deltaTime: number)
 		-- Fire LengthChanged
 		QueueFire(caster, "LengthChanged", casts[i], lastPosition, rayDir.Unit, rayDisplacement, currentVelocity, bullet)
 
-		-- Handle hit
+		-- Handle hit with HighFidelity
 		if result and hitPart ~= bullet then
-			QueueFire(caster, "Hit", casts[i], result, currentVelocity, bullet)
-			table.insert(destroyedIds, i)
+			if
+				highFidelityBehavior == HighFidelityBehavior.Automatic
+				and highFidelitySegmentSize > 0
+				and rayDisplacement > highFidelitySegmentSize
+			then
+				castIsActivelyResimulating[i] = true
+				castCancelHighResCast[i] = false
+
+				local numSegmentsDecimal = rayDisplacement / highFidelitySegmentSize
+				local numSegmentsReal = math.floor(numSegmentsDecimal)
+
+				if numSegmentsReal == 0 then
+					numSegmentsReal = 1
+				end
+
+				local timeIncrement = deltaTime / numSegmentsReal
+
+				local subLastPoint = lastPosition
+				for segmentIndex = 1, numSegmentsReal do
+					if castCancelHighResCast[i] then
+						castCancelHighResCast[i] = false
+						break
+					end
+
+					local subTime = totalDelta - deltaTime + (timeIncrement * segmentIndex)
+					local subPosition = GetPositionAtTime(subTime, origin, velocity, acceleration)
+					local subVelocity = GetVelocityAtTime(subTime, velocity, acceleration)
+					local subRayDir = subVelocity * timeIncrement
+
+					local subResult = CastHandler(castWorldRoot[i], subLastPoint, subRayDir, castRaycastParams[i], variant)
+
+					if subResult then
+						local subDisplacement = (subLastPoint - subResult.Position).Magnitude
+						local subHitVelocity = GetVelocityAtTime(subTime, velocity, acceleration)
+
+						castIsActivelyResimulating[i] = false
+
+						castTotalRuntime[i] = totalDelta
+						castDistanceCovered[i] += subDisplacement
+
+						local subCFrame = CFrame.new(subLastPoint, subLastPoint + subRayDir) * CFrame.new(0, 0, -subDisplacement / 2)
+						castCFrame[i] = subCFrame
+
+						if bullet then
+							if motor6d then
+								motor6d.Transform = subCFrame
+							elseif bullet:IsA("BasePart") then
+								bullet.CFrame = subCFrame
+							else
+								bullet:PivotTo(subCFrame)
+							end
+						end
+
+						QueueFire(caster, "Hit", casts[i], subResult, subHitVelocity, bullet)
+						table.insert(destroyedIds, i)
+						break
+					end
+
+					subLastPoint = subPosition
+				end
+
+				if castIsActivelyResimulating[i] then
+					castIsActivelyResimulating[i] = false
+				end
+			else
+				QueueFire(caster, "Hit", casts[i], result, currentVelocity, bullet)
+				table.insert(destroyedIds, i)
+			end
 		end
 
 		-- Check max distance
