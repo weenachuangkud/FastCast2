@@ -95,6 +95,7 @@ local Players = game:GetService("Players")
 
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
+local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
 
 -- CONSTANTS
 local SPEED = 500
