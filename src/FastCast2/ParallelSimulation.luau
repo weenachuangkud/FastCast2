@@ -201,7 +201,11 @@ function ParallelSimulation.Register(cast: any)
 
 	cast.ID = id
 
-	QueueFire(cast.Caster, cast.StateInfo.FastCastEventsConfig, cast.StateInfo.FastCastEventsModuleConfig, cast.RayInfo.FastCastEventsModule, "CastFire", cast, castOrigin[id], castVelocity[id], castAcceleration[id])
+	local behavior = cast.StateInfo.Behavior or {}
+	local origin = castOrigin[id]
+	local velocity = castVelocity[id]
+	local direction = velocity.Magnitude > 0 and velocity.Unit * velocity.Magnitude or Vector3.new()
+	QueueFire(cast.Caster, cast.StateInfo.FastCastEventsConfig, cast.StateInfo.FastCastEventsModuleConfig, cast.RayInfo.FastCastEventsModule, "CastFire", cast, origin, direction, velocity, behavior)
 end
 
 function ParallelSimulation.Unregister(id: number)
