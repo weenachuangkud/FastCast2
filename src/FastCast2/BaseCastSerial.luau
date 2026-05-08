@@ -33,13 +33,13 @@ BaseCastSerial.__type = "BaseCastSerial"
 	@function Init
 	@within BaseCastSerial
 ]=]
-function BaseCastSerial.Init(Bindableself.Output: BindableEvent, Data: any, parentCaster: any)
+function BaseCastSerial.Init(BindableOutput: BindableEvent, Data: any, parentCaster: any)
 	local self = setmetatable({}, BaseCastSerial)
-	self.self.Output = Bindableself.Output
-	self.self.ParentCaster = parentCaster
-	self.self.ObjectCache = nil
-	self.self.BulkMoveToConnection = nil
-	self.self.NextProjectileID = 0
+	self.Output = BindableOutput
+	self.ParentCaster = parentCaster
+	self.ObjectCache = nil
+	self.BulkMoveToConnection = nil
+	self.NextProjectileID = 0
 
 	if Data.useBulkMoveTo then
 		-- BulkMoveTo is handled by SerialSimulation
@@ -67,7 +67,7 @@ function BaseCastSerial:Raycast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	self.self.NextProjectileID += 1
+	self.NextProjectileID += 1
 
 	if typeof(Velocity) == "number" then
 		Velocity = Direction.Unit * Velocity
@@ -88,7 +88,7 @@ function BaseCastSerial:Raycast(
 	end
 
 	local castData = {
-		ID = self.self.NextProjectileID,
+		ID = self.NextProjectileID,
 		Origin = Origin,
 		Velocity = Velocity,
 		Acceleration = Behavior.Acceleration,
@@ -232,14 +232,14 @@ function BaseCastSerial:BindBulkMoveTo(enabled: boolean)
 end
 
 --[=[
-	@method Bindself.ObjectCache
+	@method BindObjectCache
 	@within BaseCastSerial
 ]=]
-function BaseCastSerial:Bindself.ObjectCache(bool: boolean)
+function BaseCastSerial:BindObjectCache(bool: boolean)
 	if bool then
 		if self.ObjectCache then return end
 		self.ObjectCache = Instance.new("BindableFunction")
-		self.ObjectCache.Name = "self.ObjectCache"
+		self.ObjectCache.Name = "ObjectCache"
 	else
 		if self.ObjectCache then
 			self.ObjectCache:Destroy()
