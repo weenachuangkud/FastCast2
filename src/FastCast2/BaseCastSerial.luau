@@ -29,20 +29,17 @@ local BaseCastSerial = {}
 BaseCastSerial.__index = BaseCastSerial
 BaseCastSerial.__type = "BaseCastSerial"
 
-local BulkMoveToConnection: RBXScriptConnection? = nil
-local Output: BindableEvent? = nil
-local ObjectCache: BindableFunction? = nil
-local NextProjectileID = 0
-local ParentCaster = nil
-
 --[=[
 	@function Init
 	@within BaseCastSerial
 ]=]
-function BaseCastSerial.Init(BindableOutput: BindableEvent, Data: any, parentCaster: any)
+function BaseCastSerial.Init(Bindableself.Output: BindableEvent, Data: any, parentCaster: any)
 	local self = setmetatable({}, BaseCastSerial)
-	Output = BindableOutput
-	ParentCaster = parentCaster
+	self.self.Output = Bindableself.Output
+	self.self.ParentCaster = parentCaster
+	self.self.ObjectCache = nil
+	self.self.BulkMoveToConnection = nil
+	self.self.NextProjectileID = 0
 
 	if Data.useBulkMoveTo then
 		-- BulkMoveTo is handled by SerialSimulation
@@ -70,7 +67,7 @@ function BaseCastSerial:Raycast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	NextProjectileID += 1
+	self.self.NextProjectileID += 1
 
 	if typeof(Velocity) == "number" then
 		Velocity = Direction.Unit * Velocity
@@ -91,7 +88,7 @@ function BaseCastSerial:Raycast(
 	end
 
 	local castData = {
-		ID = NextProjectileID,
+		ID = self.self.NextProjectileID,
 		Origin = Origin,
 		Velocity = Velocity,
 		Acceleration = Behavior.Acceleration,
@@ -106,11 +103,11 @@ function BaseCastSerial:Raycast(
 		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
-	local cast = ActiveCastSerial.new(ParentCaster, castData)
+	local cast = ActiveCastSerial.new(self.self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
-	if Output then
-		Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
+	if self.self.Output then
+		self.self.Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -125,7 +122,7 @@ function BaseCastSerial:Blockcast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	NextProjectileID += 1
+	self.NextProjectileID += 1
 
 	if typeof(Velocity) == "number" then
 		Velocity = Direction.Unit * Velocity
@@ -146,7 +143,7 @@ function BaseCastSerial:Blockcast(
 	end
 
 	local castData = {
-		ID = NextProjectileID,
+		ID = self.NextProjectileID,
 		Origin = Origin,
 		Velocity = Velocity,
 		Acceleration = Behavior.Acceleration,
@@ -162,11 +159,11 @@ function BaseCastSerial:Blockcast(
 		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
-	local cast = ActiveCastSerial.new(ParentCaster, castData)
+	local cast = ActiveCastSerial.new(self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
-	if Output then
-		Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
+	if self.Output then
+		self.Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -181,7 +178,7 @@ function BaseCastSerial:Spherecast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	NextProjectileID += 1
+	self.NextProjectileID += 1
 
 	if typeof(Velocity) == "number" then
 		Velocity = Direction.Unit * Velocity
@@ -202,7 +199,7 @@ function BaseCastSerial:Spherecast(
 	end
 
 	local castData = {
-		ID = NextProjectileID,
+		ID = self.NextProjectileID,
 		Origin = Origin,
 		Velocity = Velocity,
 		Acceleration = Behavior.Acceleration,
@@ -218,11 +215,11 @@ function BaseCastSerial:Spherecast(
 		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
-	local cast = ActiveCastSerial.new(ParentCaster, castData)
+	local cast = ActiveCastSerial.new(self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
-	if Output then
-		Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
+	if self.Output then
+		self.Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -235,18 +232,18 @@ function BaseCastSerial:BindBulkMoveTo(enabled: boolean)
 end
 
 --[=[
-	@method BindObjectCache
+	@method Bindself.ObjectCache
 	@within BaseCastSerial
 ]=]
-function BaseCastSerial:BindObjectCache(bool: boolean)
+function BaseCastSerial:Bindself.ObjectCache(bool: boolean)
 	if bool then
-		if ObjectCache then return end
-		ObjectCache = Instance.new("BindableFunction")
-		ObjectCache.Name = "ObjectCache"
+		if self.ObjectCache then return end
+		self.ObjectCache = Instance.new("BindableFunction")
+		self.ObjectCache.Name = "self.ObjectCache"
 	else
-		if ObjectCache then
-			ObjectCache:Destroy()
-			ObjectCache = nil
+		if self.ObjectCache then
+			self.ObjectCache:Destroy()
+			self.ObjectCache = nil
 		end
 	end
 end
@@ -262,8 +259,8 @@ function BaseCastSerial:TerminateCast(cast: any, castTerminatingFunction: TypeDe
 	if castTerminatingFunction then
 		castTerminatingFunction(cast)
 	end
-	if Output then
-		Output:Fire("CastTerminating", cast)
+	if self.Output then
+		self.Output:Fire("CastTerminating", cast)
 	end
 end
 
@@ -272,13 +269,13 @@ end
 	@within BaseCastSerial
 ]=]
 function BaseCastSerial:Destroy()
-	if BulkMoveToConnection then
-		BulkMoveToConnection:Disconnect()
-		BulkMoveToConnection = nil
+	if self.BulkMoveToConnection then
+		self.BulkMoveToConnection:Disconnect()
+		self.BulkMoveToConnection = nil
 	end
 
-	Output = nil
-	ParentCaster = nil
+	self.Output = nil
+	self.ParentCaster = nil
 	setmetatable(self, nil)
 end
 
