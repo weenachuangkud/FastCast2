@@ -994,10 +994,6 @@ end
 	Creates a new Serial Caster. A Serial Caster runs all cast simulations on the main thread
 	and is simpler to use but less performant than [FastCast.newParallel](FastCast#newParallel).
 
-	:::tip
-	For most use cases, especially when you need high performance, consider using [FastCast.newParallel](FastCast#newParallel) instead.
-	:::
-
 	@function new
 	@within FastCast
 
