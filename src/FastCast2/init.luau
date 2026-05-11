@@ -799,7 +799,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:GetAccelerationCast(cast: vaildcast): Vector3
-	return cast.StateInfo.Trajectory
+	return cast.StateInfo.Trajectory.Acceleration
 end
 
 --[=[
