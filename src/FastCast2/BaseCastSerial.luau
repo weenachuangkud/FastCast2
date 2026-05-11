@@ -106,8 +106,8 @@ function BaseCastSerial:Raycast(
 	local cast = ActiveCastSerial.new(self.self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
-	if self.self.Output then
-		self.self.Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
+	if self.Output then
+		self.Output:Fire("CastFire", cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
