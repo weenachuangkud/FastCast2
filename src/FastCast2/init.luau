@@ -887,25 +887,10 @@ function FastCastSerial:AddAccelerationCast(cast: vaildcast, acceleration: Vecto
 end
 
 --[=[
-	@method SyncChangesToCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:SyncChangesToCast(cast: vaildcast)
-	if self.BaseCast.SyncChange then
-		self.BaseCast.SyncChange:Fire(cast)
-	end
-end
-
---[=[
 	@method TerminateCast
 	@within FastCastSerial
 ]=]
 function FastCastSerial:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	if cast.StateInfo.UpdateConnection ~= nil then
-		cast.StateInfo.UpdateConnection:Disconnect()
-		cast.StateInfo.UpdateConnection = nil
-	end
-
 	if cast.RayInfo.CosmeticBulletObject then
 		cast.RayInfo.CosmeticBulletObject:Destroy()
 		cast.RayInfo.CosmeticBulletObject = nil
