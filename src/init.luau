@@ -229,7 +229,7 @@ function FastCastParallel:Init(
 
 	useBulkMoveTo: boolean,
 	FastCastEventsModule: ModuleScript,
-	
+
 	useObjectCache: boolean,
 	Template: BasePart | Model,
 	CacheSize: number,
@@ -248,7 +248,7 @@ function FastCastParallel:Init(
 	local newDispatcher: Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
 
 	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
-	
+
 	if useObjectCache then
 		if not CacheSize then
 			CacheSize = DEFAULT_CACHE_SIZE
@@ -257,7 +257,7 @@ function FastCastParallel:Init(
 		if not CacheHolder then
 			CacheHolder = DEFAULT_CACHE_HOLDER
 		end
-		
+
 		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder) :: any
 	end
 
@@ -282,11 +282,11 @@ function FastCastParallel:Init(
 	self.AlreadyInit = true
 	self.ObjectCacheEnabled = useObjectCache
 	self.BulkMoveEnabled = useBulkMoveTo
-	
+
 	if FastCastEventsModule then
 		self:SetFastCastEventsModule(FastCastEventsModule)
 	end
-	
+
 
 	if not useObjectCache then
 		return
@@ -324,7 +324,7 @@ function FastCastParallel:SetFastCastEventsModule(moduleScript: ModuleScript)
 	if not self.AlreadyInit then
 		error("Please Init caster")
 	end
-	
+
 	self.Dispatcher:DispatchAll("SetFastCastEventsModule", moduleScript)
 	self.FastCastEventsModule = moduleScript
 end
@@ -408,7 +408,7 @@ function FastCastParallel:SpherecastFire(
 	if BehaviorData == nil then
 		BehaviorData = FastCastParallel.newBehavior()
 	end
-	
+
 	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
 end
 
@@ -441,8 +441,7 @@ Gets the acceleration of an ActiveCast.
 
 ]=]
 function FastCastParallel:GetAccelerationCast(cast: vaildcast)
-    local currentTrajectory = cast.StateInfo.Trajectory
-    return currentTrajectory.Acceleration
+	return cast.StateInfo.Trajectory.Acceleration
 end
 
 --[=[
@@ -501,7 +500,7 @@ end
 	@within FastCastParallel
 ]=]
 function FastCastParallel:SetPositionCast(cast: vaildcast, position: Vector3)
-    ModifyTransformation(cast, nil, nil, position)
+	ModifyTransformation(cast, nil, nil, position)
 end
 
 --[=[
@@ -655,7 +654,7 @@ function FastCastParallel:SetObjectCacheEnabled(
 			self.ObjectCache = nil
 		end
 	end
-	
+
 	self.ObjectCacheEnabled = enabled
 end
 
@@ -1004,7 +1003,7 @@ function FastCast.new()
 		LengthChanged = Signal.new(),
 		Hit = Signal.new(),
 		Pierced = Signal.new(),
-        CastTerminating = Signal.new(),
+		CastTerminating = Signal.new(),
 		CastFire = Signal.new(),
 		WorldRoot = workspace,
 	}
