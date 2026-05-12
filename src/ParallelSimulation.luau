@@ -45,3 +45,91 @@ type CastVisualizerVariants = RayVisualizerVariant | BlockVisualizerVariant | Sp
 
 type CastHandler = (WorldRoot: WorldRoot, origin: Vector3, direction: Vector3, castVariant: CastVariants) -> RaycastResult
 type CastVisualizer = (castStartCFrame: CFrame, VisualizeCasts: boolean, VisualizeCastSettings: TypeDef.VisualizeCastSettings, castVariant: CastVisualizerVariants) -> (ConeHandleAdornment | BoxHandleAdornment | SphereHandleAdornment)?
+
+-- Is this even useful?
+-- What Is even these magic numbers?
+local CastVariantTypes = {
+	[EnumCastTypes.Raycast] = "Raycast",
+	[EnumCastTypes.Blockcast] = "Blockcast",
+	[EnumCastTypes.Spherecast] = "Spherecast"
+}
+
+local castHandlers = {
+	[EnumCastTypes.Raycast] = function(
+		targetWorldRoot: WorldRoot,
+		origin: Vector3,
+		direction: Vector3,
+		parameters: RaycastParams
+	)
+		return targetWorldRoot:Raycast(origin, direction, parameters)
+	end,
+	[EnumCastTypes.Blockcast] = function(
+		targetWorldRoot: WorldRoot,
+		origin: Vector3,
+		direction: Vector3,
+		parameters: RaycastParams,
+		variant: BlockcastVariant
+	)
+		return targetWorldRoot:Blockcast(CFrame.new(origin), variant.Size, direction, parameters)
+	end,
+	[EnumCastTypes.Spherecast] = function(
+		targetWorldRoot: WorldRoot,
+		origin: Vector3,
+		direction: Vector3,
+		parameters: RaycastParams,
+		variant: SpherecastVariant
+	)
+		return targetWorldRoot:Spherecast(origin, variant.Radius, direction, parameters)
+	end
+}
+
+-- Utils
+local function DebrisAdd(obj: Instance, Lifetime: number)
+	if not obj then
+		return
+	end
+	if Lifetime <= 0 then
+		obj:Destroy()
+	end
+
+	task.delay(Lifetime, function()
+		obj:Destroy()
+	end)
+end
+
+local function GetPositionAtTime(
+	t: number,
+	origin: Vector3,
+	initialVelocity: Vector3,
+	acceleration: Vector3
+): Vector3
+	local force =
+		Vector3.new((acceleration.X * t ^ 2) / 2, (acceleration.Y * t ^ 2) / 2, (acceleration.Z * t ^ 2) / 2)
+	return origin + (initialVelocity * t) + force
+end
+
+local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
+	return initialVelocity + acceleration * time
+end
+
+local function CloneCastParams(params: RaycastParams): RaycastParams
+	local clone: RaycastParams = RaycastParams.new()
+	clone.CollisionGroup = params.CollisionGroup
+	clone.FilterType = params.FilterType
+	clone.FilterDescendantsInstances = params.FilterDescendantsInstances
+	clone.IgnoreWater = params.IgnoreWater
+	return clone
+end
+
+local function GetFastCastVisualizationContainer(): Instance
+	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
+	if fcVisualizationObjects then
+		return fcVisualizationObjects
+	end
+
+	fcVisualizationObjects = Instance.new("Folder")
+	fcVisualizationObjects.Name = FC_VIS_OBJ_NAME
+	fcVisualizationObjects.Archivable = false
+	fcVisualizationObjects.Parent = workspace.Terrain
+	return fcVisualizationObjects
+end
