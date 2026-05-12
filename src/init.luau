@@ -185,21 +185,9 @@ end
 	
 	@return FastCastBehavior
 ]=]
-function FastCastParallel.newBehavior(): TypeDef.FastCastBehavior
+function FastCast.newBehavior(): TypeDef.FastCastBehavior
 	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
 end
-
---[=[
-	Creates a new FastCastBehavior for Serial Caster.
-	@function newBehavior
-	@within FastCastSerial
-
-	@return FastCastBehavior
-]=]
-function FastCastSerial.newBehavior(): TypeDef.FastCastBehavior
-	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
-end
-
 
 --[=[
 	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
