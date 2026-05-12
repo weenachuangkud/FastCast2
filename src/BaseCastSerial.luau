@@ -264,6 +264,16 @@ function BaseCastSerial:TerminateCast(cast: any, castTerminatingFunction: TypeDe
 	end
 end
 
+--[[
+	@method SetMovementMode
+	@within BaseCastSerial
+
+	Sets the movement mode for casts.
+]]
+function BaseCastSerial:SetMovementMode(mode: "BulkMoveTo" | "Motor6D")
+	-- TODO: Implement Motor6D movement mode for SerialSimulation
+end
+
 --[=[
 	@method Destroy
 	@within BaseCastSerial

@@ -586,20 +586,20 @@ function FastCastParallel:TerminateCast(cast: vaildcast, castTerminatingFunction
 end
 
 --[=[
-	Sets whether BulkMoveTo is enabled for this Caster.
-	@method SetBulkMoveEnabled
-	@within FastCastParallel
+	Sets the movement mode for casts.
 
-	@param enabled boolean
+	@method SetMovementMode
+	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set for casts.
+	@within FastCastParallel
 ]=]
-function FastCastParallel:SetBulkMoveEnabled(enabled: boolean)
+function FastCastParallel:SetMovementMode(mode: "BulkMoveTo" | "Motor6D")
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
 		return
 	end
 
-	self.Dispatcher:DispatchAll("BindBulkMoveTo", enabled)
-	self.BulkMoveEnabled = enabled
+	self.Dispatcher:DispatchAll("SetMovementMode", mode)
+	self.MovementMode = mode
 end
 
 --[=[
@@ -879,10 +879,10 @@ function FastCastSerial:TerminateCast(cast: vaildcast | any) -- NOTE: I had to a
 	self.Output:Fire("CastTerminating", cast)
 end
 
-function FastCastSerial:ChangeMovementMode(mode: "BulkMoveTo" | "Motor6D")
+function FastCastSerial:SetMovementMode(mode: "BulkMoveTo" | "Motor6D")
 	if not self.BaseCast then return end
 
-	self.BaseCast:ChangeMovementMode(mode)
+	self.BaseCast:SetMovementMode(mode)
 	self.MovementMode = mode
 end
 
