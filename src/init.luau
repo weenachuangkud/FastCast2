@@ -273,8 +273,6 @@ function FastCastParallel:Init(
 
 		if type(f) == "function" then
 			f(...)
-		else
-			f:Fire(...)
 		end
 	end)
 
@@ -704,8 +702,6 @@ function FastCastSerial:Init(
 		
 		if type(f) == "function" then
 			f(...)
-		else
-			f:Fire(...)
 		end
 	end)
 
