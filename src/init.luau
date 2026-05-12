@@ -399,193 +399,6 @@ function FastCastParallel:SpherecastFire(
 end
 
 --[=[
-
-Gets the velocity of an ActiveCast.
-
-	@method GetVelocityCast
-	@param cast vaildcast -- The active cast to get the velocity of.
-	@within FastCastParallel
-	@return Vector3 -- The current velocity of the ActiveCast.
-]=]
-function FastCastParallel:GetVelocityCast(cast: vaildcast)
-	local currentTrajectory = cast.StateInfo.Trajectory
-	return GetVelocityAtTime(
-		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
-		currentTrajectory.InitialVelocity,
-		currentTrajectory.Acceleration
-	)
-end
-
---[=[
-
-Gets the acceleration of an ActiveCast.
-
-	@method GetAccelerationCast
-	@param cast vaildcast -- The active cast to get the acceleration of.
-	@within FastCastParallel
-	@return Vector3 -- The current acceleration of the ActiveCast.
-
-]=]
-function FastCastParallel:GetAccelerationCast(cast: vaildcast)
-	return cast.StateInfo.Trajectory.Acceleration
-end
-
---[=[
-
-Gets the position of an ActiveCast.
-
-	@method GetPositionCast
-	@param cast vaildcast -- The active cast to get the position of.
-	@within FastCastParallel
-	@return Vector3 -- The current position of the ActiveCast.
-]=]
-function FastCastParallel:GetPositionCast(cast: vaildcast)
-	local currentTrajectory = cast.StateInfo.Trajectory
-	return GetPositionAtTime(
-		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
-		currentTrajectory.Origin,
-		currentTrajectory.InitialVelocity,
-		currentTrajectory.Acceleration
-	)
-end
-
---[=[
-
-Sets the velocity of an ActiveCast to the specified Vector3.
-
-	@method SetVelocityCast
-	@param cast vaildcast -- The active cast to modify.
-	@param velocity Vector3 -- The new velocity to set.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:SetVelocityCast(cast: vaildcast, velocity: Vector3)
-	ModifyTransformation(cast, velocity, nil, nil)
-end
-
---[=[
-
-Sets the acceleration of an ActiveCast to the specified Vector3.
-
-	@method SetAccelerationCast
-	@param cast vaildcast -- The active cast to modify.
-	@param acceleration Vector3 -- The new acceleration to set.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	ModifyTransformation(cast, nil, acceleration, nil)
-end
-
---[=[
-	Sets the position of an ActiveCast to the specified Vector3.
-
-	@method SetPositionCast
-	@param cast vaildcast -- The active cast to modify.
-	@param position Vector3 -- The new position to set.
-	@within FastCastParallel
-]=]
-function FastCastParallel:SetPositionCast(cast: vaildcast, position: Vector3)
-	ModifyTransformation(cast, nil, nil, position)
-end
-
---[=[
-
-Pauses or resumes simulation for an ActiveCast.
-
-	@method PauseCast
-	@param cast vaildcast -- The active cast to modify.
-	@param value boolean -- Whether to pause (true) or resume (false) the cast.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:PauseCast(cast: vaildcast, value: boolean)
-	cast.StateInfo.Paused = value
-end
-
---[=[
-
-Add position to an ActiveCast with the specified Vector3.
-
-	@method AddPositionCast
-	@param cast vaildcast -- The active cast to modify.
-	@param position Vector3 -- The new position to add.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:AddPositionCast(cast: vaildcast, position: Vector3)
-	self:SetPositionCast(cast, self:GetPositionCast(cast) + position)
-end
-
---[=[
-
-Add velocity to an ActiveCast with the specified Vector3.
-
-	@method AddVelocityCast
-	@param cast vaildcast -- The active cast to modify.
-	@param velocity Vector3 -- The new velocity to add.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:AddVelocityCast(cast: vaildcast, velocity: Vector3)
-	self:SetVelocityCast(cast, self:GetVelocityCast(cast) + velocity)
-end
-
---[=[
-
-Add acceleration to an ActiveCast with the specified Vector3.
-
-	@method AddAccelerationCast
-	@param cast vaildcast -- The active cast to modify.
-	@param acceleration Vector3 -- The new acceleration to add.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	self:SetAccelerationCast(cast, self:GetAccelerationCast(cast) + acceleration)
-end
-
---[=[
-
-Synchronize new changes to the ActiveCast.
-
-	@method SyncChangesToCast
-	@param cast vaildcast -- The active cast to synchronize.
-	@within FastCastParallel
-
-]=]
-function FastCastParallel:SyncChangesToCast(cast: vaildcast)
-	cast.Caster.SyncChange:Fire(cast)
-end
-
---[=[
-	Terminate function for casts
-	@method TerminateCast
-	@param cast vaildcast -- The active cast to terminate.
-	@param castTerminatingFunction (cast: vaildcast) -> ())? -- Optional callback invoked just before the cast is terminated.
-	@within FastCastParallel
-]=]
-function FastCastParallel:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	local trajectory = cast.StateInfo.Trajectory
-	trajectory.EndTime = cast.StateInfo.TotalRuntime
-
-	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
-	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
-		cast.Caster.Output:Fire("CastTerminating", cast)
-	end
-
-	if castTerminatingFunction then
-		castTerminatingFunction((cast :: any))
-	end
-
-	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
-
-	for key, _ in (cast :: any) do
-		cast[key] = nil
-	end
-end
-
---[=[
 	Sets the movement mode for casts.
 
 	@method SetMovementMode
@@ -771,114 +584,12 @@ function FastCastSerial:SpherecastFire(
 	self.BaseCast:Spherecast(origin, Radius, direction, velocity, BehaviorData)
 end
 
---[=[
-	@method GetVelocityCast
+--[[
+	@method SetMovementMode
 	@within FastCastSerial
-]=]
-function FastCastSerial:GetVelocityCast(cast: vaildcast): Vector3
-	local latestTrajectory = cast.StateInfo.Trajectory
-	return GetVelocityAtTime(
-		cast.StateInfo.TotalRuntime - latestTrajectory.StartTime,
-		latestTrajectory.InitialVelocity,
-		latestTrajectory.Acceleration
-	)
-end
 
---[=[
-	@method GetAccelerationCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:GetAccelerationCast(cast: vaildcast): Vector3
-	return cast.StateInfo.Trajectory.Acceleration
-end
-
---[=[
-	@method GetPositionCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:GetPositionCast(cast: vaildcast): Vector3
-	local latestTrajectory = cast.StateInfo.Trajectory
-	local totalDelta = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
-	local origin = latestTrajectory.Origin
-	local initialVelocity = latestTrajectory.InitialVelocity
-	local acceleration = latestTrajectory.Acceleration
-
-	return GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
-end
-
---[=[
-	@method SetVelocityCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:SetVelocityCast(cast: vaildcast, velocity: Vector3)
-	ModifyTransformation(cast, velocity, nil, nil)
-end
-
---[=[
-	@method SetAccelerationCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	ModifyTransformation(cast, nil, acceleration, nil)
-end
-
---[=[
-	@method SetPositionCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:SetPositionCast(cast: vaildcast, position: Vector3)
-	ModifyTransformation(cast, nil, nil, position)
-end
-
---[=[
-	@method PauseCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:PauseCast(cast: vaildcast, value: boolean)
-	cast.StateInfo.Paused = value
-end
-
---[=[
-	@method AddPositionCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:AddPositionCast(cast: vaildcast, position: Vector3)
-	self:SetPositionCast(cast, self:GetPositionCast(cast) + position)
-end
-
---[=[
-	@method AddVelocityCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:AddVelocityCast(cast: vaildcast, velocity: Vector3)
-	self:SetVelocityCast(cast, self:GetVelocityCast(cast) + velocity)
-end
-
---[=[
-	@method AddAccelerationCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	self:SetAccelerationCast(cast, self:GetAccelerationCast(cast) + acceleration)
-end
-
---[=[
-	@method TerminateCast
-	@within FastCastSerial
-]=]
-function FastCastSerial:TerminateCast(cast: vaildcast | any) -- NOTE: I had to add "any" here because of a weird issue where the type of cast is not being recognized as vaildcast, haha
-	if cast.RayInfo.CosmeticBulletObject then
-		cast.RayInfo.CosmeticBulletObject:Destroy()
-		cast.RayInfo.CosmeticBulletObject = nil
-	end
-
-	if self.BaseCast then
-		self.BaseCast:TerminateCast(cast)
-	end
-
-	self.Output:Fire("CastTerminating", cast)
-end
-
+	Sets movement mode for the Serial Caster.
+]]
 function FastCastSerial:SetMovementMode(mode: "BulkMoveTo" | "Motor6D")
 	if not self.BaseCast then return end
 
@@ -955,6 +666,195 @@ function FastCastParallel:Destroy()
 
 	self.Dispatcher:Destroy()
 	setmetatable(self, nil)
+end
+
+-- Utility Methods
+
+--[=[
+
+Gets the velocity of an ActiveCast.
+
+	@method GetVelocityCast
+	@param cast vaildcast -- The active cast to get the velocity of.
+	@within FastCast
+	@return Vector3 -- The current velocity of the ActiveCast.
+]=]
+function FastCast.GetVelocityCast(cast: vaildcast)
+	local currentTrajectory = cast.StateInfo.Trajectory
+	return GetVelocityAtTime(
+		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+--[=[
+
+Gets the acceleration of an ActiveCast.
+
+	@method GetAccelerationCast
+	@param cast vaildcast -- The active cast to get the acceleration of.
+	@within FastCast
+	@return Vector3 -- The current acceleration of the ActiveCast.
+
+]=]
+function FastCast.GetAccelerationCast(cast: vaildcast)
+	return cast.StateInfo.Trajectory.Acceleration
+end
+
+--[=[
+
+Gets the position of an ActiveCast.
+
+	@method GetPositionCast
+	@param cast vaildcast -- The active cast to get the position of.
+	@within FastCast
+	@return Vector3 -- The current position of the ActiveCast.
+]=]
+function FastCast.GetPositionCast(cast: vaildcast)
+	local currentTrajectory = cast.StateInfo.Trajectory
+	return GetPositionAtTime(
+		cast.StateInfo.TotalRuntime - currentTrajectory.StartTime,
+		currentTrajectory.Origin,
+		currentTrajectory.InitialVelocity,
+		currentTrajectory.Acceleration
+	)
+end
+
+--[=[
+
+Sets the velocity of an ActiveCast to the specified Vector3.
+
+	@method SetVelocityCast
+	@param cast vaildcast -- The active cast to modify.
+	@param velocity Vector3 -- The new velocity to set.
+	@within FastCast
+
+]=]
+function FastCast.SetVelocityCast(cast: vaildcast, velocity: Vector3)
+	ModifyTransformation(cast, velocity, nil, nil)
+end
+
+--[=[
+
+Sets the acceleration of an ActiveCast to the specified Vector3.
+
+	@method SetAccelerationCast
+	@param cast vaildcast -- The active cast to modify.
+	@param acceleration Vector3 -- The new acceleration to set.
+	@within FastCast
+
+]=]
+function FastCast.SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
+	ModifyTransformation(cast, nil, acceleration, nil)
+end
+
+--[=[
+	Sets the position of an ActiveCast to the specified Vector3.
+
+	@method SetPositionCast
+	@param cast vaildcast -- The active cast to modify.
+	@param position Vector3 -- The new position to set.
+	@within FastCast
+]=]
+function FastCast.SetPositionCast(cast: vaildcast, position: Vector3)
+	ModifyTransformation(cast, nil, nil, position)
+end
+
+--[=[
+
+Pauses or resumes simulation for an ActiveCast.
+
+	@method PauseCast
+	@param cast vaildcast -- The active cast to modify.
+	@param value boolean -- Whether to pause (true) or resume (false) the cast.
+	@within FastCast
+
+]=]
+function FastCast.PauseCast(cast: vaildcast, value: boolean)
+	cast.StateInfo.Paused = value
+end
+
+--[=[
+
+Add position to an ActiveCast with the specified Vector3.
+
+	@method AddPositionCast
+	@param cast vaildcast -- The active cast to modify.
+	@param position Vector3 -- The new position to add.
+	@within FastCast
+
+]=]
+function FastCast.AddPositionCast(cast: vaildcast, position: Vector3)
+	FastCast.SetPositionCast(cast, FastCast.GetPositionCast(cast) + position)
+end
+
+--[=[
+
+Add velocity to an ActiveCast with the specified Vector3.
+
+	@method AddVelocityCast
+	@param cast vaildcast -- The active cast to modify.
+	@param velocity Vector3 -- The new velocity to add.
+	@within FastCast
+
+]=]
+function FastCast.AddVelocityCast(cast: vaildcast, velocity: Vector3)
+	FastCast.SetVelocityCast(cast, FastCast.GetVelocityCast(cast) + velocity)
+end
+
+--[=[
+
+Add acceleration to an ActiveCast with the specified Vector3.
+
+	@method AddAccelerationCast
+	@param cast vaildcast -- The active cast to modify.
+	@param acceleration Vector3 -- The new acceleration to add.
+	@within FastCast
+
+]=]
+function FastCast.AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
+	FastCast.SetAccelerationCast(cast, FastCast.GetAccelerationCast(cast) + acceleration)
+end
+
+--[=[
+
+Synchronize new changes to the ActiveCast.
+
+	@method SyncChangesToCast
+	@param cast vaildcast -- The active cast to synchronize.
+	@within FastCastParallel
+
+]=]
+function FastCast.SyncChangesToCast(cast: vaildcast)
+	cast.Caster.SyncChange:Fire(cast)
+end
+
+--[=[
+	Terminate function for casts
+	@method TerminateCast
+	@param cast vaildcast -- The active cast to terminate.
+	@param castTerminatingFunction (cast: vaildcast) -> ())? -- Optional callback invoked just before the cast is terminated.
+	@within FastCast
+]=]
+function FastCast.TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	local trajectory = cast.StateInfo.Trajectory
+	trajectory.EndTime = cast.StateInfo.TotalRuntime
+
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
+		cast.Caster.Output:Fire("CastTerminating", cast)
+	end
+
+	if castTerminatingFunction then
+		castTerminatingFunction((cast :: any))
+	end
+
+	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
+
+	for key, _ in (cast :: any) do
+		cast[key] = nil
+	end
 end
 
 -- Constructors
