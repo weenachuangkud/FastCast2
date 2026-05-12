@@ -41,10 +41,6 @@ function BaseCastSerial.Init(BindableOutput: BindableEvent, Data: any, parentCas
 	self.BulkMoveToConnection = nil
 	self.NextProjectileID = 0
 
-	if Data.useBulkMoveTo then
-		-- BulkMoveTo is handled by SerialSimulation
-	end
-
 	return self
 end
 
