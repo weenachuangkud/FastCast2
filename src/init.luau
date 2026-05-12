@@ -102,14 +102,6 @@ FastCastParallel.__type = "FastCastParallel"
 
 -- Local functions
 
-local function DestroySignal<T>(signal: Signal.Signal<T>?)
-	if type(signal) == "table" then
-		signal:Destroy()
-	else
-		signal = nil
-	end
-end
-
 local function GetPositionAtTime(
 	time: number,
 	origin: Vector3,
@@ -634,11 +626,11 @@ function FastCastSerial:Destroy()
 		self.BaseCast:Destroy()
 	end
 
-	DestroySignal(self.LengthChanged)
-	DestroySignal(self.Hit)
-	DestroySignal(self.Pierced)
-	DestroySignal(self.CastTerminating)
-	DestroySignal(self.CastFire)
+	self.LengthChanged = nil
+	self.Hit = nil
+	self.Pierced = nil
+	self.CastTerminating = nil
+	self.CastFire = nil
 
 	if self.Output then
 		self.Output:Destroy()
@@ -658,11 +650,11 @@ function FastCastParallel:Destroy()
 	end
 
 	-- I'm making sure that everything is destroyed here lmao
-	DestroySignal(self.LengthChanged)
-	DestroySignal(self.Hit)
-	DestroySignal(self.Pierced)
-	DestroySignal(self.CastTerminating)
-	DestroySignal(self.CastFire)
+	self.LengthChanged = nil
+	self.Hit = nil
+	self.Pierced = nil
+	self.CastTerminating = nil
+	self.CastFire = nil
 
 	self.Dispatcher:Destroy()
 	setmetatable(self, nil)
