@@ -717,7 +717,7 @@ function FastCastSerial:Init(
 		self.ObjectCacheEnabled = true
 	end
 
-	self.BulkMoveEnabled = useBulkMoveTo
+	self.MovementMode = useBulkMoveTo and "BulkMoveTo" or "Motor6D"
 	self.Initialized = true
 end
 
@@ -878,7 +878,7 @@ end
 	@method TerminateCast
 	@within FastCastSerial
 ]=]
-function FastCastSerial:TerminateCast(cast: vaildcast)
+function FastCastSerial:TerminateCast(cast: vaildcast | any) -- NOTE: I had to add "any" here because of a weird issue where the type of cast is not being recognized as vaildcast, haha
 	if cast.RayInfo.CosmeticBulletObject then
 		cast.RayInfo.CosmeticBulletObject:Destroy()
 		cast.RayInfo.CosmeticBulletObject = nil
@@ -900,6 +900,13 @@ function FastCastSerial:BindBulkMoveTo(enabled: boolean)
 		self.BaseCast:BindBulkMoveTo(enabled)
 	end
 	self.BulkMoveEnabled = enabled
+end
+
+function FastCastSerial:BindToMotor6D(enabled: boolean)
+	if self.BaseCast then
+		self.BaseCast:BindToMotor6D(enabled)
+	end
+	self.Motor6DBound = enabled
 end
 
 --[=[
