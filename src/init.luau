@@ -335,7 +335,7 @@ function FastCastParallel:RaycastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCastParallel.newBehavior()
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	-- BABE RAYCAST!!!!!
@@ -364,7 +364,7 @@ function FastCastParallel:BlockcastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCastParallel.newBehavior()
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
@@ -392,7 +392,7 @@ function FastCastParallel:SpherecastFire(
 		error("Please Init caster")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCastParallel.newBehavior()
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
@@ -723,7 +723,7 @@ function FastCastSerial:RaycastFire(
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCastParallel.newBehavior()
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	self.BaseCast:Raycast(origin, direction, velocity, BehaviorData)
@@ -744,7 +744,7 @@ function FastCastSerial:BlockcastFire(
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCastParallel.newBehavior()
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	self.BaseCast:Blockcast(origin, Size, direction, velocity, BehaviorData)
@@ -765,7 +765,7 @@ function FastCastSerial:SpherecastFire(
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
-		BehaviorData = FastCastParallel.newBehavior()
+		BehaviorData = FastCast.newBehavior()
 	end
 
 	self.BaseCast:Spherecast(origin, Radius, direction, velocity, BehaviorData)
