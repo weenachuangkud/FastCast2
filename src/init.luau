@@ -820,11 +820,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:SetVelocityCast(cast: vaildcast, velocity: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectory
-	local t = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
-	latestTrajectory.Origin = GetPositionAtTime(t, latestTrajectory.Origin, latestTrajectory.InitialVelocity, latestTrajectory.Acceleration)
-	latestTrajectory.StartTime = cast.StateInfo.TotalRuntime
-	latestTrajectory.InitialVelocity = velocity
+	ModifyTransformation(cast, velocity, nil, nil)
 end
 
 --[=[
@@ -832,12 +828,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectory
-	local t = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
-	latestTrajectory.Origin = GetPositionAtTime(t, latestTrajectory.Origin, latestTrajectory.InitialVelocity, latestTrajectory.Acceleration)
-	latestTrajectory.InitialVelocity = GetVelocityAtTime(t, latestTrajectory.InitialVelocity, latestTrajectory.Acceleration)
-	latestTrajectory.StartTime = cast.StateInfo.TotalRuntime
-	latestTrajectory.Acceleration = acceleration
+	ModifyTransformation(cast, nil, acceleration, nil)
 end
 
 --[=[
@@ -845,11 +836,7 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:SetPositionCast(cast: vaildcast, position: Vector3)
-	local latestTrajectory = cast.StateInfo.Trajectory
-	local t = cast.StateInfo.TotalRuntime - latestTrajectory.StartTime
-	latestTrajectory.InitialVelocity = GetVelocityAtTime(t, latestTrajectory.InitialVelocity, latestTrajectory.Acceleration)
-	latestTrajectory.StartTime = cast.StateInfo.TotalRuntime
-	latestTrajectory.Origin = position
+	ModifyTransformation(cast, nil, nil, position)
 end
 
 --[=[
