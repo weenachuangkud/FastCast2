@@ -697,9 +697,15 @@ function FastCastSerial:Init(
 	self.Output = BindableOutput
 
 	BindableOutput.Event:Connect(function(eventName: string, ...)
-		local signal = self[eventName]
-		if signal and type(signal) == "table" and type(signal.Fire) == "function" then
-			signal:Fire(...)
+		local f = self[eventName]
+		if not f then
+			return
+		end
+		
+		if type(f) == "function" then
+			f(...)
+		else
+			f:Fire(...)
 		end
 	end)
 
