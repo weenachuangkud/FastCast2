@@ -13,7 +13,6 @@ Configs.DebugLogging = {
 	Hit = false,
 	RayPierce = false,
 	Calculation = false,
-	AutomaticPerformance = false,
 }
 Configs.VisualizeCasts = true
 
