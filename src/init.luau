@@ -712,7 +712,8 @@ function FastCastSerial:Init(
 		if not CacheHolder then
 			CacheHolder = DEFAULT_CACHE_HOLDER
 		end
-		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder) :: any
+		-- HEy I use "Template :: any" here because of a weird issue where the type of Template is not being recognized as BasePart | Model, even though it is. I have no idea why this is happening, but it works so I'm not gonna question it.
+		self.ObjectCache = ObjectCache.new((Template :: any), CacheSize, CacheHolder) :: any
 		self.ObjectCacheEnabled = true
 	end
 
