@@ -891,22 +891,11 @@ function FastCastSerial:TerminateCast(cast: vaildcast | any) -- NOTE: I had to a
 	self.Output:Fire("CastTerminating", cast)
 end
 
---[=[
-	@method BindBulkMoveTo
-	@within FastCastSerial
-]=]
-function FastCastSerial:BindBulkMoveTo(enabled: boolean)
-	if self.BaseCast then
-		self.BaseCast:BindBulkMoveTo(enabled)
-	end
-	self.BulkMoveEnabled = enabled
-end
+function FastCastSerial:ChangeMovementMode(mode: "BulkMoveTo" | "Motor6D")
+	if not self.BaseCast then return end
 
-function FastCastSerial:BindToMotor6D(enabled: boolean)
-	if self.BaseCast then
-		self.BaseCast:BindToMotor6D(enabled)
-	end
-	self.Motor6DBound = enabled
+	self.BaseCast:ChangeMovementMode(mode)
+	self.MovementMode = mode
 end
 
 --[=[
