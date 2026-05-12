@@ -592,13 +592,13 @@ end
 	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set for casts.
 	@within FastCastParallel
 ]=]
-function FastCastParallel:SetMovementMode(mode: "BulkMoveTo" | "Motor6D")
+function FastCastParallel:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
 		return
 	end
 
-	self.Dispatcher:DispatchAll("SetMovementMode", mode)
+	self.Dispatcher:DispatchAll("SetMovementMode", mode, enabled)
 	self.MovementMode = mode
 end
 

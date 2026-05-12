@@ -34,7 +34,7 @@ BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
 -- Connections
-local BulkMoveToConnection: RBXScriptConnection? = nil
+local MovementConnection: RBXScriptConnection? = nil
 
 -- Variables
 -- Because each different threads have different BaseCast haha
@@ -72,6 +72,10 @@ local function HandleBulkMoveTo()
 
 	--print("BulkMoveTo parts : ", Parts, "CFrames : ", CFrames)
 	workspace:BulkMoveTo(Parts, CFrames, Enum.BulkMoveMode.FireCFrameChanged)
+end
+
+local function HandleMotor6D()
+	-- TODO: Implement Motor6D movement mode
 end
 
 local function SendCastFire(
@@ -325,6 +329,33 @@ function BaseCast:BindBulkMoveTo(bool: boolean)
 	end
 end
 
+function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+	-- Who even write code like this lmao
+	if mode == "BulkMoveTo" then
+		if enabled then
+			if not MovementConnection then
+				MovementConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
+			end
+		else
+			if MovementConnection then
+				MovementConnection:Disconnect()
+				MovementConnection = nil
+			end
+		end
+	elseif mode == "Motor6D" then
+		if enabled then
+			if not MovementConnection then
+				MovementConnection = RS.PreRender:ConnectParallel(HandleMotor6D)
+			end
+		else
+			if MovementConnection then
+				MovementConnection:Disconnect()
+				MovementConnection = nil
+			end
+		end
+	end
+end
+
 --[=[
 
 @method BindObjectCache
@@ -369,6 +400,7 @@ function BaseCast:Destroy()
 	FastCastEventsModule = nil
 
 	for _, v in Actives do
+		--TODO: Fix FastCastM:TerminateCast not working properly
 		FastCastM:TerminateCast(v)
 	end
 
