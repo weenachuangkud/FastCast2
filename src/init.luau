@@ -1014,7 +1014,6 @@ end
 
 --[=[
 	Creates a new Parallel Caster. A Parallel Caster runs cast simulations on separate worker VMs
-	in parallel, providing better performance for high-frequency raycasting scenarios.
 
 	:::warning
 	You must [initialize](FastCastParallel#Init) the Parallel Caster before using it!
