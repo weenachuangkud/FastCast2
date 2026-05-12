@@ -400,8 +400,7 @@ function BaseCast:Destroy()
 	FastCastEventsModule = nil
 
 	for _, v in Actives do
-		--TODO: Fix FastCastM:TerminateCast not working properly
-		FastCastM:TerminateCast(v)
+		FastCastM.TerminateCast(v)
 	end
 
 	Actives = {}
