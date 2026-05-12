@@ -875,18 +875,14 @@ end
 	@method TerminateCast
 	@within FastCastSerial
 ]=]
-function FastCastSerial:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+function FastCastSerial:TerminateCast(cast: vaildcast)
 	if cast.RayInfo.CosmeticBulletObject then
 		cast.RayInfo.CosmeticBulletObject:Destroy()
 		cast.RayInfo.CosmeticBulletObject = nil
 	end
 
 	if self.BaseCast then
-		self.BaseCast:TerminateCast(cast, castTerminatingFunction)
-	end
-
-	if castTerminatingFunction then
-		castTerminatingFunction(cast)
+		self.BaseCast:TerminateCast(cast)
 	end
 
 	self.Output:Fire("CastTerminating", cast)
