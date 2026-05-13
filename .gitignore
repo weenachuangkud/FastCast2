@@ -14,3 +14,4 @@
 
 # FastCast2 related stuff
 /src/*.legacy.luau
+.aider*
