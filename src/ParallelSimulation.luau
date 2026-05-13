@@ -204,14 +204,13 @@ local casts_Acceleration = {} :: { [number]: Vector3 }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
 
-local queuedEvents = {} :: { {
+type QueuedEventData = {
 	eventType: string,
-	cast: any,
-	result: RaycastResult?,
-	position: Vector3?,
-	velocity: Vector3?,
-	length: number?
-} }
+	castID: number,
+	args: { any }
+}
+
+local queuedEvents: { QueuedEventData } = {}
 
 local BaseCastRef = nil :: any
 local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
@@ -304,14 +303,12 @@ function ParallelSimulation.GetActiveMotor6Ds()
 	return casts_ActiveMotor6Ds
 end
 
-function ParallelSimulation.QueueEvent(eventType: string, cast: any, data: any)
+function ParallelSimulation.QueueEvent(eventType: string, castID: number, ...: any)
+	local args = { ... }
 	table.insert(queuedEvents, {
 		eventType = eventType,
-		cast = cast,
-		result = data.result,
-		position = data.position,
-		velocity = data.velocity,
-		length = data.length
+		castID = castID,
+		args = args
 	})
 end
 
