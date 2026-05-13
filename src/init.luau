@@ -229,18 +229,6 @@ function FastCastParallel:Init(
 
 	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
 
-	if useObjectCache then
-		if not CacheSize then
-			CacheSize = DEFAULT_CACHE_SIZE
-		end
-
-		if not CacheHolder then
-			CacheHolder = DEFAULT_CACHE_HOLDER
-		end
-
-		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder) :: any
-	end
-
 	local data = {
 		movementMode = movementMode,
 		useObjectCache = useObjectCache,
