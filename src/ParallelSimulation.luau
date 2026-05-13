@@ -140,3 +140,28 @@ local castUserDatas = {} :: { [number]: any }
 local castStateInfos = {} :: { [number]: TypeDef.CastStateInfo }
 local castRayInfos = {} :: { [number]: TypeDef.CastRayInfo }
 local castVisualizeInfos = {} :: { [number]: TypeDef.CastVisualizeInfo }
+
+-- QueueEvents
+
+-- ParallelSimulation
+
+local ParallelSimulation = {}
+ParallelSimulation.Connection = nil :: RBXScriptConnection?
+
+function ParallelSimulation.Register(cast: any)
+	-- TODO
+end
+
+function ParallelSimulation.Unregister(cast: any)
+	-- TODO
+end
+
+function ParallelSimulation.Start()
+	-- TODO
+end
+
+function ParallelSimulation.Stop()
+	-- TODO
+end
+
+return ParallelSimulation
