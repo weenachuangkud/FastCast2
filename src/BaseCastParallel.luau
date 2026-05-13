@@ -13,10 +13,10 @@ local FastCast2 = script.Parent
 local FastCastM = require(FastCast2)
 
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
-local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
+local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
 local ParallelSimulation = require(FastCast2:WaitForChild("ParallelSimulation"))
-local ObjectCache = require(script.Parent:WaitForChild("ObjectCache"))
+local ObjectCache = require(FastCast2:WaitForChild("ObjectCache"))
 local FastCastEventsModule: ModuleScript? = nil
 
 -- Enums
