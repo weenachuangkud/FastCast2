@@ -195,7 +195,7 @@ function BaseCast:Raycast(
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
-	} :: any)
+	} :: any, true)
 
 	ParallelSimulation.Register(cast)
 	Actives[cast.ID] = cast
@@ -260,7 +260,7 @@ function BaseCast:Blockcast(
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any)
+	} :: any, true)
 
 	ParallelSimulation.Register(cast)
 	Actives[cast.ID] = cast
@@ -305,7 +305,7 @@ function BaseCast:Spherecast(
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any)
+	} :: any, true)
 
 	ParallelSimulation.Register(cast)
 	Actives[cast.ID] = cast
