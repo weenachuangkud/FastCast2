@@ -1,14 +1,11 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	
+
 ]]
 
--- Services
---local HTTPS = game:GetService("HttpService")
 local RS = game:GetService("RunService")
 
--- Requires
 local FastCast2 = script.Parent
 local FastCastM = require(FastCast2)
 
@@ -17,70 +14,123 @@ local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
 local ParallelSimulation = require(FastCast2:WaitForChild("ParallelSimulation"))
 local ObjectCache = require(FastCast2:WaitForChild("ObjectCache"))
+local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 local FastCastEventsModule: ModuleScript? = nil
 
--- Enums
 local EnumCastTypes = FastCastEnums.CastType
 
-
---[=[
-
-@class BaseCast
-@private
-Base class for all Raycast operations.
-
-]=]
 local BaseCast = {}
 BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
--- CONSTANTS
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
 
--- Connections
 local MovementConnection: RBXScriptConnection? = nil
 
--- Variables
--- Because each different threads have different BaseCast haha
 local Actives: any = {}
 local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
 local ObjectCacheInstance: any = nil
+local Motor6DCacheInstance: any = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
 local CastFireFunc = nil
+local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
+local MovementEnabled = false
+local SimulationConnection: RBXScriptConnection? = nil
 
--- Private functions
+local function CloneCastParams(params: RaycastParams): RaycastParams
+	local clone: RaycastParams = RaycastParams.new()
+	clone.CollisionGroup = params.CollisionGroup
+	clone.FilterType = params.FilterType
+	clone.FilterDescendantsInstances = params.FilterDescendantsInstances
+	clone.IgnoreWater = params.IgnoreWater
+	return clone
+end
+
+local function FireQueuedEvents()
+	local events = ParallelSimulation.GetQueuedEvents()
+	for _, event in events do
+		local cast = event.cast
+		if event.eventType == "LengthChanged" then
+			if cast.RayInfo.FastCastEventsConfig.UseLengthChanged then
+				if cast.RayInfo.FastCastEventsModuleConfig.UseLengthChanged and cast.RayInfo.LengthChangedFunc then
+					cast.RayInfo.LengthChangedFunc(cast, event.position, event.velocity, event.length)
+				else
+					cast.Caster.Output:Fire("LengthChanged", cast, event.position, event.velocity, event.length)
+				end
+			end
+		elseif event.eventType == "Hit" then
+			if cast.RayInfo.FastCastEventsConfig.UseHit then
+				if cast.RayInfo.FastCastEventsModuleConfig.UseHit and cast.RayInfo.HitFunc then
+					cast.RayInfo.HitFunc(cast, event.result, event.position, event.velocity)
+				else
+					cast.Caster.Output:Fire("Hit", cast, event.result, event.position, event.velocity)
+				end
+			end
+		elseif event.eventType == "Pierced" then
+			if cast.RayInfo.FastCastEventsConfig.UsePierced then
+				if cast.RayInfo.FastCastEventsModuleConfig.UsePierced and cast.RayInfo.PiercedFunc then
+					cast.RayInfo.PiercedFunc(cast, event.result, event.position, event.velocity)
+				else
+					cast.Caster.Output:Fire("Pierced", cast, event.result, event.position, event.velocity)
+				end
+			end
+		elseif event.eventType == "CastTerminating" then
+			if cast.RayInfo.FastCastEventsConfig.UseCastTerminating then
+				if cast.RayInfo.FastCastEventsModuleConfig.UseCastTerminating and cast.RayInfo.CastTerminatingFunc then
+					cast.RayInfo.CastTerminatingFunc(cast)
+				else
+					cast.Caster.Output:Fire("CastTerminating", cast)
+				end
+			end
+		end
+	end
+end
 
 local function HandleBulkMoveTo()
-	local Parts: { BasePart } = {}
-	local CFrames: { CFrame } = {}
+	local parts: { BasePart } = {}
+	local cframes: { CFrame } = {}
 
-	for _, ActiveCasts in Actives do
-		local ProjectilePart = ActiveCasts.RayInfo.CosmeticBulletObject
-		if not ProjectilePart then
+	for _, activeCast in Actives do
+		local projectilePart = activeCast.RayInfo.CosmeticBulletObject
+		if not projectilePart then
 			continue
 		end
 
-		local resultCFrame = ActiveCasts.CFrame
-		if ProjectilePart:IsA("BasePart") then
-			table.insert(Parts, ProjectilePart)
-			table.insert(CFrames, resultCFrame)
+		local resultCF = activeCast.CFrame
+		if projectilePart:IsA("BasePart") then
+			table.insert(parts, projectilePart)
+			table.insert(cframes, resultCF)
 		else
-			ProjectilePart:PivotTo(resultCFrame)
+			projectilePart:PivotTo(resultCF)
 		end
 	end
 
 	task.synchronize()
 
-	--print("BulkMoveTo parts : ", Parts, "CFrames : ", CFrames)
-	workspace:BulkMoveTo(Parts, CFrames, Enum.BulkMoveMode.FireCFrameChanged)
+	if #parts > 0 then
+		workspace:BulkMoveTo(parts, cframes, Enum.BulkMoveMode.FireCFrameChanged)
+	end
 end
 
 local function HandleMotor6D()
-	-- TODO: Implement Motor6D movement mode
+	local motor6Ds = ParallelSimulation.GetActiveMotor6Ds()
+	for castID, motor6d in motor6Ds do
+		if motor6d and Actives[castID] then
+			local cast = Actives[castID]
+			local bullet = cast.RayInfo.CosmeticBulletObject
+			if bullet and bullet:IsA("BasePart") then
+				motor6d.Transform = bullet.CFrame
+			end
+		end
+	end
+end
+
+local function UpdateCastsParallel()
+	ParallelSimulation.UpdateCasts()
 end
 
 local function SendCastFire(
@@ -93,25 +143,10 @@ local function SendCastFire(
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end
 
---[=[
-
-@function Init
-@within BaseCast
-
-@param BindableOutput BindableEvent -- The BindableEvent used for outputting events.
-@param Data any -- Configuration data for the BaseCast.
-@return BaseCast -- The initialized BaseCast instance.
-
-To initialize a new BaseCast instance.
-
-]=]
 function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	local self = setmetatable({}, BaseCast)
-	-- Others
-	--print(BindableOutput.Parent)
 	Actor = BindableOutput.Parent
 	Actives = setmetatable({}, { __mode = "v" })
-	-- Bindable
 	Output = BindableOutput
 
 	local BindableCleaner = Instance.new("BindableEvent")
@@ -131,17 +166,18 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
 	end
 
-	-- TODO: Clean this up and use movementMode from Data
-	if Data.useBulkMoveTo then
-		--print("Connecting PreRender")
-		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
-	end
+	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
 
 	ActiveCastCleaner = BindableCleaner
 
 	ActiveCastCleaner.Event:Connect(function(activeCastID: number)
 		if Actives[activeCastID] then
+			local cast = Actives[activeCastID]
+			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject and ObjectCacheInstance then
+				ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+			end
 			Actives[activeCastID] = nil
+			ParallelSimulation.Unregister(activeCastID)
 			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") - 1)
 		end
 	end)
@@ -159,8 +195,18 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 				TargetCast[i] = v
 			end
 		end
-
 	end)
+
+	ParallelSimulation.Init(self)
+
+	if RS:IsClient() then
+		SimulationConnection = RS.PreRender:ConnectParallel(UpdateCastsParallel)
+	else
+		SimulationConnection = RS.Heartbeat:Connect(UpdateCastsParallel)
+	end
+
+	ParallelSimulation.SetMovementMode(CurrentMovementMode, true)
+	MovementEnabled = true
 
 	return self
 end
@@ -329,30 +375,30 @@ end
 
 ]=]
 function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
-	-- TODO: Implement this for ParallelSimulation as well
-	if mode == "BulkMoveTo" then
-		if enabled then
-			if not MovementConnection then
-				MovementConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
-			end
-		else
-			if MovementConnection then
-				MovementConnection:Disconnect()
-				MovementConnection = nil
-			end
-		end
-	elseif mode == "Motor6D" then
-		if enabled then
-			if not MovementConnection then
-				MovementConnection = RS.PreRender:ConnectParallel(HandleMotor6D)
-			end
-		else
-			if MovementConnection then
-				MovementConnection:Disconnect()
-				MovementConnection = nil
-			end
+	CurrentMovementMode = mode
+
+	if mode == "Motor6D" and enabled then
+		if not Motor6DCacheInstance then
+			Motor6DCacheInstance = Motor6DCache.new()
 		end
 	end
+
+	if enabled then
+		if not MovementConnection then
+			if mode == "BulkMoveTo" then
+				MovementConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
+			elseif mode == "Motor6D" then
+				MovementConnection = RS.PreRender:ConnectParallel(HandleMotor6D)
+			end
+		end
+	else
+		if MovementConnection then
+			MovementConnection:Disconnect()
+			MovementConnection = nil
+		end
+	end
+
+	ParallelSimulation.SetMovementMode(mode, enabled)
 end
 
 --[=[
@@ -366,14 +412,14 @@ Enables or disables the ObjectCache feature.
 
 ]=]
 function BaseCast:BindObjectCache(
-	enabled: boolean, 
-	Template: BasePart, 
-	CacheSize: number, 
-	CacheHolder: Instance
+	enabled: boolean,
+	Template: BasePart?,
+	CacheSize: number?,
+	CacheHolder: Instance?
 )
 	if enabled then
 		if ObjectCacheInstance then
-			return 
+			return
 		end
 
 		if not Template then
@@ -396,6 +442,20 @@ function BaseCast:BindObjectCache(
 	end
 end
 
+function BaseCast:BindMotor6DCache(enabled: boolean)
+	if enabled then
+		if Motor6DCacheInstance then
+			return
+		end
+		Motor6DCacheInstance = Motor6DCache.new()
+	else
+		if Motor6DCacheInstance then
+			Motor6DCacheInstance:Destroy()
+			Motor6DCacheInstance = nil
+		end
+	end
+end
+
 --[=[
 
 @method Destroy
@@ -405,9 +465,19 @@ Destroys the BaseCast instance and cleans up resources.
 
 ]=]
 function BaseCast:Destroy()
-	if BulkMoveToConnection then
-		BulkMoveToConnection:Disconnect()
-		BulkMoveToConnection = nil
+	if SimulationConnection then
+		SimulationConnection:Disconnect()
+		SimulationConnection = nil
+	end
+
+	if MovementConnection then
+		MovementConnection:Disconnect()
+		MovementConnection = nil
+	end
+
+	if Motor6DCacheInstance then
+		Motor6DCacheInstance:Destroy()
+		Motor6DCacheInstance = nil
 	end
 
 	FastCastEventsModule = nil
@@ -431,6 +501,19 @@ end
 function BaseCast:_ReturnObjectCache(object: BasePart)
 	if ObjectCacheInstance then
 		ObjectCacheInstance:ReturnPart(object)
+	end
+end
+
+function BaseCast:_GetMotor6D(castID: number, projectilePart: BasePart?)
+	if Motor6DCacheInstance and projectilePart then
+		return Motor6DCacheInstance:Connect(castID, projectilePart)
+	end
+	return nil
+end
+
+function BaseCast:_ReturnMotor6D(motor6d: Motor6D?)
+	if Motor6DCacheInstance then
+		Motor6DCacheInstance:Disconnect(motor6d)
 	end
 end
 

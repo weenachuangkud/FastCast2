@@ -3,105 +3,73 @@
 	- Date: 2026
 ]]
 
--- NOTE: The reason why this module is not OOP, because it's made for parallel luau
--- Basically in parallel luau, each actors will have completely different copys of this module in multiple threads
--- So if this module is OOP, then each thread will have to create a new instance of the class, which is not what we want
--- We want to have a single instance of the class that is shared across all threads, so
--- If this changed in the future, please Pull request
-
--- Services
 local RS = game:GetService("RunService")
 
--- Variables
 local FastCastModule = script.Parent
 
--- Dependencies
 local FastCast = require(FastCastModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
-local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
--- Constants
-local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
-local MAX_SEGMENT_CAL_TIME = 0.016 * 5 -- 80ms
-local MAX_CASTING_TIME = 0.2 -- 200ms
 
+local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
+local MAX_SEGMENT_CAL_TIME = 0.016 * 5
+local MAX_CASTING_TIME = 0.2
 local DEFAULT_MAX_DISTANCE = 1000
 
--- Enums
 local EnumCastTypes = FastCastEnums.CastType
 
--- Debugging
-
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
-local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.454902, 0.933333, 0.011765)
-
 local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
-
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 
--- Types
-type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.ActiveSpherecastData
-
-type BlockcastVariant = { CastType: number, Size: Vector3}
+type BlockcastVariant = { CastType: number, Size: Vector3 }
 type SpherecastVariant = { CastType: number, Radius: number }
 type CastVariants = BlockcastVariant | SpherecastVariant
 
-type RayVisualizerVariant = { castLength: number}
+type RayVisualizerVariant = { castLength: number }
 type BlockVisualizerVariant = { size: Vector3 }
 type SphereVisualizerVariant = { radius: number }
 type CastVisualizerVariants = RayVisualizerVariant | BlockVisualizerVariant | SphereVisualizerVariant
-
-type CastHandler = (WorldRoot: WorldRoot, origin: Vector3, direction: Vector3, castVariant: CastVariants) -> RaycastResult
-type CastVisualizer = (castStartCFrame: CFrame, VisualizeCasts: boolean, VisualizeCastSettings: TypeDef.VisualizeCastSettings, castVariant: CastVisualizerVariants) -> (ConeHandleAdornment | BoxHandleAdornment | SphereHandleAdornment)?
-
--- Is this even useful?
--- What Is even these magic numbers?
-local CastVariantTypes = {
-	[EnumCastTypes.Raycast] = "Raycast",
-	[EnumCastTypes.Blockcast] = "Blockcast",
-	[EnumCastTypes.Spherecast] = "Spherecast"
-}
 
 local castHandlers = {
 	[EnumCastTypes.Raycast] = function(
 		targetWorldRoot: WorldRoot,
 		origin: Vector3,
 		direction: Vector3,
-		parameters: RaycastParams
+		params: RaycastParams
 	)
-		return targetWorldRoot:Raycast(origin, direction, parameters)
+		return targetWorldRoot:Raycast(origin, direction, params)
 	end,
 	[EnumCastTypes.Blockcast] = function(
 		targetWorldRoot: WorldRoot,
 		origin: Vector3,
 		direction: Vector3,
-		parameters: RaycastParams,
+		params: RaycastParams,
 		variant: BlockcastVariant
 	)
-		return targetWorldRoot:Blockcast(CFrame.new(origin), variant.Size, direction, parameters)
+		return targetWorldRoot:Blockcast(CFrame.new(origin), variant.Size, direction, params)
 	end,
 	[EnumCastTypes.Spherecast] = function(
 		targetWorldRoot: WorldRoot,
 		origin: Vector3,
 		direction: Vector3,
-		parameters: RaycastParams,
+		params: RaycastParams,
 		variant: SpherecastVariant
 	)
-		return targetWorldRoot:Spherecast(origin, variant.Radius, direction, parameters)
+		return targetWorldRoot:Spherecast(origin, variant.Radius, direction, params)
 	end
 }
 
--- Utils
-local function DebrisAdd(obj: Instance, Lifetime: number)
+local function DebrisAdd(obj: Instance, lifetime: number)
 	if not obj then
 		return
 	end
-	if Lifetime <= 0 then
+	if lifetime <= 0 then
 		obj:Destroy()
+		return
 	end
-
-	task.delay(Lifetime, function()
+	task.delay(lifetime, function()
 		obj:Destroy()
 	end)
 end
@@ -112,8 +80,11 @@ local function GetPositionAtTime(
 	initialVelocity: Vector3,
 	acceleration: Vector3
 ): Vector3
-	local force =
-		Vector3.new((acceleration.X * t ^ 2) / 2, (acceleration.Y * t ^ 2) / 2, (acceleration.Z * t ^ 2) / 2)
+	local force = Vector3.new(
+		(acceleration.X * t ^ 2) / 2,
+		(acceleration.Y * t ^ 2) / 2,
+		(acceleration.Z * t ^ 2) / 2
+	)
 	return origin + (initialVelocity * t) + force
 end
 
@@ -121,124 +92,94 @@ local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceler
 	return initialVelocity + acceleration * time
 end
 
-local function CloneCastParams(params: RaycastParams): RaycastParams
-	local clone: RaycastParams = RaycastParams.new()
-	clone.CollisionGroup = params.CollisionGroup
-	clone.FilterType = params.FilterType
-	clone.FilterDescendantsInstances = params.FilterDescendantsInstances
-	clone.IgnoreWater = params.IgnoreWater
-	return clone
-end
-
 local function GetFastCastVisualizationContainer(): Instance
-	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
-	if fcVisualizationObjects then
-		return fcVisualizationObjects
+	local container = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
+	if container then
+		return container
 	end
-
-	fcVisualizationObjects = Instance.new("Folder")
-	fcVisualizationObjects.Name = FC_VIS_OBJ_NAME
-	fcVisualizationObjects.Archivable = false
-	fcVisualizationObjects.Parent = workspace.Terrain
-	return fcVisualizationObjects
+	container = Instance.new("Folder")
+	container.Name = FC_VIS_OBJ_NAME
+	container.Archivable = false
+	container.Parent = workspace.Terrain
+	return container
 end
 
 local function DbgVisualizeRaySegment(
-	castStartCFrame: CFrame,
-	VisualizeCasts: boolean,
-	VisualizeCastSettings: TypeDef.VisualizeCastSettings,
+	startCF: CFrame,
+	visualize: boolean,
+	settings: TypeDef.VisualizeCastSettings,
 	variant: RayVisualizerVariant
-): ConeHandleAdornment?
-	if not VisualizeCasts then
+)
+	if not visualize then
 		return
 	end
 	local adornment = Instance.new("ConeHandleAdornment")
 	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = castStartCFrame
+	adornment.CFrame = startCF
 	adornment.Height = variant.castLength
-	adornment.Color3 = VisualizeCastSettings.Debug_SegmentColor
-	adornment.Radius = VisualizeCastSettings.Debug_SegmentSize
-	adornment.Transparency = VisualizeCastSettings.Debug_SegmentTransparency
+	adornment.Color3 = settings.Debug_SegmentColor
+	adornment.Radius = settings.Debug_SegmentSize
+	adornment.Transparency = settings.Debug_SegmentTransparency
 	adornment.Parent = GetFastCastVisualizationContainer()
-
-	DebrisAdd(adornment, VisualizeCastSettings.Debug_RayLifetime)
-	return adornment
+	DebrisAdd(adornment, settings.Debug_RayLifetime)
 end
 
 local function DbgVisualizeBlockSegment(
-	castStartCFrame: CFrame,
-	VisualizeCasts: boolean,
-	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
+	startCF: CFrame,
+	visualize: boolean,
+	settings: TypeDef.VisualizeCastSettings,
 	variant: BlockVisualizerVariant
-): BoxHandleAdornment?
-	if not VisualizeCasts then
+)
+	if not visualize then
 		return
 	end
 	local adornment = Instance.new("BoxHandleAdornment")
 	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = castStartCFrame
-	--adornment.Height = castLength
-
+	adornment.CFrame = startCF
 	adornment.Size = variant.size
-	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
-	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
-
+	adornment.Color3 = settings.Debug_SegmentColor
+	adornment.Transparency = settings.Debug_SegmentTransparency
 	adornment.Parent = GetFastCastVisualizationContainer()
-
-	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
-	return adornment
+	DebrisAdd(adornment, settings.Debug_RayLifetime)
 end
 
 local function DbgVisualizeSphereSegment(
-	castStartCFrame: CFrame,
-	VisualizeCasts: boolean,
-	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
+	startCF: CFrame,
+	visualize: boolean,
+	settings: TypeDef.VisualizeCastSettings,
 	variant: SphereVisualizerVariant
-): SphereHandleAdornment?
-	if not VisualizeCasts then
+)
+	if not visualize then
 		return
 	end
 	local adornment = Instance.new("SphereHandleAdornment")
 	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = castStartCFrame
-	--adornment.Height = castLength
+	adornment.CFrame = startCF
 	adornment.Radius = variant.radius
-	--adornment.Size = Vector3.new(size.X, size.Y, size.Z + castLength)
-	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
-	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
-
+	adornment.Color3 = settings.Debug_SegmentColor
+	adornment.Transparency = settings.Debug_SegmentTransparency
 	adornment.Parent = GetFastCastVisualizationContainer()
-
-	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
-	return adornment
+	DebrisAdd(adornment, settings.Debug_RayLifetime)
 end
 
 local function DbgVisualizeHit(
 	atCF: CFrame,
 	wasPierce: boolean,
-	VisualizeCasts: boolean,
-	VisualizeCastSettings: TypeDef.VisualizeCastSettings
-): SphereHandleAdornment?
-	if not VisualizeCasts then
+	visualize: boolean,
+	settings: TypeDef.VisualizeCastSettings
+)
+	if not visualize then
 		return
 	end
 	local adornment = Instance.new("SphereHandleAdornment")
 	adornment.Adornee = workspace.Terrain
 	adornment.CFrame = atCF
-	-- Alert! someone is Mawining it!!!!!
-	adornment.Radius = (wasPierce == false) and VisualizeCastSettings.Debug_HitSize
-		or VisualizeCastSettings.Debug_RayPierceSize
-	adornment.Transparency = (wasPierce == false) and VisualizeCastSettings.Debug_HitTransparency
-		or VisualizeCastSettings.Debug_RayPierceTransparency
-	adornment.Color3 = (wasPierce == false) and VisualizeCastSettings.Debug_HitColor
-		or VisualizeCastSettings.Debug_RayPierceColor
+	adornment.Radius = wasPierce and settings.Debug_RayPierceSize or settings.Debug_HitSize
+	adornment.Transparency = wasPierce and settings.Debug_RayPierceTransparency or settings.Debug_HitTransparency
+	adornment.Color3 = wasPierce and settings.Debug_RayPierceColor or settings.Debug_HitColor
 	adornment.Parent = GetFastCastVisualizationContainer()
-
-	DebrisAdd(adornment, VisualizeCastSettings.Debug_HitLifetime)
-	return adornment
+	DebrisAdd(adornment, settings.Debug_HitLifetime)
 end
-
--- SoA
 
 local casts_Paused = {} :: { [number]: boolean }
 local casts_TotalRunTime = {} :: { [number]: number }
@@ -248,7 +189,7 @@ local casts_HighFidelityBehavior = {} :: { [number]: number }
 local casts_IsActivelySimulatingPierce = {} :: { [number]: boolean }
 local casts_IsActivelyResimulating = {} :: { [number]: boolean }
 local casts_CancelHighResCast = {} :: { [number]: boolean }
-local casts_Trajectory  = {} :: { [number]: TypeDef.CastTrajectory }
+local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
 local casts_VisualizeCasts = {} :: { [number]: boolean }
 local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
 local casts_FastCastEventsModuleConfig = {} :: { [number]: TypeDef.FastCastEventsModuleConfig }
@@ -256,52 +197,165 @@ local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfi
 local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
 local casts_UserData = {} :: { [number]: any }
 local casts_CFrame = {} :: { [number]: CFrame }
-local casts_ID = {} :: { [number]: number }
---local casts_Type
+local casts_CastType = {} :: { [number]: number }
+local casts_CastVariant = {} :: { [number]: CastVariants }
+local casts_Origin = {} :: { [number]: Vector3 }
+local casts_Acceleration = {} :: { [number]: Vector3 }
+local casts_MaxDistance = {} :: { [number]: number }
+local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
 
--- QueueEvents
-local castsData
+local queuedEvents = {} :: { {
+	eventType: string,
+	cast: any,
+	result: RaycastResult?,
+	position: Vector3?,
+	velocity: Vector3?,
+	length: number?
+} }
 
--- QueueVisualizes
-
--- RS
-local function UpdateCasts()
-	-- TODO
-end
-
--- ParallelSimulation
+local BaseCastRef = nil :: any
+local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
+local MovementEnabled = false
 
 local ParallelSimulation = {}
-ParallelSimulation.Connection = nil :: RBXScriptConnection?
+
+function ParallelSimulation.Init(baseCastRef: any)
+	BaseCastRef = baseCastRef
+end
 
 function ParallelSimulation.Register(cast: any)
-	-- TODO
+	local id = cast.ID
+
+	casts_Paused[id] = cast.StateInfo.Paused or false
+	casts_TotalRunTime[id] = cast.StateInfo.TotalRuntime or 0
+	casts_DistanceCovered[id] = 0
+	casts_HighFidelitySegmentSize[id] = cast.Behavior.HighFidelitySegmentSize or 0.1
+	casts_HighFidelityBehavior[id] = cast.Behavior.HighFidelityBehavior or 0
+	casts_IsActivelySimulatingPierce[id] = false
+	casts_IsActivelyResimulating[id] = false
+	casts_CancelHighResCast[id] = false
+	casts_Trajectory[id] = cast.StateInfo.Trajectory
+	casts_VisualizeCasts[id] = cast.Behavior.VisualizeCasts or false
+	casts_VisualizeCastSettings[id] = cast.Behavior.VisualizeCastSettings
+	casts_FastCastEventsModuleConfig[id] = cast.Behavior.FastCastEventsModuleConfig
+	casts_FastCastEventsConfig[id] = cast.Behavior.FastCastEventsConfig
+	casts_RayInfo[id] = cast.RayInfo
+	casts_UserData[id] = cast.UserData
+	casts_CastType[id] = cast.CastType
+	casts_CastVariant[id] = cast.CastVariant
+	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
+	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration
+	casts_MaxDistance[id] = cast.Behavior.MaxDistance or DEFAULT_MAX_DISTANCE
+
+	local position = GetPositionAtTime(
+		casts_TotalRunTime[id],
+		casts_Trajectory[id].Origin,
+		casts_Trajectory[id].InitialVelocity,
+		casts_Trajectory[id].Acceleration
+	)
+	casts_CFrame[id] = CFrame.new(position)
+
+	cast.CFrame = casts_CFrame[id]
 end
 
-function ParallelSimulation.Unregister(cast: any)
-	-- TODO
-end
+function ParallelSimulation.Unregister(castID: number)
+	casts_Paused[castID] = nil
+	casts_TotalRunTime[castID] = nil
+	casts_DistanceCovered[castID] = nil
+	casts_HighFidelitySegmentSize[castID] = nil
+	casts_HighFidelityBehavior[castID] = nil
+	casts_IsActivelySimulatingPierce[castID] = nil
+	casts_IsActivelyResimulating[castID] = nil
+	casts_CancelHighResCast[castID] = nil
+	casts_Trajectory[castID] = nil
+	casts_VisualizeCasts[castID] = nil
+	casts_VisualizeCastSettings[castID] = nil
+	casts_FastCastEventsModuleConfig[castID] = nil
+	casts_FastCastEventsConfig[castID] = nil
+	casts_RayInfo[castID] = nil
+	casts_UserData[castID] = nil
+	casts_CFrame[castID] = nil
+	casts_CastType[castID] = nil
+	casts_CastVariant[castID] = nil
+	casts_Origin[castID] = nil
+	casts_Acceleration[castID] = nil
+	casts_MaxDistance[castID] = nil
 
-function ParallelSimulation.Init()
-	-- TODO
-	-- use ObjectCache from BaseCastParallel
-	-- use Motor6DCache from BaseCastParallel
-end
-
-function ParallelSimulation.Start()
-	if ParallelSimulation.Connection then return end
-	if RS:IsClient() then
-		ParallelSimulation.Connection = RS.PreRender:ConnectParallel(UpdateCasts)
-	else
-		ParallelSimulation.Connection = RS.Heartbeat:Connect(UpdateCasts)
+	if casts_ActiveMotor6Ds[castID] then
+		if BaseCastRef and BaseCastRef._ReturnMotor6D then
+			BaseCastRef:_ReturnMotor6D(casts_ActiveMotor6Ds[castID])
+		end
+		casts_ActiveMotor6Ds[castID] = nil
 	end
 end
 
-function ParallelSimulation.Stop()
-	if ParallelSimulation.Connection then
-		ParallelSimulation.Connection:Disconnect()
-		ParallelSimulation.Connection = nil
-	end
+function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+	CurrentMovementMode = mode
+	MovementEnabled = enabled
+end
+
+function ParallelSimulation.GetQueuedEvents()
+	local events = queuedEvents
+	queuedEvents = {}
+	return events
+end
+
+function ParallelSimulation.GetActiveMotor6Ds()
+	return casts_ActiveMotor6Ds
+end
+
+function ParallelSimulation.QueueEvent(eventType: string, cast: any, data: any)
+	table.insert(queuedEvents, {
+		eventType = eventType,
+		cast = cast,
+		result = data.result,
+		position = data.position,
+		velocity = data.velocity,
+		length = data.length
+	})
+end
+
+function ParallelSimulation.GetSoA()
+	return {
+		Paused = casts_Paused,
+		TotalRunTime = casts_TotalRunTime,
+		DistanceCovered = casts_DistanceCovered,
+		HighFidelitySegmentSize = casts_HighFidelitySegmentSize,
+		HighFidelityBehavior = casts_HighFidelityBehavior,
+		IsActivelySimulatingPierce = casts_IsActivelySimulatingPierce,
+		IsActivelyResimulating = casts_IsActivelyResimulating,
+		CancelHighResCast = casts_CancelHighResCast,
+		Trajectory = casts_Trajectory,
+		VisualizeCasts = casts_VisualizeCasts,
+		VisualizeCastSettings = casts_VisualizeCastSettings,
+		FastCastEventsModuleConfig = casts_FastCastEventsModuleConfig,
+		FastCastEventsConfig = casts_FastCastEventsConfig,
+		RayInfo = casts_RayInfo,
+		UserData = casts_UserData,
+		CFrame = casts_CFrame,
+		CastType = casts_CastType,
+		CastVariant = casts_CastVariant,
+		Origin = casts_Origin,
+		Acceleration = casts_Acceleration,
+		MaxDistance = casts_MaxDistance,
+		ActiveMotor6Ds = casts_ActiveMotor6Ds
+	}
+end
+
+function ParallelSimulation.GetBaseCastRef()
+	return BaseCastRef
+end
+
+function ParallelSimulation.GetCurrentMovementMode()
+	return CurrentMovementMode
+end
+
+function ParallelSimulation.IsMovementEnabled()
+	return MovementEnabled
+end
+
+function ParallelSimulation.UpdateCasts(dt: number)
+	-- Implemented by user
 end
 
 return ParallelSimulation
