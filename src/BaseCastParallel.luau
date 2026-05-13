@@ -131,6 +131,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
 	end
 
+	-- TODO: Clean this up and use movementMode from Data
 	if Data.useBulkMoveTo then
 		--print("Connecting PreRender")
 		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
