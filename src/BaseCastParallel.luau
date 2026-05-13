@@ -366,19 +366,33 @@ end
 Enables or disables the ObjectCache feature.
 
 ]=]
-function BaseCast:BindObjectCache(bool: boolean)
-	if bool then
-		if ObjectCache then
-			return
+function BaseCast:BindObjectCache(
+	enabled: boolean, 
+	Template: BasePart, 
+	CacheSize: number, 
+	CacheHolder: Instance
+)
+	if enabled then
+		if ObjectCacheInstance then
+			return 
 		end
-		local BindableObjectCache = Instance.new("BindableFunction")
-		BindableObjectCache.Parent = Actor
-		BindableObjectCache.Name = "ActiveCastObjectCache"
-		ObjectCache = BindableObjectCache
+
+		if not Template then
+			error("Template must be provided when enabling ObjectCache.")
+		end
+
+		if not CacheSize then
+			CacheSize = DEFAULT_CACHE_SIZE
+		end
+
+		if not CacheHolder then
+			CacheHolder = DEFAULT_CACHE_HOLDER
+		end
+		ObjectCacheInstance = ObjectCache.new(Template, CacheSize, CacheHolder)
 	else
-		if ObjectCache then
-			ObjectCache:Destroy()
-			ObjectCache = nil
+		if ObjectCacheInstance then
+			ObjectCacheInstance:Destroy()
+			ObjectCacheInstance = nil
 		end
 	end
 end
