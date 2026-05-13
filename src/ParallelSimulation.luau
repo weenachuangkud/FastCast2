@@ -67,6 +67,7 @@ type QueuedEventData = {
 
 local queuedEvents: { [number]: { QueuedEventData } } = {}
 
+local ActivesRef: any = nil
 local BaseCastRef = nil :: any
 local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
 local MovementEnabled = false
@@ -248,6 +249,7 @@ ParallelSimulation.Connection = nil :: RBXScriptConnection?
 
 function ParallelSimulation.Init(baseCastRef: any)
 	BaseCastRef = baseCastRef
+	ActivesRef = baseCastRef.Actives
 end
 
 function ParallelSimulation.Register(cast: any)
