@@ -318,29 +318,17 @@ function BaseCast:Spherecast(
 	end
 end
 
---[=[
+--[[
+	@method SetMovementMode
+	@within BaseCast
 
-@method BindBulkMoveTo
-@within BaseCast
+	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set.
+	@param enabled boolean -- Whether to enable or disable the movement mode.
 
-@param bool boolean -- Whether to enable or disable BulkMoveTo.
-
-Enables or disables the BulkMoveTo feature.
+	Sets the movement mode for the casts. This determines how the cast's position is updated during simulation.
 
 ]=]
-function BaseCast:BindBulkMoveTo(bool: boolean)
-	if bool then
-		if not BulkMoveToConnection then
-    		BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
-		end
-	else
-		if BulkMoveToConnection then
-			BulkMoveToConnection:Disconnect()
-			BulkMoveToConnection = nil
-		end
-	end
-end
-
+]]
 function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
 	-- Who even write code like this lmao
 	if mode == "BulkMoveTo" then
