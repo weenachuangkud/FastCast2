@@ -242,6 +242,32 @@ local function QueueEvent(castID: number, eventType: string, ...: any)
 	})
 end
 
+local function FireQueuedEvents()
+	for castID, eventList in queuedEvents do
+		if not eventList then 
+			return 
+		end
+		for _, event in eventList do
+			local cast = ActivesRef[castID]
+			if not cast then 
+				continue
+			end
+			local eventType: string = event.eventType
+			local args: { any } = event.args
+
+			if eventType == "LengthChanged" then
+				-- handle LengthChanged
+			elseif eventType == "Hit" then
+				-- handle Hit
+			elseif eventType == "Pierced" then
+				-- handle Pierced
+			elseif eventType == "CastTerminating" then
+				FastCast.TerminateCast(cast, args[1])
+			end
+		end
+	end
+end
+
 -- ParallelSimulation
 
 local ParallelSimulation = {}
