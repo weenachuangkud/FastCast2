@@ -133,3 +133,10 @@ local function GetFastCastVisualizationContainer(): Instance
 	fcVisualizationObjects.Parent = workspace.Terrain
 	return fcVisualizationObjects
 end
+
+-- SoA
+
+local castUserDatas = {} :: { [number]: any }
+local castStateInfos = {} :: { [number]: TypeDef.CastStateInfo }
+local castRayInfos = {} :: { [number]: TypeDef.CastRayInfo }
+local castVisualizeInfos = {} :: { [number]: TypeDef.CastVisualizeInfo }

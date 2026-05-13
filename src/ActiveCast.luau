@@ -49,7 +49,8 @@ function ActiveCastSerial.createCastData(
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?,
-	variant: CastVariants
+	variant: CastVariants,
+	_parallel: boolean
 ): any
 	local cast = {
 		Caster = BaseCast,
@@ -69,7 +70,14 @@ function ActiveCastSerial.createCastData(
 				Acceleration = behavior.Acceleration,
 			},
 			VisualizeCasts = behavior.VisualizeCasts,
-			VisualizeCastSettings = behavior.VisualizeCastSettings
+			VisualizeCastSettings = behavior.VisualizeCastSettings,
+
+			FastCastEventsConfig = {
+				UseLengthChanged = behavior.FastCastEventsConfig.UseLengthChanged,
+				UseHit = behavior.FastCastEventsConfig.UseHit,
+				UsePierced = behavior.FastCastEventsConfig.UsePierced,
+				UseCastTerminating = behavior.FastCastEventsConfig.UseCastTerminating,
+			}
 		},
 
 		RayInfo = {
@@ -84,6 +92,16 @@ function ActiveCastSerial.createCastData(
 		CFrame = CFrame.new(origin),
 		ID = activeCastID
 	}
+
+	if _parallel then
+		cast.StateInfo.FastCastEventsModuleConfig = {
+				UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
+				UseHit = behavior.FastCastEventsModuleConfig.UseHit,
+				UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
+				UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
+				UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
+			}
+	end
 
 	if variant.CastType == EnumCastTypes.Blockcast then
 		cast.RayInfo.Size = (variant :: BlockcastVariant).Size
