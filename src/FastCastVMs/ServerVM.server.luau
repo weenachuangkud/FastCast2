@@ -14,7 +14,7 @@ local FastCast2Module: ModuleScript = script:WaitForChild("FastCast2").Value :: 
 
 local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
 
-local BaseCast = require(FastCast2Module:WaitForChild("BaseCast"))
+local BaseCastParallel = require(FastCast2Module:WaitForChild("BaseCastParallel"))
 
 -- Variables
 local actor = script:GetActor()
@@ -25,7 +25,7 @@ end
 -- Listeners
 
 actor:BindToMessage("Init", function(Data : any?)
-	BaseCast = BaseCast.Init(
+	BaseCast = BaseCastParallel.Init(
 		script.Parent:WaitForChild("Output"), 
 		Data
 	)
