@@ -257,30 +257,6 @@ function FastCastParallel:Init(
 	if FastCastEventsModule then
 		self:SetFastCastEventsModule(FastCastEventsModule)
 	end
-
-
-	if not useObjectCache then
-		return
-	end
-
-	local vmDispatcher = self.Dispatcher
-
-	repeat
-		task.wait()
-	until #vmDispatcher.Threads == numWorkers
-	--print("STARTED CONNECTING")
-
-	for _, v in vmDispatcher.Threads do
-		-- Please dont change this to FindFirstChild, or else diddy will oil you up
-		local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
-		if BindableObjectCache then
-			--print("CONNECTED")
-			BindableObjectCache.OnInvoke = function(targetCFrame: CFrame)
-				--print("INVOKED")
-				return self.ObjectCache:GetPart(targetCFrame)
-			end -- OH MY GOD
-		end -- KEEP GOING
-	end -- OH YES DADDY
 end
 
 --[=[
