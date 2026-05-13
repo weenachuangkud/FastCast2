@@ -137,6 +137,101 @@ local function GetFastCastVisualizationContainer(): Instance
 	return fcVisualizationObjects
 end
 
+local function DbgVisualizeRaySegment(
+	castStartCFrame: CFrame,
+	VisualizeCasts: boolean,
+	VisualizeCastSettings: TypeDef.VisualizeCastSettings,
+	variant: RayVisualizerVariant
+): ConeHandleAdornment?
+	if not VisualizeCasts then
+		return
+	end
+	local adornment = Instance.new("ConeHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	adornment.Height = variant.castLength
+	adornment.Color3 = VisualizeCastSettings.Debug_SegmentColor
+	adornment.Radius = VisualizeCastSettings.Debug_SegmentSize
+	adornment.Transparency = VisualizeCastSettings.Debug_SegmentTransparency
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSettings.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeBlockSegment(
+	castStartCFrame: CFrame,
+	VisualizeCasts: boolean,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
+	variant: BlockVisualizerVariant
+): BoxHandleAdornment?
+	if not VisualizeCasts then
+		return
+	end
+	local adornment = Instance.new("BoxHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	--adornment.Height = castLength
+
+	adornment.Size = variant.size
+	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
+	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
+
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeSphereSegment(
+	castStartCFrame: CFrame,
+	VisualizeCasts: boolean,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
+	variant: SphereVisualizerVariant
+): SphereHandleAdornment?
+	if not VisualizeCasts then
+		return
+	end
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	--adornment.Height = castLength
+	adornment.Radius = variant.radius
+	--adornment.Size = Vector3.new(size.X, size.Y, size.Z + castLength)
+	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
+	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
+
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeHit(
+	atCF: CFrame,
+	wasPierce: boolean,
+	VisualizeCasts: boolean,
+	VisualizeCastSettings: TypeDef.VisualizeCastSettings
+): SphereHandleAdornment?
+	if not VisualizeCasts then
+		return
+	end
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = atCF
+	-- Alert! someone is Mawining it!!!!!
+	adornment.Radius = (wasPierce == false) and VisualizeCastSettings.Debug_HitSize
+		or VisualizeCastSettings.Debug_RayPierceSize
+	adornment.Transparency = (wasPierce == false) and VisualizeCastSettings.Debug_HitTransparency
+		or VisualizeCastSettings.Debug_RayPierceTransparency
+	adornment.Color3 = (wasPierce == false) and VisualizeCastSettings.Debug_HitColor
+		or VisualizeCastSettings.Debug_RayPierceColor
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSettings.Debug_HitLifetime)
+	return adornment
+end
+
 -- SoA
 
 local castUserDatas = {} :: { [number]: any }
