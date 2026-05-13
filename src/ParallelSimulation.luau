@@ -3,6 +3,12 @@
 	- Date: 2026
 ]]
 
+-- NOTE: The reason why this module is not OOP, because it's made for parallel luau
+-- Basically in parallel luau, each actors will have completely different copys of this module in multiple threads
+-- So if this module is OOP, then each thread will have to create a new instance of the class, which is not what we want
+-- We want to have a single instance of the class that is shared across all threads, so
+-- If this changed in the future, please Pull request
+
 -- Services
 local RS = game:GetService("RunService")
 
@@ -234,11 +240,27 @@ end
 
 -- SoA
 
-local castUserDatas = {} :: { [number]: any }
-local castStateInfos = {} :: { [number]: TypeDef.CastStateInfo }
-local castRayInfos = {} :: { [number]: TypeDef.CastRayInfo }
+local casts_Paused = {} :: { [number]: boolean }
+local casts_TotalRunTime = {} :: { [number]: number }
+local casts_DistanceCovered = {} :: { [number]: number }
+local casts_HighFidelitySegmentSize = {} :: { [number]: number }
+local casts_HighFidelityBehavior = {} :: { [number]: number }
+local casts_IsActivelySimulatingPierce = {} :: { [number]: boolean }
+local casts_IsActivelyResimulating = {} :: { [number]: boolean }
+local casts_CancelHighResCast = {} :: { [number]: boolean }
+local casts_Trajectory  = {} :: { [number]: TypeDef.CastTrajectory }
+local casts_VisualizeCasts = {} :: { [number]: boolean }
+local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
+local casts_FastCastEventsModuleConfig = {} :: { [number]: TypeDef.FastCastEventsModuleConfig }
+local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
+local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
+local casts_UserData = {} :: { [number]: any }
+local casts_CFrame = {} :: { [number]: CFrame }
+local casts_ID = {} :: { [number]: number }
+--local casts_Type
 
 -- QueueEvents
+local castsData
 
 -- QueueVisualizes
 
@@ -262,6 +284,8 @@ end
 
 function ParallelSimulation.Init()
 	-- TODO
+	-- use ObjectCache from BaseCastParallel
+	-- use Motor6DCache from BaseCastParallel
 end
 
 function ParallelSimulation.Start()
