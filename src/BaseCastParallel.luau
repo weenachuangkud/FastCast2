@@ -318,7 +318,7 @@ function BaseCast:Spherecast(
 	end
 end
 
---[[
+--[=[
 	@method SetMovementMode
 	@within BaseCast
 
@@ -328,7 +328,6 @@ end
 	Sets the movement mode for the casts. This determines how the cast's position is updated during simulation.
 
 ]=]
-]]
 function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
 	-- TODO: Implement this for ParallelSimulation as well
 	if mode == "BulkMoveTo" then
