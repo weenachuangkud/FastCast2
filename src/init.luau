@@ -207,7 +207,7 @@ function FastCastParallel:Init(
 	VMContainerName: string,
 	VMname: string,
 
-	useBulkMoveTo: boolean,
+	movementMode: "BulkMoveTo" | "Motor6D",
 	FastCastEventsModule: ModuleScript,
 
 	useObjectCache: boolean,
@@ -242,7 +242,7 @@ function FastCastParallel:Init(
 	end
 
 	local data = {
-		useBulkMoveTo = useBulkMoveTo,
+		movementMode = movementMode,
 		useObjectCache = useObjectCache
 	}
 	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName: string, ...)
@@ -259,7 +259,7 @@ function FastCastParallel:Init(
 
 	self.AlreadyInit = true
 	self.ObjectCacheEnabled = useObjectCache
-	self.BulkMoveEnabled = useBulkMoveTo
+	self.MovementMode = movementMode
 
 	if FastCastEventsModule then
 		self:SetFastCastEventsModule(FastCastEventsModule)
