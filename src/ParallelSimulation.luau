@@ -3,14 +3,21 @@
 	- Date: 2026
 ]]
 
+-- Services
+
 local RS = game:GetService("RunService")
 
 local FastCastModule = script.Parent
 
+-- Requires
+
 local FastCast = require(FastCastModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local Configs = require(FastCastModule:WaitForChild("Configs"))
+local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+
+-- Constants
 
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 local MAX_SEGMENT_CAL_TIME = 0.016 * 5
@@ -22,6 +29,49 @@ local EnumCastTypes = FastCastEnums.CastType
 local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
 local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
 local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
+
+-- Variables
+
+local casts_Paused = {} :: { [number]: boolean }
+local casts_TotalRunTime = {} :: { [number]: number }
+local casts_DistanceCovered = {} :: { [number]: number }
+local casts_HighFidelitySegmentSize = {} :: { [number]: number }
+local casts_HighFidelityBehavior = {} :: { [number]: number }
+local casts_IsActivelySimulatingPierce = {} :: { [number]: boolean }
+local casts_IsActivelyResimulating = {} :: { [number]: boolean }
+local casts_CancelHighResCast = {} :: { [number]: boolean }
+local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
+local casts_VisualizeCasts = {} :: { [number]: boolean }
+local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
+local casts_FastCastEventsModuleConfig = {} :: { [number]: TypeDef.FastCastEventsModuleConfig }
+local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
+local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
+local casts_UserData = {} :: { [number]: any }
+local casts_CFrame = {} :: { [number]: CFrame }
+local casts_CastType = {} :: { [number]: number }
+local casts_CastVariant = {} :: { [number]: CastVariants }
+local casts_Origin = {} :: { [number]: Vector3 }
+local casts_Acceleration = {} :: { [number]: Vector3 }
+local casts_MaxDistance = {} :: { [number]: number }
+local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
+
+local casts_ID = {} :: { number }
+local casts_ID_Index = {} :: { [number]: number }
+
+local casts_FastCastEvents = {} :: { [number]: ModuleScript }
+
+type QueuedEventData = {
+	eventType: string,
+	args: { any }
+}
+
+local queuedEvents: { [number]: { QueuedEventData } } = {}
+
+local BaseCastRef = nil :: any
+local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
+local MovementEnabled = false
+
+-- Types
 
 type BlockcastVariant = { CastType: number, Size: Vector3 }
 type SpherecastVariant = { CastType: number, Radius: number }
@@ -60,6 +110,8 @@ local castHandlers = {
 		return targetWorldRoot:Spherecast(origin, variant.Radius, direction, params)
 	end
 }
+
+-- Utils
 
 local function DebrisAdd(obj: Instance, lifetime: number)
 	if not obj then
@@ -181,43 +233,15 @@ local function DbgVisualizeHit(
 	DebrisAdd(adornment, settings.Debug_HitLifetime)
 end
 
-local casts_Paused = {} :: { [number]: boolean }
-local casts_TotalRunTime = {} :: { [number]: number }
-local casts_DistanceCovered = {} :: { [number]: number }
-local casts_HighFidelitySegmentSize = {} :: { [number]: number }
-local casts_HighFidelityBehavior = {} :: { [number]: number }
-local casts_IsActivelySimulatingPierce = {} :: { [number]: boolean }
-local casts_IsActivelyResimulating = {} :: { [number]: boolean }
-local casts_CancelHighResCast = {} :: { [number]: boolean }
-local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
-local casts_VisualizeCasts = {} :: { [number]: boolean }
-local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
-local casts_FastCastEventsModuleConfig = {} :: { [number]: TypeDef.FastCastEventsModuleConfig }
-local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
-local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
-local casts_UserData = {} :: { [number]: any }
-local casts_CFrame = {} :: { [number]: CFrame }
-local casts_CastType = {} :: { [number]: number }
-local casts_CastVariant = {} :: { [number]: CastVariants }
-local casts_Origin = {} :: { [number]: Vector3 }
-local casts_Acceleration = {} :: { [number]: Vector3 }
-local casts_MaxDistance = {} :: { [number]: number }
-local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
+local function QueueEvent(castID: number, eventType: string, ...: any)
+	local args = { ... }
+	table.insert(queuedEvents[castID], {
+		eventType = eventType,
+		args = args
+	})
+end
 
-local casts_ID = {} :: { number }
-local casts_ID_Index = {} :: { [number]: number }
-
-type QueuedEventData = {
-	eventType: string,
-	castID: number,
-	args: { any }
-}
-
-local queuedEvents: { QueuedEventData } = {}
-
-local BaseCastRef = nil :: any
-local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
-local MovementEnabled = false
+-- ParallelSimulation
 
 local ParallelSimulation = {}
 ParallelSimulation.Connection = nil :: RBXScriptConnection?
@@ -252,6 +276,9 @@ function ParallelSimulation.Register(cast: any)
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
 
+	local eventModule = cast.RayInfo.FastCastEventsModule
+	casts_FastCastEvents[id] = typeof(eventModule) == "ModuleScript" and require(eventModule) or nil
+
 	local position = GetPositionAtTime(
 		casts_TotalRunTime[id],
 		casts_Trajectory[id].Origin,
@@ -261,6 +288,8 @@ function ParallelSimulation.Register(cast: any)
 	casts_CFrame[id] = CFrame.new(position)
 
 	cast.CFrame = casts_CFrame[id]
+
+	queuedEvents[id] = {}
 end
 
 function ParallelSimulation.Unregister(castID: number)
@@ -301,6 +330,10 @@ function ParallelSimulation.Unregister(castID: number)
 		casts_ID[#casts_ID] = nil
 		casts_ID_Index[castID] = nil
 	end
+	casts_FastCastEvents[castID] = nil
+
+	table.clear(queuedEvents[castID])
+	queuedEvents[castID] = nil
 end
 
 function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
@@ -316,15 +349,6 @@ end
 
 function ParallelSimulation.GetActiveMotor6Ds()
 	return casts_ActiveMotor6Ds
-end
-
-function ParallelSimulation.QueueEvent(eventType: string, castID: number, ...: any)
-	local args = { ... }
-	table.insert(queuedEvents, {
-		eventType = eventType,
-		castID = castID,
-		args = args
-	})
 end
 
 function ParallelSimulation.GetSoA()
@@ -372,7 +396,41 @@ local function SimluateCast()
 end
 
 local function UpdateCasts(delta: number)
-	-- TODO: Implement by user
+	for _, id in casts_ID do
+		if casts_Paused[id] then 
+			return 
+		end
+
+		if DebugLogging.Casting then
+			print("Casting for frame.")
+		end
+
+
+		local Trajectory: TypeDef.CastTrajectory = casts_Trajectory[id]
+		if typeof(Trajectory.Acceleration) ~= "Vector3" then
+			Trajectory.Acceleration = Vector3.new()
+		end
+
+		if casts_HighFidelitySegmentSize[id] > 0 then
+			casts_HighFidelitySegmentSize = 0.1
+		end
+
+		local FastCastEvents: TypeDef.FastCastEvents = casts_FastCastEvents[id]
+
+		if casts_HighFidelityBehavior[id] == FastCastEnums.HighFidelityBehavior.Always then
+			local castTerminatingfn: TypeDef.OnCastTerminatingFunction? = nil
+			if FastCastEvents then
+				castTerminatingfn = casts_FastCastEventsModuleConfig[id].UseCastTerminating
+					and FastCastEvents.CastTerminating
+					or nil
+			end
+
+			if casts_IsActivelyResimulating[id] then
+				QueueEvent(id, "CastTerminating", castTerminatingfn)
+			end
+			-- TODO: Contiune
+		end
+	end
 end
 
 function ParallelSimulation.Start()
