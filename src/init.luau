@@ -396,7 +396,7 @@ function FastCastParallel:SetObjectCacheEnabled(
 	local vmDispatcher = self.Dispatcher
 
 	if enabled then
-		vmDispatcher:DispatchAll("BindObjectCache", enabled)
+		vmDispatcher:DispatchAll("BindObjectCache", enabled, Template, CacheSize, CacheHolder)
 	else
 		vmDispatcher:DispatchAll("BindObjectCache", enabled)
 	end
