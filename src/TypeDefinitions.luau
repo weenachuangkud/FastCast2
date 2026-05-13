@@ -294,7 +294,8 @@ export type FastCastEventsConfig = {
 	UseHit: boolean,
 	UsePierced: boolean,
 	UseCastTerminating: boolean,
-	UseCastFire: boolean
+	UseCastFire: boolean,
+	UseCanPierce: boolean
 }
 
 --[=[

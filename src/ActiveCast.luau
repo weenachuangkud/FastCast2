@@ -77,6 +77,7 @@ function ActiveCastSerial.createCastData(
 				UseHit = behavior.FastCastEventsConfig.UseHit,
 				UsePierced = behavior.FastCastEventsConfig.UsePierced,
 				UseCastTerminating = behavior.FastCastEventsConfig.UseCastTerminating,
+				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce
 			}
 		},
 
