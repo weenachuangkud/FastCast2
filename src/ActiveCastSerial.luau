@@ -11,24 +11,18 @@ local RS = game:GetService("RunService")
 
 local FastCastModule = script.Parent
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
-local Configs = require(FastCastModule:WaitForChild("Configs"))
-local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 
-local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
-local MAX_SEGMENT_CAL_TIME = 0.016 * 5
-local MAX_CASTING_TIME = 0.2
 local DEFAULT_MAX_DISTANCE = 1000
-local HIGH_FIDE_INCREASE_SIZE = 0.5
 
 local EnumCastTypes = FastCastEnums.CastType
 
-local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
-local DBG_SEGMENT_SUB_COLOR2 = Color3.new(0.454902, 0.933333, 0.011765)
-local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
-local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
-
 type CastVariant = { CastType: number, Size: Vector3?, Radius: number? }
+
+type BlockcastVariant = { CastType: number, Size: Vector3}
+type SpherecastVariant = { CastType: number, Radius: number }
+type CastVariants = BlockcastVariant | SpherecastVariant
+
 
 local CastVariantTypes = {
 	[EnumCastTypes.Raycast] = "Raycast",
@@ -36,80 +30,7 @@ local CastVariantTypes = {
 	[EnumCastTypes.Spherecast] = "Spherecast"
 }
 
-local castHandlers = {
-	[EnumCastTypes.Raycast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, parameters: RaycastParams)
-		return targetWorldRoot:Raycast(origin, direction, parameters)
-	end,
-	[EnumCastTypes.Blockcast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, parameters: RaycastParams, size: Vector3)
-		return targetWorldRoot:Blockcast(CFrame.new(origin), size, direction, parameters)
-	end,
-	[EnumCastTypes.Spherecast] = function(targetWorldRoot: WorldRoot, origin: Vector3, direction: Vector3, parameters: RaycastParams, radius: number)
-		return targetWorldRoot:Spherecast(origin, radius, direction, parameters)
-	end
-}
-
 local ActiveCastSerial = {}
-
-local function GetPositionAtTime(t: number, origin: Vector3, initialVelocity: Vector3, acceleration: Vector3): Vector3
-	local force = Vector3.new(
-		(acceleration.X * t ^ 2) / 2,
-		(acceleration.Y * t ^ 2) / 2,
-		(acceleration.Z * t ^ 2) / 2
-	)
-	return origin + (initialVelocity * t) + force
-end
-
-local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
-	return initialVelocity + acceleration * time
-end
-
-local function DebrisAdd(obj: Instance, Lifetime: number)
-	if not obj then return end
-	if Lifetime <= 0 then
-		obj:Destroy()
-		return
-	end
-	task.delay(Lifetime, function()
-		obj:Destroy()
-	end)
-end
-
-local function GetFastCastVisualizationContainer(): Instance
-	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
-	if fcVisualizationObjects then
-		return fcVisualizationObjects
-	end
-	fcVisualizationObjects = Instance.new("Folder")
-	fcVisualizationObjects.Name = FC_VIS_OBJ_NAME
-	fcVisualizationObjects.Archivable = false
-	fcVisualizationObjects.Parent = workspace.Terrain
-	return fcVisualizationObjects
-end
-
-local function DbgVisualizeRaySegment(castStartCFrame: CFrame, visualize: boolean, settings: any, length: number)
-	if not visualize then return end
-	local adornment = Instance.new("ConeHandleAdornment")
-	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = castStartCFrame
-	adornment.Height = length
-	adornment.Color3 = settings.Debug_SegmentColor
-	adornment.Radius = settings.Debug_SegmentSize
-	adornment.Transparency = settings.Debug_SegmentTransparency
-	adornment.Parent = GetFastCastVisualizationContainer()
-	DebrisAdd(adornment, settings.Debug_RayLifetime)
-end
-
-local function DbgVisualizeHit(atCF: CFrame, wasPierce: boolean, visualize: boolean, settings: any)
-	if not visualize then return end
-	local adornment = Instance.new("SphereHandleAdornment")
-	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = atCF
-	adornment.Radius = wasPierce and settings.Debug_RayPierceSize or settings.Debug_HitSize
-	adornment.Transparency = wasPierce and settings.Debug_RayPierceTransparency or settings.Debug_HitTransparency
-	adornment.Color3 = wasPierce and settings.Debug_RayPierceColor or settings.Debug_HitColor
-	adornment.Parent = GetFastCastVisualizationContainer()
-	DebrisAdd(adornment, settings.Debug_HitLifetime)
-end
 
 local function CloneCastParams(params: RaycastParams): RaycastParams
 	local clone: RaycastParams = RaycastParams.new()
@@ -120,42 +41,94 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-function ActiveCastSerial.new(caster: any, castData: any): any
-	return {
-		Caster = caster,
+function ActiveCastSerial.new(
+	BaseCast: TypeDef.BaseCastData,
+	activeCastID: number,
+	origin: Vector3,
+	direction: Vector3,
+	velocity: Vector3 | number,
+	behavior: TypeDef.FastCastBehavior,
+	eventModule: TypeDef.FastCastEventsModule?,
+	variant: CastVariants
+): any
+	local cast = {
+		Caster = BaseCast,
 		StateInfo = {
 			Paused = false,
 			TotalRuntime = 0,
 			DistanceCovered = 0,
-			HighFidelitySegmentSize = castData.HighFidelitySegmentSize,
-			HighFidelityBehavior = castData.HighFidelityBehavior,
+			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,
+			HighFidelityBehavior = behavior.HighFidelityBehavior,
 			IsActivelyResimulating = false,
 			CancelHighResCast = false,
 			Trajectory = {
 				StartTime = 0,
 				EndTime = -1,
-				Origin = castData.Origin,
-				InitialVelocity = castData.Velocity,
-				Acceleration = castData.Acceleration,
+				Origin = origin,
+				InitialVelocity = velocity,
+				Acceleration = behavior.Acceleration,
 			},
-			VisualizeCasts = castData.VisualizeCasts,
-			VisualizeCastSettings = castData.VisualizeCastSettings
+			VisualizeCasts = behavior.VisualizeCasts,
+			VisualizeCastSettings = behavior.VisualizeCastSettings
 		},
 
 		RayInfo = {
-			Parameters = castData.RaycastParams and CloneCastParams(castData.RaycastParams) or RaycastParams.new(),
+			Parameters = behavior.RaycastParams and CloneCastParams(behavior.RaycastParams) or RaycastParams.new(),
 			WorldRoot = workspace,
-			MaxDistance = castData.MaxDistance or DEFAULT_MAX_DISTANCE,
-			CosmeticBulletObject = castData.CosmeticBulletObject,
-			MovementMethod = castData.MovementMethod or "BulkMoveTo",
-			Size = castData.Size,
-			Radius = castData.Radius
+			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
+			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
+			MovementMethod = behavior.MovementMethod or "BulkMoveTo"
 		},
 
-		Type = CastVariantTypes[castData.CastType],
-		CFrame = CFrame.new(castData.Origin),
-		ID = castData.ID
+		Type = CastVariantTypes[variant.CastType],
+		CFrame = CFrame.new(origin),
+		ID = activeCastID
 	}
+
+	if variant.CastType == EnumCastTypes.Blockcast then
+		cast.RayInfo.Size = (variant :: BlockcastVariant).Size
+	elseif variant.CastType == EnumCastTypes.Spherecast then
+		cast.RayInfo.Radius = (variant :: SpherecastVariant).Radius
+	end
+
+	if behavior.UserData then
+		cast.UserData = behavior.UserData
+	end
+
+	if cast.RayInfo.Parameters ~= nil then
+		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
+	else
+		cast.RayInfo.Parameters = RaycastParams.new()
+	end
+
+	local targetContainer: Instance?
+	if cast.Caster.ObjectCache then
+		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
+		targetContainer = cast.Caster.CacheHolder
+	else
+		if cast.RayInfo.CosmeticBulletObject ~= nil then
+			local basePart = cast.RayInfo.CosmeticBulletObject
+			basePart = basePart:Clone()
+			basePart.CFrame = CFrame.new(origin, origin + direction)
+			basePart.Parent = behavior.CosmeticBulletContainer
+
+			cast.RayInfo.CosmeticBulletObject = basePart
+		end
+
+		if behavior.CosmeticBulletContainer then
+			targetContainer = behavior.CosmeticBulletContainer
+		end
+	end
+
+	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
+		local igroneList = cast.RayInfo.Parameters.FilterDescendantsInstances
+		if not table.find(igroneList, targetContainer) then
+			table.insert(igroneList, targetContainer)
+			cast.RayInfo.Parameters.FilterDescendantsInstances = igroneList
+		end
+	end
+
+	return cast
 end
 
 return ActiveCastSerial
