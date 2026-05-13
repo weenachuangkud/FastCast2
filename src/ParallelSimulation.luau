@@ -142,7 +142,6 @@ end
 local castUserDatas = {} :: { [number]: any }
 local castStateInfos = {} :: { [number]: TypeDef.CastStateInfo }
 local castRayInfos = {} :: { [number]: TypeDef.CastRayInfo }
-local castVisualizeInfos = {} :: { [number]: TypeDef.CastVisualizeInfo }
 
 -- QueueEvents
 
