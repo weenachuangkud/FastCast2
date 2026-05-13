@@ -41,7 +41,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-function ActiveCastSerial.new(
+function ActiveCastSerial.createCastData(
 	BaseCast: TypeDef.BaseCastData,
 	activeCastID: number,
 	origin: Vector3,
