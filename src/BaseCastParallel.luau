@@ -53,35 +53,39 @@ end
 local function FireQueuedEvents()
 	local events = ParallelSimulation.GetQueuedEvents()
 	for _, event in events do
-		local cast = event.cast
+		local cast = Actives[event.castID]
+		if not cast then continue end
+
+		local rayInfo = cast.RayInfo
+		local args = event.args
 		if event.eventType == "LengthChanged" then
-			if cast.RayInfo.FastCastEventsConfig.UseLengthChanged then
-				if cast.RayInfo.FastCastEventsModuleConfig.UseLengthChanged and cast.RayInfo.LengthChangedFunc then
-					cast.RayInfo.LengthChangedFunc(cast, event.position, event.velocity, event.length)
+			if rayInfo.FastCastEventsConfig.UseLengthChanged then
+				if rayInfo.FastCastEventsModuleConfig.UseLengthChanged and rayInfo.LengthChangedFunc then
+					rayInfo.LengthChangedFunc(cast, args[1], args[2], args[3])
 				else
-					cast.Caster.Output:Fire("LengthChanged", cast, event.position, event.velocity, event.length)
+					cast.Caster.Output:Fire("LengthChanged", cast, args[1], args[2], args[3])
 				end
 			end
 		elseif event.eventType == "Hit" then
-			if cast.RayInfo.FastCastEventsConfig.UseHit then
-				if cast.RayInfo.FastCastEventsModuleConfig.UseHit and cast.RayInfo.HitFunc then
-					cast.RayInfo.HitFunc(cast, event.result, event.position, event.velocity)
+			if rayInfo.FastCastEventsConfig.UseHit then
+				if rayInfo.FastCastEventsModuleConfig.UseHit and rayInfo.HitFunc then
+					rayInfo.HitFunc(cast, args[1], args[2], args[3])
 				else
-					cast.Caster.Output:Fire("Hit", cast, event.result, event.position, event.velocity)
+					cast.Caster.Output:Fire("Hit", cast, args[1], args[2], args[3])
 				end
 			end
 		elseif event.eventType == "Pierced" then
-			if cast.RayInfo.FastCastEventsConfig.UsePierced then
-				if cast.RayInfo.FastCastEventsModuleConfig.UsePierced and cast.RayInfo.PiercedFunc then
-					cast.RayInfo.PiercedFunc(cast, event.result, event.position, event.velocity)
+			if rayInfo.FastCastEventsConfig.UsePierced then
+				if rayInfo.FastCastEventsModuleConfig.UsePierced and rayInfo.PiercedFunc then
+					rayInfo.PiercedFunc(cast, args[1], args[2], args[3])
 				else
-					cast.Caster.Output:Fire("Pierced", cast, event.result, event.position, event.velocity)
+					cast.Caster.Output:Fire("Pierced", cast, args[1], args[2], args[3])
 				end
 			end
 		elseif event.eventType == "CastTerminating" then
-			if cast.RayInfo.FastCastEventsConfig.UseCastTerminating then
-				if cast.RayInfo.FastCastEventsModuleConfig.UseCastTerminating and cast.RayInfo.CastTerminatingFunc then
-					cast.RayInfo.CastTerminatingFunc(cast)
+			if rayInfo.FastCastEventsConfig.UseCastTerminating then
+				if rayInfo.FastCastEventsModuleConfig.UseCastTerminating and rayInfo.CastTerminatingFunc then
+					rayInfo.CastTerminatingFunc(cast)
 				else
 					cast.Caster.Output:Fire("CastTerminating", cast)
 				end
@@ -91,39 +95,44 @@ local function FireQueuedEvents()
 end
 
 local function HandleBulkMoveTo()
+	local soa = ParallelSimulation.GetSoA()
+	local rayInfo = soa.RayInfo
+	local cframes = soa.CFrame
+
 	local parts: { BasePart } = {}
-	local cframes: { CFrame } = {}
+	local cfList: { CFrame } = {}
 
-	for _, activeCast in Actives do
-		local projectilePart = activeCast.RayInfo.CosmeticBulletObject
-		if not projectilePart then
-			continue
-		end
+	for castID, bullet in pairs(rayInfo) do
+		local cosmetic = bullet.CosmeticBulletObject
+		if not cosmetic then continue end
 
-		local resultCF = activeCast.CFrame
-		if projectilePart:IsA("BasePart") then
-			table.insert(parts, projectilePart)
-			table.insert(cframes, resultCF)
+		local cf = cframes[castID]
+		if cosmetic:IsA("BasePart") then
+			table.insert(parts, cosmetic)
+			table.insert(cfList, cf)
 		else
-			projectilePart:PivotTo(resultCF)
+			cosmetic:PivotTo(cf)
 		end
 	end
 
 	task.synchronize()
 
 	if #parts > 0 then
-		workspace:BulkMoveTo(parts, cframes, Enum.BulkMoveMode.FireCFrameChanged)
+		workspace:BulkMoveTo(parts, cfList, Enum.BulkMoveMode.FireCFrameChanged)
 	end
 end
 
 local function HandleMotor6D()
-	local motor6Ds = ParallelSimulation.GetActiveMotor6Ds()
-	for castID, motor6d in motor6Ds do
-		if motor6d and Actives[castID] then
-			local cast = Actives[castID]
-			local bullet = cast.RayInfo.CosmeticBulletObject
+	local soa = ParallelSimulation.GetSoA()
+	local rayInfo = soa.RayInfo
+	local cframes = soa.CFrame
+	local motor6Ds = soa.ActiveMotor6Ds
+
+	for castID, motor6d in pairs(motor6Ds) do
+		if motor6d then
+			local bullet = rayInfo[castID] and rayInfo[castID].CosmeticBulletObject
 			if bullet and bullet:IsA("BasePart") then
-				motor6d.Transform = bullet.CFrame
+				motor6d.Transform = cframes[castID]
 			end
 		end
 	end

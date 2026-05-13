@@ -217,6 +217,7 @@ local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
 local MovementEnabled = false
 
 local ParallelSimulation = {}
+ParallelSimulation.Connection = nil :: RBXScriptConnection?
 
 function ParallelSimulation.Init(baseCastRef: any)
 	BaseCastRef = baseCastRef
@@ -352,7 +353,22 @@ function ParallelSimulation.IsMovementEnabled()
 end
 
 function ParallelSimulation.UpdateCasts(dt: number)
-	-- Implemented by user
+	-- TODO: Implement by user
+end
+
+function ParallelSimulation.Start()
+	if RS:IsClient() then
+		ParallelSimulation.Connection = RS.PreRender:ConnectParallel(ParallelSimulation.UpdateCasts)
+	else
+		ParallelSimulation.Connection = RS.Heartbeat:Connect(ParallelSimulation.UpdateCasts)
+	end
+end
+
+function ParallelSimulation.Stop()
+	if ParallelSimulation.Connection then
+		ParallelSimulation.Connection:Disconnect()
+		ParallelSimulation.Connection = nil
+	end
 end
 
 return ParallelSimulation
