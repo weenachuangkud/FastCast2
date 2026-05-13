@@ -204,6 +204,9 @@ local casts_Acceleration = {} :: { [number]: Vector3 }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
 
+local casts_ID = {} :: { number }
+local casts_ID_Index = {} :: { [number]: number }
+
 type QueuedEventData = {
 	eventType: string,
 	castID: number,
@@ -246,6 +249,8 @@ function ParallelSimulation.Register(cast: any)
 	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
 	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration
 	casts_MaxDistance[id] = cast.Behavior.MaxDistance or DEFAULT_MAX_DISTANCE
+	table.insert(casts_ID, id)
+	casts_ID_Index[id] = #casts_ID
 
 	local position = GetPositionAtTime(
 		casts_TotalRunTime[id],
@@ -286,6 +291,15 @@ function ParallelSimulation.Unregister(castID: number)
 			BaseCastRef:_ReturnMotor6D(casts_ActiveMotor6Ds[castID])
 		end
 		casts_ActiveMotor6Ds[castID] = nil
+	end
+
+	local idx = casts_ID_Index[castID]
+	if idx then
+		local lastID = casts_ID[#casts_ID]
+		casts_ID[idx] = lastID
+		casts_ID_Index[lastID] = idx
+		casts_ID[#casts_ID] = nil
+		casts_ID_Index[castID] = nil
 	end
 end
 
@@ -352,15 +366,20 @@ function ParallelSimulation.IsMovementEnabled()
 	return MovementEnabled
 end
 
-function ParallelSimulation.UpdateCasts(dt: number)
+-- RS
+local function SimluateCast()
+	-- TODO: Implement
+end
+
+local function UpdateCasts(delta: number)
 	-- TODO: Implement by user
 end
 
 function ParallelSimulation.Start()
 	if RS:IsClient() then
-		ParallelSimulation.Connection = RS.PreRender:ConnectParallel(ParallelSimulation.UpdateCasts)
+		ParallelSimulation.Connection = RS.PreRender:ConnectParallel(UpdateCasts)
 	else
-		ParallelSimulation.Connection = RS.Heartbeat:Connect(ParallelSimulation.UpdateCasts)
+		ParallelSimulation.Connection = RS.Heartbeat:Connect(UpdateCasts)
 	end
 end
 
