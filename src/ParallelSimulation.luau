@@ -166,6 +166,10 @@ function ParallelSimulation.Unregister(cast: any)
 	-- TODO
 end
 
+function ParallelSimulation.Init()
+	-- TODO
+end
+
 function ParallelSimulation.Start()
 	if ParallelSimulation.Connection then return end
 	if RS:IsClient() then
@@ -181,8 +185,5 @@ function ParallelSimulation.Stop()
 		ParallelSimulation.Connection = nil
 	end
 end
-
--- Auto-start when loaded
-ParallelSimulation.Start()
 
 return ParallelSimulation
