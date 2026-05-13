@@ -396,23 +396,9 @@ function FastCastParallel:SetObjectCacheEnabled(
 	local vmDispatcher = self.Dispatcher
 
 	if enabled then
-		self.ObjectCache = ObjectCache.new(Template, CacheSize, CacheHolder)
 		vmDispatcher:DispatchAll("BindObjectCache", enabled)
-
-		for _, v in vmDispatcher.Threads do
-			local BindableObjectCache: BindableFunction = v:WaitForChild("ActiveCastObjectCache") :: BindableFunction
-			if BindableObjectCache then
-				BindableObjectCache.OnInvoke = function(targetCFrame: CFrame)
-					return self.ObjectCache:GetPart(targetCFrame)
-				end
-			end 
-		end
 	else
 		vmDispatcher:DispatchAll("BindObjectCache", enabled)
-		if self.ObjectCache then
-			self.ObjectCache:Destroy()
-			self.ObjectCache = nil
-		end
 	end
 
 	self.ObjectCacheEnabled = enabled
