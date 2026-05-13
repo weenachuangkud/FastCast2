@@ -146,6 +146,8 @@ local castVisualizeInfos = {} :: { [number]: TypeDef.CastVisualizeInfo }
 
 -- QueueEvents
 
+-- QueueVisualizes
+
 -- RS
 local function UpdateCasts()
 	-- TODO
