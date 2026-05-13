@@ -243,7 +243,12 @@ function FastCastParallel:Init(
 
 	local data = {
 		movementMode = movementMode,
-		useObjectCache = useObjectCache
+		useObjectCache = useObjectCache,
+		objectCacheArgs = {
+			Template = Template,
+			CacheSize = CacheSize,
+			CacheHolder = CacheHolder
+		}
 	}
 	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName: string, ...)
 		local f = self[signalName]

@@ -16,6 +16,7 @@ local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local ParallelSimulation = require(FastCast2:WaitForChild("ParallelSimulation"))
+local ObjectCache = require(script.Parent:WaitForChild("ObjectCache"))
 local FastCastEventsModule: ModuleScript? = nil
 
 -- Enums
@@ -33,6 +34,10 @@ local BaseCast = {}
 BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
+-- CONSTANTS
+local DEFAULT_CACHE_SIZE = 500
+local DEFAULT_CACHE_HOLDER = workspace
+
 -- Connections
 local MovementConnection: RBXScriptConnection? = nil
 
@@ -42,7 +47,7 @@ local Actives: any = {}
 local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
-local ObjectCache: BindableEvent? = nil
+local ObjectCacheInstance: any = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
 local CastFireFunc = nil
@@ -114,10 +119,16 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	BindableCleaner.Parent = Actor
 
 	if Data.useObjectCache then
-		local BindableObjectCache = Instance.new("BindableFunction")
-		BindableObjectCache.Parent = Actor
-		BindableObjectCache.Name = "ActiveCastObjectCache"
-		ObjectCache = BindableObjectCache
+		local objectCacheArgs = Data.objectCacheArgs or {}
+		if not objectCacheArgs.CacheSize then
+			objectCacheArgs.CacheSize = DEFAULT_CACHE_SIZE
+		end
+
+		if not objectCacheArgs.CacheHolder then
+			objectCacheArgs.CacheHolder = DEFAULT_CACHE_HOLDER
+		end
+
+		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
 	end
 
 	if Data.useBulkMoveTo then
@@ -179,7 +190,7 @@ function BaseCast:Raycast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCache,
+		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
@@ -243,7 +254,7 @@ function BaseCast:Blockcast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCache,
+		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
@@ -288,7 +299,7 @@ function BaseCast:Spherecast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCache,
+		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
@@ -405,6 +416,20 @@ function BaseCast:Destroy()
 
 	Actives = {}
 	setmetatable(self, nil)
+end
+
+-- ObjectCache
+function BaseCast:_GetObjectCache(object: BasePart)
+	if ObjectCacheInstance then
+		return ObjectCacheInstance:GetPart(object)
+	end
+	return nil
+end
+
+function BaseCast:_ReturnObjectCache(object: BasePart)
+	if ObjectCacheInstance then
+		ObjectCacheInstance:ReturnPart(object)
+	end
 end
 
 return BaseCast
