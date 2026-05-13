@@ -3,6 +3,9 @@
 	- Date: 2026
 ]]
 
+-- Services
+local RS = game:GetService("RunService")
+
 -- Variables
 local FastCastModule = script.Parent
 
@@ -143,6 +146,11 @@ local castVisualizeInfos = {} :: { [number]: TypeDef.CastVisualizeInfo }
 
 -- QueueEvents
 
+-- RS
+local function UpdateCasts()
+	-- TODO
+end
+
 -- ParallelSimulation
 
 local ParallelSimulation = {}
@@ -157,11 +165,22 @@ function ParallelSimulation.Unregister(cast: any)
 end
 
 function ParallelSimulation.Start()
-	-- TODO
+	if ParallelSimulation.Connection then return end
+	if RS:IsClient() then
+		ParallelSimulation.Connection = RS.PreRender:ConnectParallel(UpdateCasts)
+	else
+		ParallelSimulation.Connection = RS.Heartbeat:Connect(UpdateCasts)
+	end
 end
 
 function ParallelSimulation.Stop()
-	-- TODO
+	if ParallelSimulation.Connection then
+		ParallelSimulation.Connection:Disconnect()
+		ParallelSimulation.Connection = nil
+	end
 end
+
+-- Auto-start when loaded
+ParallelSimulation.Start()
 
 return ParallelSimulation
