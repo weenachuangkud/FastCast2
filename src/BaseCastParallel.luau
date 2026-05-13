@@ -330,7 +330,7 @@ end
 ]=]
 ]]
 function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
-	-- Who even write code like this lmao
+	-- TODO: Implement this for ParallelSimulation as well
 	if mode == "BulkMoveTo" then
 		if enabled then
 			if not MovementConnection then
