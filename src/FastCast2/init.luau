@@ -290,7 +290,7 @@ function FastCastParallel:RaycastFire(
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior
+	BehaviorData: TypeDef.FastCastBehavior?
 )
 	if not self.AlreadyInit then
 		error("Please Init caster")
@@ -299,14 +299,13 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	local cosmeticBullet = nil
 	if BehaviorData.CosmeticBulletTemplate then
-		cosmeticBullet = BehaviorData.CosmeticBulletTemplate:Clone()
-		cosmeticBullet.CFrame = CFrame.new(origin, origin + direction)
-		cosmeticBullet.Parent = BehaviorData.CosmeticBulletContainer
+		BehaviorData.CosmeticBulletTemplate = BehaviorData.CosmeticBulletTemplate:Clone()
+		BehaviorData.CosmeticBulletTemplate.CFrame = CFrame.new(origin, origin + direction)
+		BehaviorData.CosmeticBulletTemplate.Parent = BehaviorData.CosmeticBulletContainer
 	end
 
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData, cosmeticBullet)
+	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -325,7 +324,7 @@ function FastCastParallel:BlockcastFire(
 	Size: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior
+	BehaviorData: TypeDef.FastCastBehavior?
 )
 	if not self.AlreadyInit then
 		error("Please Init caster")
@@ -334,14 +333,13 @@ function FastCastParallel:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	local cosmeticBullet = nil
 	if BehaviorData.CosmeticBulletTemplate then
-		cosmeticBullet = BehaviorData.CosmeticBulletTemplate:Clone()
-		cosmeticBullet.CFrame = CFrame.new(origin, origin + direction)
-		cosmeticBullet.Parent = BehaviorData.CosmeticBulletContainer
+		BehaviorData.CosmeticBulletTemplate = BehaviorData.CosmeticBulletTemplate:Clone()
+		BehaviorData.CosmeticBulletTemplate.CFrame = CFrame.new(origin, origin + direction)
+		BehaviorData.CosmeticBulletTemplate.Parent = BehaviorData.CosmeticBulletContainer
 	end
 
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData, cosmeticBullet)
+	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -360,7 +358,7 @@ function FastCastParallel:SpherecastFire(
 	Radius: number,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior
+	BehaviorData: TypeDef.FastCastBehavior?
 )
 	if not self.AlreadyInit then
 		error("Please Init caster")
@@ -369,14 +367,13 @@ function FastCastParallel:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	local cosmeticBullet = nil
 	if BehaviorData.CosmeticBulletTemplate then
-		cosmeticBullet = BehaviorData.CosmeticBulletTemplate:Clone()
-		cosmeticBullet.CFrame = CFrame.new(origin, origin + direction)
-		cosmeticBullet.Parent = BehaviorData.CosmeticBulletContainer
+		BehaviorData.CosmeticBulletTemplate = BehaviorData.CosmeticBulletTemplate:Clone()
+		BehaviorData.CosmeticBulletTemplate.CFrame = CFrame.new(origin, origin + direction)
+		BehaviorData.CosmeticBulletTemplate.Parent = BehaviorData.CosmeticBulletContainer
 	end
 
-	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData, cosmeticBullet)
+	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[=[

@@ -33,10 +33,13 @@ actor:BindToMessage("Raycast", function(
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	behavior: TypeDefinitions.FastCastBehavior,
-	cosmeticBullet: Instance?
+	behavior: TypeDefinitions.FastCastBehavior
 )
-	BaseCast:Raycast(origin, direction, velocity, behavior, cosmeticBullet)
+	--print(behavior)
+	--print(SharedCasters[casterID])
+	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
+
+	BaseCast:Raycast(origin, direction, velocity, behavior)
 end)
 
 actor:BindToMessage(
@@ -64,10 +67,9 @@ actor:BindToMessage("Blockcast", function(
 	size: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	behavior: TypeDefinitions.FastCastBehavior,
-	cosmeticBullet: Instance?
+	behavior: TypeDefinitions.FastCastBehavior
 )
-	BaseCast:Blockcast(origin, size, direction, velocity, behavior, cosmeticBullet)
+	BaseCast:Blockcast(origin, size, direction, velocity, behavior)
 end)
 
 actor:BindToMessage("Spherecast", function(
@@ -75,10 +77,9 @@ actor:BindToMessage("Spherecast", function(
 	radius : number,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior,
-	cosmeticBullet: Instance?
+	behavior : TypeDefinitions.FastCastBehavior
 )
-	BaseCast:Spherecast(origin, radius, direction, velocity, behavior, cosmeticBullet)
+	BaseCast:Spherecast(origin, radius, direction, velocity, behavior)
 end)
 
 actor:BindToMessage("SetMovementMode", function(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)

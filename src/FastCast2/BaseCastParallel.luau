@@ -30,7 +30,6 @@ local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
 local ObjectCacheInstance: any = nil
-local CacheHolder: Instance? = nil
 local Motor6DCacheInstance: any = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
@@ -68,7 +67,6 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		end
 
 		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
-		CacheHolder = objectCacheArgs.CacheHolder
 	end
 
 	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
@@ -82,7 +80,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		if self.Actives[activeCastID] then
 			local cast = self.Actives[activeCastID]
 			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-				BaseCast:_ReturnObjectCache(cast.RayInfo.CosmeticBulletObject)
+				self:_ReturnObjectCache(cast.RayInfo.CosmeticBulletObject)
 			end
 			self.Actives[activeCastID] = nil
 			ParallelSimulation.Unregister(activeCastID)
@@ -153,12 +151,9 @@ function BaseCast:Raycast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCacheInstance,
-		GetObjectCache = ObjectCacheInstance and BaseCast._GetObjectCache or nil,
-		CacheHolder = CacheHolder,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
-		CastType = EnumCastTypes.Raycast,
-		CosmeticBulletObject = CosmeticBullet
+		CastType = EnumCastTypes.Raycast
 	} :: any, true)
 
 	ParallelSimulation.Register(cast)
@@ -220,13 +215,10 @@ function BaseCast:Blockcast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCacheInstance,
-		GetObjectCache = ObjectCacheInstance and BaseCast._GetObjectCache or nil,
-		CacheHolder = CacheHolder,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
-		Size = Size,
-		CosmeticBulletObject = CosmeticBullet
+		Size = Size
 	} :: any, true)
 
 	ParallelSimulation.Register(cast)
@@ -268,13 +260,10 @@ function BaseCast:Spherecast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCacheInstance,
-		GetObjectCache = ObjectCacheInstance and BaseCast._GetObjectCache or nil,
-		CacheHolder = CacheHolder,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
-		Radius = Radius,
-		CosmeticBulletObject = CosmeticBullet
+		Radius = Radius
 	} :: any, true)
 
 	ParallelSimulation.Register(cast)
@@ -380,9 +369,9 @@ function BaseCast:Destroy()
 end
 
 -- ObjectCache
-function BaseCast:_GetObjectCache(partCFrame: CFrame)
+function BaseCast:_GetObjectCache(object: BasePart)
 	if ObjectCacheInstance then
-		return ObjectCacheInstance:GetPart(partCFrame)
+		return ObjectCacheInstance:GetPart(object)
 	end
 	return nil
 end

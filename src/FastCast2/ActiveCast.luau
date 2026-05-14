@@ -15,10 +15,10 @@ local DEFAULT_MAX_DISTANCE = 1000
 
 local EnumCastTypes = FastCastEnums.CastType
 
-type CastVariant = { CastType: number, Size: Vector3?, Radius: number?, CosmeticBulletObject: Instance? }
+type CastVariant = { CastType: number, Size: Vector3?, Radius: number? }
 
-type BlockcastVariant = { CastType: number, Size: Vector3, CosmeticBulletObject: Instance? }
-type SpherecastVariant = { CastType: number, Radius: number, CosmeticBulletObject: Instance? }
+type BlockcastVariant = { CastType: number, Size: Vector3}
+type SpherecastVariant = { CastType: number, Radius: number }
 type CastVariants = BlockcastVariant | SpherecastVariant
 
 
@@ -84,8 +84,7 @@ function ActiveCast.createCastData(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			MovementMethod = behavior.MovementMethod or "BulkMoveTo",
-			FastCastModule = eventModule
+			MovementMethod = behavior.MovementMethod or "BulkMoveTo"
 		},
 
 		Type = CastVariantTypes[variant.CastType],
@@ -121,12 +120,13 @@ function ActiveCast.createCastData(
 	end
 
 	local targetContainer: Instance?
-	if _parallel and variant.CosmeticBulletObject then
-		cast.RayInfo.CosmeticBulletObject = variant.CosmeticBulletObject
-		targetContainer = behavior.CosmeticBulletContainer
-	elseif cast.Caster.GetObjectCache then
-		cast.RayInfo.CosmeticBulletObject = cast.Caster.GetObjectCache(CFrame.new(origin, origin + direction))
+	if cast.Caster.ObjectCache then
+		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:GetPart(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
+	elseif _parallel then
+		if cast.RayInfo.CosmeticBulletObject ~= nil then
+			targetContainer = behavior.CosmeticBulletContainer
+		end
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
 			local basePart = cast.RayInfo.CosmeticBulletObject
