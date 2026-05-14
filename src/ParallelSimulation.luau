@@ -234,6 +234,9 @@ end
 
 local function QueueEvent(castID: number, eventType: string, ...: any)
 	local args = { ... }
+	if not queuedEvents[castID] then
+		queuedEvents[castID] = {}
+	end
 	table.insert(queuedEvents[castID], {
 		eventType = eventType,
 		args = args
