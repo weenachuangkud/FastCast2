@@ -98,7 +98,19 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 		if TargetCast then
 			for i, v in cast do
-				TargetCast[i] = v
+				if i == "StateInfo" and type(v) == "table" and type(TargetCast[i]) == "table" then
+					for k, v2 in v do
+						if k == "Trajectory" and type(v2) == "table" and type(TargetCast[i][k]) == "table" then
+							for tk, tv in v2 do
+								TargetCast[i][k][tk] = tv
+							end
+						else
+							TargetCast[i][k] = v2
+						end
+					end
+				else
+					TargetCast[i] = v
+				end
 			end
 		end
 	end)
