@@ -5,11 +5,5 @@
       "command": ["luau-lsp", "stdio"],
       "extensions": [".luau", ".lua"]
     }
-  },
-  "lint": {
-    "luau": {
-      "command": ["selene", "--nocopyright"],
-      "extensions": [".luau", ".lua"]
-    }
   }
 }
