@@ -41,7 +41,7 @@ RS.Heartbeat:Connect(function(dt: number)
 		minFps = fps
 	end
 	table.insert(fpsTable, fps)
-	
+
 	if tick() >= startTime + updateRate then
 		local totalFps = 0
 		for _, vFps in fpsTable do 
@@ -78,20 +78,14 @@ Caster:Init(
 	"CastVMs",      -- newName
 	RepFirst,       -- ContainerParent
 	"CastVMContainer", -- VMContainerName
-	"CastVM",       -- VMname
-	true,           -- useBulkMoveTo
-	nil,            -- FastCastEventsModule (optional for parallel)
-	false,          -- useObjectCache
-	nil,            -- Template
-	500,            -- CacheSize
-	workspace       -- CacheHolder
+	"CastVM"       -- VMname
 )
 
 local activeCasts = {}
 
-Caster.CastFire:Connect(function(cast)
+Caster.CastFire = function(cast)
 	table.insert(activeCasts, cast)
-end)
+end
 
 -- Functions
 local function summary()
@@ -103,7 +97,7 @@ end
 
 -- Benchmark
 local isBenchmarking = false
-local AMOUNT = 5000
+local AMOUNT = 50
 local BENCH_TIME = 5
 
 UIS.InputBegan:Connect(function(input, gp)
@@ -113,7 +107,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		isBenchmarking = true
 		print("=== PARALLEL MODE BENCHMARK ===")
 		print(string.format("Firing %d casts...", AMOUNT))
-		
+
 		for i = 1, AMOUNT do
 			Caster:RaycastFire(
 				Vector3.new(
@@ -130,21 +124,21 @@ UIS.InputBegan:Connect(function(input, gp)
 				castBehavior
 			)
 		end
-		
+
 		print("=== CREATION COMPLETE ===")
 		summary()
-		
+
 		task.wait(BENCH_TIME)
-		
+
 		print("=== SIMULATION COMPLETE ===")
 		summary()
-		
+
 		print("=== CLEANUP ===")
 		for i = #activeCasts, 1, -1 do
-			Caster:TerminateCast(activeCasts[i])
+			FastCast.TerminateCast(activeCasts[i])
 		end
 		activeCasts = {}
-		
+
 		print("=== DONE ===")
 		summary()
 		isBenchmarking = false
