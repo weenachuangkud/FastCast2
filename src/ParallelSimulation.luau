@@ -244,28 +244,112 @@ end
 
 local function FireQueuedEvents()
 	for castID, eventList in queuedEvents do
-		if not eventList then 
-			return 
+		if not eventList or not next(eventList) then
+			continue
 		end
+
 		for _, event in eventList do
 			local cast = ActivesRef[castID]
-			if not cast then 
+			if not cast then
 				continue
 			end
+
 			local eventType: string = event.eventType
 			local args: { any } = event.args
 
+			local caster = cast.Caster
+			local moduleConfig = casts_FastCastEventsModuleConfig[castID]
+			local eventConfig = casts_FastCastEventsConfig[castID]
+			local fastCastEvents = casts_FastCastEvents[castID]
+
 			if eventType == "LengthChanged" then
-				-- handle LengthChanged
+				local lastPoint = args[1]
+				local rayDir = args[2]
+				local rayDisplacement = args[3]
+
+				if eventConfig and eventConfig.UseLengthChanged then
+					caster.Output:Fire("LengthChanged", cast, lastPoint, rayDir, rayDisplacement)
+				end
+
+				if moduleConfig and moduleConfig.UseLengthChanged and fastCastEvents and fastCastEvents.LengthChanged then
+					fastCastEvents.LengthChanged(cast, lastPoint, rayDir, rayDisplacement)
+				end
+
 			elseif eventType == "Hit" then
-				-- handle Hit
+				local result = args[1]
+				local velocity = args[2]
+				local cosmeticBulletObject = args[3]
+
+				if eventConfig and eventConfig.UseHit then
+					caster.Output:Fire("Hit", cast, result, velocity, cosmeticBulletObject)
+				end
+
+				if moduleConfig and moduleConfig.UseHit and fastCastEvents and fastCastEvents.Hit then
+					fastCastEvents.Hit(cast, result, velocity, cosmeticBulletObject)
+				end
+
 			elseif eventType == "Pierced" then
-				-- handle Pierced
+				local result = args[1]
+				local velocity = args[2]
+				local cosmeticBulletObject = args[3]
+
+				if eventConfig and eventConfig.UsePierced then
+					caster.Output:Fire("Pierced", cast, result, velocity, cosmeticBulletObject)
+				end
+
+				if moduleConfig and moduleConfig.UsePierced and fastCastEvents and fastCastEvents.Pierced then
+					fastCastEvents.Pierced(cast, result, velocity, cosmeticBulletObject)
+				end
+
 			elseif eventType == "CastTerminating" then
-				FastCast.TerminateCast(cast, args[1])
+				local castTerminatingfn = args[1]
+				FastCast.TerminateCast(cast, castTerminatingfn)
 			end
 		end
+
+		table.clear(queuedEvents[castID])
 	end
+end
+
+local function BulkMoveTo()
+	if CurrentMovementMode ~= "BulkMoveTo" or not MovementEnabled then
+		return
+	end
+
+	local parts = table.create(#casts_ID)
+	local cframes = table.create(#casts_ID)
+
+	for _, id in casts_ID do
+		local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
+		if cosmeticPart and cosmeticPart.Parent then
+			table.insert(parts, cosmeticPart)
+			table.insert(cframes, casts_CFrame[id])
+		end
+	end
+
+	if #parts > 0 then
+		workspace:BulkMoveTo(parts, cframes, Enum.BulkMoveMode.FireCFrameChanged)
+	end
+end
+
+local function UpdateMotor6Ds()
+	if CurrentMovementMode ~= "Motor6D" or not MovementEnabled then
+		return
+	end
+
+	for id, motor6d in casts_ActiveMotor6Ds do
+		if motor6d and motor6d.Parent then
+			motor6d.Transform = casts_CFrame[id]
+		end
+	end
+end
+
+local function SyncPhase()
+	task.synchronize()
+
+	UpdateMotor6Ds()
+	BulkMoveTo()
+	FireQueuedEvents()
 end
 
 -- ParallelSimulation

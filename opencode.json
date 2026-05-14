@@ -1,4 +1,5 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   "lsp": {
     "luau": {
       "command": ["luau-lsp", "stdio"],
