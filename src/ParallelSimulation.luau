@@ -418,9 +418,193 @@ function ParallelSimulation.IsMovementEnabled()
 	return MovementEnabled
 end
 
+-- TODO: Try Implement Visualizations
+
 -- RS
-local function SimluateCast()
-	-- TODO: Implement
+local function SimluateCast(
+	id: number,
+	 delta: number, 
+	 FastCastEvents, 
+	 variant: CastVariants
+)
+	if DebugLogging.Casting then
+		print("Casting for frame.")
+	end
+
+	local trajectory = casts_Trajectory[id]
+
+	local origin = trajectory.Origin
+	local totalDelta = TotalRunTime - trajectory.StartTime
+	local initialVelocity = trajectory.InitialVelocity
+	local acceleration = trajectory.Acceleration
+
+	local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+
+	local lastDelta = casts_TotalRunTime[id] - trajectory.StartTime
+
+	casts_TotalRunTime[id] += delta
+
+	totalDelta = casts_TotalRunTime[id] - trajectory.StartTime
+
+	local currentTarget = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+	local totalDisplacement = currentTarget - lastPoint
+
+	local rayDir = totalDisplacement * segmentVelocity.Magnitude
+
+	local targetWorldRoot = casts_RayInfo[id].WorldRoot
+
+	local castHandler = castHandlers[casts_CastVariant[id].CastType]
+	local resultOfCast = castHandler(targetWorldRoot, lastPoint, rayDir, casts_RayInfo[id].Parameters, casts_CastVariant[id])
+
+	local point = currentTarget
+	local part: Instance? = nil
+
+	if resultOfCast ~= nil then
+		point = resultOfCast.Position
+		part = resultOfCast.Instance 
+	end
+
+	local rayDisplacement = (point - lastPoint).Magnitude
+	
+	casts_CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+
+	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
+
+	casts_DistanceCovered[id] += rayDisplacement
+
+	local canPierceCheckfn: TypeDef.CanPierceFunction? = nil
+	local castTerminatingfn: TypeDef.OnCastTerminatingFunction? = nil
+
+	if FastCastEvents then
+		canPierceCheckfn = casts_FastCastEventsModuleConfig[id].UseCanPierce and FastCastEvents.CanPierce or nil
+		castTerminatingfn = casts_FastCastEventsModuleConfig[id].UseCastTerminating and FastCastEvents.CastTerminating or nil
+	end
+	
+	-- NOTE: Please dont remove "part and"
+	-- Why? basically when part doesn't exist it will do nothing, but removing "part and" will break the logic
+	-- You can't do anything about it
+	if part and part ~= casts_RayInfo.cosmeticBulletObject then
+		if DebugLogging.Hit then
+			print("Hit something, testing now.")
+		end
+
+		-- TODO: How will you handle CanRayPierce?
+		if DebugLogging.RayPierce and canPierceCheckfn == nil then
+			print("No piercing function set, proceeding to hit processing.")
+		end
+
+		if 
+			canPierceCheckfn == nil
+			or canPierceCheckfn(ActivesRef[id], resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
+		then
+			if DebugLogging.RayPierce then
+				print("Piercing function is nil or it returned FALSE to not pierce this hit.")
+			end
+
+			casts_IsActivelyResimulating[id] = false
+
+			if 
+				casts_HighFidelityBehavior[id] == FastCastEnums.HighFidelityBehavior.Automatic
+				and casts_HighFidelitySegmentSize[id] > 0 
+			then
+				casts_CancelHighResCast[id] = false
+
+				if casts_IsActivelyResimulating then
+					QueueEvent(id, "CastTerminating", castTerminatingfn)
+
+					warn(
+						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
+					)
+					return
+				end
+
+				casts_IsActivelyResimulating[id] = true
+
+				if DebugLogging.Calculation then
+					print(
+						"Hit was registered, but recalculation is on for physics based casts. Recalculating to verify a real hit..."
+					)
+				end
+
+				local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
+				local numSegmentsReal = math.floor(numSegmentsDecimal)
+				--local realSegmentLength = rayDisplacement / numSegmentsReal
+
+				if numSegmentsReal == 0 then
+					numSegmentsReal = 1
+				end
+
+				local timeIncrement = delta / numSegmentsReal
+
+				if DebugLogging.Calculation then
+					print(
+						"Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal
+					)
+				end
+
+				for segmentIndex = 1, numSegmentsReal do
+					if casts_CancelHighResCast[id] then
+						casts_CancelHighResCast[id] = false
+						break
+					end
+
+					local subPosition = GetPositionAtTime(
+						 	totalDelta + (timeIncrement * segmentIndex),
+							 origin, 
+						 	initialVelocity, 
+						 	acceleration
+						)
+					local subVelocity = GetVelocityAtTime(
+							lastDelta + (timeIncrement * segmentIndex),
+							initialVelocity, 
+							acceleration
+						)
+					local subRayDir = subVelocity * delta
+					local subResult = castHandler(targetWorldRoot, subPosition, casts_RayInfo[id].Parameters, casts_CastVariant[id])
+
+					
+					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
+
+					if subResult ~= nil then
+						local subDispalcement = (subPosition - subResult.Position).Magnitude
+
+						if 
+							canPierceCheckfn == nil
+							or canPierceCheckfn(ActivesRef[id], subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
+						then
+							casts_IsActivelyResimulating[id] = false
+							QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
+							QueueEvent(id, "CastTerminating", castTerminatingfn)
+						else
+							QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
+						end
+					end
+				end
+				casts_IsActivelyResimulating[id] = false
+			else
+				if DebugLogging.Hit then
+					print("Hit was successful. Terminating")
+				end
+
+				QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+				QueueEvent(id, "CastTerminating", castTerminatingfn)
+
+				return
+			end
+		else
+			if DebugLogging.RayPierce then
+				print("Piercing function returned TRUE to pierce this part.")
+			end
+
+			QueueEvent(id, "Pierced", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+
+		end
+	end
+
+	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
+		QueueEvent(id, "CastTerminating", castTerminatingfn)
+	end
 end
 
 local function UpdateCasts(delta: number)
@@ -455,8 +639,86 @@ local function UpdateCasts(delta: number)
 
 			if casts_IsActivelyResimulating[id] then
 				QueueEvent(id, "CastTerminating", castTerminatingfn)
+				warn("Casading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize.")
+				continue
 			end
-			-- TODO: Contiune
+			casts_IsActivelyResimulating[id] = true
+
+			local origin = Trajectory.Origin
+			local totalDelta = casts_TotalRunTime[id] - Trajectory.StartTime
+			local initialVelocity = Trajectory.InitialVelocity
+			local acceleration = Trajectory.Acceleration
+
+			local lastPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+
+			casts_TotalRunTime[id] += delta
+
+			totalDelta = casts_TotalRunTime[id] - Trajectory.StartTime
+
+			local currentPoint = GetPositionAtTime(totalDelta, origin, initialVelocity, acceleration)
+			local currentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
+			local totalDisplacement = currentPoint - lastPoint
+
+			local rayDir = totalDisplacement.Unit * currentVelocity.Magnitude * delta
+
+			local RayInfo = casts_RayInfo[id]
+			local targetWorldRoot = RayInfo.WorldRoot
+
+			local castHandler = castHandlers[casts_CastVariant[id].CastType]
+			local resultOfCast = castHandler(targetWorldRoot, lastPoint, rayDir, RayInfo.Parameters, casts_CastVariant[id])
+			
+			local point = currentPoint
+			if resultOfCast ~= nil then
+				point = resultOfCast.Position
+			end
+
+			local rayDisplacement = (point - lastPoint).Magnitude
+			casts_TotalRunTime[id] -= delta
+
+			local numSegmentsDecimal = rayDisplacement / casts_HighFidelitySegmentSize[id]
+			local numSegmentsReal = math.floor(numSegmentsDecimal)
+			if numSegmentsReal == 0 then
+				numSegmentsReal = 1
+			end
+
+			local timeIncrement = delta / numSegmentsReal
+
+			if DebugLogging.Calculation then
+				print("Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal)
+			end
+
+			local cast_nil = false
+			for segmentIndex = 1, numSegmentsReal do
+
+				-- In case when cast Destroyed or not exist
+				if ActivesRef[id] == nil then
+					cast_nil = true
+				end
+
+
+				if casts_CancelHighResCast[id] then
+					casts_CancelHighResCast[id] = false
+					break
+				end
+
+				if DebugLogging.Segment then
+					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
+				end
+
+				SimluateCast(id, delta, FastCastEvents, casts_CastVariant[id])
+			end
+
+			if cast_nil then
+				continue
+			end
+
+			-- Double check again
+			if ActivesRef[id] == nil then
+				continue
+			end
+			casts_IsActivelyResimulating[id] = false
+		else
+			SimluateCast(id, delta, FastCastEvents, casts_CastVariant[id])
 		end
 	end
 end
