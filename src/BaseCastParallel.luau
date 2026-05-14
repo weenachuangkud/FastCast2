@@ -49,7 +49,7 @@ end
 function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	local self = setmetatable({}, BaseCast)
 	Actor = BindableOutput.Parent
-	self.Actives = setmetatable({}, { __mode = "v" })
+	self.Actives = {}
 	Output = BindableOutput
 
 	local BindableCleaner = Instance.new("BindableEvent")
