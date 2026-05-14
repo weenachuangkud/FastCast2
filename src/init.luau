@@ -783,9 +783,14 @@ end
 	@param cast vaildcast -- The active cast to terminate.
 	@param castTerminatingFunction (cast: vaildcast) -> ())? -- Optional callback invoked just before the cast is terminated.
 	@within FastCast
+
+	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast.TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
 	local trajectory = cast.StateInfo.Trajectory
+	if trajectory.EndTime ~= -1 then
+		return
+	end
 	trajectory.EndTime = cast.StateInfo.TotalRuntime
 
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
