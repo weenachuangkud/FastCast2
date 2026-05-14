@@ -243,8 +243,15 @@ local function QueueEvent(castID: number, eventType: string, ...: any)
 	})
 end
 
-local function FireQueuedEvents()
-	for castID, eventList in queuedEvents do
+local function FireQueuedEvents(events: { [number]: { QueuedEventData } })
+	local sortedIDs = {}
+	for id in events do
+		table.insert(sortedIDs, id)
+	end
+	table.sort(sortedIDs)
+
+	for _, castID in sortedIDs do
+		local eventList = events[castID]
 		if not eventList or not next(eventList) then
 			continue
 		end
@@ -305,9 +312,6 @@ local function FireQueuedEvents()
 			elseif eventType == "CastTerminating" then
 				local castTerminatingfn = args[1]
 				FastCast:TerminateCast(cast, castTerminatingfn)
-				if queuedEvents[castID] then
-					queuedEvents[castID] = nil
-				end
 			end
 		end
 	end
@@ -351,7 +355,10 @@ local function SyncPhase()
 
 	UpdateMotor6Ds()
 	BulkMoveTo()
-	FireQueuedEvents()
+
+	local eventsToProcess = queuedEvents
+	queuedEvents = {}
+	FireQueuedEvents(eventsToProcess)
 end
 
 -- ParallelSimulation
@@ -446,19 +453,12 @@ function ParallelSimulation.Unregister(castID: number)
 	end
 	casts_FastCastEvents[castID] = nil
 
-	table.clear(queuedEvents[castID])
 	queuedEvents[castID] = nil
 end
 
 function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
 	CurrentMovementMode = mode
 	MovementEnabled = enabled
-end
-
-function ParallelSimulation.GetQueuedEvents()
-	local events = queuedEvents
-	queuedEvents = {}
-	return events
 end
 
 function ParallelSimulation.GetActiveMotor6Ds()
@@ -595,7 +595,7 @@ local function SimluateCast(
 			then
 				casts_CancelHighResCast[id] = false
 
-				if casts_IsActivelyResimulating then
+				if casts_IsActivelyResimulating[id] then
 					QueueEvent(id, "CastTerminating", castTerminatingfn)
 
 					warn(
@@ -697,7 +697,7 @@ local function UpdateCasts(delta: number)
 
 	for _, id in casts_ID do
 		if casts_Paused[id] then
-			return
+			continue
 		end
 
 		if DebugLogging.Casting then
