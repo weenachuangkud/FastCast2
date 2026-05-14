@@ -706,8 +706,8 @@ local function UpdateCasts(delta: number)
 			Trajectory.Acceleration = Vector3.new()
 		end
 
-		if casts_HighFidelitySegmentSize[id] > 0 then
-			casts_HighFidelitySegmentSize = 0.1
+		if casts_HighFidelitySegmentSize[id] <= 0 then
+			casts_HighFidelitySegmentSize[id] = 0.1
 		end
 
 		local FastCastEvents: TypeDef.FastCastEvents = casts_FastCastEvents[id]
