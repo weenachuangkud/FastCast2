@@ -299,12 +299,6 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	if BehaviorData.CosmeticBulletTemplate then
-		BehaviorData.CosmeticBulletTemplate = BehaviorData.CosmeticBulletTemplate:Clone()
-		BehaviorData.CosmeticBulletTemplate.CFrame = CFrame.new(origin, origin + direction)
-		BehaviorData.CosmeticBulletTemplate.Parent = BehaviorData.CosmeticBulletContainer
-	end
-
 	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
 end
 
@@ -332,13 +326,7 @@ function FastCastParallel:BlockcastFire(
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
 	end
-
-	if BehaviorData.CosmeticBulletTemplate then
-		BehaviorData.CosmeticBulletTemplate = BehaviorData.CosmeticBulletTemplate:Clone()
-		BehaviorData.CosmeticBulletTemplate.CFrame = CFrame.new(origin, origin + direction)
-		BehaviorData.CosmeticBulletTemplate.Parent = BehaviorData.CosmeticBulletContainer
-	end
-
+	
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
 end
 
@@ -365,12 +353,6 @@ function FastCastParallel:SpherecastFire(
 	end
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
-	end
-
-	if BehaviorData.CosmeticBulletTemplate then
-		BehaviorData.CosmeticBulletTemplate = BehaviorData.CosmeticBulletTemplate:Clone()
-		BehaviorData.CosmeticBulletTemplate.CFrame = CFrame.new(origin, origin + direction)
-		BehaviorData.CosmeticBulletTemplate.Parent = BehaviorData.CosmeticBulletContainer
 	end
 
 	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
