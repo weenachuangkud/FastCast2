@@ -548,7 +548,7 @@ local function SimluateCast(
 
 	local rayDisplacement = (point - lastPoint).Magnitude
 
-	casts_CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
 
