@@ -7,8 +7,6 @@
 	Similar to SwiftCast implementation
 ]]
 
-local RS = game:GetService("RunService")
-
 local FastCastModule = script.Parent
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
@@ -30,7 +28,7 @@ local CastVariantTypes = {
 	[EnumCastTypes.Spherecast] = "Spherecast"
 }
 
-local ActiveCastSerial = {}
+local ActiveCast = {}
 
 local function CloneCastParams(params: RaycastParams): RaycastParams
 	local clone: RaycastParams = RaycastParams.new()
@@ -41,7 +39,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	return clone
 end
 
-function ActiveCastSerial.createCastData(
+function ActiveCast.createCastData(
 	BaseCast: TypeDef.BaseCastData,
 	activeCastID: number,
 	origin: Vector3,
@@ -151,4 +149,4 @@ function ActiveCastSerial.createCastData(
 	return cast
 end
 
-return ActiveCastSerial
+return ActiveCast
