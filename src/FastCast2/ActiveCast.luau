@@ -124,9 +124,8 @@ function ActiveCast.createCastData(
 	if _parallel and variant.CosmeticBulletObject then
 		cast.RayInfo.CosmeticBulletObject = variant.CosmeticBulletObject
 		targetContainer = behavior.CosmeticBulletContainer
-	elseif cast.Caster.ObjectCache then
-		-- TODO: Remove this legacy code, use BaseCast:._ReturnObjectCache from BaseCastParallel instead
-		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:GetPart(CFrame.new(origin, origin + direction))
+	elseif cast.Caster.GetObjectCache then
+		cast.RayInfo.CosmeticBulletObject = cast.Caster.GetObjectCache(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then

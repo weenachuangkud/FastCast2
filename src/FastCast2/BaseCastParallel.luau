@@ -30,6 +30,7 @@ local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
 local ObjectCacheInstance: any = nil
+local CacheHolder: Instance? = nil
 local Motor6DCacheInstance: any = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
@@ -67,6 +68,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		end
 
 		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
+		CacheHolder = objectCacheArgs.CacheHolder
 	end
 
 	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
@@ -151,9 +153,12 @@ function BaseCast:Raycast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCacheInstance,
+		GetObjectCache = ObjectCacheInstance and BaseCast._GetObjectCache or nil,
+		CacheHolder = CacheHolder,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
-		CastType = EnumCastTypes.Raycast
+		CastType = EnumCastTypes.Raycast,
+		CosmeticBulletObject = CosmeticBullet
 	} :: any, true)
 
 	ParallelSimulation.Register(cast)
@@ -215,10 +220,13 @@ function BaseCast:Blockcast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCacheInstance,
+		GetObjectCache = ObjectCacheInstance and BaseCast._GetObjectCache or nil,
+		CacheHolder = CacheHolder,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
-		Size = Size
+		Size = Size,
+		CosmeticBulletObject = CosmeticBullet
 	} :: any, true)
 
 	ParallelSimulation.Register(cast)
@@ -260,10 +268,13 @@ function BaseCast:Spherecast(
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
 		ObjectCache = ObjectCacheInstance,
+		GetObjectCache = ObjectCacheInstance and BaseCast._GetObjectCache or nil,
+		CacheHolder = CacheHolder,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
-		Radius = Radius
+		Radius = Radius,
+		CosmeticBulletObject = CosmeticBullet
 	} :: any, true)
 
 	ParallelSimulation.Register(cast)
