@@ -20,8 +20,6 @@ local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 -- Constants
 
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
-local MAX_SEGMENT_CAL_TIME = 0.016 * 5
-local MAX_CASTING_TIME = 0.2
 local DEFAULT_MAX_DISTANCE = 1000
 
 local EnumCastTypes = FastCastEnums.CastType
@@ -691,9 +689,11 @@ local function SimluateCast(
 end
 
 local function UpdateCasts(delta: number)
+	task.desynchronize()
+
 	for _, id in casts_ID do
-		if casts_Paused[id] then 
-			return 
+		if casts_Paused[id] then
+			return
 		end
 
 		if DebugLogging.Casting then
@@ -804,6 +804,8 @@ local function UpdateCasts(delta: number)
 			SimluateCast(id, delta, FastCastEvents)
 		end
 	end
+
+	SyncPhase()
 end
 
 function ParallelSimulation.Start()
