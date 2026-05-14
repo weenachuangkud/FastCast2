@@ -79,8 +79,8 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	ActiveCastCleaner.Event:Connect(function(activeCastID: number)
 		if self.Actives[activeCastID] then
 			local cast = self.Actives[activeCastID]
-			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject and ObjectCacheInstance then
-				ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
+				BaseCast:_ReturnObjectCache(cast.RayInfo.CosmeticBulletObject)
 			end
 			self.Actives[activeCastID] = nil
 			ParallelSimulation.Unregister(activeCastID)
@@ -369,9 +369,9 @@ function BaseCast:Destroy()
 end
 
 -- ObjectCache
-function BaseCast:_GetObjectCache(object: BasePart)
+function BaseCast:_GetObjectCache(partCFrame: CFrame)
 	if ObjectCacheInstance then
-		return ObjectCacheInstance:GetPart(object)
+		return ObjectCacheInstance:GetPart(partCFrame)
 	end
 	return nil
 end
