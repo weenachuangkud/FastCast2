@@ -425,7 +425,6 @@ local function SimluateCast(
 	id: number,
 	 delta: number, 
 	 FastCastEvents, 
-	 variant: CastVariants
 )
 	if DebugLogging.Casting then
 		print("Casting for frame.")
@@ -434,7 +433,7 @@ local function SimluateCast(
 	local trajectory = casts_Trajectory[id]
 
 	local origin = trajectory.Origin
-	local totalDelta = TotalRunTime - trajectory.StartTime
+	local totalDelta = casts_TotalRunTime[id] - trajectory.StartTime
 	local initialVelocity = trajectory.InitialVelocity
 	local acceleration = trajectory.Acceleration
 
@@ -560,14 +559,14 @@ local function SimluateCast(
 							initialVelocity, 
 							acceleration
 						)
-					local subRayDir = subVelocity * delta
+					--local subRayDir = subVelocity * delta
 					local subResult = castHandler(targetWorldRoot, subPosition, casts_RayInfo[id].Parameters, casts_CastVariant[id])
 
 					
-					local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
+					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
 					if subResult ~= nil then
-						local subDispalcement = (subPosition - subResult.Position).Magnitude
+						--subDispalcement = (subPosition - subResult.Position).Magnitude
 
 						if 
 							canPierceCheckfn == nil
@@ -705,7 +704,7 @@ local function UpdateCasts(delta: number)
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
-				SimluateCast(id, delta, FastCastEvents, casts_CastVariant[id])
+				SimluateCast(id, delta, FastCastEvents)
 			end
 
 			if cast_nil then
@@ -718,7 +717,7 @@ local function UpdateCasts(delta: number)
 			end
 			casts_IsActivelyResimulating[id] = false
 		else
-			SimluateCast(id, delta, FastCastEvents, casts_CastVariant[id])
+			SimluateCast(id, delta, FastCastEvents)
 		end
 	end
 end
