@@ -304,7 +304,7 @@ local function FireQueuedEvents()
 
 			elseif eventType == "CastTerminating" then
 				local castTerminatingfn = args[1]
-				FastCast.TerminateCast(cast, castTerminatingfn)
+				FastCast:TerminateCast(cast, castTerminatingfn)
 				if queuedEvents[castID] then
 					queuedEvents[castID] = nil
 				end

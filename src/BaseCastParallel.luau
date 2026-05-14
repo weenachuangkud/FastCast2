@@ -361,7 +361,7 @@ function BaseCast:Destroy()
 	FastCastEventsModule = nil
 
 	for _, v in self.Actives do
-		FastCastM.TerminateCast(v)
+		FastCastM:TerminateCast(v)
 	end
 
 	self.Actives = {}
