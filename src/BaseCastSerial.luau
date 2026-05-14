@@ -9,7 +9,6 @@
 local RS = game:GetService("RunService")
 
 local FastCast2 = script.Parent
-local FastCastM = require(FastCast2)
 
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
