@@ -63,7 +63,7 @@ function Motor6DCache:Return(motor6d: Motor6D)
 	table.insert(self.FreeMotor6Ds, motor6d)
 end
 
-function Motor6DCache:Connect(castID: number, projectilePart: BasePart?): Motor6D?
+function Motor6DCache:Connect(projectilePart: BasePart?): Motor6D?
 	if not projectilePart then return nil end
 
 	projectilePart.Anchored = false
