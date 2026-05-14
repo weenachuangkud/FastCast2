@@ -66,7 +66,7 @@ function ActiveCastSerial.createCastData(
 				StartTime = 0,
 				EndTime = -1,
 				Origin = origin,
-				InitialVelocity = velocity,
+				InitialVelocity = if typeof(velocity) == "number" then direction * velocity else velocity,
 				Acceleration = behavior.Acceleration,
 			},
 			VisualizeCasts = behavior.VisualizeCasts,
