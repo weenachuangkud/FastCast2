@@ -366,23 +366,23 @@ function ParallelSimulation.Register(cast: any)
 	casts_Paused[id] = cast.StateInfo.Paused or false
 	casts_TotalRunTime[id] = cast.StateInfo.TotalRuntime or 0
 	casts_DistanceCovered[id] = 0
-	casts_HighFidelitySegmentSize[id] = cast.Behavior.HighFidelitySegmentSize or 0.1
-	casts_HighFidelityBehavior[id] = cast.Behavior.HighFidelityBehavior or 0
+	casts_HighFidelitySegmentSize[id] = cast.StateInfo.HighFidelitySegmentSize or 0.1
+	casts_HighFidelityBehavior[id] = cast.StateInfo.HighFidelityBehavior or 0
 	casts_IsActivelySimulatingPierce[id] = false
 	casts_IsActivelyResimulating[id] = false
 	casts_CancelHighResCast[id] = false
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
-	casts_VisualizeCasts[id] = cast.Behavior.VisualizeCasts or false
-	casts_VisualizeCastSettings[id] = cast.Behavior.VisualizeCastSettings
-	casts_FastCastEventsModuleConfig[id] = cast.Behavior.FastCastEventsModuleConfig
-	casts_FastCastEventsConfig[id] = cast.Behavior.FastCastEventsConfig
+	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts or false
+	casts_VisualizeCastSettings[id] = cast.StateInfo.VisualizeCastSettings
+	casts_FastCastEventsModuleConfig[id] = cast.StateInfo.FastCastEventsModuleConfig
+	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_RayInfo[id] = cast.RayInfo
 	casts_UserData[id] = cast.UserData
 	casts_CastType[id] = cast.CastType
 	casts_CastVariant[id] = cast.CastVariant
 	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
 	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration
-	casts_MaxDistance[id] = cast.Behavior.MaxDistance or DEFAULT_MAX_DISTANCE
+	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
 
@@ -505,8 +505,8 @@ end
 -- RS
 local function SimluateCast(
 	id: number,
-	 delta: number, 
-	 FastCastEvents 
+	delta: number, 
+	FastCastEvents 
 )
 	if DebugLogging.Casting then
 		print("Casting for frame.")
@@ -547,7 +547,7 @@ local function SimluateCast(
 	end
 
 	local rayDisplacement = (point - lastPoint).Magnitude
-	
+
 	casts_CFrame = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
@@ -561,7 +561,7 @@ local function SimluateCast(
 		canPierceCheckfn = casts_FastCastEventsModuleConfig[id].UseCanPierce and FastCastEvents.CanPierce or nil
 		castTerminatingfn = casts_FastCastEventsModuleConfig[id].UseCastTerminating and FastCastEvents.CastTerminating or nil
 	end
-	
+
 	-- NOTE: Please dont remove "part and"
 	-- Why? basically when part doesn't exist it will do nothing, but removing "part and" will break the logic
 	-- You can't do anything about it
@@ -631,20 +631,20 @@ local function SimluateCast(
 					end
 
 					local subPosition = GetPositionAtTime(
-						 	totalDelta + (timeIncrement * segmentIndex),
-							 origin, 
-						 	initialVelocity, 
-						 	acceleration
-						)
+						totalDelta + (timeIncrement * segmentIndex),
+						origin, 
+						initialVelocity, 
+						acceleration
+					)
 					local subVelocity = GetVelocityAtTime(
-							lastDelta + (timeIncrement * segmentIndex),
-							initialVelocity, 
-							acceleration
-						)
+						lastDelta + (timeIncrement * segmentIndex),
+						initialVelocity, 
+						acceleration
+					)
 					--local subRayDir = subVelocity * delta
 					local subResult = castHandler(targetWorldRoot, subPosition, casts_RayInfo[id].Parameters, casts_CastVariant[id])
 
-					
+
 					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
 					if subResult ~= nil then
@@ -749,7 +749,7 @@ local function UpdateCasts(delta: number)
 
 			local castHandler = castHandlers[casts_CastVariant[id].CastType]
 			local resultOfCast = castHandler(targetWorldRoot, lastPoint, rayDir, RayInfo.Parameters, casts_CastVariant[id])
-			
+
 			local point = currentPoint
 			if resultOfCast ~= nil then
 				point = resultOfCast.Position
