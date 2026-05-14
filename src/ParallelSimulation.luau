@@ -378,7 +378,7 @@ function ParallelSimulation.Register(cast: any)
 	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_RayInfo[id] = cast.RayInfo
 	casts_UserData[id] = cast.UserData
-	casts_CastType[id] = cast.CastType
+	casts_CastType[id] = cast.CastVariant.CastType
 	casts_CastVariant[id] = cast.CastVariant
 	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
 	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration

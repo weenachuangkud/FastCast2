@@ -90,6 +90,7 @@ function ActiveCastSerial.createCastData(
 		},
 
 		Type = CastVariantTypes[variant.CastType],
+		CastVariant = variant,
 		CFrame = CFrame.new(origin),
 		ID = activeCastID
 	}
