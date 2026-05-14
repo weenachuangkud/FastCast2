@@ -12,7 +12,7 @@ local FastCast2 = script.Parent
 
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-local ActiveCastSerial = require(FastCast2:WaitForChild("ActiveCastSerial"))
+local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local SerialSimulation = require(FastCast2:WaitForChild("SerialSimulation"))
 
 local EnumCastTypes = FastCastEnums.CastType
@@ -98,7 +98,7 @@ function BaseCastSerial:Raycast(
 		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
-	local cast = ActiveCastSerial.new(self.self.ParentCaster, castData)
+	local cast = ActiveCast.new(self.self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
 	if self.Output then
@@ -154,7 +154,7 @@ function BaseCastSerial:Blockcast(
 		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
-	local cast = ActiveCastSerial.new(self.ParentCaster, castData)
+	local cast = ActiveCast.new(self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
 	if self.Output then
@@ -210,7 +210,7 @@ function BaseCastSerial:Spherecast(
 		MovementMethod = Behavior.MovementMethod or "BulkMoveTo"
 	}
 
-	local cast = ActiveCastSerial.new(self.ParentCaster, castData)
+	local cast = ActiveCast.new(self.ParentCaster, castData)
 	SerialSimulation.Register(cast)
 
 	if self.Output then
