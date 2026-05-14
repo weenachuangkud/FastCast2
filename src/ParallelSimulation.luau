@@ -424,7 +424,7 @@ end
 local function SimluateCast(
 	id: number,
 	 delta: number, 
-	 FastCastEvents, 
+	 FastCastEvents 
 )
 	if DebugLogging.Casting then
 		print("Casting for frame.")
@@ -526,7 +526,7 @@ local function SimluateCast(
 					)
 				end
 
-				local numSegmentsDecimal = rayDisplacement / cast.StateInfo.HighFidelitySegmentSize
+				local numSegmentsDecimal = rayDisplacement / casts_HighFidelitySegmentSize[id]
 				local numSegmentsReal = math.floor(numSegmentsDecimal)
 				--local realSegmentLength = rayDisplacement / numSegmentsReal
 
