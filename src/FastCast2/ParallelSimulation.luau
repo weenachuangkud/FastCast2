@@ -706,10 +706,7 @@ local function UpdateCasts(delta: number)
 
 
 		local Trajectory: TypeDef.CastTrajectory = casts_Trajectory[id]
-		if typeof(Trajectory.Acceleration) ~= "Vector3" then
-			Trajectory.Acceleration = Vector3.new()
-		end
-
+		
 		if casts_HighFidelitySegmentSize[id] <= 0 then
 			casts_HighFidelitySegmentSize[id] = 0.1
 		end
