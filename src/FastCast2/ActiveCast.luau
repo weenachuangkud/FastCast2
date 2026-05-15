@@ -84,8 +84,7 @@ function ActiveCast.createCastData(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			MovementMethod = behavior.MovementMethod or "BulkMoveTo",
-			FastCastModule = eventModule
+			MovementMethod = behavior.MovementMethod or "BulkMoveTo"
 		},
 
 		Type = CastVariantTypes[variant.CastType],
@@ -96,12 +95,12 @@ function ActiveCast.createCastData(
 
 	if _parallel then
 		cast.StateInfo.FastCastEventsModuleConfig = {
-				UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
-				UseHit = behavior.FastCastEventsModuleConfig.UseHit,
-				UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
-				UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
-				UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
-			}
+			UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
+			UseHit = behavior.FastCastEventsModuleConfig.UseHit,
+			UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
+			UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
+			UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
+		}
 	end
 
 	if variant.CastType == EnumCastTypes.Blockcast then
@@ -122,13 +121,9 @@ function ActiveCast.createCastData(
 
 	local targetContainer: Instance?
 	if cast.Caster.ObjectCache then
-		-- TODO: Fix AI stupid
-		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:GetPart(CFrame.new(origin, origin + direction))
+		--TODO: Change this legacy code
+		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
-	elseif _parallel then
-		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			targetContainer = behavior.CosmeticBulletContainer
-		end
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
 			local basePart = cast.RayInfo.CosmeticBulletObject
