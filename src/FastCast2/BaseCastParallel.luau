@@ -150,11 +150,10 @@ function BaseCast:Raycast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
-	} :: any, true)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -258,12 +257,11 @@ function BaseCast:Spherecast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any, true)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
