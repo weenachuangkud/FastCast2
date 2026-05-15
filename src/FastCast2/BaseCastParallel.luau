@@ -214,12 +214,11 @@ function BaseCast:Blockcast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any, true)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast

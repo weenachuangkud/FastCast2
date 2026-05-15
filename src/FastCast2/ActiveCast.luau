@@ -48,6 +48,7 @@ function ActiveCast.createCastData(
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants,
+	ObjectCacheRef: any,
 	_parallel: boolean
 ): any
 	local cast = {
@@ -121,9 +122,8 @@ function ActiveCast.createCastData(
 	end
 
 	local targetContainer: Instance?
-	if cast.Caster.ObjectCache then
-		--TODO: Change this legacy code
-		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:Invoke(CFrame.new(origin, origin + direction))
+	if ObjectCacheRef then
+		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
