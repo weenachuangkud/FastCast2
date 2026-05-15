@@ -420,7 +420,7 @@ local function SimluateCast(
 	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local totalDisplacement = currentTarget - lastPoint
 
-	local rayDir = totalDisplacement * segmentVelocity.Magnitude
+	local rayDir = totalDisplacement * segmentVelocity.Magnitude * delta
 
 	local targetWorldRoot = casts_RayInfo[id].WorldRoot
 
