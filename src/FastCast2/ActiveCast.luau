@@ -115,12 +115,6 @@ function ActiveCast.createCastData(
 		cast.UserData = behavior.UserData
 	end
 
-	if cast.RayInfo.Parameters ~= nil then
-		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
-	else
-		cast.RayInfo.Parameters = RaycastParams.new()
-	end
-
 	local targetContainer: Instance?
 	if ObjectCacheRef then
 		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
