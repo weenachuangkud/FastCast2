@@ -112,19 +112,6 @@ local castHandlers = {
 
 -- Utils
 
-local function DebrisAdd(obj: Instance, lifetime: number)
-	if not obj then
-		return
-	end
-	if lifetime <= 0 then
-		obj:Destroy()
-		return
-	end
-	task.delay(lifetime, function()
-		obj:Destroy()
-	end)
-end
-
 local function GetPositionAtTime(
 	t: number,
 	origin: Vector3,
@@ -141,95 +128,6 @@ end
 
 local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
 	return initialVelocity + acceleration * time
-end
-
-local function GetFastCastVisualizationContainer(): Instance
-	local container = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
-	if container then
-		return container
-	end
-	container = Instance.new("Folder")
-	container.Name = FC_VIS_OBJ_NAME
-	container.Archivable = false
-	container.Parent = workspace.Terrain
-	return container
-end
-
-local function DbgVisualizeRaySegment(
-	startCF: CFrame,
-	visualize: boolean,
-	settings: TypeDef.VisualizeCastSettings,
-	variant: RayVisualizerVariant
-)
-	if not visualize then
-		return
-	end
-	local adornment = Instance.new("ConeHandleAdornment")
-	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = startCF
-	adornment.Height = variant.castLength
-	adornment.Color3 = settings.Debug_SegmentColor
-	adornment.Radius = settings.Debug_SegmentSize
-	adornment.Transparency = settings.Debug_SegmentTransparency
-	adornment.Parent = GetFastCastVisualizationContainer()
-	DebrisAdd(adornment, settings.Debug_RayLifetime)
-end
-
-local function DbgVisualizeBlockSegment(
-	startCF: CFrame,
-	visualize: boolean,
-	settings: TypeDef.VisualizeCastSettings,
-	variant: BlockVisualizerVariant
-)
-	if not visualize then
-		return
-	end
-	local adornment = Instance.new("BoxHandleAdornment")
-	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = startCF
-	adornment.Size = variant.size
-	adornment.Color3 = settings.Debug_SegmentColor
-	adornment.Transparency = settings.Debug_SegmentTransparency
-	adornment.Parent = GetFastCastVisualizationContainer()
-	DebrisAdd(adornment, settings.Debug_RayLifetime)
-end
-
-local function DbgVisualizeSphereSegment(
-	startCF: CFrame,
-	visualize: boolean,
-	settings: TypeDef.VisualizeCastSettings,
-	variant: SphereVisualizerVariant
-)
-	if not visualize then
-		return
-	end
-	local adornment = Instance.new("SphereHandleAdornment")
-	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = startCF
-	adornment.Radius = variant.radius
-	adornment.Color3 = settings.Debug_SegmentColor
-	adornment.Transparency = settings.Debug_SegmentTransparency
-	adornment.Parent = GetFastCastVisualizationContainer()
-	DebrisAdd(adornment, settings.Debug_RayLifetime)
-end
-
-local function DbgVisualizeHit(
-	atCF: CFrame,
-	wasPierce: boolean,
-	visualize: boolean,
-	settings: TypeDef.VisualizeCastSettings
-)
-	if not visualize then
-		return
-	end
-	local adornment = Instance.new("SphereHandleAdornment")
-	adornment.Adornee = workspace.Terrain
-	adornment.CFrame = atCF
-	adornment.Radius = wasPierce and settings.Debug_RayPierceSize or settings.Debug_HitSize
-	adornment.Transparency = wasPierce and settings.Debug_RayPierceTransparency or settings.Debug_HitTransparency
-	adornment.Color3 = wasPierce and settings.Debug_RayPierceColor or settings.Debug_HitColor
-	adornment.Parent = GetFastCastVisualizationContainer()
-	DebrisAdd(adornment, settings.Debug_HitLifetime)
 end
 
 local function QueueEvent(castID: number, eventType: string, ...: any)
