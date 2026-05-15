@@ -781,12 +781,6 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	local trajectory = cast.StateInfo.Trajectory
-	if trajectory.EndTime ~= -1 then
-		return
-	end
-	trajectory.EndTime = cast.StateInfo.TotalRuntime
-
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
 		cast.Caster.Output:Fire("CastTerminating", cast)
