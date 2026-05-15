@@ -64,7 +64,6 @@
 
 -- Requires
 -- local FastCastEnums = require(script.FastCastEnums)
-local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
 --local Configs = require(script:WaitForChild("Configs"))
