@@ -119,6 +119,8 @@ function ActiveCast.createCastData(
 	if ObjectCacheRef then
 		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
+	elseif _parallel then
+		targetContainer = behavior.CosmeticBulletContainer
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
 			local basePart = cast.RayInfo.CosmeticBulletObject

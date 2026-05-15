@@ -18,15 +18,7 @@ local DebugLogging = Configs.DebugLogging
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 
 -- Constants
-
-local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
-local DEFAULT_MAX_DISTANCE = 1000
-
 local EnumCastTypes = FastCastEnums.CastType
-
-local DBG_SEGMENT_SUB_COLOR = Color3.new(0.286275, 0.329412, 0.247059)
-local DBG_HIT_SUB_COLOR = Color3.new(0.0588235, 0.87451, 1)
-local DBG_RAYPIERCE_SUB_COLOR = Color3.new(1, 0.113725, 0.588235)
 
 -- Variables
 
