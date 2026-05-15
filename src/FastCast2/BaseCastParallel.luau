@@ -365,19 +365,7 @@ function BaseCast:Destroy()
 	setmetatable(self, nil)
 end
 
--- ObjectCache
-function BaseCast:_GetObjectCache(object: BasePart)
-	if ObjectCacheInstance then
-		return ObjectCacheInstance:GetPart(object)
-	end
-	return nil
-end
-
-function BaseCast:_ReturnObjectCache(object: BasePart)
-	if ObjectCacheInstance then
-		ObjectCacheInstance:ReturnPart(object)
-	end
-end
+-- Motor6D
 
 function BaseCast:_GetMotor6D(castID: number, projectilePart: BasePart?)
 	if Motor6DCacheInstance and projectilePart then
