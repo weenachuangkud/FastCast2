@@ -84,7 +84,8 @@ function ActiveCast.createCastData(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			MovementMethod = behavior.MovementMethod or "BulkMoveTo"
+			MovementMethod = behavior.MovementMethod or "BulkMoveTo",
+			FastCastModule = eventModule
 		},
 
 		Type = CastVariantTypes[variant.CastType],
