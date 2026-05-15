@@ -97,7 +97,7 @@ end
 
 -- Benchmark
 local isBenchmarking = false
-local AMOUNT = 1000
+local AMOUNT = 3000
 local BENCH_TIME = 5
 
 UIS.InputBegan:Connect(function(input, gp)
@@ -106,7 +106,7 @@ UIS.InputBegan:Connect(function(input, gp)
 	if input.KeyCode == Enum.KeyCode.P then
 		isBenchmarking = true
 		print("=== PARALLEL MODE BENCHMARK ===")
-		print(string.format("Firing %d casts...", AMOUNT))
+		print(string.format("Firing %d projectiles...", AMOUNT))
 
 		for i = 1, AMOUNT do
 			Caster:RaycastFire(
