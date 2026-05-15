@@ -816,11 +816,21 @@ end
 ]=]
 function FastCast.new()
 	local fs = {
-		LengthChanged = Signal.new(),
-		Hit = Signal.new(),
-		Pierced = Signal.new(),
-		CastTerminating = Signal.new(),
-		CastFire = Signal.new(),
+		LengthChanged = function()
+			print("Length Changed")
+		end,
+		Hit = function()
+			print("Hit")
+		end,
+		Pierced = function()
+			print("Pierced")
+		end,
+		CastTerminating = function()
+			print("Cast Terminating")
+		end,
+		CastFire = function()
+			print("CastFire!")
+		end,
 		WorldRoot = workspace,
 	}
 	setmetatable(fs, FastCastSerial)
@@ -842,11 +852,21 @@ end
 ]=]
 function FastCast.newParallel()
 	local fp = {
-		LengthChanged = Signal.new(),
-		Hit = Signal.new(),
-		Pierced = Signal.new(),
-		CastTerminating = Signal.new(),
-		CastFire = Signal.new(),
+		LengthChanged = function()
+			print("Length Changed")
+		end,
+		Hit = function()
+			print("Hit")
+		end,
+		Pierced = function()
+			print("Pierced")
+		end,
+		CastTerminating = function()
+			print("Cast Terminating")
+		end,
+		CastFire = function()
+			print("CastFire!")
+		end,
 		WorldRoot = workspace,
 		Dispatcher = nil,
 		AlreadyInit = false
