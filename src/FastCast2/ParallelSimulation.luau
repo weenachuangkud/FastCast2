@@ -506,8 +506,8 @@ local function SimluateCast(
 						initialVelocity, 
 						acceleration
 					)
-					--local subRayDir = subVelocity * delta
-					local subResult = castHandler(targetWorldRoot, subPosition, casts_RayInfo[id].Parameters, casts_CastVariant[id])
+					local subRayDir = subVelocity * delta
+					local subResult = castHandler(targetWorldRoot, subPosition, subRayDir, casts_RayInfo[id].Parameters)
 
 
 					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
@@ -557,7 +557,7 @@ local function UpdateCasts(delta: number)
 
 
 		local Trajectory: TypeDef.CastTrajectory = casts_Trajectory[id]
-		
+
 		if casts_HighFidelitySegmentSize[id] <= 0 then
 			casts_HighFidelitySegmentSize[id] = 0.1
 		end
