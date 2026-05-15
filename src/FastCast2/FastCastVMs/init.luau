@@ -142,7 +142,8 @@ function Dispatcher.new(Threads: number, Data : any?, Callback: (...any) -> ()?)
 
 
 	local self: Dispatcher = setmetatable({
-		Threads = {}
+		Threads = {},
+		_nextIndex = 0
 	} :: any, Dispatcher)
 
 	--> Allocate initial threads
@@ -205,13 +206,8 @@ end
 	</p>
 ]]
 function Dispatcher:Dispatch(Message : string?, ...)
-	local Threads: {Actor} = table.clone(self.Threads)
-	table.sort(Threads, function(a: Actor, b: Actor)
-		local aTasks = a:GetAttribute("Tasks") or 0
-		local bTasks = b:GetAttribute("Tasks") or 0
-		return aTasks < bTasks
-	end)
-	Threads[1]:SendMessage(Message or "Dispatch", ...)
+	self._nextIndex = self._nextIndex % #self.Threads + 1
+	self.Threads[self._nextIndex]:SendMessage(Message or "Dispatch", ...)
 end
 
 function Dispatcher:Destroy(destroySource: boolean)
