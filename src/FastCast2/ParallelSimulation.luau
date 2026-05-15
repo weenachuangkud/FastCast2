@@ -401,10 +401,6 @@ local function SimluateCast(
 	delta: number, 
 	FastCastEvents 
 )
-	if DebugLogging.Casting then
-		print("Casting for frame.")
-	end
-
 	local trajectory = casts_Trajectory[id]
 
 	local origin = trajectory.Origin
@@ -459,22 +455,10 @@ local function SimluateCast(
 	-- Why? basically when part doesn't exist it will do nothing, but removing "part and" will break the logic
 	-- You can't do anything about it
 	if part and part ~= casts_RayInfo.cosmeticBulletObject then
-		if DebugLogging.Hit then
-			print("Hit something, testing now.")
-		end
-
-		-- TODO: How will you handle CanRayPierce?
-		if DebugLogging.RayPierce and canPierceCheckfn == nil then
-			print("No piercing function set, proceeding to hit processing.")
-		end
-
 		if 
 			canPierceCheckfn == nil
 			or canPierceCheckfn(ActivesRef[id], resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
 		then
-			if DebugLogging.RayPierce then
-				print("Piercing function is nil or it returned FALSE to not pierce this hit.")
-			end
 
 			casts_IsActivelyResimulating[id] = false
 
@@ -495,12 +479,6 @@ local function SimluateCast(
 
 				casts_IsActivelyResimulating[id] = true
 
-				if DebugLogging.Calculation then
-					print(
-						"Hit was registered, but recalculation is on for physics based casts. Recalculating to verify a real hit..."
-					)
-				end
-
 				local numSegmentsDecimal = rayDisplacement / casts_HighFidelitySegmentSize[id]
 				local numSegmentsReal = math.floor(numSegmentsDecimal)
 				--local realSegmentLength = rayDisplacement / numSegmentsReal
@@ -510,12 +488,6 @@ local function SimluateCast(
 				end
 
 				local timeIncrement = delta / numSegmentsReal
-
-				if DebugLogging.Calculation then
-					print(
-						"Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal
-					)
-				end
 
 				for segmentIndex = 1, numSegmentsReal do
 					if casts_CancelHighResCast[id] then
@@ -557,9 +529,6 @@ local function SimluateCast(
 				end
 				casts_IsActivelyResimulating[id] = false
 			else
-				if DebugLogging.Hit then
-					print("Hit was successful. Terminating")
-				end
 
 				QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 				QueueEvent(id, "CastTerminating", castTerminatingfn)
@@ -567,9 +536,6 @@ local function SimluateCast(
 				return
 			end
 		else
-			if DebugLogging.RayPierce then
-				print("Piercing function returned TRUE to pierce this part.")
-			end
 
 			QueueEvent(id, "Pierced", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 
@@ -587,10 +553,6 @@ local function UpdateCasts(delta: number)
 	for _, id in casts_ID do
 		if casts_Paused[id] then
 			continue
-		end
-
-		if DebugLogging.Casting then
-			print("Casting for frame.")
 		end
 
 
@@ -654,11 +616,7 @@ local function UpdateCasts(delta: number)
 				numSegmentsReal = 1
 			end
 
-			local timeIncrement = delta / numSegmentsReal
-
-			if DebugLogging.Calculation then
-				print("Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal)
-			end
+			--local timeIncrement = delta / numSegmentsReal
 
 			local cast_nil = false
 			for segmentIndex = 1, numSegmentsReal do
@@ -672,10 +630,6 @@ local function UpdateCasts(delta: number)
 				if casts_CancelHighResCast[id] then
 					casts_CancelHighResCast[id] = false
 					break
-				end
-
-				if DebugLogging.Segment then
-					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
 				SimluateCast(id, delta, FastCastEvents)
