@@ -12,4 +12,3 @@
 - [x] ActiveCast.Trajectories -> ActiveCast.Trajectory
 - [x] Documentation updates
 - [x] Add benchmarks
-- [x] Refactor - Removed metatable, UpdateConnection, xpcall from hot path
