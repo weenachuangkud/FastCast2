@@ -17,7 +17,7 @@ local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 
 -- Constants
 local EnumCastTypes = FastCastEnums.CastType
-
+local DEFAULT_MAX_DISTANCE = 1000
 
 -- Variables
 
