@@ -1,6 +1,3 @@
-print("Starting test in 10 seconds")
-task.wait(10)
-
 -- Services
 local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")
@@ -99,46 +96,55 @@ local function summary()
 end
 
 -- Benchmark
-local AMOUNT = 500000
+local isBenchmarking = false
+local AMOUNT = 1000
 local BENCH_TIME = 5
 
-print("=== PARALLEL MODE BENCHMARK ===")
-print(string.format("Firing %d projectiles...", AMOUNT))
+UIS.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if isBenchmarking then return end
+	if input.KeyCode == Enum.KeyCode.P then
+		isBenchmarking = true
+		print("=== PARALLEL MODE BENCHMARK ===")
+		print(string.format("Firing %d casts...", AMOUNT))
 
-for i = 1, AMOUNT do
-	Caster:RaycastFire(
-		Vector3.new(
-			math.random(-1, 1) * 5000,
-			math.random(-1, 1) * 5000,
-			math.random(-1, 1) * 5000
-		),
-		Vector3.new(
-			math.random(-1, 1) * 5000,
-			math.random(-1, 1) * 5000,
-			math.random(-1, 1) * 5000
-		),
-		35,
-		castBehavior
-	)
-end
+		for i = 1, AMOUNT do
+			Caster:RaycastFire(
+				Vector3.new(
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000
+				),
+				Vector3.new(
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000
+				),
+				35,
+				castBehavior
+			)
+		end
 
-task.wait()
+		print("=== CREATION COMPLETE ===")
+		summary()
 
-print("=== CREATION COMPLETE ===")
-summary()
+		task.wait(BENCH_TIME)
 
-task.wait(BENCH_TIME)
+		print("=== SIMULATION COMPLETE ===")
+		summary()
 
-print("=== SIMULATION COMPLETE ===")
-summary()
+		print("=== CLEANUP ===")
+		for i = #activeCasts, 1, -1 do
+			FastCast:TerminateCast(activeCasts[i])
+		end
+		activeCasts = {}
+		
+		task.wait(3)
 
-print("=== CLEANUP ===")
-for i = #activeCasts, 1, -1 do
-	FastCast:TerminateCast(activeCasts[i])
-end
-activeCasts = {}
+		print("=== DONE ===")
+		summary()
+		isBenchmarking = false
+	end
+end)
 
-task.wait(3)
-
-print("=== DONE ===")
-summary()
+print("Press P to start Parallel benchmark")
