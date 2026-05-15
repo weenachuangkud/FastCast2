@@ -80,7 +80,12 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		if self.Actives[activeCastID] then
 			local cast = self.Actives[activeCastID]
 			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-				self:_ReturnObjectCache(cast.RayInfo.CosmeticBulletObject)
+				if ObjectCacheInstance then
+					ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+				else
+					cast.RayInfo.CosmeticBulletObject:Destroy()
+					cast.RayInfo.CosmeticBulletObject = nil
+				end
 			end
 			self.Actives[activeCastID] = nil
 			ParallelSimulation.Unregister(activeCastID)
