@@ -380,39 +380,6 @@ function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enab
 	end
 end
 
-function ParallelSimulation.GetActiveMotor6Ds()
-	return casts_ActiveMotor6Ds
-end
-
---[[
-function ParallelSimulation.GetSoA()
-	return {
-		Paused = casts_Paused,
-		TotalRunTime = casts_TotalRunTime,
-		DistanceCovered = casts_DistanceCovered,
-		HighFidelitySegmentSize = casts_HighFidelitySegmentSize,
-		HighFidelityBehavior = casts_HighFidelityBehavior,
-		IsActivelySimulatingPierce = casts_IsActivelySimulatingPierce,
-		IsActivelyResimulating = casts_IsActivelyResimulating,
-		CancelHighResCast = casts_CancelHighResCast,
-		Trajectory = casts_Trajectory,
-		VisualizeCasts = casts_VisualizeCasts,
-		VisualizeCastSettings = casts_VisualizeCastSettings,
-		FastCastEventsModuleConfig = casts_FastCastEventsModuleConfig,
-		FastCastEventsConfig = casts_FastCastEventsConfig,
-		RayInfo = casts_RayInfo,
-		UserData = casts_UserData,
-		CFrame = casts_CFrame,
-		CastType = casts_CastType,
-		CastVariant = casts_CastVariant,
-		Origin = casts_Origin,
-		Acceleration = casts_Acceleration,
-		MaxDistance = casts_MaxDistance,
-		ActiveMotor6Ds = casts_ActiveMotor6Ds
-	}
-end
-]]
-
 -- RS
 local function SimluateCast(
 	id: number,
