@@ -210,7 +210,6 @@ function BaseCast:Blockcast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 	NextProjectileID += 1
 
 	local cast = ActiveCast.createCastData({
@@ -254,14 +253,9 @@ function BaseCast:Spherecast(
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
-	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData({
-		Output = Output,
-		ActiveCastCleaner = ActiveCastCleaner,
-		SyncChange = SyncChanges
-	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
+	local cast = ActiveCast.createCastData(nil, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
 	} :: any,  ObjectCacheInstance)
