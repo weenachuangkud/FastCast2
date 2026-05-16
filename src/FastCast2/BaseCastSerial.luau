@@ -10,7 +10,7 @@ local FastCastM = require(FastCast2)
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-local ParallelSimulation = require(FastCast2:WaitForChild("ParallelSimulation"))
+local SerialSimulation = require(FastCast2:WaitForChild("SerialSimulation"))
 local ObjectCache = require(FastCast2:WaitForChild("ObjectCache"))
 local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 local FastCastEventsModule: ModuleScript? = nil
@@ -25,13 +25,9 @@ local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
 
 local Actor = nil
-local Output = nil
-local ActiveCastCleaner: BindableEvent = nil
 local ObjectCacheInstance: any = nil
 local Motor6DCacheInstance: any = nil
 local NextProjectileID = 0
-local SyncChanges: BindableEvent = nil
-local CastFireFunc = nil
 local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
 
 local function SendCastFire(
@@ -44,11 +40,9 @@ local function SendCastFire(
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end
 
-function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
+function BaseCast.Init(events: TypeDef.FastCastEvents, Data: any)
 	local self = setmetatable({}, BaseCast)
-	Actor = BindableOutput.Parent
 	self.Actives = {}
-	Output = BindableOutput
 
 	local BindableCleaner = Instance.new("BindableEvent")
 	BindableCleaner.Name = "ActiveCastDestroyer"
@@ -72,57 +66,11 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		Motor6DCacheInstance = Motor6DCache.new()
 	end
 
-	ActiveCastCleaner = BindableCleaner
+	SerialSimulation.Init(self)
 
-	ActiveCastCleaner.Event:Connect(function(activeCastID: number)
-		if self.Actives[activeCastID] then
-			local cast = self.Actives[activeCastID]
-			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-				if ObjectCacheInstance then
-					ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
-				else
-					cast.RayInfo.CosmeticBulletObject:Destroy()
-					cast.RayInfo.CosmeticBulletObject = nil
-				end
-			end
-			self.Actives[activeCastID] = nil
-			ParallelSimulation.Unregister(activeCastID)
-			Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") - 1)
-		end
-	end)
+	SerialSimulation.Start()
 
-	SyncChanges = Instance.new("BindableEvent")
-	SyncChanges.Name = "SyncChanges"
-	SyncChanges.Parent = Actor
-
-	SyncChanges.Event:Connect(function(cast: TypeDef.ActiveCastData)
-		local ID = cast.ID
-		local TargetCast = self.Actives[ID]
-
-		if TargetCast then
-			for i, v in cast do
-				if i == "StateInfo" and type(v) == "table" and type(TargetCast[i]) == "table" then
-					for k, v2 in v do
-						if k == "Trajectory" and type(v2) == "table" and type(TargetCast[i][k]) == "table" then
-							for tk, tv in v2 do
-								TargetCast[i][k][tk] = tv
-							end
-						else
-							TargetCast[i][k] = v2
-						end
-					end
-				else
-					TargetCast[i] = v
-				end
-			end
-		end
-	end)
-
-	ParallelSimulation.Init(self)
-
-	ParallelSimulation.Start()
-
-	ParallelSimulation.SetMovementMode(CurrentMovementMode, true)
+	SerialSimulation.SetMovementMode(CurrentMovementMode, true)
 
 	return self
 end
@@ -154,34 +102,11 @@ function BaseCast:Raycast(
 		CastType = EnumCastTypes.Raycast
 	} :: any, ObjectCacheInstance, true)
 
-	ParallelSimulation.Register(cast)
+	SerialSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire then
 		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
-	end
-	if Behavior.FastCastEventsModuleConfig.UseCastFire and CastFireFunc then
-		CastFireFunc(cast, Origin, Direction, Velocity, Behavior)
-	end
-end
-
---[=[
-
-@method SetFastCastEventsModule
-@within BaseCast
-
-@param moduleScript ModuleScript -- The FastCastEventsModule to set.
-
-]=]
-function BaseCast:SetFastCastEventsModule(moduleScript: ModuleScript)
-	FastCastEventsModule = moduleScript
-	if moduleScript and typeof(moduleScript) == "Instance" and moduleScript:IsA("ModuleScript") then
-		CastFireFunc = require(moduleScript)
-		if CastFireFunc.CastFire then
-			CastFireFunc = CastFireFunc.CastFire
-		else
-			CastFireFunc = nil
-		end
 	end
 end
 
@@ -213,14 +138,11 @@ function BaseCast:Blockcast(
 		Size = Size
 	} :: any, ObjectCacheInstance, true)
 
-	ParallelSimulation.Register(cast)
+	SerialSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire then
 		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
-	end
-	if Behavior.FastCastEventsModuleConfig.UseCastFire and CastFireFunc then
-		CastFireFunc(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -252,14 +174,11 @@ function BaseCast:Spherecast(
 		Radius = Radius
 	} :: any,  ObjectCacheInstance)
 
-	ParallelSimulation.Register(cast)
+	SerialSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire then
 		SendCastFire(cast, Origin, Direction, Velocity, Behavior)
-	end
-	if Behavior.FastCastEventsModuleConfig.UseCastFire and CastFireFunc then
-		CastFireFunc(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -287,7 +206,7 @@ function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boole
 		end
 	end
 
-	ParallelSimulation.SetMovementMode(mode, enabled)
+	SerialSimulation.SetMovementMode(mode, enabled)
 end
 
 function BaseCast:BindObjectCache(
@@ -330,8 +249,8 @@ Destroys the BaseCast instance and cleans up resources.
 
 ]=]
 function BaseCast:Destroy()
-	if ParallelSimulation then
-		ParallelSimulation.Stop()
+	if SerialSimulation then
+		SerialSimulation:Destroy()
 	end
 
 	if ObjectCacheInstance then
