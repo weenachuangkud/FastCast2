@@ -413,18 +413,6 @@ function ParallelSimulation.GetSoA()
 end
 ]]
 
-function ParallelSimulation.GetBaseCastRef()
-	return BaseCastRef
-end
-
-function ParallelSimulation.GetCurrentMovementMode()
-	return CurrentMovementMode
-end
-
-function ParallelSimulation.IsMovementEnabled()
-	return MovementEnabled
-end
-
 -- RS
 local function SimluateCast(
 	id: number,
