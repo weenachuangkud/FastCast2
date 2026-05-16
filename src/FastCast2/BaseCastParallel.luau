@@ -24,8 +24,6 @@ BaseCast.__type = "BaseCast"
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
 
-local MovementConnection: RBXScriptConnection? = nil
-
 local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
@@ -348,16 +346,6 @@ Destroys the BaseCast instance and cleans up resources.
 function BaseCast:Destroy()
 	if ParallelSimulation then
 		ParallelSimulation.Stop()
-	end
-
-	if MovementConnection then
-		MovementConnection:Disconnect()
-		MovementConnection = nil
-	end
-
-	if Motor6DCacheInstance then
-		Motor6DCacheInstance:Destroy()
-		Motor6DCacheInstance = nil
 	end
 
 	FastCastEventsModule = nil
