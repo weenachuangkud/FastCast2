@@ -48,7 +48,7 @@ function ActiveCast.createCastData(
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants,
-	ObjectCacheRef: any,
+	CacheRef: { ObjectCacheRef: any, Motor6Cache: any},
 	_parallel: boolean
 ): any
 	local cast = {
@@ -116,8 +116,8 @@ function ActiveCast.createCastData(
 	end
 
 	local targetContainer: Instance?
-	if ObjectCacheRef then
-		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
+	if CacheRef and CacheRef.ObjectCacheRef then
+		cast.RayInfo.CosmeticBulletObject = CacheRef.ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
@@ -134,6 +134,10 @@ function ActiveCast.createCastData(
 		end
 	end
 
+	if CacheRef and CacheRef.Motor6Cache then
+		CacheRef.Motor6Cache:Connect(cast.RayInfo.CosmeticBulletObject)
+	end
+	
 	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
 		local igroneList = cast.RayInfo.Parameters.FilterDescendantsInstances
 		if not table.find(igroneList, targetContainer) then
