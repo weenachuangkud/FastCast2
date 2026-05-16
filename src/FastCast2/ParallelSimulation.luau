@@ -548,8 +548,6 @@ local function SimluateCast(
 end
 
 local function UpdateCasts(delta: number)
-	task.desynchronize()
-
 	for _, id in casts_ID do
 		if casts_Paused[id] then
 			continue
