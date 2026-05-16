@@ -354,6 +354,7 @@ function ParallelSimulation.GetActiveMotor6Ds()
 	return casts_ActiveMotor6Ds
 end
 
+--[[
 function ParallelSimulation.GetSoA()
 	return {
 		Paused = casts_Paused,
@@ -380,6 +381,7 @@ function ParallelSimulation.GetSoA()
 		ActiveMotor6Ds = casts_ActiveMotor6Ds
 	}
 end
+]]
 
 function ParallelSimulation.GetBaseCastRef()
 	return BaseCastRef
