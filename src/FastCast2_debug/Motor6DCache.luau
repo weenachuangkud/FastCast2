@@ -9,6 +9,9 @@
 	I just wanted to make it more efficient and I didn't want to rewrite the whole thing
 ]]
 
+-- Services
+local HTTPS = game:GetService("HttpService")
+
 local GROWTH_RATE = 2
 local INITIAL_POOL_SIZE = 128
 
@@ -19,6 +22,11 @@ Motor6DCache.__type = "Motor6DCache"
 function Motor6DCache.new()
 	local self = setmetatable({}, Motor6DCache)
 
+	-- Folder
+	local Motor6DFolder = Instance.new("Folder")
+	Motor6DFolder.Parent = workspace
+	Motor6DFolder.Name = "Motor6D" .. tostring(HTTPS:GenerateGUID())
+
 	-- Motor6DAnchor
 	local Motor6DAnchor: BasePart = Instance.new("Part")
 	Motor6DAnchor.Name = "FastCastMotor6DAnchor"
@@ -28,8 +36,9 @@ function Motor6DCache.new()
 	Motor6DAnchor.CanTouch = false
 	Motor6DAnchor.Anchored = true
 	Motor6DAnchor.CFrame = CFrame.identity
-	Motor6DAnchor.Parent = workspace
+	Motor6DAnchor.Parent = Motor6DFolder
 
+	self.Motor6DFolder = Motor6DFolder
 	self.Motor6DAnchor = Motor6DAnchor
 	self.FreeMotor6Ds = {}
 	self.PoolSize = 0
@@ -49,7 +58,7 @@ function Motor6DCache:GrowPool(target: number)
 end
 
 function Motor6DCache:Get(): Motor6D
-	if #self.FreeMotor6Ds == 0 then
+	if #self.FreeMotor6Ds == 0 or self.PoolSize > self.PoolSize*GROWTH_RATE then
 		self:GrowPool(self.PoolSize * GROWTH_RATE)
 	end
 	return table.remove(self.FreeMotor6Ds) :: Motor6D
@@ -81,6 +90,12 @@ function Motor6DCache:Disconnect(motor6d: Motor6D?)
 	if motor6d then
 		self:Return(motor6d)
 	end
+end
+
+function Motor6DCache:Destroy()
+	self.Motor6DFolder:Destroy()
+	self.FreeMotor6Ds = {}
+	self.PoolSize = 0
 end
 
 return Motor6DCache

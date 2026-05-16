@@ -63,15 +63,10 @@
 --local BaseCast = script:WaitForChild("BaseCast")
 
 -- Requires
--- local FastCastEnums = require(script.FastCastEnums)
-local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
---local Configs = require(script:WaitForChild("Configs"))
 local ObjectCache = require(script:WaitForChild("ObjectCache"))
 local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
-
---local SharedCasters = require(script:WaitForChild("SharedCasters"))
 
 local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
@@ -299,14 +294,6 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BehaviorData._CosmeticBullet = nil
-	if BehaviorData.CosmeticBulletTemplate then
-		local bullet = BehaviorData.CosmeticBulletTemplate:Clone()
-		bullet.CFrame = CFrame.new(origin, origin + direction)
-		bullet.Parent = BehaviorData.CosmeticBulletContainer
-		BehaviorData._CosmeticBullet = bullet
-	end
-
 	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
 end
 
@@ -334,15 +321,7 @@ function FastCastParallel:BlockcastFire(
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
 	end
-
-	BehaviorData._CosmeticBullet = nil
-	if BehaviorData.CosmeticBulletTemplate then
-		local bullet = BehaviorData.CosmeticBulletTemplate:Clone()
-		bullet.CFrame = CFrame.new(origin, origin + direction)
-		bullet.Parent = BehaviorData.CosmeticBulletContainer
-		BehaviorData._CosmeticBullet = bullet
-	end
-
+	
 	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
 end
 
@@ -369,14 +348,6 @@ function FastCastParallel:SpherecastFire(
 	end
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
-	end
-
-	BehaviorData._CosmeticBullet = nil
-	if BehaviorData.CosmeticBulletTemplate then
-		local bullet = BehaviorData.CosmeticBulletTemplate:Clone()
-		bullet.CFrame = CFrame.new(origin, origin + direction)
-		bullet.Parent = BehaviorData.CosmeticBulletContainer
-		BehaviorData._CosmeticBullet = bullet
 	end
 
 	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
@@ -810,12 +781,6 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	local trajectory = cast.StateInfo.Trajectory
-	if trajectory.EndTime ~= -1 then
-		return
-	end
-	trajectory.EndTime = cast.StateInfo.TotalRuntime
-
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
 		cast.Caster.Output:Fire("CastTerminating", cast)
@@ -845,11 +810,11 @@ end
 ]=]
 function FastCast.new()
 	local fs = {
-		LengthChanged = Signal.new(),
-		Hit = Signal.new(),
-		Pierced = Signal.new(),
-		CastTerminating = Signal.new(),
-		CastFire = Signal.new(),
+		LengthChanged = nil,
+		Hit = nil,
+		Pierced = nil,
+		CastTerminating = nil,
+		CastFire = nil,
 		WorldRoot = workspace,
 	}
 	setmetatable(fs, FastCastSerial)
@@ -871,11 +836,11 @@ end
 ]=]
 function FastCast.newParallel()
 	local fp = {
-		LengthChanged = Signal.new(),
-		Hit = Signal.new(),
-		Pierced = Signal.new(),
-		CastTerminating = Signal.new(),
-		CastFire = Signal.new(),
+		LengthChanged = nil,
+		Hit = nil,
+		Pierced = nil,
+		CastTerminating = nil,
+		CastFire = nil,
 		WorldRoot = workspace,
 		Dispatcher = nil,
 		AlreadyInit = false

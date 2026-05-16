@@ -79,8 +79,13 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	ActiveCastCleaner.Event:Connect(function(activeCastID: number)
 		if self.Actives[activeCastID] then
 			local cast = self.Actives[activeCastID]
-			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject and ObjectCacheInstance then
-				ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
+				if ObjectCacheInstance then
+					ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+				else
+					cast.RayInfo.CosmeticBulletObject:Destroy()
+					cast.RayInfo.CosmeticBulletObject = nil
+				end
 			end
 			self.Actives[activeCastID] = nil
 			ParallelSimulation.Unregister(activeCastID)
@@ -150,11 +155,10 @@ function BaseCast:Raycast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
-	} :: any, true)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -214,12 +218,11 @@ function BaseCast:Blockcast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any, true)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -259,12 +262,11 @@ function BaseCast:Spherecast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		ObjectCache = ObjectCacheInstance,
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any, true)
+	} :: any,  ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -368,23 +370,11 @@ function BaseCast:Destroy()
 	setmetatable(self, nil)
 end
 
--- ObjectCache
-function BaseCast:_GetObjectCache(object: BasePart)
-	if ObjectCacheInstance then
-		return ObjectCacheInstance:GetPart(object)
-	end
-	return nil
-end
+-- Motor6D
 
-function BaseCast:_ReturnObjectCache(object: BasePart)
-	if ObjectCacheInstance then
-		ObjectCacheInstance:ReturnPart(object)
-	end
-end
-
-function BaseCast:_GetMotor6D(castID: number, projectilePart: BasePart?)
+function BaseCast:_GetMotor6D(projectilePart: BasePart?)
 	if Motor6DCacheInstance and projectilePart then
-		return Motor6DCacheInstance:Connect(castID, projectilePart)
+		return Motor6DCacheInstance:Connect(projectilePart)
 	end
 	return nil
 end

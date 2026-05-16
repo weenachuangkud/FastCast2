@@ -48,6 +48,7 @@ function ActiveCast.createCastData(
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants,
+	ObjectCacheRef: any,
 	_parallel: boolean
 ): any
 	local cast = {
@@ -84,7 +85,8 @@ function ActiveCast.createCastData(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			MovementMethod = behavior.MovementMethod or "BulkMoveTo"
+			MovementMethod = behavior.MovementMethod or "BulkMoveTo",
+			FastCastModule = eventModule
 		},
 
 		Type = CastVariantTypes[variant.CastType],
@@ -95,12 +97,12 @@ function ActiveCast.createCastData(
 
 	if _parallel then
 		cast.StateInfo.FastCastEventsModuleConfig = {
-				UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
-				UseHit = behavior.FastCastEventsModuleConfig.UseHit,
-				UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
-				UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
-				UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
-			}
+			UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
+			UseHit = behavior.FastCastEventsModuleConfig.UseHit,
+			UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
+			UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
+			UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
+		}
 	end
 
 	if variant.CastType == EnumCastTypes.Blockcast then
@@ -113,18 +115,9 @@ function ActiveCast.createCastData(
 		cast.UserData = behavior.UserData
 	end
 
-	if cast.RayInfo.Parameters ~= nil then
-		cast.RayInfo.Parameters = CloneCastParams(cast.RayInfo.Parameters)
-	else
-		cast.RayInfo.Parameters = RaycastParams.new()
-	end
-
 	local targetContainer: Instance?
-	if behavior._CosmeticBullet then
-		cast.RayInfo.CosmeticBulletObject = behavior._CosmeticBullet
-		targetContainer = behavior.CosmeticBulletContainer
-	elseif cast.Caster.ObjectCache then
-		cast.RayInfo.CosmeticBulletObject = cast.Caster.ObjectCache:GetPart(CFrame.new(origin, origin + direction))
+	if ObjectCacheRef then
+		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
 		targetContainer = cast.Caster.CacheHolder
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then

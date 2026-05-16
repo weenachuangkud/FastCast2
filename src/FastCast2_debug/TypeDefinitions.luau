@@ -421,7 +421,6 @@ export type SphereCastRayInfo = {
 export type BaseCastData = {
 	Output: BindableEvent,
 	ActiveCastCleaner: BindableEvent,
-	ObjectCache: BindableFunction?,
 	CacheHolder: any?,
 	SyncChange : BindableEvent
 }
