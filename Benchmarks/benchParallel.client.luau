@@ -7,6 +7,10 @@ local RepFirst = game:GetService("ReplicatedFirst")
 -- Requires
 local FastCast = require(Rep:WaitForChild("FastCast2"))
 
+-- Settings
+local Instanced = true
+local MovementMode = "Motor6D"
+
 -- Variables
 local ProjectileContainer = Instance.new("Folder")
 ProjectileContainer.Name = "FastCast2PJ_Parallel"
@@ -68,7 +72,7 @@ castBehavior.HighFidelitySegmentSize = 1
 castBehavior.Acceleration = Vector3.new(0, 0, 0)
 castBehavior.AutoIgnoreContainer = true
 castBehavior.CosmeticBulletContainer = ProjectileContainer
-castBehavior.CosmeticBulletTemplate = ProjectileTemplate
+castBehavior.CosmeticBulletTemplate = Instanced and ProjectileTemplate or nil
 
 -- Parallel Caster
 local Caster = FastCast.newParallel()
@@ -78,7 +82,8 @@ Caster:Init(
 	"CastVMs",      -- newName
 	RepFirst,       -- ContainerParent
 	"CastVMContainer", -- VMContainerName
-	"CastVM"       -- VMname
+	"CastVM",       -- VMname
+	MovementMode
 )
 
 local activeCasts = {}
@@ -97,8 +102,10 @@ end
 
 -- Benchmark
 local isBenchmarking = false
-local AMOUNT = 3000
+local AMOUNT = 7000
 local BENCH_TIME = 5
+
+local ien = Instanced and "Instanced" or "Non-Instanced"
 
 UIS.InputBegan:Connect(function(input, gp)
 	if gp then return end
@@ -106,7 +113,10 @@ UIS.InputBegan:Connect(function(input, gp)
 	if input.KeyCode == Enum.KeyCode.P then
 		isBenchmarking = true
 		print("=== PARALLEL MODE BENCHMARK ===")
-		print(string.format("Firing %d projectiles...", AMOUNT))
+		if Instanced then
+			print("MOVEMENT MODE: " .. MovementMode)
+		end
+		print(string.format("Firing %d projectiles..." .. ien, AMOUNT))
 
 		for i = 1, AMOUNT do
 			Caster:RaycastFire(
