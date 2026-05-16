@@ -158,12 +158,7 @@ function BaseCast:Raycast(
 		SyncChange = SyncChanges
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
-	} :: any, {
-		ObjectCacheRef = ObjectCacheInstance,
-		Motor6Cache = Motor6DCacheInstance
-	}, 
-		true
-	)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -227,12 +222,7 @@ function BaseCast:Blockcast(
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any,  {
-		ObjectCacheRef = ObjectCacheInstance,
-		Motor6Cache = Motor6DCacheInstance
-	}, 
-		true
-	)
+	} :: any, ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -276,12 +266,7 @@ function BaseCast:Spherecast(
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any,  {
-		ObjectCacheRef = ObjectCacheInstance,
-		Motor6Cache = Motor6DCacheInstance
-	}, 
-		true
-	)
+	} :: any,  ObjectCacheInstance, true)
 
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
@@ -387,9 +372,9 @@ end
 
 -- Motor6D
 
-function BaseCast:_GetMotor6D(castID: number, projectilePart: BasePart?)
+function BaseCast:_GetMotor6D(projectilePart: BasePart?)
 	if Motor6DCacheInstance and projectilePart then
-		return Motor6DCacheInstance:Connect(castID, projectilePart)
+		return Motor6DCacheInstance:Connect(projectilePart)
 	end
 	return nil
 end

@@ -58,7 +58,7 @@ function Motor6DCache:GrowPool(target: number)
 end
 
 function Motor6DCache:Get(): Motor6D
-	if #self.FreeMotor6Ds == 0 then
+	if #self.FreeMotor6Ds == 0 or self.PoolSize > self.PoolSize*GROWTH_RATE then
 		self:GrowPool(self.PoolSize * GROWTH_RATE)
 	end
 	return table.remove(self.FreeMotor6Ds) :: Motor6D

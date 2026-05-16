@@ -299,6 +299,14 @@ function ParallelSimulation.Register(cast: any)
 
 	cast.CFrame = casts_CFrame[id]
 
+	if CurrentMovementMode == "Motor6D" and MovementEnabled then
+		local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
+		if cosmeticPart and BaseCastRef and BaseCastRef._GetMotor6D then
+			local motor6d = BaseCastRef:_GetMotor6D(cosmeticPart)
+			casts_ActiveMotor6Ds[id] = motor6d
+		end
+	end
+
 	queuedEvents[id] = {}
 end
 
@@ -346,8 +354,30 @@ function ParallelSimulation.Unregister(castID: number)
 end
 
 function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+	local oldMode = CurrentMovementMode
 	CurrentMovementMode = mode
 	MovementEnabled = enabled
+
+	if oldMode == "Motor6D" and mode ~= "Motor6D" then
+		for id, motor6d in casts_ActiveMotor6Ds do
+			if BaseCastRef and BaseCastRef._ReturnMotor6D then
+				BaseCastRef:_ReturnMotor6D(motor6d)
+			end
+			casts_ActiveMotor6Ds[id] = nil
+		end
+	end
+
+	if mode == "Motor6D" and enabled and oldMode ~= "Motor6D" then
+		for _, id in casts_ID do
+			if not casts_ActiveMotor6Ds[id] then
+				local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
+				if cosmeticPart and BaseCastRef and BaseCastRef._GetMotor6D then
+					local motor6d = BaseCastRef:_GetMotor6D(cosmeticPart)
+					casts_ActiveMotor6Ds[id] = motor6d
+				end
+			end
+		end
+	end
 end
 
 function ParallelSimulation.GetActiveMotor6Ds()
