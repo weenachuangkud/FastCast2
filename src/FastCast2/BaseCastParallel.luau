@@ -348,6 +348,14 @@ function BaseCast:Destroy()
 		ParallelSimulation.Stop()
 	end
 
+	if ObjectCacheInstance then
+		ObjectCacheInstance:Destroy()
+	end
+
+	if Motor6DCacheInstance then
+		Motor6DCacheInstance:Destroy()
+	end
+
 	FastCastEventsModule = nil
 
 	for _, v in self.Actives do
