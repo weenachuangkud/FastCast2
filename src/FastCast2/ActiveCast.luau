@@ -49,7 +49,7 @@ function ActiveCast.createCastData(
 	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants,
 	ObjectCacheRef: any,
-	_parallel: boolean
+	_parallel: boolean?
 ): any
 	local cast = {
 		Caster = BaseCast,
