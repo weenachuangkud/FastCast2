@@ -412,7 +412,7 @@ end
 	@param CacheHolder Instance? -- Parent for cached objects.
 ]=]
 function FastCastSerial:Init(
-	useBulkMoveTo: boolean,
+	movementMode: "BulkMoveTo" | "Motor6D",
 	useObjectCache: boolean,
 	Template: BasePart | Model?,
 	CacheSize: number?,
@@ -423,44 +423,20 @@ function FastCastSerial:Init(
 		return
 	end
 
-	local BindableOutput = Instance.new("BindableEvent")
-	BindableOutput.Name = "Output"
-	BindableOutput.Parent = script
-
 	local data = {
-		useBulkMoveTo = useBulkMoveTo,
-		useObjectCache = useObjectCache
+		movementMode = movementMode or "BulkMoveTo",
+		useObjectCache = useObjectCache,
+		objectCacheArgs = {
+			Template = Template,
+			CacheSize = CacheSize or DEFAULT_CACHE_SIZE,
+			CacheHolder = CacheHolder or DEFAULT_CACHE_HOLDER
+		}
 	}
 
-	self.BaseCast = BaseCastSerial.Init(BindableOutput, data, self)
+	self.BaseCast = BaseCastSerial.Init(self, data)
 
-	self.Output = BindableOutput
-
-	BindableOutput.Event:Connect(function(eventName: string, ...)
-		local f = self[eventName]
-		if not f then
-			return
-		end
-		
-		if type(f) == "function" then
-			f(...)
-		end
-	end)
-
-	if useObjectCache then
-		if not CacheSize then
-			CacheSize = DEFAULT_CACHE_SIZE
-		end
-		if not CacheHolder then
-			CacheHolder = DEFAULT_CACHE_HOLDER
-		end
-		-- HEy I use "Template :: any" here because of a weird issue where the type of Template is not being recognized as BasePart | Model, even though it is. I have no idea why this is happening, but it works so I'm not gonna question it.
-		self.ObjectCache = ObjectCache.new((Template :: any), CacheSize, CacheHolder) :: any
-		self.ObjectCacheEnabled = true
-	end
-
-	self.MovementMode = useBulkMoveTo and "BulkMoveTo" or "Motor6D"
-	self.Initialized = true
+	self.MovementMode = movementMode or "BulkMoveTo"
+	self.AlreadyInit = true
 end
 
 --[=[
@@ -473,7 +449,7 @@ function FastCastSerial:RaycastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior?
 )
-	if not self.Initialized or not self.BaseCast then
+	if not self.AlreadyInit then
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
@@ -494,7 +470,7 @@ function FastCastSerial:BlockcastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior?
 )
-	if not self.Initialized or not self.BaseCast then
+	if not self.AlreadyInit then
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
@@ -515,7 +491,7 @@ function FastCastSerial:SpherecastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior?
 )
-	if not self.Initialized or not self.BaseCast then
+	if not self.AlreadyInit then
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
@@ -545,20 +521,7 @@ end
 function FastCastSerial:SetObjectCacheEnabled(enabled: boolean)
 	if not self.BaseCast then return end
 
-	if enabled then
-		if not self.ObjectCache then
-			warn("ObjectCache not initialized. Call Init with useObjectCache = true first.")
-			return
-		end
-		self.BaseCast:BindObjectCache(true)
-	else
-		self.BaseCast:BindObjectCache(false)
-		if self.ObjectCache then
-			self.ObjectCache:Destroy()
-			self.ObjectCache = nil
-		end
-	end
-
+	self.BaseCast:BindObjectCache(enabled)
 	self.ObjectCacheEnabled = enabled
 end
 
@@ -567,10 +530,6 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:Destroy()
-	if self.ObjectCache then
-		self.ObjectCache:Destroy()
-	end
-
 	if self.BaseCast then
 		self.BaseCast:Destroy()
 	end
@@ -578,12 +537,9 @@ function FastCastSerial:Destroy()
 	self.LengthChanged = nil
 	self.Hit = nil
 	self.Pierced = nil
+	self.CanPierce = nil
 	self.CastTerminating = nil
 	self.CastFire = nil
-
-	if self.Output then
-		self.Output:Destroy()
-	end
 
 	setmetatable(self, nil)
 end
@@ -813,6 +769,7 @@ function FastCast.new()
 		LengthChanged = nil,
 		Hit = nil,
 		Pierced = nil,
+		CanPierce = nil,
 		CastTerminating = nil,
 		CastFire = nil,
 		WorldRoot = workspace,
