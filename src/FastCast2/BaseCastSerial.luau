@@ -150,11 +150,7 @@ function BaseCast:Raycast(
 	Actor:SetAttribute("Tasks", Actor:GetAttribute("Tasks") + 1)
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData({
-		Output = Output,
-		ActiveCastCleaner = ActiveCastCleaner,
-		SyncChange = SyncChanges
-	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
+	local cast = ActiveCast.createCastData(nil, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
 	} :: any, ObjectCacheInstance, true)
 
@@ -212,11 +208,7 @@ function BaseCast:Blockcast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData({
-		Output = Output,
-		ActiveCastCleaner = ActiveCastCleaner,
-		SyncChange = SyncChanges
-	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
+	local cast = ActiveCast.createCastData(nil, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
 	} :: any, ObjectCacheInstance, true)
