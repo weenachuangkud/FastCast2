@@ -767,7 +767,7 @@ function FastCast.TerminateCast(cast: vaildcast)
 	local caster = cast.Caster
 	if caster == nil then return end
 
-	local eventsCfg = cast.StateInfo.FastCastEventsConfig
+	local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
 
 	if caster.Output then
 		-- Parallel mode
@@ -784,9 +784,8 @@ function FastCast.TerminateCast(cast: vaildcast)
 			end
 		end
 		caster.SerialSimulation:Unregister(cast.ID)
+		caster.Actives[cast.ID] = nil
 	end
-
-	caster.Actives[cast.ID] = nil
 
 	for key, _ in (cast :: any) do
 		cast[key] = nil
