@@ -137,7 +137,7 @@ function Dispatcher.new(Threads: number, Data : any?, Callback: (...any) -> ()?)
 	assert(type(Threads) == "number" and Threads > 0, "Invalid argument #2 to 'Dispatcher.new', threads must be a positive integer.")
 
 	if not AlreadyInit then
-		error("Please Init dispatcher, RunContext : " .. IS_SERVER and "Server"or "Client")
+		error("Please Init dispatcher, RunContext : " .. (IS_SERVER and "Server" or "Client"))
 	end
 
 

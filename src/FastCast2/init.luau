@@ -65,7 +65,6 @@
 -- Requires
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
-local ObjectCache = require(script:WaitForChild("ObjectCache"))
 local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
 
 local DispatcherModule = script:WaitForChild("FastCastVMs")
@@ -77,6 +76,14 @@ type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.
 -- CONSTANTS
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
+local VALID_EVENTS = {
+	["CastFire"] = true,
+	["CastTerminating"] = true,
+	["Hit"] = true,
+	["Pierced"] = true,
+	["LengthChanged"] = true,
+	["CanPierce"] = true
+}
 
 -- FastCast
 
@@ -90,6 +97,21 @@ If true, verbose debug logging will be used,
 ]]
 
 FastCastSerial.__index = FastCastSerial
+FastCastSerial.__newindex = function(self, key, value)
+	if VALID_EVENTS[key] then
+		if type(value) == "function" then
+			if self.BaseCast then
+				self.BaseCast:_UpdateEvents(key, value)
+			else
+				rawset(self, key, value)
+			end
+		else
+			warn("Cannot set event, not a function")
+		end
+	else
+		rawset(self, key, value)
+	end
+end
 FastCastSerial.__type = "FastCastSerial"
 
 FastCastParallel.__index = FastCastParallel
@@ -433,7 +455,16 @@ function FastCastSerial:Init(
 		}
 	}
 
-	self.BaseCast = BaseCastSerial.Init(self, data)
+	local events: TypeDef.FastCastEvents = {
+		CastFire = self.CastFire,
+		Pierced = self.Pierced,
+		Hit = self.Hit,
+		LengthChanged = self.LengthChanged,
+		CanPierce = self.CanPierce,
+		CastTerminating = self.CastTerminating
+	}
+
+	self.BaseCast = BaseCastSerial.Init(events, data)
 
 	self.MovementMode = movementMode or "BulkMoveTo"
 	self.AlreadyInit = true
@@ -550,10 +581,6 @@ end
 	@within FastCastParallel
 ]=]
 function FastCastParallel:Destroy()
-	if self.ObjectCache then
-		self.ObjectCache:Destroy()
-	end
-
 	-- I'm making sure that everything is destroyed here lmao
 	self.LengthChanged = nil
 	self.Hit = nil
@@ -736,21 +763,8 @@ end
 
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
-function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
-	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
-		cast.Caster.Output:Fire("CastTerminating", cast)
-	end
-
-	if castTerminatingFunction then
-		castTerminatingFunction((cast :: any))
-	end
-
-	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
-
-	for key, _ in (cast :: any) do
-		cast[key] = nil
-	end
+function FastCast.TerminateCast(cast: vaildcast)
+	-- TODO
 end
 
 -- Constructors

@@ -34,7 +34,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	local clone: RaycastParams = RaycastParams.new()
 	clone.CollisionGroup = params.CollisionGroup
 	clone.FilterType = params.FilterType
-	clone.FilterDescendantsInstances = params.FilterDescendantsInstances
+	clone.FilterDescendantsInstances = {table.unpack(params.FilterDescendantsInstances)}
 	clone.IgnoreWater = params.IgnoreWater
 	return clone
 end
@@ -135,10 +135,10 @@ function ActiveCast.createCastData(
 	end
 
 	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
-		local igroneList = cast.RayInfo.Parameters.FilterDescendantsInstances
-		if not table.find(igroneList, targetContainer) then
-			table.insert(igroneList, targetContainer)
-			cast.RayInfo.Parameters.FilterDescendantsInstances = igroneList
+		local ignoreList = cast.RayInfo.Parameters.FilterDescendantsInstances
+		if not table.find(ignoreList, targetContainer) then
+			table.insert(ignoreList, targetContainer)
+			cast.RayInfo.Parameters.FilterDescendantsInstances = ignoreList
 		end
 	end
 

@@ -7,13 +7,8 @@
 
 local RS = game:GetService("RunService")
 
-local FastCastModule = script.Parent
-
--- Requires
-
-local FastCast = require(FastCastModule)
-local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
-local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+local TypeDef = require(script.Parent:WaitForChild("TypeDefinitions"))
+local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 
 -- Constants
 local EnumCastTypes = FastCastEnums.CastType
@@ -30,8 +25,6 @@ local casts_IsActivelySimulatingPierce = {} :: { [number]: boolean }
 local casts_IsActivelyResimulating = {} :: { [number]: boolean }
 local casts_CancelHighResCast = {} :: { [number]: boolean }
 local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
-local casts_VisualizeCasts = {} :: { [number]: boolean }
-local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
 local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
 local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
 local casts_UserData = {} :: { [number]: any }
@@ -43,9 +36,6 @@ local casts_Acceleration = {} :: { [number]: Vector3 }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
 
-local casts_ID = {} :: { number }
-local casts_ID_Index = {} :: { [number]: number }
-
 type QueuedEventData = {
 	eventType: string,
 	args: { any }
@@ -55,8 +45,6 @@ local queuedEvents: { [number]: { QueuedEventData } } = {}
 
 local ActivesRef: any = nil
 local BaseCastRef = nil :: any
-local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
-local MovementEnabled = false
 
 -- Types
 
@@ -118,48 +106,14 @@ local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceler
 	return initialVelocity + acceleration * time
 end
 
-local function BulkMoveTo()
-	if CurrentMovementMode ~= "BulkMoveTo" or not MovementEnabled then
-		return
+local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	if castTerminatingFunction then
+		castTerminatingFunction((cast :: any))
 	end
 
-	local parts = table.create(#casts_ID)
-	local cframes = table.create(#casts_ID)
-
-	for _, id in casts_ID do
-		local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
-		if cosmeticPart and cosmeticPart.Parent then
-			table.insert(parts, cosmeticPart)
-			table.insert(cframes, casts_CFrame[id])
-		end
+	for key, _ in (cast :: any) do
+		cast[key] = nil
 	end
-
-	if #parts > 0 then
-		workspace:BulkMoveTo(parts, cframes, Enum.BulkMoveMode.FireCFrameChanged)
-	end
-end
-
-local function UpdateMotor6Ds()
-	if CurrentMovementMode ~= "Motor6D" or not MovementEnabled then
-		return
-	end
-
-	for id, motor6d in casts_ActiveMotor6Ds do
-		if motor6d and motor6d.Parent then
-			motor6d.Transform = casts_CFrame[id]
-		end
-	end
-end
-
-local function SyncPhase()
-	task.synchronize()
-
-	UpdateMotor6Ds()
-	BulkMoveTo()
-
-	local eventsToProcess = queuedEvents
-	queuedEvents = {}
-	FireQueuedEvents(eventsToProcess)
 end
 
 -- SerialSimulation
@@ -168,7 +122,7 @@ local SerialSimulation = {}
 SerialSimulation.__index = SerialSimulation
 SerialSimulation.__type = "SerialSimulation"
 
-function SerialSimulation.Register(cast: any)
+function SerialSimulation:Register(cast: any)
 	local id = cast.ID
 
 	casts_Paused[id] = cast.StateInfo.Paused or false
@@ -180,8 +134,6 @@ function SerialSimulation.Register(cast: any)
 	casts_IsActivelyResimulating[id] = false
 	casts_CancelHighResCast[id] = false
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
-	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts or false
-	casts_VisualizeCastSettings[id] = cast.StateInfo.VisualizeCastSettings
 	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_RayInfo[id] = cast.RayInfo
 	casts_UserData[id] = cast.UserData
@@ -190,8 +142,8 @@ function SerialSimulation.Register(cast: any)
 	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
 	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration
 	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
-	table.insert(casts_ID, id)
-	casts_ID_Index[id] = #casts_ID
+	table.insert(self.casts_ID, id)
+	self.casts_ID_Index[id] = #self.casts_ID
 
 	local position = GetPositionAtTime(
 		casts_TotalRunTime[id],
@@ -203,7 +155,7 @@ function SerialSimulation.Register(cast: any)
 
 	cast.CFrame = casts_CFrame[id]
 
-	if CurrentMovementMode == "Motor6D" and MovementEnabled then
+	if self.CurrentMovementMode == "Motor6D" and self.MovementEnabled then
 		local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
 		if cosmeticPart and BaseCastRef and BaseCastRef._GetMotor6D then
 			local motor6d = BaseCastRef:_GetMotor6D(cosmeticPart)
@@ -214,7 +166,7 @@ function SerialSimulation.Register(cast: any)
 	queuedEvents[id] = {}
 end
 
-function SerialSimulation.Unregister(castID: number)
+function SerialSimulation:Unregister(castID: number)
 	casts_Paused[castID] = nil
 	casts_TotalRunTime[castID] = nil
 	casts_DistanceCovered[castID] = nil
@@ -224,8 +176,6 @@ function SerialSimulation.Unregister(castID: number)
 	casts_IsActivelyResimulating[castID] = nil
 	casts_CancelHighResCast[castID] = nil
 	casts_Trajectory[castID] = nil
-	casts_VisualizeCasts[castID] = nil
-	casts_VisualizeCastSettings[castID] = nil
 	casts_FastCastEventsConfig[castID] = nil
 	casts_RayInfo[castID] = nil
 	casts_UserData[castID] = nil
@@ -243,13 +193,13 @@ function SerialSimulation.Unregister(castID: number)
 		casts_ActiveMotor6Ds[castID] = nil
 	end
 
-	local idx = casts_ID_Index[castID]
+	local idx = self.casts_ID_Index[castID]
 	if idx then
-		local lastID = casts_ID[#casts_ID]
-		casts_ID[idx] = lastID
-		casts_ID_Index[lastID] = idx
-		casts_ID[#casts_ID] = nil
-		casts_ID_Index[castID] = nil
+		local lastID = self.casts_ID[#self.casts_ID]
+		self.casts_ID[idx] = lastID
+		self.casts_ID_Index[lastID] = idx
+		self.casts_ID[#self.casts_ID] = nil
+		self.casts_ID_Index[castID] = nil
 	end
 
 	queuedEvents[castID] = nil
@@ -270,7 +220,7 @@ function SerialSimulation:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enable
 	end
 
 	if mode == "Motor6D" and enabled and oldMode ~= "Motor6D" then
-		for _, id in casts_ID do
+		for _, id in self.casts_ID do
 			if not casts_ActiveMotor6Ds[id] then
 				local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
 				if cosmeticPart and BaseCastRef and BaseCastRef._GetMotor6D then
@@ -300,7 +250,7 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 	end
 	table.sort(sortedIDs)
 
-	local eventsFunction = self.events
+	local eventsFunction = self.Events
 
 	for _, castID in sortedIDs do
 		local eventList = unFiredEvents[castID]
@@ -309,7 +259,7 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 		end
 
 		for _, event in eventList do
-			local cast = ActivesRef[castID]
+			local cast = self.ActivesRef[castID]
 			if not cast then
 				continue
 			end
@@ -317,7 +267,6 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 			local eventType: string = event.eventType
 			local args: { any } = event.args
 
-			local caster = cast.Caster
 			local eventConfig = casts_FastCastEventsConfig[castID]
 
 			if eventType == "LengthChanged" then
@@ -348,8 +297,43 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 				end
 
 			elseif eventType == "CastTerminating" then
-				FastCast:TerminateCast(cast, eventsFunction.CastTerminating)
+				TerminateCast(cast, eventsFunction.CastTerminating)
+				self:Unregister(castID)
+				self.ActivesRef[castID] = nil
 			end
+		end
+	end
+end
+
+function SerialSimulation:BulkMoveTo()
+	if self.CurrentMovementMode ~= "BulkMoveTo" or not self.MovementEnabled then
+		return
+	end
+
+	local parts = table.create(#self.casts_ID)
+	local cframes = table.create(#self.casts_ID)
+
+	for _, id in self.casts_ID do
+		local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
+		if cosmeticPart and cosmeticPart.Parent then
+			table.insert(parts, cosmeticPart)
+			table.insert(cframes, casts_CFrame[id])
+		end
+	end
+
+	if #parts > 0 then
+		workspace:BulkMoveTo(parts, cframes, Enum.BulkMoveMode.FireCFrameChanged)
+	end
+end
+
+function SerialSimulation:UpdateMotor6Ds()
+	if self.CurrentMovementMode ~= "Motor6D" or not self.MovementEnabled then
+		return
+	end
+
+	for id, motor6d in casts_ActiveMotor6Ds do
+		if motor6d and motor6d.Parent then
+			motor6d.Transform = casts_CFrame[id]
 		end
 	end
 end
@@ -379,7 +363,7 @@ function SerialSimulation:SimluateCast(
 	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local totalDisplacement = currentTarget - lastPoint
 
-	local rayDir = totalDisplacement * segmentVelocity.Magnitude * delta
+	local rayDir = totalDisplacement
 
 	local targetWorldRoot = casts_RayInfo[id].WorldRoot
 
@@ -398,14 +382,14 @@ function SerialSimulation:SimluateCast(
 
 	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
-	SerialSimulation:QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
+	self:QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
 
 	casts_DistanceCovered[id] += rayDisplacement
 
 	-- NOTE: Please dont remove "part and"
 	-- Why? basically when part doesn't exist it will do nothing, but removing "part and" will break the logic
 	-- You can't do anything about it
-	if part and part ~= casts_RayInfo.cosmeticBulletObject then
+	if part and part ~= casts_RayInfo[id].CosmeticBulletObject then
 		if 
 			CanPiercefn == nil
 			or CanPiercefn(ActivesRef[id], resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
@@ -420,7 +404,7 @@ function SerialSimulation:SimluateCast(
 				casts_CancelHighResCast[id] = false
 
 				if casts_IsActivelyResimulating[id] then
-					SerialSimulation:QueueEvent(id, "CastTerminating")
+					self:QueueEvent(id, "CastTerminating")
 
 					warn(
 						"Cascading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize."
@@ -439,6 +423,7 @@ function SerialSimulation:SimluateCast(
 				end
 
 				local timeIncrement = delta / numSegmentsReal
+				local subHitFound = false
 
 				for segmentIndex = 1, numSegmentsReal do
 					if casts_CancelHighResCast[id] then
@@ -464,6 +449,7 @@ function SerialSimulation:SimluateCast(
 					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
 					if subResult ~= nil then
+						subHitFound = true
 						--subDispalcement = (subPosition - subResult.Position).Magnitude
 
 						if 
@@ -471,35 +457,41 @@ function SerialSimulation:SimluateCast(
 							or CanPiercefn(ActivesRef[id], subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
 						then
 							casts_IsActivelyResimulating[id] = false
-							SerialSimulation:QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
-							SerialSimulation:QueueEvent(id, "CastTerminating")
+							self:QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
+							self:QueueEvent(id, "CastTerminating")
+							return
 						else
-							SerialSimulation:QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
+							self:QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 						end
 					end
 				end
 				casts_IsActivelyResimulating[id] = false
+				if not subHitFound then
+					self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+					self:QueueEvent(id, "CastTerminating")
+					return
+				end
 			else
 
-				SerialSimulation:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
-				SerialSimulation:QueueEvent(id, "CastTerminating")
+				self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+				self:QueueEvent(id, "CastTerminating")
 
 				return
 			end
 		else
 
-			SerialSimulation:QueueEvent(id, "Pierced", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+			self:QueueEvent(id, "Pierced", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 
 		end
 	end
 
 	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
-		SerialSimulation:QueueEvent(id, "CastTerminating")
+		self:QueueEvent(id, "CastTerminating")
 	end
 end
 
 function SerialSimulation:UpdateCasts(delta: number)
-	for _, id in casts_ID do
+	for _, id in self.casts_ID do
 		if casts_Paused[id] then
 			continue
 		end
@@ -514,7 +506,7 @@ function SerialSimulation:UpdateCasts(delta: number)
 		if casts_HighFidelityBehavior[id] == FastCastEnums.HighFidelityBehavior.Always then
 
 			if casts_IsActivelyResimulating[id] then
-				SerialSimulation:QueueEvent(id, "CastTerminating")
+				self:QueueEvent(id, "CastTerminating")
 				warn("Casading cast lag encountered! The caster attempted to perform a high fidelity cast before the previous one completed, resulting in exponential cast lag. Consider increasing HighFidelitySegmentSize.")
 				continue
 			end
@@ -563,7 +555,7 @@ function SerialSimulation:UpdateCasts(delta: number)
 			for segmentIndex = 1, numSegmentsReal do
 
 				-- In case when cast Destroyed or not exist
-				if ActivesRef[id] == nil then
+				if self.ActivesRef[id] == nil then
 					cast_nil = true
 				end
 
@@ -573,7 +565,7 @@ function SerialSimulation:UpdateCasts(delta: number)
 					break
 				end
 
-				SerialSimulation:SimluateCast(id, delta, self.events.CanPierce)
+				self:SimluateCast(id, delta, self.Events.CanPierce)
 			end
 
 			if cast_nil then
@@ -581,16 +573,23 @@ function SerialSimulation:UpdateCasts(delta: number)
 			end
 
 			-- Double check again
-			if ActivesRef[id] == nil then
+			if self.ActivesRef[id] == nil then
 				continue
 			end
 			casts_IsActivelyResimulating[id] = false
 		else
-			SerialSimulation:SimluateCast(id, delta, self.events.CanPierce)
+			self:SimluateCast(id, delta, self.Events.CanPierce)
 		end
 	end
 
-	SyncPhase()
+	-- BulkMoveTo, UpdateMotor6Ds, FireQueuedEvents
+
+	self:UpdateMotor6Ds()
+	self:BulkMoveTo()
+
+	local eventsToProcess = queuedEvents
+	queuedEvents = {}
+	self:FireQueuedEvents(eventsToProcess)
 end
 
 function SerialSimulation.new()
@@ -598,9 +597,12 @@ function SerialSimulation.new()
     self.Connection = nil
 	self.CurrentMovementMode = "BulkMoveTo"
 	self.MovementEnabled = true
-	self.Events = nil
+	self.Events = {}
 	self.BaseCastRef = nil
 	self.ActivesRef = nil
+	self.casts_ID = {}
+	self.casts_ID_Index = {}
+	return self
 end
 
 function SerialSimulation:Init(baseCastRef: any, events: TypeDef.FastCastEvents)
@@ -631,6 +633,11 @@ function SerialSimulation:Stop()
 		self.Connection:Disconnect()
 		self.Connection = nil
 	end
+end
+
+-- Utils
+function SerialSimulation:_UpdateEvents(eventName: string, newEventfn: (...any) -> ())
+	self.Events[eventName] = newEventfn
 end
 
 return SerialSimulation

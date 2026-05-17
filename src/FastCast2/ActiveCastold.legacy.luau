@@ -526,7 +526,7 @@ local function SimulateCast(
 					)
 				end
 
-				c
+				local numSegmentsReal = math.floor(numSegmentsDecimal)
 
 				local timeIncrement = delta / numSegmentsReal
 

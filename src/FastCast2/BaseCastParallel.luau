@@ -44,6 +44,23 @@ local function SendCastFire(
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end
 
+local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
+		cast.Caster.Output:Fire("CastTerminating", cast)
+	end
+
+	if castTerminatingFunction then
+		castTerminatingFunction((cast :: any))
+	end
+
+	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
+
+	for key, _ in (cast :: any) do
+		cast[key] = nil
+	end
+end
+
 function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	local self = setmetatable({}, BaseCast)
 	Actor = BindableOutput.Parent
@@ -359,7 +376,7 @@ function BaseCast:Destroy()
 	FastCastEventsModule = nil
 
 	for _, v in self.Actives do
-		FastCastM:TerminateCast(v)
+		TerminateCast(v)
 	end
 
 	self.Actives = {}

@@ -9,7 +9,7 @@
 --local Rep = game:GetService("ReplicatedStorage")
 --local FastCast2Module = Rep:WaitForChild("FastCast2")
 
-local FastCast2Module: ModuleScript = script:WaitForChild("FastCast2").Value :: ModuleScript
+local FastCast2Module: ModuleScript = script:WaitForChild("FastCast2", 10).Value :: ModuleScript
 
 
 local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
@@ -21,6 +21,7 @@ local actor = script:GetActor()
 if actor == nil then 
 	error("The script must placed inside of actor")
 end
+local BaseCast = nil
 
 -- Listeners
 
@@ -35,7 +36,7 @@ actor:BindToMessage("Raycast", function(
 	origin : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior
+	behavior : any
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])
@@ -69,7 +70,7 @@ actor:BindToMessage("Blockcast", function(
 	size : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior
+	behavior : any
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])
@@ -83,7 +84,7 @@ actor:BindToMessage("Spherecast", function(
 	radius : number,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior
+	behavior : any
 )
 	BaseCast:Spherecast(origin, radius, direction, velocity, behavior)
 end)
