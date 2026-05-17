@@ -5,12 +5,11 @@
 ]]
 
 local FastCast2 = script.Parent
-local FastCastM = require(FastCast2)
 
+local SerialSimulation = require(script.Parent.SerialSimulation)
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-local SerialSimulation = require(FastCast2:WaitForChild("SerialSimulation"))
 local ObjectCache = require(FastCast2:WaitForChild("ObjectCache"))
 local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 local FastCastEventsModule: ModuleScript? = nil
@@ -66,11 +65,12 @@ function BaseCast.Init(events: TypeDef.FastCastEvents, Data: any)
 		Motor6DCacheInstance = Motor6DCache.new()
 	end
 
-	SerialSimulation.Init(self)
+	self.SerialSimulation = SerialSimulation.new()
+	self.SerialSimulation:Init(self, events)
 
-	SerialSimulation.Start()
+	self.SerialSimulation:SetMovementMode(CurrentMovementMode, true)
 
-	SerialSimulation.SetMovementMode(CurrentMovementMode, true)
+	self.SerialSimulation:Start()
 
 	return self
 end

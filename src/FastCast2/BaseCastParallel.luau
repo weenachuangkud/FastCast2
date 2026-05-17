@@ -120,9 +120,9 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	ParallelSimulation.Init(self)
 
-	ParallelSimulation.Start()
-
 	ParallelSimulation.SetMovementMode(CurrentMovementMode, true)
+
+	ParallelSimulation.Start()
 
 	return self
 end

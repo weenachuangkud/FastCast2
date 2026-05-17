@@ -636,10 +636,15 @@ local function UpdateCasts(delta: number)
 end
 
 function ParallelSimulation.Start()
+	if ParallelSimulation.Connection then
+		warn("Already started")
+		return
+	end
+	
 	if RS:IsClient() then
 		ParallelSimulation.Connection = RS.PreSimulation:ConnectParallel(UpdateCasts)
 	else
-		ParallelSimulation.Connection = RS.Heartbeat:Connect(UpdateCasts)
+		ParallelSimulation.Connection = RS.Heartbeat:ConnectParallel(UpdateCasts)
 	end
 end
 
