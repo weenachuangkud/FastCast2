@@ -92,7 +92,7 @@ function BaseCast:Raycast(
 	Behavior: TypeDef.FastCastBehavior
 )
 	NextProjectileID += 1
-	local cast = ActiveCast.createCastData(nil, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Raycast
 	} :: any, self.ObjectCacheInstance)
 
@@ -127,7 +127,7 @@ function BaseCast:Blockcast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData(nil, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
 	} :: any, self.ObjectCacheInstance)
@@ -163,7 +163,7 @@ function BaseCast:Spherecast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData(nil, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
 	} :: any, self.ObjectCacheInstance)
