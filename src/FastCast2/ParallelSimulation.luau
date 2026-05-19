@@ -29,8 +29,6 @@ local casts_IsActivelySimulatingPierce = {} :: { [number]: boolean }
 local casts_IsActivelyResimulating = {} :: { [number]: boolean }
 local casts_CancelHighResCast = {} :: { [number]: boolean }
 local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
-local casts_VisualizeCasts = {} :: { [number]: boolean }
-local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
 local casts_FastCastEventsModuleConfig = {} :: { [number]: TypeDef.FastCastEventsModuleConfig }
 local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
 local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
@@ -277,8 +275,6 @@ function ParallelSimulation.Register(cast: any)
 	casts_IsActivelyResimulating[id] = false
 	casts_CancelHighResCast[id] = false
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
-	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts or false
-	casts_VisualizeCastSettings[id] = cast.StateInfo.VisualizeCastSettings
 	casts_FastCastEventsModuleConfig[id] = cast.StateInfo.FastCastEventsModuleConfig
 	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_RayInfo[id] = cast.RayInfo
@@ -325,8 +321,6 @@ function ParallelSimulation.Unregister(castID: number)
 	casts_IsActivelyResimulating[castID] = nil
 	casts_CancelHighResCast[castID] = nil
 	casts_Trajectory[castID] = nil
-	casts_VisualizeCasts[castID] = nil
-	casts_VisualizeCastSettings[castID] = nil
 	casts_FastCastEventsModuleConfig[castID] = nil
 	casts_FastCastEventsConfig[castID] = nil
 	casts_RayInfo[castID] = nil
