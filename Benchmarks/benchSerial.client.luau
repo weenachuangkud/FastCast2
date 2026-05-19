@@ -2,13 +2,18 @@
 local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
+local RepFirst = game:GetService("ReplicatedFirst")
 
 -- Requires
 local FastCast = require(Rep:WaitForChild("FastCast2"))
 
+-- Settings
+local Instanced = true
+local MovementMode = "Motor6D"
+
 -- Variables
 local ProjectileContainer = Instance.new("Folder")
-ProjectileContainer.Name = "FastCast2PJ"
+ProjectileContainer.Name = "FastCast2PJ_Parallel"
 ProjectileContainer.Parent = workspace
 local ProjectileTemplate = Instance.new("Part")
 ProjectileTemplate.Name = "Projectile"
@@ -40,7 +45,7 @@ RS.Heartbeat:Connect(function(dt: number)
 		minFps = fps
 	end
 	table.insert(fpsTable, fps)
-	
+
 	if tick() >= startTime + updateRate then
 		local totalFps = 0
 		for _, vFps in fpsTable do 
@@ -67,20 +72,19 @@ castBehavior.HighFidelitySegmentSize = 1
 castBehavior.Acceleration = Vector3.new(0, 0, 0)
 castBehavior.AutoIgnoreContainer = true
 castBehavior.CosmeticBulletContainer = ProjectileContainer
-castBehavior.CosmeticBulletTemplate = ProjectileTemplate
+castBehavior.CosmeticBulletTemplate = Instanced and ProjectileTemplate or nil
 
--- Serial Caster
+-- Parallel Caster
 local Caster = FastCast.new()
 Caster:Init(
-	true,  -- useBulkMoveTo
-	false  -- useObjectCache
+	"BulkMoveTo"
 )
 
 local activeCasts = {}
 
-Caster.CastFire:Connect(function(cast)
+Caster.CastFire = function(cast)
 	table.insert(activeCasts, cast)
-end)
+end
 
 -- Functions
 local function summary()
@@ -92,56 +96,59 @@ end
 
 -- Benchmark
 local isBenchmarking = false
-local AMOUNT = 5000
+local AMOUNT = 7000
 local BENCH_TIME = 5
+
+local ien = Instanced and "Instanced" or "Non-Instanced"
 
 UIS.InputBegan:Connect(function(input, gp)
 	if gp then return end
 	if isBenchmarking then return end
-	if input.KeyCode == Enum.KeyCode.E then
+	if input.KeyCode == Enum.KeyCode.P then
 		isBenchmarking = true
 		print("=== SERIAL MODE BENCHMARK ===")
-		print(string.format("Firing %d casts...", AMOUNT))
-		
+		if Instanced then
+			print("MOVEMENT MODE: " .. MovementMode)
+		end
+		print(string.format("Firing %d projectiles..." .. ien, AMOUNT))
+
 		for i = 1, AMOUNT do
-			local direction = Vector3.new(
-				math.random() * 2 - 1,
-				math.random() * 2 - 1,
-				math.random() * 2 - 1
-			)
-			if direction.Magnitude == 0 then
-				direction = Vector3.new(0, 0, 1)
-			end
 			Caster:RaycastFire(
 				Vector3.new(
-					math.random() * 2 - 1,
-					math.random() * 2 - 1,
-					math.random() * 2 - 1
-				) * 5000,
-				direction,
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000
+				),
+				Vector3.new(
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000,
+					math.random(-1, 1) * 5000
+				),
 				35,
 				castBehavior
 			)
 		end
-		
+
 		print("=== CREATION COMPLETE ===")
 		summary()
-		
+
 		task.wait(BENCH_TIME)
-		
+
 		print("=== SIMULATION COMPLETE ===")
 		summary()
-		
+
 		print("=== CLEANUP ===")
 		for i = #activeCasts, 1, -1 do
-			Caster:TerminateCast(activeCasts[i])
+			FastCast:TerminateCast(activeCasts[i])
 		end
 		activeCasts = {}
-		
+
+		task.wait(3)
+
 		print("=== DONE ===")
 		summary()
 		isBenchmarking = false
 	end
 end)
 
-print("Press E to start benchmark")
+print("Press L to start Serial benchmark")
