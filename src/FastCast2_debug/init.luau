@@ -65,7 +65,6 @@
 -- Requires
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
-local ObjectCache = require(script:WaitForChild("ObjectCache"))
 local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
 
 local DispatcherModule = script:WaitForChild("FastCastVMs")
@@ -77,6 +76,14 @@ type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.
 -- CONSTANTS
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
+local VALID_EVENTS = {
+	["CastFire"] = true,
+	["CastTerminating"] = true,
+	["Hit"] = true,
+	["Pierced"] = true,
+	["LengthChanged"] = true,
+	["CanPierce"] = true
+}
 
 -- FastCast
 
@@ -90,6 +97,21 @@ If true, verbose debug logging will be used,
 ]]
 
 FastCastSerial.__index = FastCastSerial
+FastCastSerial.__newindex = function(self, key, value)
+	if VALID_EVENTS[key] then
+		if type(value) == "function" then
+			if self.BaseCast then
+				self.BaseCast:_UpdateEvents(key, value)
+			else
+				rawset(self, key, value)
+			end
+		else
+			warn("Cannot set event, not a function")
+		end
+	else
+		rawset(self, key, value)
+	end
+end
 FastCastSerial.__type = "FastCastSerial"
 
 FastCastParallel.__index = FastCastParallel
@@ -412,7 +434,7 @@ end
 	@param CacheHolder Instance? -- Parent for cached objects.
 ]=]
 function FastCastSerial:Init(
-	useBulkMoveTo: boolean,
+	movementMode: "BulkMoveTo" | "Motor6D",
 	useObjectCache: boolean,
 	Template: BasePart | Model?,
 	CacheSize: number?,
@@ -423,44 +445,29 @@ function FastCastSerial:Init(
 		return
 	end
 
-	local BindableOutput = Instance.new("BindableEvent")
-	BindableOutput.Name = "Output"
-	BindableOutput.Parent = script
-
 	local data = {
-		useBulkMoveTo = useBulkMoveTo,
-		useObjectCache = useObjectCache
+		movementMode = movementMode or "BulkMoveTo",
+		useObjectCache = useObjectCache,
+		objectCacheArgs = {
+			Template = Template,
+			CacheSize = CacheSize or DEFAULT_CACHE_SIZE,
+			CacheHolder = CacheHolder or DEFAULT_CACHE_HOLDER
+		}
 	}
 
-	self.BaseCast = BaseCastSerial.Init(BindableOutput, data, self)
+	local events: TypeDef.FastCastEvents = {
+		CastFire = self.CastFire,
+		Pierced = self.Pierced,
+		Hit = self.Hit,
+		LengthChanged = self.LengthChanged,
+		CanPierce = self.CanPierce,
+		CastTerminating = self.CastTerminating
+	}
 
-	self.Output = BindableOutput
+	self.BaseCast = BaseCastSerial.Init(events, data)
 
-	BindableOutput.Event:Connect(function(eventName: string, ...)
-		local f = self[eventName]
-		if not f then
-			return
-		end
-		
-		if type(f) == "function" then
-			f(...)
-		end
-	end)
-
-	if useObjectCache then
-		if not CacheSize then
-			CacheSize = DEFAULT_CACHE_SIZE
-		end
-		if not CacheHolder then
-			CacheHolder = DEFAULT_CACHE_HOLDER
-		end
-		-- HEy I use "Template :: any" here because of a weird issue where the type of Template is not being recognized as BasePart | Model, even though it is. I have no idea why this is happening, but it works so I'm not gonna question it.
-		self.ObjectCache = ObjectCache.new((Template :: any), CacheSize, CacheHolder) :: any
-		self.ObjectCacheEnabled = true
-	end
-
-	self.MovementMode = useBulkMoveTo and "BulkMoveTo" or "Motor6D"
-	self.Initialized = true
+	self.MovementMode = movementMode or "BulkMoveTo"
+	self.AlreadyInit = true
 end
 
 --[=[
@@ -473,7 +480,7 @@ function FastCastSerial:RaycastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior?
 )
-	if not self.Initialized or not self.BaseCast then
+	if not self.AlreadyInit then
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
@@ -494,7 +501,7 @@ function FastCastSerial:BlockcastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior?
 )
-	if not self.Initialized or not self.BaseCast then
+	if not self.AlreadyInit then
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
@@ -515,7 +522,7 @@ function FastCastSerial:SpherecastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior?
 )
-	if not self.Initialized or not self.BaseCast then
+	if not self.AlreadyInit then
 		error("Please Init caster first")
 	end
 	if BehaviorData == nil then
@@ -545,20 +552,7 @@ end
 function FastCastSerial:SetObjectCacheEnabled(enabled: boolean)
 	if not self.BaseCast then return end
 
-	if enabled then
-		if not self.ObjectCache then
-			warn("ObjectCache not initialized. Call Init with useObjectCache = true first.")
-			return
-		end
-		self.BaseCast:BindObjectCache(true)
-	else
-		self.BaseCast:BindObjectCache(false)
-		if self.ObjectCache then
-			self.ObjectCache:Destroy()
-			self.ObjectCache = nil
-		end
-	end
-
+	self.BaseCast:BindObjectCache(enabled)
 	self.ObjectCacheEnabled = enabled
 end
 
@@ -567,10 +561,6 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:Destroy()
-	if self.ObjectCache then
-		self.ObjectCache:Destroy()
-	end
-
 	if self.BaseCast then
 		self.BaseCast:Destroy()
 	end
@@ -578,12 +568,9 @@ function FastCastSerial:Destroy()
 	self.LengthChanged = nil
 	self.Hit = nil
 	self.Pierced = nil
+	self.CanPierce = nil
 	self.CastTerminating = nil
 	self.CastFire = nil
-
-	if self.Output then
-		self.Output:Destroy()
-	end
 
 	setmetatable(self, nil)
 end
@@ -594,10 +581,6 @@ end
 	@within FastCastParallel
 ]=]
 function FastCastParallel:Destroy()
-	if self.ObjectCache then
-		self.ObjectCache:Destroy()
-	end
-
 	-- I'm making sure that everything is destroyed here lmao
 	self.LengthChanged = nil
 	self.Hit = nil
@@ -767,7 +750,7 @@ Synchronize new changes to the ActiveCast.
 	@within FastCastParallel
 
 ]=]
-function FastCast:SyncChangesToCast(cast: vaildcast)
+function FastCastParallel:SyncChangesToCast(cast: vaildcast)
 	cast.Caster.SyncChange:Fire(cast)
 end
 
@@ -780,17 +763,29 @@ end
 
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
-function FastCast:TerminateCast(cast: vaildcast, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
-	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
-		cast.Caster.Output:Fire("CastTerminating", cast)
-	end
+function FastCast:TerminateCast(cast: vaildcast)
+	local caster = cast.Caster
+	if caster == nil then return end
 
-	if castTerminatingFunction then
-		castTerminatingFunction((cast :: any))
-	end
+	local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
 
-	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
+	if caster.Output then
+		-- Parallel mode
+		if eventsCfg and eventsCfg.UseCastTerminating then
+			caster.Output:Fire("CastTerminating", cast)
+		end
+		caster.ActiveCastCleaner:Fire(cast.ID)
+	elseif caster.SerialSimulation then
+		-- Serial mode
+		if eventsCfg and eventsCfg.UseCastTerminating then
+			local cb = caster.SerialSimulation.Events.CastTerminating
+			if cb then
+				cb(cast)
+			end
+		end
+		caster.SerialSimulation:Unregister(cast.ID)
+		caster.Actives[cast.ID] = nil
+	end
 
 	for key, _ in (cast :: any) do
 		cast[key] = nil
@@ -813,6 +808,7 @@ function FastCast.new()
 		LengthChanged = nil,
 		Hit = nil,
 		Pierced = nil,
+		CanPierce = nil,
 		CastTerminating = nil,
 		CastFire = nil,
 		WorldRoot = workspace,

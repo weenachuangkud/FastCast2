@@ -11,7 +11,6 @@ local FastCastModule = script.Parent
 
 -- Requires
 
-local FastCast = require(FastCastModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 
@@ -121,6 +120,23 @@ local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceler
 	return initialVelocity + acceleration * time
 end
 
+local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
+		cast.Caster.Output:Fire("CastTerminating", cast)
+	end
+
+	if castTerminatingFunction then
+		castTerminatingFunction((cast :: any))
+	end
+
+	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
+
+	for key, _ in (cast :: any) do
+		cast[key] = nil
+	end
+end
+
 local function QueueEvent(castID: number, eventType: string, ...: any)
 	local args = { ... }
 	if not queuedEvents[castID] then
@@ -200,7 +216,7 @@ local function FireQueuedEvents(events: { [number]: { QueuedEventData } })
 
 			elseif eventType == "CastTerminating" then
 				local castTerminatingfn = args[1]
-				FastCast:TerminateCast(cast, castTerminatingfn)
+				TerminateCast(cast, castTerminatingfn)
 			end
 		end
 	end
@@ -380,53 +396,6 @@ function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enab
 	end
 end
 
-function ParallelSimulation.GetActiveMotor6Ds()
-	return casts_ActiveMotor6Ds
-end
-
---[[
-function ParallelSimulation.GetSoA()
-	return {
-		Paused = casts_Paused,
-		TotalRunTime = casts_TotalRunTime,
-		DistanceCovered = casts_DistanceCovered,
-		HighFidelitySegmentSize = casts_HighFidelitySegmentSize,
-		HighFidelityBehavior = casts_HighFidelityBehavior,
-		IsActivelySimulatingPierce = casts_IsActivelySimulatingPierce,
-		IsActivelyResimulating = casts_IsActivelyResimulating,
-		CancelHighResCast = casts_CancelHighResCast,
-		Trajectory = casts_Trajectory,
-		VisualizeCasts = casts_VisualizeCasts,
-		VisualizeCastSettings = casts_VisualizeCastSettings,
-		FastCastEventsModuleConfig = casts_FastCastEventsModuleConfig,
-		FastCastEventsConfig = casts_FastCastEventsConfig,
-		RayInfo = casts_RayInfo,
-		UserData = casts_UserData,
-		CFrame = casts_CFrame,
-		CastType = casts_CastType,
-		CastVariant = casts_CastVariant,
-		Origin = casts_Origin,
-		Acceleration = casts_Acceleration,
-		MaxDistance = casts_MaxDistance,
-		ActiveMotor6Ds = casts_ActiveMotor6Ds
-	}
-end
-]]
-
-function ParallelSimulation.GetBaseCastRef()
-	return BaseCastRef
-end
-
-function ParallelSimulation.GetCurrentMovementMode()
-	return CurrentMovementMode
-end
-
-function ParallelSimulation.IsMovementEnabled()
-	return MovementEnabled
-end
-
--- TODO: Try Implement Visualizations
-
 -- RS
 local function SimluateCast(
 	id: number,
@@ -452,7 +421,7 @@ local function SimluateCast(
 	local segmentVelocity = GetVelocityAtTime(totalDelta, initialVelocity, acceleration)
 	local totalDisplacement = currentTarget - lastPoint
 
-	local rayDir = totalDisplacement * segmentVelocity.Magnitude * delta
+	local rayDir = totalDisplacement
 
 	local targetWorldRoot = casts_RayInfo[id].WorldRoot
 
@@ -486,7 +455,7 @@ local function SimluateCast(
 	-- NOTE: Please dont remove "part and"
 	-- Why? basically when part doesn't exist it will do nothing, but removing "part and" will break the logic
 	-- You can't do anything about it
-	if part and part ~= casts_RayInfo.cosmeticBulletObject then
+	if part and part ~= casts_RayInfo[id].CosmeticBulletObject then
 		if 
 			canPierceCheckfn == nil
 			or canPierceCheckfn(ActivesRef[id], resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
@@ -520,6 +489,7 @@ local function SimluateCast(
 				end
 
 				local timeIncrement = delta / numSegmentsReal
+				local subHitFound = false
 
 				for segmentIndex = 1, numSegmentsReal do
 					if casts_CancelHighResCast[id] then
@@ -545,6 +515,7 @@ local function SimluateCast(
 					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
 					if subResult ~= nil then
+						subHitFound = true
 						--subDispalcement = (subPosition - subResult.Position).Magnitude
 
 						if 
@@ -554,12 +525,18 @@ local function SimluateCast(
 							casts_IsActivelyResimulating[id] = false
 							QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 							QueueEvent(id, "CastTerminating", castTerminatingfn)
+							return
 						else
 							QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 						end
 					end
 				end
 				casts_IsActivelyResimulating[id] = false
+				if not subHitFound then
+					QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+					QueueEvent(id, "CastTerminating", castTerminatingfn)
+					return
+				end
 			else
 
 				QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
@@ -649,7 +626,8 @@ local function UpdateCasts(delta: number)
 			--local timeIncrement = delta / numSegmentsReal
 
 			local cast_nil = false
-			for segmentIndex = 1, numSegmentsReal do
+			-- _ = segmentIndex
+			for _ = 1, numSegmentsReal do
 
 				-- In case when cast Destroyed or not exist
 				if ActivesRef[id] == nil then
@@ -683,10 +661,15 @@ local function UpdateCasts(delta: number)
 end
 
 function ParallelSimulation.Start()
+	if ParallelSimulation.Connection then
+		warn("Already started")
+		return
+	end
+
 	if RS:IsClient() then
 		ParallelSimulation.Connection = RS.PreSimulation:ConnectParallel(UpdateCasts)
 	else
-		ParallelSimulation.Connection = RS.Heartbeat:Connect(UpdateCasts)
+		ParallelSimulation.Connection = RS.Heartbeat:ConnectParallel(UpdateCasts)
 	end
 end
 

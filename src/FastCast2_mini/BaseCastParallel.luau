@@ -24,8 +24,6 @@ BaseCast.__type = "BaseCast"
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
 
-local MovementConnection: RBXScriptConnection? = nil
-
 local Actor = nil
 local Output = nil
 local ActiveCastCleaner: BindableEvent = nil
@@ -44,6 +42,23 @@ local function SendCastFire(
 	behavior: TypeDef.FastCastBehavior
 )
 	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
+end
+
+local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
+	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
+		cast.Caster.Output:Fire("CastTerminating", cast)
+	end
+
+	if castTerminatingFunction then
+		castTerminatingFunction((cast :: any))
+	end
+
+	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
+
+	for key, _ in (cast :: any) do
+		cast[key] = nil
+	end
 end
 
 function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
@@ -122,9 +137,9 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	ParallelSimulation.Init(self)
 
-	ParallelSimulation.Start()
-
 	ParallelSimulation.SetMovementMode(CurrentMovementMode, true)
+
+	ParallelSimulation.Start()
 
 	return self
 end
@@ -350,20 +365,18 @@ function BaseCast:Destroy()
 		ParallelSimulation.Stop()
 	end
 
-	if MovementConnection then
-		MovementConnection:Disconnect()
-		MovementConnection = nil
+	if ObjectCacheInstance then
+		ObjectCacheInstance:Destroy()
 	end
 
 	if Motor6DCacheInstance then
 		Motor6DCacheInstance:Destroy()
-		Motor6DCacheInstance = nil
 	end
 
 	FastCastEventsModule = nil
 
 	for _, v in self.Actives do
-		FastCastM:TerminateCast(v)
+		TerminateCast(v)
 	end
 
 	self.Actives = {}

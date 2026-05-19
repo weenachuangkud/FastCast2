@@ -121,11 +121,11 @@ function Cache:Update()
 end
 
 function Cache:ExpandCache(Amount: number)
-	assert(typeof(Amount) ~= "number" or Amount >= 0, `Invalid argument #1 to 'ObjectCache:ExpandCache' (positive number expected, got {typeof(Amount)})`)
+	assert(typeof(Amount) == "number" and Amount >= 0, `Invalid argument #1 to 'ObjectCache:ExpandCache' (positive number expected, got {typeof(Amount)})`)
 	self:_GetNew(Amount, false)
 end
 function Cache:SetExpandAmount(Amount: number)
-	assert(typeof(Amount) ~= "number" or Amount > 0, `Invalid argument #1 to 'ObjectCache:SetExpandAmount' (positive number expected, got {typeof(Amount)})`)
+	assert(typeof(Amount) == "number" and Amount > 0, `Invalid argument #1 to 'ObjectCache:SetExpandAmount' (positive number expected, got {typeof(Amount)})`)
 	self._ExpandAmount = Amount
 end
 
