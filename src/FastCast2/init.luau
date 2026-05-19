@@ -763,8 +763,33 @@ end
 
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
-function FastCast.TerminateCast(cast: vaildcast)
-	-- TODO
+function FastCast:TerminateCast(cast: vaildcast)
+	local caster = cast.Caster
+	if caster == nil then return end
+
+	local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
+
+	if caster.Output then
+		-- Parallel mode
+		if eventsCfg and eventsCfg.UseCastTerminating then
+			caster.Output:Fire("CastTerminating", cast)
+		end
+		caster.ActiveCastCleaner:Fire(cast.ID)
+	elseif caster.SerialSimulation then
+		-- Serial mode
+		if eventsCfg and eventsCfg.UseCastTerminating then
+			local cb = caster.SerialSimulation.Events.CastTerminating
+			if cb then
+				cb(cast)
+			end
+		end
+		caster.SerialSimulation:Unregister(cast.ID)
+		caster.Actives[cast.ID] = nil
+	end
+
+	for key, _ in (cast :: any) do
+		cast[key] = nil
+	end
 end
 
 -- Constructors
