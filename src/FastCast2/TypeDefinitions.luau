@@ -387,9 +387,6 @@ export type FastCastBehavior = {
 	SimulateAfterPhysic: boolean,
 	MovementMethod: "BulkMoveTo" | "Transform",
 
-	VisualizeCasts: boolean,
-	VisualizeCastSettings: VisualizeCastSettings,
-
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
 
 	FastCastEventsConfig: FastCastEventsConfig,

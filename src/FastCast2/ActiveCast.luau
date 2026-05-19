@@ -68,8 +68,6 @@ function ActiveCast.createCastData(
 				InitialVelocity = if typeof(velocity) == "number" then direction * velocity else velocity,
 				Acceleration = behavior.Acceleration,
 			},
-			VisualizeCasts = behavior.VisualizeCasts,
-			VisualizeCastSettings = behavior.VisualizeCastSettings,
 
 			FastCastEventsConfig = {
 				UseLengthChanged = behavior.FastCastEventsConfig.UseLengthChanged,
