@@ -96,7 +96,7 @@ end
 
 -- Benchmark
 local isBenchmarking = false
-local AMOUNT = 7000
+local AMOUNT = 1000
 local BENCH_TIME = 5
 
 local ien = Instanced and "Instanced" or "Non-Instanced"
@@ -104,7 +104,7 @@ local ien = Instanced and "Instanced" or "Non-Instanced"
 UIS.InputBegan:Connect(function(input, gp)
 	if gp then return end
 	if isBenchmarking then return end
-	if input.KeyCode == Enum.KeyCode.P then
+	if input.KeyCode == Enum.KeyCode.L then
 		isBenchmarking = true
 		print("=== SERIAL MODE BENCHMARK ===")
 		if Instanced then
