@@ -13,8 +13,6 @@ local FastCast2Module: ModuleScript = script:WaitForChild("FastCast2", 10).Value
 
 
 -- Requires
-local TypeDef = require(FastCast2Module:WaitForChild("TypeDefinitions"))
-
 local BaseCastParallel = require(FastCast2Module:WaitForChild("BaseCastParallel"))
 
 -- Variables
