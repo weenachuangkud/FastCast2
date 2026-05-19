@@ -5,7 +5,6 @@
 ]]
 
 local FastCast2 = script.Parent
-local FastCastM = require(FastCast2)
 
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
