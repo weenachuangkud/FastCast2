@@ -224,7 +224,7 @@ function FastCastParallel:Init(
 	VMContainerName: string,
 	VMname: string,
 
-	MovementMode: "BulkMoveTo" | "Motor6D",
+	movementMode: "BulkMoveTo" | "Motor6D",
 	FastCastEventsModule: ModuleScript,
 
 	useObjectCache: boolean,
