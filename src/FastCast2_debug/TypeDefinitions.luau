@@ -123,6 +123,31 @@ export type OnCastFireFunction = (
 	behavior: FastCastBehavior
 ) -> ()
 
+-- Debug
+
+--[=[
+	@type VisualizeCastSettings { Debug_SegmentColor: Color3, Debug_SegmentTransparency: number, Debug_SegmentSize: number, Debug_HitColor: Color3, Debug_HitTransparency: number, Debug_HitSize: number, Debug_RayPierceColor: Color3, Debug_RayPierceTransparency: number, Debug_RayPierceSize: number, Debug_RayLifetime: number, Debug_HitLifetime: number }
+	@within TypeDefinitions
+
+	Debug visualization settings for casts.
+]=]
+export type VisualizeCastSettings = {
+	Debug_SegmentColor: Color3,
+	Debug_SegmentTransparency: number,
+	Debug_SegmentSize: number,
+
+	Debug_HitColor: Color3,
+	Debug_HitTransparency: number,
+	Debug_HitSize: number,
+
+	Debug_RayPierceColor: Color3,
+	Debug_RayPierceTransparency: number,
+	Debug_RayPierceSize: number,
+
+	Debug_RayLifetime: number,
+	Debug_HitLifetime: number,
+}
+
 --[=[
 	@type CasterParallel { WorldRoot: WorldRoot, LengthChanged: Signal<OnLengthChangedFunction> | OnLengthChangedFunction, Hit: Signal<OnHitFunction> | OnHitFunction, Pierced: Signal<OnPiercedFunction> | OnPiercedFunction, CastTerminating: Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction, CastFire: Signal<OnCastFireFunction> | OnCastFireFunction, Dispatcher: Dispatcher.Dispatcher, ObjectCache: ObjectCache, AlreadyInit: boolean, ObjectCacheEnabled: boolean, BulkMoveEnabled: boolean, FastCastEventsModule: FastCastEventsModule, Init: ( self: Caster, numWorkers: number, newParent: Folder, newName: string, ContainerParent: Folder, VMContainerName: string, VMname: string, useBulkMoveTo: boolean, FastCastEventsModule: ModuleScript, useObjectCache: boolean, Template: BasePart | Model, CacheSize: number, CacheHolder: Instance ) -> (), RaycastFire: ( Caster, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior ) -> (), BlockcastFire: ( self: Caster, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavio ) -> (), SetBulkMoveEnabled: (self: Caster, enabled: boolean) -> (), SetObjectCacheEnabled: ( self: Caster, enabled: boolean, Template: BasePart | Model, CacheSize: number, CacheHolder: Instance ) -> (), SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (), AddVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> (), SetVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> (), GetVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> Vector3, AddAccelerationCast: (Caster, cast: vaildcast) -> Vector3, GetAccelerationCast: (Caster, cast: vaildcast) -> Vector3, SetAccelerationCast: (Caster, cast: vaildcast, acceleration: Vector3) -> (), GetPositionCast: (Caster, cast: vaildcast, Position: Vector3) -> Vector3, AddPositionCast: (Caster, cast: vaildcast, Position: Vector3) -> (), ResumeCast: (Caster, cast: vaildcast) -> (), PauseCast: (Caster, cast: vaildcast) -> (), SyncChangesToCast: (Caster, cast: vaildcast) -> (), TerminateCast: (Caster, cast: vaildcast) -> (), Destroy: (Caster) -> () }
 	
@@ -364,6 +389,9 @@ export type FastCastBehavior = {
 	SimulateAfterPhysic: boolean,
 	MovementMethod: "BulkMoveTo" | "Transform",
 
+	VisualizeCasts: boolean,
+	VisualizeCastSettings: VisualizeCastSettings,
+
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
 
 	FastCastEventsConfig: FastCastEventsConfig,
@@ -401,6 +429,9 @@ export type CastStateInfo = {
 	IsActivelyResimulating: boolean,
 	CancelHighResCast: boolean,
 	Trajectory: CastTrajectory,
+
+	VisualizeCasts: boolean,
+	VisualizeCastSettings: VisualizeCastSettings,
 
 	FastCastEventsConfig: FastCastEventsConfig,
 
