@@ -316,29 +316,6 @@ export type CasterSerial = {
 }
 
 --[=[
-	@type VisualizeCastSettings { Debug_SegmentColor: Color3, Debug_SegmentTransparency: number, Debug_SegmentSize: number, Debug_HitColor: Color3, Debug_HitTransparency: number, Debug_HitSize: number, Debug_RayPierceColor: Color3, Debug_RayPierceTransparency: number, Debug_RayPierceSize: number, Debug_RayLifetime: number, Debug_HitLifetime: number }
-	@within TypeDefinitions
-
-	Debug visualization settings for casts.
-]=]
-export type VisualizeCastSettings = {
-	Debug_SegmentColor: Color3,
-	Debug_SegmentTransparency: number,
-	Debug_SegmentSize: number,
-
-	Debug_HitColor: Color3,
-	Debug_HitTransparency: number,
-	Debug_HitSize: number,
-
-	Debug_RayPierceColor: Color3,
-	Debug_RayPierceTransparency: number,
-	Debug_RayPierceSize: number,
-
-	Debug_RayLifetime: number,
-	Debug_HitLifetime: number,
-}
-
---[=[
 	@type FastCastEventsModuleConfig { UseLengthChanged: boolean, UseHit: boolean, UsePierced: boolean, UseCastTerminating: boolean, UseCanPierce: boolean, UseCastFire: boolean }
 	@within TypeDefinitions
 
@@ -424,8 +401,6 @@ export type CastStateInfo = {
 	IsActivelyResimulating: boolean,
 	CancelHighResCast: boolean,
 	Trajectory: CastTrajectory,
-	VisualizeCasts: boolean,
-	VisualizeCastSettings: VisualizeCastSettings,
 
 	FastCastEventsConfig: FastCastEventsConfig,
 
