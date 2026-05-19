@@ -5,7 +5,14 @@
 		"ReplicatedStorage": {
 			"FastCast2": {
 				"$path": "src/FastCast2"
-			}
+			},
+			"FastCast2_mini": {
+				"$path": "src/FastCast2_mini"
+			},
+			"FastCast2_debug": {
+				"$path": "src/FastCast2_debug"
+			},
+			"$ignoreUnknownInstances": true
 		}
 	}
 }
