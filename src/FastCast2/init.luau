@@ -763,7 +763,7 @@ end
 
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
-function FastCast.TerminateCast(cast: vaildcast)
+function FastCast:TerminateCast(cast: vaildcast)
 	local caster = cast.Caster
 	if caster == nil then return end
 
