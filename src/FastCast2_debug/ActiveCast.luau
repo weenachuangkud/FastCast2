@@ -75,7 +75,10 @@ function ActiveCast.createCastData(
 				UsePierced = behavior.FastCastEventsConfig.UsePierced,
 				UseCastTerminating = behavior.FastCastEventsConfig.UseCastTerminating,
 				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce
-			}
+			},
+
+			VisualizeCasts = behavior.VisualizeCasts,
+			VisualizeCastSettings = behavior.VisualizeCastSettings,
 		},
 
 		RayInfo = {
