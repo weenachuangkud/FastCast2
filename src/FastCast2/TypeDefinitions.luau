@@ -152,7 +152,7 @@ export type Caster = {
 		ContainerParent: Folder,
 		VMContainerName: string,
 		VMname: string,
-		useBulkMoveTo: boolean,
+		MovementMode: "BulkMoveTo" | "Motor6D",
 		FastCastEventsModule: ModuleScript,
 		useObjectCache: boolean,
 		Template: BasePart | Model,
