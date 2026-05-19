@@ -777,12 +777,6 @@ function FastCast:TerminateCast(cast: vaildcast)
 		caster.ActiveCastCleaner:Fire(cast.ID)
 	elseif caster.SerialSimulation then
 		-- Serial mode
-		if eventsCfg and eventsCfg.UseCastTerminating then
-			local cb = caster.SerialSimulation.Events.CastTerminating
-			if cb then
-				cb(cast)
-			end
-		end
 		caster.SerialSimulation:Unregister(cast.ID)
 		caster.Actives[cast.ID] = nil
 	end

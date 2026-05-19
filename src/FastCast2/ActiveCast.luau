@@ -40,7 +40,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 end
 
 function ActiveCast.createCastData(
-	BaseCast: TypeDef.BaseCastData?,
+	BaseCast: any,
 	activeCastID: number,
 	origin: Vector3,
 	direction: Vector3,
