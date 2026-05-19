@@ -99,8 +99,11 @@ function BaseCast:Raycast(
 	self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
-		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
+if Behavior.FastCastEventsConfig.UseCastFire then
+		local castFireFn = self.CastFirefn or (self.Caster and self.Caster.CastFire)
+		if castFireFn then
+			castFireFn(cast, Origin, Direction, Velocity, Behavior)
+		end
 	end
 end
 
@@ -109,11 +112,11 @@ end
 @method Blockcast
 @within BaseCast
 
-@param Origin Vector3 -- The origin of the blockcast.
-@param Size Vector3 -- The size of the blockcast.
-@param Direction Vector3 -- The direction of the blockcast.
-@param Velocity Vector3 | number -- The velocity of the blockcast.
-@param Behavior FastCastBehavior -- The behavior data for the blockcast.
+@param Origin Vector3 -- The origin of the raycast.
+@param Size Vector3 -- The size of the raycast.
+@param Direction Vector3 -- The direction of the raycast.
+@param Velocity Vector3 | number -- The velocity of the raycast.
+@param Behavior FastCastBehavior -- The behavior data for the raycast.
 
 Create a Blockcast.
 
@@ -135,8 +138,11 @@ function BaseCast:Blockcast(
 	self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
-		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
+	if Behavior.FastCastEventsConfig.UseCastFire then
+		local castFireFn = self.CastFirefn or (self.Caster and self.Caster.CastFire)
+		if castFireFn then
+			castFireFn(cast, Origin, Direction, Velocity, Behavior)
+		end
 	end
 end
 
@@ -168,17 +174,21 @@ function BaseCast:Spherecast(
 		Radius = Radius
 	} :: any, self.ObjectCacheInstance)
 
-	self.SerialSimulation:Register(cast)
+self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
-		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
+	if Behavior.FastCastEventsConfig.UseCastFire then
+		local castFireFn = self.CastFirefn or (self.Caster and self.Caster.CastFire)
+		if castFireFn then
+			castFireFn(cast, Origin, Direction, Velocity, Behavior)
+		end
 	end
 end
 
 --[=[
-	@method SetMovementMode
-	@within BaseCast
+
+@method SetMovementMode
+@within BaseCast
 
 	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set.
 	@param enabled boolean -- Whether to enable or disable the movement mode.
@@ -279,6 +289,10 @@ function BaseCast:_ReturnMotor6D(motor6d: Motor6D?)
 end
 
 function BaseCast:_UpdateEvents(eventName: string, newEventfn: (...any) -> ())
+	if eventName == "CastFire" then 
+		self.castFireFn = newEventfn
+		return
+	end
 	self.SerialSimulation:_UpdateEvents(eventName, newEventfn)
 end
 

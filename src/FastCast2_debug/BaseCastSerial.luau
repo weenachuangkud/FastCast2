@@ -96,7 +96,7 @@ function BaseCast:Raycast(
 		CastType = EnumCastTypes.Raycast
 	} :: any, self.ObjectCacheInstance)
 
-	self.SerialSimulation:Register(cast)
+self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
@@ -109,11 +109,11 @@ end
 @method Blockcast
 @within BaseCast
 
-@param Origin Vector3 -- The origin of the blockcast.
-@param Size Vector3 -- The size of the blockcast.
-@param Direction Vector3 -- The direction of the blockcast.
-@param Velocity Vector3 | number -- The velocity of the blockcast.
-@param Behavior FastCastBehavior -- The behavior data for the blockcast.
+@param Origin Vector3 -- The origin of the raycast.
+@param Size Vector3 -- The size of the raycast.
+@param Direction Vector3 -- The direction of the raycast.
+@param Velocity Vector3 | number -- The velocity of the raycast.
+@param Behavior FastCastBehavior -- The behavior data for the raycast.
 
 Create a Blockcast.
 
@@ -168,7 +168,7 @@ function BaseCast:Spherecast(
 		Radius = Radius
 	} :: any, self.ObjectCacheInstance)
 
-	self.SerialSimulation:Register(cast)
+self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
 	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
@@ -177,8 +177,9 @@ function BaseCast:Spherecast(
 end
 
 --[=[
-	@method SetMovementMode
-	@within BaseCast
+
+@method SetMovementMode
+@within BaseCast
 
 	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set.
 	@param enabled boolean -- Whether to enable or disable the movement mode.
