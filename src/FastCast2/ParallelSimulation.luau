@@ -255,17 +255,6 @@ local function UpdateMotor6Ds()
 	end
 end
 
-local function SyncPhase()
-	task.synchronize()
-
-	UpdateMotor6Ds()
-	BulkMoveTo()
-
-	local eventsToProcess = queuedEvents
-	queuedEvents = {}
-	FireQueuedEvents(eventsToProcess)
-end
-
 -- ParallelSimulation
 
 local ParallelSimulation = {}
@@ -657,7 +646,14 @@ local function UpdateCasts(delta: number)
 		end
 	end
 
-	SyncPhase()
+	task.synchronize()
+
+	UpdateMotor6Ds()
+	BulkMoveTo()
+
+	local eventsToProcess = queuedEvents
+	queuedEvents = {}
+	FireQueuedEvents(eventsToProcess)
 end
 
 function ParallelSimulation.Start()
