@@ -92,18 +92,15 @@ function BaseCast:Raycast(
 	Behavior: TypeDef.FastCastBehavior
 )
 	NextProjectileID += 1
-	local cast = ActiveCast.createCastData({SerialSimulation = self.SerialSimulation}, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Raycast
 	} :: any, self.ObjectCacheInstance)
 
 	self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire then
-		local castFireFn = self.CastFirefn or (self.Caster and self.Caster.CastFire)
-		if castFireFn then
-			castFireFn(cast, Origin, Direction, Velocity, Behavior)
-		end
+	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
+		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -130,7 +127,7 @@ function BaseCast:Blockcast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData({SerialSimulation = self.SerialSimulation}, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
 	} :: any, self.ObjectCacheInstance)
@@ -138,11 +135,8 @@ function BaseCast:Blockcast(
 	self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire then
-		local castFireFn = self.CastFirefn or (self.Caster and self.Caster.CastFire)
-		if castFireFn then
-			castFireFn(cast, Origin, Direction, Velocity, Behavior)
-		end
+	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
+		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -169,19 +163,16 @@ function BaseCast:Spherecast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData({SerialSimulation = self.SerialSimulation}, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
 	} :: any, self.ObjectCacheInstance)
 
-self.SerialSimulation:Register(cast)
+	self.SerialSimulation:Register(cast)
 	self.Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire then
-		local castFireFn = self.CastFirefn or (self.Caster and self.Caster.CastFire)
-		if castFireFn then
-			castFireFn(cast, Origin, Direction, Velocity, Behavior)
-		end
+	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
+		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -290,7 +281,7 @@ end
 
 function BaseCast:_UpdateEvents(eventName: string, newEventfn: (...any) -> ())
 	if eventName == "CastFire" then 
-		self.castFireFn = newEventfn
+		self.CastFirefn = newEventfn
 		return
 	end
 	self.SerialSimulation:_UpdateEvents(eventName, newEventfn)
