@@ -11,7 +11,6 @@ local FastCastModule = script.Parent
 
 -- Requires
 
-local FastCast = require(FastCastModule)
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
 
@@ -627,7 +626,8 @@ local function UpdateCasts(delta: number)
 			--local timeIncrement = delta / numSegmentsReal
 
 			local cast_nil = false
-			for segmentIndex = 1, numSegmentsReal do
+			-- _ = segmentIndex
+			for _ = 1, numSegmentsReal do
 
 				-- In case when cast Destroyed or not exist
 				if ActivesRef[id] == nil then
