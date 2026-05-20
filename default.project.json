@@ -4,10 +4,7 @@
 		"$className": "DataModel",
 		"ReplicatedStorage": {
 			"FastCast2": {
-				"$path": "src/FastCast2"
-			},
-			"FastCast2_debug": {
-				"$path": "src/FastCast2_debug"
+				"$path": "src"
 			},
 			"$ignoreUnknownInstances": true
 		}
