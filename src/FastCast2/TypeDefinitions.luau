@@ -123,31 +123,6 @@ export type OnCastFireFunction = (
 	behavior: FastCastBehavior
 ) -> ()
 
--- Debug
-
---[=[
-	@type VisualizeCastSettings { Debug_SegmentColor: Color3, Debug_SegmentTransparency: number, Debug_SegmentSize: number, Debug_HitColor: Color3, Debug_HitTransparency: number, Debug_HitSize: number, Debug_RayPierceColor: Color3, Debug_RayPierceTransparency: number, Debug_RayPierceSize: number, Debug_RayLifetime: number, Debug_HitLifetime: number }
-	@within TypeDefinitions
-
-	Debug visualization settings for casts.
-]=]
-export type VisualizeCastSettings = {
-	Debug_SegmentColor: Color3,
-	Debug_SegmentTransparency: number,
-	Debug_SegmentSize: number,
-
-	Debug_HitColor: Color3,
-	Debug_HitTransparency: number,
-	Debug_HitSize: number,
-
-	Debug_RayPierceColor: Color3,
-	Debug_RayPierceTransparency: number,
-	Debug_RayPierceSize: number,
-
-	Debug_RayLifetime: number,
-	Debug_HitLifetime: number,
-}
-
 --[=[
 	@type CasterParallel { WorldRoot: WorldRoot,	LengthChanged: OnLengthChangedFunction,	Hit: OnHitFunction,	Pierced: OnPiercedFunction,	CastTerminating: OnCastTerminatingFunction,	CastFire: OnCastFireFunction,	Dispatcher: Dispatcher.Dispatcher,	AlreadyInit: boolean,	ObjectCacheEnabled: boolean,	MovementMode: "BulkMoveTo" | "Motor6D",	FastCastEventsModule: FastCastEventsModule,	Init: (		self: CasterParallel,		numWorkers: number,		newParent: Folder,		newName: string,		ContainerParent: Folder,		VMContainerName: string,		VMname: string,		MovementMode: "BulkMoveTo" | "Motor6D",		FastCastEventsModule: ModuleScript,		useObjectCache: boolean,		Template: BasePart | Model,		CacheSize: number,		CacheHolder: Instance	) -> (),	RaycastFire: (		CasterParallel,		Origin: Vector3,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	BlockcastFire: (		self: CasterParallel,		Origin: Vector3,		Size: Vector3,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	SpherecastFire: (		self: CasterParallel,		Origin: Vector3,		Radius: number,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	SetMovementMode: (		mode: "BulkMoveTo" | "Motor6D", 		enabled: boolean	) -> (),	SetObjectCacheEnabled: (		self: CasterParallel,		enabled: boolean,		Template: BasePart | Model,		CacheSize: number,		CacheHolder: Instance	) -> (),	SetFastCastEventsModule: (self: CasterParallel, moduleScript: ModuleScript) -> (),	AddVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),	SetVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),	GetVelocityCast: (CasterParallel, cast: vaildcast) -> Vector3,	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> Vector3,	SetAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),	GetAccelerationCast: (CasterParallel, cast: vaildcast) -> Vector3,	AddPositionCast: (CasterParallel, cast: vaildcast, Position: Vector3) -> (),	GetPositionCast: (CasterParallel, cast: vaildcast) -> Vector3,	ResumeCast: (CasterParallel, cast: vaildcast) -> (),	PauseCast: (CasterParallel, cast: vaildcast) -> (),	SyncChangesToCast: (CasterParallel, cast: vaildcast) -> (),	TerminateCast: (CasterParallel, cast: vaildcast) -> (),	Destroy: (CasterParallel) -> () }
 	
@@ -365,7 +340,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, FastCastEventsModuleConfig: FastCastEventsModuleConfig, FastCastEventsConfig: FastCastEventsConfig, UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	SimulateAfterPhysic: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -404,13 +379,12 @@ export type CastTrajectory = {
 }
 
 --[=[
-	@type CastStateInfo { UpdateConnection: RBXScriptSignal, HighFidelityBehavior: number, HighFidelitySegmentSize: number, Paused: boolean, TotalRuntime: number, DistanceCovered: number, IsActivelySimulatingPierce: boolean, IsActivelyResimulating: boolean, CancelHighResCast: boolean, Trajectory: CastTrajectory, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, FastCastEventsConfig: FastCastEventsConfig, FastCastEventsModuleConfig: FastCastEventsModuleConfig }
+	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	Paused: boolean,	TotalRuntime: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	FastCastEventsConfig: FastCastEventsConfig,	FastCastEventsModuleConfig: FastCastEventsModuleConfig }
 	@within TypeDefinitions
 
 	Represents cast state tracking data.
 ]=]
 export type CastStateInfo = {
-	UpdateConnection: RBXScriptConnection?,
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
 	Paused: boolean,

@@ -365,7 +365,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, Acceleration: Vector3, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, SimulateAfterPhysic: boolean, AutomaticPerformance: boolean, AdaptivePerformance: AdaptivePerformance, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, FastCastEventsModuleConfig: FastCastEventsModuleConfig, FastCastEventsConfig: FastCastEventsConfig, UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	SimulateAfterPhysic: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -384,6 +384,8 @@ export type FastCastBehavior = {
 	MovementMethod: "BulkMoveTo" | "Transform",
 
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
+	VisualizeCasts: boolean, 
+	VisualizeCastSettings: VisualizeCastSettings,
 
 	FastCastEventsConfig: FastCastEventsConfig,
 	UserData: any
@@ -404,13 +406,12 @@ export type CastTrajectory = {
 }
 
 --[=[
-	@type CastStateInfo { UpdateConnection: RBXScriptSignal, HighFidelityBehavior: number, HighFidelitySegmentSize: number, Paused: boolean, TotalRuntime: number, DistanceCovered: number, IsActivelySimulatingPierce: boolean, IsActivelyResimulating: boolean, CancelHighResCast: boolean, Trajectory: CastTrajectory, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, FastCastEventsConfig: FastCastEventsConfig, FastCastEventsModuleConfig: FastCastEventsModuleConfig }
+	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	Paused: boolean,	TotalRuntime: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	FastCastEventsModuleConfig: FastCastEventsModuleConfig }
 	@within TypeDefinitions
 
 	Represents cast state tracking data.
 ]=]
 export type CastStateInfo = {
-	UpdateConnection: RBXScriptConnection?,
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
 	Paused: boolean,
@@ -420,6 +421,8 @@ export type CastStateInfo = {
 	IsActivelyResimulating: boolean,
 	CancelHighResCast: boolean,
 	Trajectory: CastTrajectory,
+	VisualizeCasts: boolean, 
+	VisualizeCastSettings: VisualizeCastSettings,
 
 	FastCastEventsConfig: FastCastEventsConfig,
 
