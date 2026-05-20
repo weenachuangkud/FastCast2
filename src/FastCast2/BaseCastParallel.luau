@@ -40,7 +40,7 @@ local function SendCastFire(
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior
 )
-	cast.Caster.Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
+	(cast.Caster :: any).Output:Fire("CastFire", cast, origin, direction, velocity, behavior)
 end
 
 local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
