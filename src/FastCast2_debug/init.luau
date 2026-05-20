@@ -751,7 +751,7 @@ Synchronize new changes to the ActiveCast.
 
 ]=]
 function FastCastParallel:SyncChangesToCast(cast: vaildcast)
-	cast.Caster.SyncChange:Fire(cast)
+	(cast.Caster :: any).SyncChange:Fire(cast)
 end
 
 --[=[
