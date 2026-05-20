@@ -123,80 +123,39 @@ export type OnCastFireFunction = (
 	behavior: FastCastBehavior
 ) -> ()
 
+-- Debug
+
 --[=[
-	@type CasterSerial { WorldRoot: WorldRoot, LengthChanged: OnLengthChangedFunction?, Hit: OnHitFunction?, Pierced: OnPiercedFunction?, CastTerminating: OnCastTerminatingFunction?, CastFire: OnCastFireFunction?, BaseCast: BaseCastData, AlreadyInit: boolean, MovementMode: "BulkMoveTo" | "Motor6D", Init: ( self: CasterSerial, movementMode: "BulkMoveTo" | "Motor6D", useObjectCache: boolean?, Template: BasePart | Model?, CacheSize: number?, CacheHolder: Instance? ) -> (), RaycastFire: ( CasterSerial, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior? ) -> (), BlockcastFire: ( CasterSerial, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior? ) -> (), SpherecastFire: ( CasterSerial, Origin: Vector3, Radius: number, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior? ) -> (), SetMovementMode: ( CasterSerial, mode: "BulkMoveTo" | "Motor6D" ) -> (), SetObjectCacheEnabled: ( CasterSerial, enabled: boolean ) -> (), Destroy: ( CasterSerial ) -> () }
-	
+	@type VisualizeCastSettings { Debug_SegmentColor: Color3, Debug_SegmentTransparency: number, Debug_SegmentSize: number, Debug_HitColor: Color3, Debug_HitTransparency: number, Debug_HitSize: number, Debug_RayPierceColor: Color3, Debug_RayPierceTransparency: number, Debug_RayPierceSize: number, Debug_RayLifetime: number, Debug_HitLifetime: number }
 	@within TypeDefinitions
 
-	Represents a Caster Serial.
+	Debug visualization settings for casts.
 ]=]
-export type CasterSerial = {
-	WorldRoot: WorldRoot,
-	LengthChanged: OnLengthChangedFunction?,
-	Hit: OnHitFunction?,
-	Pierced: OnPiercedFunction?,
-	CastTerminating: OnCastTerminatingFunction?,
-	CastFire: OnCastFireFunction?,
+export type VisualizeCastSettings = {
+	Debug_SegmentColor: Color3,
+	Debug_SegmentTransparency: number,
+	Debug_SegmentSize: number,
 
-	BaseCast: BaseCastData,
-	AlreadyInit: boolean,
-	MovementMode: "BulkMoveTo" | "Motor6D",
+	Debug_HitColor: Color3,
+	Debug_HitTransparency: number,
+	Debug_HitSize: number,
 
-	Init: (
-		self: CasterSerial,
-		movementMode: "BulkMoveTo" | "Motor6D",
-		useObjectCache: boolean?,
-		Template: BasePart | Model?,
-		CacheSize: number?,
-		CacheHolder: Instance?
-	) -> (),
+	Debug_RayPierceColor: Color3,
+	Debug_RayPierceTransparency: number,
+	Debug_RayPierceSize: number,
 
-	RaycastFire: (
-		CasterSerial,
-		Origin: Vector3,
-		Direction: Vector3,
-		Velocity: Vector3 | number,
-		Behavior: FastCastBehavior?
-	) -> (),
-	BlockcastFire: (
-		self: CasterSerial,
-		Origin: Vector3,
-		Size: Vector3,
-		Direction: Vector3,
-		Velocity: Vector3 | number,
-		Behavior: FastCastBehavior?
-	) -> (),
-
-	SpherecastFire: (
-		self: CasterSerial,
-		Origin: Vector3,
-		Radius: number,
-		Direction: Vector3,
-		Velocity: Vector3 | number,
-		Behavior: FastCastBehavior?
-	) -> (),
-
-	SetMovementMode: (
-		self: CasterSerial,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
-	SetObjectCacheEnabled: (
-		self: CasterSerial,
-		enabled: boolean
-	) -> (),
-
-	Destroy: (CasterSerial) -> ()
+	Debug_RayLifetime: number,
+	Debug_HitLifetime: number,
 }
 
 --[=[
-	@type CasterParallel { WorldRoot: WorldRoot, LengthChanged: Signal<OnLengthChangedFunction> | OnLengthChangedFunction, Hit: Signal<OnHitFunction> | OnHitFunction, Pierced: Signal<OnPiercedFunction> | OnPiercedFunction, CastTerminating: Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction, CastFire: Signal<OnCastFireFunction> | OnCastFireFunction, Dispatcher: Dispatcher.Dispatcher, ObjectCache: ObjectCache, AlreadyInit: boolean, ObjectCacheEnabled: boolean, BulkMoveEnabled: boolean, FastCastEventsModule: FastCastEventsModule, Init: ( self: Caster, numWorkers: number, newParent: Folder, newName: string, ContainerParent: Folder, VMContainerName: string, VMname: string, useBulkMoveTo: boolean, FastCastEventsModule: ModuleScript, useObjectCache: boolean, Template: BasePart | Model, CacheSize: number, CacheHolder: Instance ) -> (), RaycastFire: ( Caster, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior ) -> (), BlockcastFire: ( self: Caster, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavio ) -> (), SetBulkMoveEnabled: (self: Caster, enabled: boolean) -> (), SetObjectCacheEnabled: ( self: Caster, enabled: boolean, Template: BasePart | Model, CacheSize: number, CacheHolder: Instance ) -> (), SetFastCastEventsModule: (self: Caster, moduleScript: ModuleScript) -> (), AddVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> (), SetVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> (), GetVelocityCast: (Caster, cast: vaildcast, velocity: Vector3) -> Vector3, AddAccelerationCast: (Caster, cast: vaildcast) -> Vector3, GetAccelerationCast: (Caster, cast: vaildcast) -> Vector3, SetAccelerationCast: (Caster, cast: vaildcast, acceleration: Vector3) -> (), GetPositionCast: (Caster, cast: vaildcast, Position: Vector3) -> Vector3, AddPositionCast: (Caster, cast: vaildcast, Position: Vector3) -> (), ResumeCast: (Caster, cast: vaildcast) -> (), PauseCast: (Caster, cast: vaildcast) -> (), SyncChangesToCast: (Caster, cast: vaildcast) -> (), TerminateCast: (Caster, cast: vaildcast) -> (), Destroy: (Caster) -> () }
+	@type CasterParallel { WorldRoot: WorldRoot,	LengthChanged: OnLengthChangedFunction,	Hit: OnHitFunction,	Pierced: OnPiercedFunction,	CastTerminating: OnCastTerminatingFunction,	CastFire: OnCastFireFunction,	Dispatcher: Dispatcher.Dispatcher,	AlreadyInit: boolean,	ObjectCacheEnabled: boolean,	MovementMode: "BulkMoveTo" | "Motor6D",	FastCastEventsModule: FastCastEventsModule,	Init: (		self: CasterParallel,		numWorkers: number,		newParent: Folder,		newName: string,		ContainerParent: Folder,		VMContainerName: string,		VMname: string,		MovementMode: "BulkMoveTo" | "Motor6D",		FastCastEventsModule: ModuleScript,		useObjectCache: boolean,		Template: BasePart | Model,		CacheSize: number,		CacheHolder: Instance	) -> (),	RaycastFire: (		CasterParallel,		Origin: Vector3,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	BlockcastFire: (		self: CasterParallel,		Origin: Vector3,		Size: Vector3,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	SpherecastFire: (		self: CasterParallel,		Origin: Vector3,		Radius: number,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	SetMovementMode: (		mode: "BulkMoveTo" | "Motor6D", 		enabled: boolean	) -> (),	SetObjectCacheEnabled: (		self: CasterParallel,		enabled: boolean,		Template: BasePart | Model,		CacheSize: number,		CacheHolder: Instance	) -> (),	SetFastCastEventsModule: (self: CasterParallel, moduleScript: ModuleScript) -> (),	AddVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),	SetVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),	GetVelocityCast: (CasterParallel, cast: vaildcast) -> Vector3,	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> Vector3,	SetAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),	GetAccelerationCast: (CasterParallel, cast: vaildcast) -> Vector3,	AddPositionCast: (CasterParallel, cast: vaildcast, Position: Vector3) -> (),	GetPositionCast: (CasterParallel, cast: vaildcast) -> Vector3,	ResumeCast: (CasterParallel, cast: vaildcast) -> (),	PauseCast: (CasterParallel, cast: vaildcast) -> (),	SyncChangesToCast: (CasterParallel, cast: vaildcast) -> (),	TerminateCast: (CasterParallel, cast: vaildcast) -> (),	Destroy: (CasterParallel) -> () }
 	
 	@within TypeDefinitions
 
-	Represents a Caster Serial.
+	Represents a Caster Parallel.
 ]=]
-export type CasterSerial = {
+export type CasterParallel = {
 	WorldRoot: WorldRoot,
 	LengthChanged: OnLengthChangedFunction,
 	Hit: OnHitFunction,
@@ -211,7 +170,7 @@ export type CasterSerial = {
 	FastCastEventsModule: FastCastEventsModule,
 
 	Init: (
-		self: CasterSerial,
+		self: CasterParallel,
 		numWorkers: number,
 		newParent: Folder,
 		newName: string,
@@ -224,6 +183,98 @@ export type CasterSerial = {
 		Template: BasePart | Model,
 		CacheSize: number,
 		CacheHolder: Instance
+	) -> (),
+
+	RaycastFire: (
+		CasterParallel,
+		Origin: Vector3,
+		Direction: Vector3,
+		Velocity: Vector3 | number,
+		Behavior: FastCastBehavior?
+	) -> (),
+	BlockcastFire: (
+		self: CasterParallel,
+		Origin: Vector3,
+		Size: Vector3,
+		Direction: Vector3,
+		Velocity: Vector3 | number,
+		Behavior: FastCastBehavior?
+	) -> (),
+
+	SpherecastFire: (
+		self: CasterParallel,
+		Origin: Vector3,
+		Radius: number,
+		Direction: Vector3,
+		Velocity: Vector3 | number,
+		Behavior: FastCastBehavior?
+	) -> (),
+
+	SetMovementMode: (
+		mode: "BulkMoveTo" | "Motor6D", 
+		enabled: boolean
+	) -> (),
+
+	SetObjectCacheEnabled: (
+		self: CasterParallel,
+		enabled: boolean,
+		Template: BasePart | Model,
+		CacheSize: number,
+		CacheHolder: Instance
+	) -> (),
+
+	SetFastCastEventsModule: (self: CasterParallel, moduleScript: ModuleScript) -> (),
+
+	AddVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),
+	SetVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),
+	GetVelocityCast: (CasterParallel, cast: vaildcast) -> Vector3,
+
+	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> Vector3,
+	SetAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),
+	GetAccelerationCast: (CasterParallel, cast: vaildcast) -> Vector3,
+
+	AddPositionCast: (CasterParallel, cast: vaildcast, Position: Vector3) -> (),
+	GetPositionCast: (CasterParallel, cast: vaildcast) -> Vector3,
+
+	ResumeCast: (CasterParallel, cast: vaildcast) -> (),
+	PauseCast: (CasterParallel, cast: vaildcast) -> (),
+
+	SyncChangesToCast: (CasterParallel, cast: vaildcast) -> (),
+
+	TerminateCast: (CasterParallel, cast: vaildcast) -> (),
+
+	Destroy: (CasterParallel) -> ()
+}
+
+--[=[
+	@type CasterSerial { WorldRoot: WorldRoot,	LengthChanged: OnLengthChangedFunction,	Hit: OnHitFunction,	CanPierce: CanPierceFunction,	Pierced: OnPiercedFunction,	CastTerminating: OnCastTerminatingFunction,	CastFire: OnCastFireFunction,	Dispatcher: Dispatcher.Dispatcher,	AlreadyInit: boolean,	ObjectCacheEnabled: boolean,	MovementMode: "BulkMoveTo" | "Motor6D",	FastCastEventsModule: FastCastEventsModule,	Init: (		self: CasterSerial,		movementMode: "BulkMoveTo" | "Motor6D",		useObjectCache: boolean,		Template: BasePart | Model?,		CacheSize: number?,		CacheHolder: Instance?	) -> (),	RaycastFire: (		CasterSerial,		Origin: Vector3,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	BlockcastFire: (		self: CasterSerial,		Origin: Vector3,		Size: Vector3,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	SpherecastFire: (		self: CasterSerial,		Origin: Vector3,		Radius: number,		Direction: Vector3,		Velocity: Vector3 | number,		Behavior: FastCastBehavior?	) -> (),	SetMovementMode: (		mode: "BulkMoveTo" | "Motor6D", 		enabled: boolean	) -> (),	SetObjectCacheEnabled: (		self: CasterSerial,		enabled: boolean,		Template: BasePart | Model,		CacheSize: number,		CacheHolder: Instance	) -> (),	AddVelocityCast: (CasterSerial, cast: vaildcast, velocity: Vector3) -> (),	SetVelocityCast: (CasterSerial, cast: vaildcast, velocity: Vector3) -> (),	GetVelocityCast: (CasterSerial, cast: vaildcast) -> Vector3,	AddAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> Vector3,	SetAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> (),	GetAccelerationCast: (CasterSerial, cast: vaildcast) -> Vector3,	AddPositionCast: (CasterSerial, cast: vaildcast, Position: Vector3) -> (),	GetPositionCast: (CasterSerial, cast: vaildcast) -> Vector3,	ResumeCast: (CasterSerial, cast: vaildcast) -> (),	PauseCast: (CasterSerial, cast: vaildcast) -> (),	TerminateCast: (CasterSerial, cast: vaildcast) -> (),	Destroy: (CasterSerial) -> () }
+	
+	@within TypeDefinitions
+
+	Represents a Caster Serial.
+]=]
+export type CasterSerial = {
+	WorldRoot: WorldRoot,
+	LengthChanged: OnLengthChangedFunction,
+	Hit: OnHitFunction,
+	CanPierce: CanPierceFunction,
+	Pierced: OnPiercedFunction,
+	CastTerminating: OnCastTerminatingFunction,
+	CastFire: OnCastFireFunction,
+	Dispatcher: Dispatcher.Dispatcher,
+
+	AlreadyInit: boolean,
+	ObjectCacheEnabled: boolean,
+	MovementMode: "BulkMoveTo" | "Motor6D",
+	FastCastEventsModule: FastCastEventsModule,
+
+	Init: (
+		self: CasterSerial,
+		movementMode: "BulkMoveTo" | "Motor6D",
+		useObjectCache: boolean,
+		Template: BasePart | Model?,
+		CacheSize: number?,
+		CacheHolder: Instance?
 	) -> (),
 
 	RaycastFire: (
@@ -376,7 +427,7 @@ export type CastStateInfo = {
 }
 
 --[=[
-	@type CastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, CanPierceModule: ModuleScript? }
+	@type CastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, FastCastEventsModule: FastCastEventsModule }
 	@within TypeDefinitions
 
 	Ray info for ray-cast variants.
@@ -432,16 +483,14 @@ export type BaseCastData = {
 	SyncChange : BindableEvent
 }
 
--- ECS
-
 --[=[
-	@type ActiveCastData {Caster: BaseCastData,StateInfo: CastStateInfo,RayInfo: CastRayInfo,UserData: { [any]: any }, Type : "Raycast",CFrame: CFrame,ID: number}
+	@type ActiveCastData {Caster: BaseCastData | { SerialSimulation: any},StateInfo: CastStateInfo,RayInfo: CastRayInfo,UserData: { [any]: any }, Type : "Raycast",CFrame: CFrame,ID: number}
 	@within TypeDefinitions	
 	
 	Represents an active cast data.
 ]=]
 export type ActiveCastData = {
-	Caster: BaseCastData,
+	Caster: BaseCastData | { SerialSimulation: any},
 	StateInfo: CastStateInfo,
 	RayInfo: CastRayInfo,
 	UserData: { [any]: any },
@@ -452,13 +501,13 @@ export type ActiveCastData = {
 }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Blockcast", CFrame: CFrame, ID: number }
+	@type ActiveCastData { Caster: BaseCastData | { SerialSimulation: any}, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Blockcast", CFrame: CFrame, ID: number }
 	@within TypeDefinitions	
 	
 	Represents an active block cast data.
 ]=]
 export type ActiveBlockcastData = {
-	Caster: BaseCastData,
+	Caster: BaseCastData | { SerialSimulation: any},
 	StateInfo: CastStateInfo,
 	RayInfo: BlockCastRayInfo,
 	UserData: { [any]: any },
@@ -469,13 +518,13 @@ export type ActiveBlockcastData = {
 }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Spherecast", CFrame: CFrame, ID: number }
+	@type ActiveCastData { Caster: BaseCastData | { SerialSimulation: any}, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, Type : "Spherecast", CFrame: CFrame, ID: number }
 	@within TypeDefinitions	
 	
 	Represents an active sphere cast data.
 ]=]
 export type ActiveSpherecastData = {
-	Caster: BaseCastData,
+	Caster: BaseCastData | { SerialSimulation: any},
 	StateInfo: CastStateInfo,
 	RayInfo: SphereCastRayInfo,
 	UserData: { [any]: any },
