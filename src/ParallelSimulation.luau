@@ -20,6 +20,7 @@ local DebugLogging = Config.DebugLogging
 -- Constants
 local EnumCastTypes = FastCastEnums.CastType
 local DEFAULT_MAX_DISTANCE = 1000
+local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 
 -- Variables
 
@@ -51,19 +52,18 @@ local casts_ID_Index = {} :: { [number]: number }
 
 local casts_FastCastEvents = {} :: { [number]: ModuleScript }
 
+-- Types
+
 type QueuedEventData = {
 	eventType: string,
 	args: { any }
 }
 
-local queuedEvents: { [number]: { QueuedEventData } } = {}
-
-local ActivesRef: any = nil
-local BaseCastRef = nil :: any
-local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
-local MovementEnabled = false
-
--- Types
+type QueuedVisualizeData = {
+	castStartCFrame: CFrame,
+	castVariant: CastVisualizerVariants,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings
+}
 
 type BlockcastVariant = { CastType: number, Size: Vector3 }
 type SpherecastVariant = { CastType: number, Radius: number }
@@ -73,6 +73,16 @@ type RayVisualizerVariant = { castLength: number }
 type BlockVisualizerVariant = { size: Vector3 }
 type SphereVisualizerVariant = { radius: number }
 type CastVisualizerVariants = RayVisualizerVariant | BlockVisualizerVariant | SphereVisualizerVariant
+
+-- queued things
+
+local queuedEvents: { [number]: { QueuedEventData } } = {}
+local queuedVisualizes: { [number]: { QueuedVisualizeData } } = {}
+
+local ActivesRef: any = nil
+local BaseCastRef = nil :: any
+local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
+local MovementEnabled = false
 
 local castHandlers = {
 	[EnumCastTypes.Raycast] = function(
@@ -137,6 +147,153 @@ local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastT
 
 	for key, _ in (cast :: any) do
 		cast[key] = nil
+	end
+end
+
+local function DebrisAdd(obj: Instance, Lifetime: number)
+	if not obj then
+		return
+	end
+	if Lifetime <= 0 then
+		obj:Destroy()
+	end
+
+	task.delay(Lifetime, function()
+		obj:Destroy()
+	end)
+end
+
+local function GetFastCastVisualizationContainer(): Instance
+	local fcVisualizationObjects = workspace.Terrain:FindFirstChild(FC_VIS_OBJ_NAME)
+	if fcVisualizationObjects then
+		return fcVisualizationObjects
+	end
+
+	fcVisualizationObjects = Instance.new("Folder")
+	fcVisualizationObjects.Name = FC_VIS_OBJ_NAME
+	fcVisualizationObjects.Archivable = false
+	fcVisualizationObjects.Parent = workspace.Terrain
+	return fcVisualizationObjects
+end
+
+local function DbgVisualizeRaySegment(
+	castStartCFrame: CFrame,
+	VisualizeCastSettings: TypeDef.VisualizeCastSettings,
+	variant: RayVisualizerVariant
+): ConeHandleAdornment?
+	local adornment = Instance.new("ConeHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	adornment.Height = variant.castLength
+	adornment.Color3 = VisualizeCastSettings.Debug_SegmentColor
+	adornment.Radius = VisualizeCastSettings.Debug_SegmentSize
+	adornment.Transparency = VisualizeCastSettings.Debug_SegmentTransparency
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSettings.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeBlockSegment(
+	castStartCFrame: CFrame,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
+	variant: BlockVisualizerVariant
+): BoxHandleAdornment?
+	local adornment = Instance.new("BoxHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	--adornment.Height = castLength
+
+	adornment.Size = variant.size
+	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
+	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
+
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeSphereSegment(
+	castStartCFrame: CFrame,
+	VisualizeCastSetting: TypeDef.VisualizeCastSettings,
+	variant: SphereVisualizerVariant
+): SphereHandleAdornment?
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = castStartCFrame
+	--adornment.Height = castLength
+	adornment.Radius = variant.radius
+	--adornment.Size = Vector3.new(size.X, size.Y, size.Z + castLength)
+	adornment.Color3 = VisualizeCastSetting.Debug_SegmentColor
+	adornment.Transparency = VisualizeCastSetting.Debug_SegmentTransparency
+
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSetting.Debug_RayLifetime)
+	return adornment
+end
+
+local function DbgVisualizeHit(
+	atCF: CFrame,
+	wasPierce: boolean,
+	VisualizeCastSettings: TypeDef.VisualizeCastSettings
+): SphereHandleAdornment?
+	local adornment = Instance.new("SphereHandleAdornment")
+	adornment.Adornee = workspace.Terrain
+	adornment.CFrame = atCF
+	-- Alert! someone is Mawining it!!!!!
+	adornment.Radius = (wasPierce == false) and VisualizeCastSettings.Debug_HitSize
+		or VisualizeCastSettings.Debug_RayPierceSize
+	adornment.Transparency = (wasPierce == false) and VisualizeCastSettings.Debug_HitTransparency
+		or VisualizeCastSettings.Debug_RayPierceTransparency
+	adornment.Color3 = (wasPierce == false) and VisualizeCastSettings.Debug_HitColor
+		or VisualizeCastSettings.Debug_RayPierceColor
+	adornment.Parent = GetFastCastVisualizationContainer()
+
+	DebrisAdd(adornment, VisualizeCastSettings.Debug_HitLifetime)
+	return adornment
+end
+
+local Visualizers = {
+	[EnumCastTypes.Raycast] = DbgVisualizeRaySegment,
+	[EnumCastTypes.Blockcast] = DbgVisualizeBlockSegment,
+	[EnumCastTypes.Spherecast] = DbgVisualizeSphereSegment
+}
+
+local function QueueVisualize(castID: number, castStartCFrame: CFrame, VisualizeCasts: boolean, VisualizeCastSettings: TypeDef.VisualizeCastSettings, castVariant: CastVisualizerVariants)
+	if not VisualizeCasts then
+		return
+	end
+
+	if not queuedVisualizes[castID] then
+		queuedVisualizes[castID] = {}
+	end
+
+	table.insert(queuedVisualizes[castID], {
+		castStartCFrame = castStartCFrame,
+		castVariant = castVariant,
+		VisualizeCastSetting = VisualizeCastSettings
+	} :: any)
+end
+
+local function FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisualizeData }})
+	local sortedIDs = {}
+	for id in unFiredVisualizes do
+		table.insert(sortedIDs, id)
+	end
+	table.sort(sortedIDs)
+	
+	for _, castID in sortedIDs do
+		local visualizesList = unFiredVisualizes[castID]
+		if not visualizesList or not next(visualizesList) then
+			continue
+		end
+
+		for _, visualizeData in visualizesList do
+			local castVisualizer = Visualizers[visualizeData.castVariant]
+			castVisualizer(visualizeData.castStartCFrame, visualizeData.VisualizeCastSetting, visualizeData.castVariant)
+		end
 	end
 end
 
@@ -397,7 +554,7 @@ local function SimluateCast(
 	if DebugLogging.Casting then
 		print("Casting for frame - SimulateCast")
 	end
-	
+
 	local trajectory = casts_Trajectory[id]
 
 	local origin = trajectory.Origin
