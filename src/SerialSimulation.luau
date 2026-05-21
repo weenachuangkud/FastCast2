@@ -370,7 +370,7 @@ function SerialSimulation:QueueVisualize(castID: number, castStartCFrame: CFrame
 	if not queuedVisualizes[castID] then
 		queuedVisualizes[castID] = {}
 	end
-
+	-- TODO: Add Hit visualizer
 	table.insert(queuedVisualizes[castID], {
 		castStartCFrame = castStartCFrame,
 		castVariant = castVariant,
@@ -392,6 +392,7 @@ function SerialSimulation:FireQueuedVisualizes(unFiredVisualizes: { [number]: { 
 		end
 
 		for _, visualizeData in visualizesList do
+			-- TODO: Add Hit visualizer
 			local castVisualizer = Visualizers[visualizeData.castVariant]
 			castVisualizer(visualizeData.castStartCFrame, visualizeData.VisualizeCastSetting, visualizeData.castVariant)
 		end

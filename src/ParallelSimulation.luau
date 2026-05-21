@@ -269,7 +269,7 @@ local function QueueVisualize(castID: number, castStartCFrame: CFrame, Visualize
 	if not queuedVisualizes[castID] then
 		queuedVisualizes[castID] = {}
 	end
-
+	-- TODO: Add Hit visualizer
 	table.insert(queuedVisualizes[castID], {
 		castStartCFrame = castStartCFrame,
 		castVariant = castVariant,
@@ -291,6 +291,7 @@ local function FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisua
 		end
 
 		for _, visualizeData in visualizesList do
+			-- TODO: Add Hit visualizer
 			local castVisualizer = Visualizers[visualizeData.castVariant]
 			castVisualizer(visualizeData.castStartCFrame, visualizeData.VisualizeCastSetting, visualizeData.castVariant)
 		end
