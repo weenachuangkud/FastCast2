@@ -352,6 +352,9 @@ function SerialSimulation:SimluateCast(
 	delta: number,
 	CanPiercefn: TypeDef.CanPierceFunction?
 )
+	if DebugLogging.Casting then
+		print("Casting for frame - SimluateCast")
+	end
 	local trajectory = casts_Trajectory[id]
 
 	local origin = trajectory.Origin
@@ -505,7 +508,7 @@ function SerialSimulation:UpdateCasts(delta: number)
 		end
 
 		if DebugLogging.Casting then
-			print("Casting for frame.")
+			print("Casting for frame - UpdateCasts")
 		end
 
 

@@ -394,6 +394,10 @@ local function SimluateCast(
 	delta: number, 
 	FastCastEvents 
 )
+	if DebugLogging.Casting then
+		print("Casting for frame - SimulateCast")
+	end
+	
 	local trajectory = casts_Trajectory[id]
 
 	local origin = trajectory.Origin
@@ -555,7 +559,7 @@ local function UpdateCasts(delta: number)
 		end
 
 		if DebugLogging.Casting then
-			print("Casting for frame.")
+			print("Casting for frame - UpdateCasts")
 		end
 
 
