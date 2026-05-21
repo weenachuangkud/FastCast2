@@ -13,6 +13,9 @@ local FastCastModule = script.Parent
 
 local TypeDef = require(FastCastModule:WaitForChild("TypeDefinitions"))
 local FastCastEnums = require(FastCastModule:WaitForChild("FastCastEnums"))
+local Config = require(script.Parent:WaitForChild("Config"))
+local Debuglogging = Config.DebugLogging
+
 
 -- Constants
 local EnumCastTypes = FastCastEnums.CastType

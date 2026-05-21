@@ -9,6 +9,8 @@ local RS = game:GetService("RunService")
 
 local TypeDef = require(script.Parent:WaitForChild("TypeDefinitions"))
 local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
+local Config = require(script.Parent:WaitForChild("Config"))
+local Debuglogging = Config.DebugLogging
 
 -- Constants
 local EnumCastTypes = FastCastEnums.CastType
