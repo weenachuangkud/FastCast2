@@ -10,7 +10,7 @@ local RS = game:GetService("RunService")
 local TypeDef = require(script.Parent:WaitForChild("TypeDefinitions"))
 local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 local Config = require(script.Parent:WaitForChild("Config"))
-local Debuglogging = Config.DebugLogging
+local DebugLogging = Config.DebugLogging
 
 -- Constants
 local EnumCastTypes = FastCastEnums.CastType
@@ -502,6 +502,10 @@ function SerialSimulation:UpdateCasts(delta: number)
 	for _, id in self.casts_ID do
 		if casts_Paused[id] then
 			continue
+		end
+
+		if DebugLogging.Casting then
+			print("Casting for frame.")
 		end
 
 
