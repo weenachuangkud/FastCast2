@@ -619,11 +619,15 @@ local function UpdateCasts(delta: number)
 				numSegmentsReal = 1
 			end
 
-			--local timeIncrement = delta / numSegmentsReal
+			local timeIncrement = delta / numSegmentsReal
+
+			if DebugLogging.Calculation then
+				print("Performing subcast! Time increment: " .. timeIncrement .. ", num segments: " .. numSegmentsReal)
+			end
 
 			local cast_nil = false
-			-- _ = segmentIndex
-			for _ = 1, numSegmentsReal do
+			
+			for segmentIndex = 1, numSegmentsReal do
 
 				-- In case when cast Destroyed or not exist
 				if ActivesRef[id] == nil then
@@ -634,6 +638,10 @@ local function UpdateCasts(delta: number)
 				if casts_CancelHighResCast[id] then
 					casts_CancelHighResCast[id] = false
 					break
+				end
+
+				if DebugLogging.Segment then
+					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
 				SimluateCast(id, delta, FastCastEvents)
