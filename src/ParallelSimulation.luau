@@ -59,10 +59,14 @@ type QueuedEventData = {
 	args: { any }
 }
 
-type QueuedVisualizeData = {
+type QueuedVisualizeCastData = {
 	castStartCFrame: CFrame,
 	castVariant: CastVisualizerVariants,
-	VisualizeCastSetting: TypeDef.VisualizeCastSettings
+}
+
+type QueuedVisualizeHitData = {
+	atCF: CFrame,
+	wasPierce: boolean,
 }
 
 type BlockcastVariant = { CastType: number, Size: Vector3 }
@@ -77,7 +81,7 @@ type CastVisualizerVariants = RayVisualizerVariant | BlockVisualizerVariant | Sp
 -- queued things
 
 local queuedEvents: { [number]: { QueuedEventData } } = {}
-local queuedVisualizes: { [number]: { QueuedVisualizeData } } = {}
+local queuedVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeHitData } } = {}
 
 local ActivesRef: any = nil
 local BaseCastRef = nil :: any
@@ -261,7 +265,7 @@ local Visualizers = {
 	[EnumCastTypes.Spherecast] = DbgVisualizeSphereSegment
 }
 
-local function QueueVisualize(castID: number, castStartCFrame: CFrame, VisualizeCasts: boolean, VisualizeCastSettings: TypeDef.VisualizeCastSettings, castVariant: CastVisualizerVariants)
+local function QueueVisualize(castID: number, VisualizeCasts: boolean, visualizeData: QueuedVisualizeCastData | QueuedVisualizeHitData)
 	if not VisualizeCasts then
 		return
 	end
@@ -269,15 +273,11 @@ local function QueueVisualize(castID: number, castStartCFrame: CFrame, Visualize
 	if not queuedVisualizes[castID] then
 		queuedVisualizes[castID] = {}
 	end
-	-- TODO: Add Hit visualizer
-	table.insert(queuedVisualizes[castID], {
-		castStartCFrame = castStartCFrame,
-		castVariant = castVariant,
-		VisualizeCastSetting = VisualizeCastSettings
-	} :: any)
+
+	table.insert(queuedVisualizes[castID], visualizeData)
 end
 
-local function FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisualizeData }})
+local function FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeHitData }})
 	local sortedIDs = {}
 	for id in unFiredVisualizes do
 		table.insert(sortedIDs, id)
@@ -291,9 +291,13 @@ local function FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisua
 		end
 
 		for _, visualizeData in visualizesList do
-			-- TODO: Add Hit visualizer
+			-- VisualizeHit
+			if visualizeData.atCF then
+				DbgVisualizeHit(visualizeData.atCF, visualizeData.wasPierce, casts_VisualizeCastSettings[castID])
+			end
+			-- VisualizeCasts
 			local castVisualizer = Visualizers[visualizeData.castVariant]
-			castVisualizer(visualizeData.castStartCFrame, visualizeData.VisualizeCastSetting, visualizeData.castVariant)
+			castVisualizer(visualizeData.castStartCFrame, casts_VisualizeCastSettings[castID], visualizeData.castVariant)
 		end
 	end
 end
@@ -593,6 +597,20 @@ local function SimluateCast(
 	local rayDisplacement = (point - lastPoint).Magnitude
 
 	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+
+	-- TODO: Contiune
+	local VisualizeCasts = casts_VisualizeCasts[id]
+
+	local VisualizeVariant = {}
+	local ct = casts_CastType[id]
+
+	if ct == EnumCastTypes.Raycast then
+		VisualizeVariant.castLength = rayDisplacement
+	elseif ct == EnumCastTypes.Blockcast then
+		VisualizeVariant.size = casts_RayInfo[id].Size
+	elseif ct == EnumCastTypes.Spherecast then
+		VisualizeVariant.radius = casts_RayInfo[id].Radius
+	end
 
 	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
 

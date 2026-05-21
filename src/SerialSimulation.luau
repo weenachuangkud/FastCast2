@@ -58,16 +58,20 @@ type QueuedEventData = {
 	args: { any }
 }
 
-type QueuedVisualizeData = {
+type QueuedVisualizeCastData = {
 	castStartCFrame: CFrame,
 	castVariant: CastVisualizerVariants,
-	VisualizeCastSetting: TypeDef.VisualizeCastSettings
+}
+
+type QueuedVisualizeHitData = {
+	atCF: CFrame,
+	wasPierce: boolean,
 }
 
 -- queued things
 
 local queuedEvents: { [number]: { QueuedEventData } } = {}
-local queuedVisualizes: { [number]: { QueuedVisualizeData }} = {}
+local queuedVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeHitData }} = {}
 
 local ActivesRef: any = nil
 local BaseCastRef = nil :: any
@@ -362,7 +366,7 @@ function SerialSimulation:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enable
 	end
 end
 
-function SerialSimulation:QueueVisualize(castID: number, castStartCFrame: CFrame, VisualizeCasts: boolean, VisualizeCastSettings: TypeDef.VisualizeCastSettings, castVariant: CastVisualizerVariants)
+function SerialSimulation:QueueVisualize(castID: number, VisualizeCasts: boolean, visualizeData: QueuedVisualizeCastData | QueuedVisualizeHitData)
 	if not VisualizeCasts then
 		return
 	end
@@ -370,15 +374,11 @@ function SerialSimulation:QueueVisualize(castID: number, castStartCFrame: CFrame
 	if not queuedVisualizes[castID] then
 		queuedVisualizes[castID] = {}
 	end
-	-- TODO: Add Hit visualizer
-	table.insert(queuedVisualizes[castID], {
-		castStartCFrame = castStartCFrame,
-		castVariant = castVariant,
-		VisualizeCastSetting = VisualizeCastSettings
-	} :: any)
+
+	table.insert(queuedVisualizes[castID], visualizeData)
 end
 
-function SerialSimulation:FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisualizeData }})
+function SerialSimulation:FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeHitData }})
 	local sortedIDs = {}
 	for id in unFiredVisualizes do
 		table.insert(sortedIDs, id)
@@ -392,9 +392,13 @@ function SerialSimulation:FireQueuedVisualizes(unFiredVisualizes: { [number]: { 
 		end
 
 		for _, visualizeData in visualizesList do
-			-- TODO: Add Hit visualizer
+			-- VisualizeHit
+			if visualizeData.atCF then
+				DbgVisualizeHit(visualizeData.atCF, visualizeData.wasPierce, casts_VisualizeCastSettings[castID])
+			end
+			-- VisualizeCasts
 			local castVisualizer = Visualizers[visualizeData.castVariant]
-			castVisualizer(visualizeData.castStartCFrame, visualizeData.VisualizeCastSetting, visualizeData.castVariant)
+			castVisualizer(visualizeData.castStartCFrame, casts_VisualizeCastSettings[castID], visualizeData.castVariant)
 		end
 	end
 end
@@ -552,8 +556,8 @@ function SerialSimulation:SimluateCast(
 
 	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
 
+	-- TODO: Contiune
 	local VisualizeCasts = casts_VisualizeCasts[id]
-	local VisualizeCastSettings = casts_VisualizeCastSettings[id]
 
 	local VisualizeVariant = {}
 	local ct = casts_CastType[id]
