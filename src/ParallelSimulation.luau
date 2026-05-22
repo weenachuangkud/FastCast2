@@ -87,6 +87,7 @@ local queuedVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeH
 
 local ActivesRef: any = nil
 local BaseCastRef = nil :: any
+local CurrentActor: Actor? = nil
 local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
 local MovementEnabled = false
 
@@ -449,9 +450,10 @@ end
 local ParallelSimulation = {}
 ParallelSimulation.Connection = nil :: RBXScriptConnection?
 
-function ParallelSimulation.Init(baseCastRef: any)
+function ParallelSimulation.Init(baseCastRef: any, actor: Actor?)
 	BaseCastRef = baseCastRef
 	ActivesRef = baseCastRef.Actives
+	CurrentActor = actor
 end
 
 function ParallelSimulation.Register(cast: any)
@@ -551,6 +553,9 @@ function ParallelSimulation.Unregister(castID: number)
 
 	queuedEvents[castID] = nil
 	queuedVisualizes[castID] = nil
+	if CurrentActor then
+		CurrentActor:SetAttribute("FC2_Paused_" .. castID, nil)
+	end
 end
 
 function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
@@ -785,6 +790,17 @@ local function UpdateCasts(delta: number)
 	for _, id in casts_ID do
 		if casts_Paused[id] then
 			continue
+		end
+		if ActivesRef[id] and ActivesRef[id].StateInfo.Paused then
+			casts_Paused[id] = true
+			continue
+		end
+		if CurrentActor then
+			local attr = CurrentActor:GetAttribute("FC2_Paused_" .. id)
+			if attr then
+				casts_Paused[id] = true
+				continue
+			end
 		end
 
 		if DebugLogging.Casting then
