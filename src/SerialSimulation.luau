@@ -40,6 +40,7 @@ local casts_Origin = {} :: { [number]: Vector3 }
 local casts_Acceleration = {} :: { [number]: Vector3 }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
+local casts_RayDisplacement = {} :: { [number]: number }
 
 -- Types
 
@@ -60,12 +61,13 @@ type QueuedEventData = {
 
 type QueuedVisualizeCastData = {
 	castStartCFrame: CFrame,
-	castVariant: CastVisualizerVariants,
+	sub: boolean
 }
 
 type QueuedVisualizeHitData = {
 	atCF: CFrame,
 	wasPierce: boolean,
+	sub: boolean
 }
 
 -- queued things
@@ -266,7 +268,7 @@ function SerialSimulation:Register(cast: any)
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
 	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts
-	casts_VisualizeCastSettings = cast.StateInfo.VisualizeCastSettings
+	casts_VisualizeCastSettings[id] = cast.StateInfo.VisualizeCastSettings
 	casts_RayInfo[id] = cast.RayInfo
 	casts_UserData[id] = cast.UserData
 	casts_CastType[id] = cast.CastVariant.CastType
@@ -319,6 +321,7 @@ function SerialSimulation:Unregister(castID: number)
 	casts_Origin[castID] = nil
 	casts_Acceleration[castID] = nil
 	casts_MaxDistance[castID] = nil
+	casts_RayDisplacement[castID] = nil
 
 	if casts_ActiveMotor6Ds[castID] then
 		if BaseCastRef and BaseCastRef._ReturnMotor6D then
@@ -337,6 +340,7 @@ function SerialSimulation:Unregister(castID: number)
 	end
 
 	queuedEvents[castID] = nil
+	queuedVisualizes[castID] = nil
 end
 
 function SerialSimulation:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
@@ -394,11 +398,33 @@ function SerialSimulation:FireQueuedVisualizes(unFiredVisualizes: { [number]: { 
 		for _, visualizeData in visualizesList do
 			-- VisualizeHit
 			if visualizeData.atCF then
+				if DebugLogging.Hit and not visualizeData.wasPierce and not visualizeData.sub then
+					print("Hit was successful. Terminating.")
+				end
+				if DebugLogging.Pierced and visualizeData.wasPierce and not visualizeData.sub then
+					print("Piercing function returned TRUE to pierce this part.")
+				end
 				DbgVisualizeHit(visualizeData.atCF, visualizeData.wasPierce, casts_VisualizeCastSettings[castID])
+				continue
 			end
 			-- VisualizeCasts
-			local castVisualizer = Visualizers[visualizeData.castVariant]
-			castVisualizer(visualizeData.castStartCFrame, casts_VisualizeCastSettings[castID], visualizeData.castVariant)
+			if DebugLogging.Segment and visualizeData.sub then
+				print("Subcast visualization")
+			end
+			local castType = casts_CastType[castID]
+			local castVisualizer = Visualizers[castType]
+			if not castVisualizer then
+				continue
+			end
+			local visualizerVariant: CastVisualizerVariants
+			if castType == EnumCastTypes.Raycast then
+				visualizerVariant = { castLength = casts_RayDisplacement[castID] or 1 }
+			elseif castType == EnumCastTypes.Blockcast then
+				visualizerVariant = { size = (casts_CastVariant[castID] :: BlockcastVariant).Size }
+			else
+				visualizerVariant = { radius = (casts_CastVariant[castID] :: SpherecastVariant).Radius }
+			end
+			castVisualizer(visualizeData.castStartCFrame, casts_VisualizeCastSettings[castID], visualizerVariant)
 		end
 	end
 end
@@ -553,29 +579,21 @@ function SerialSimulation:SimluateCast(
 	end
 
 	local rayDisplacement = (point - lastPoint).Magnitude
+	casts_RayDisplacement[id] = rayDisplacement
 
 	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
-
-	-- TODO: Contiune
-	local VisualizeVariant = {}
-	local ct = casts_CastType[id]
-
-	if ct == EnumCastTypes.Raycast then
-		VisualizeVariant.castLength = rayDisplacement
-	elseif ct == EnumCastTypes.Blockcast then
-		VisualizeVariant.size = casts_RayInfo[id].Size
-	elseif ct == EnumCastTypes.Spherecast then
-		VisualizeVariant.radius = casts_RayInfo[id].Radius
-	end
 
 	self:QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
 
 	casts_DistanceCovered[id] += rayDisplacement
 
 	if delta > 0 then
-		SerialSimulation:QueueVisualize(
+		self:QueueVisualize(
 			id,
-			Visualize
+			{
+				castStartCFrame = CFrame.new(lastPoint, lastPoint+rayDir),
+				sub = false
+			} :: any
 		)
 	end
 
@@ -643,6 +661,12 @@ function SerialSimulation:SimluateCast(
 
 					if subResult ~= nil then
 						subHitFound = true
+
+						self:QueueVisualize(id, {
+							castStartCFrame = CFrame.new(subPosition, subPosition + subVelocity),
+							sub = true
+						} :: any)
+
 						--subDispalcement = (subPosition - subResult.Position).Magnitude
 
 						if 
@@ -652,10 +676,26 @@ function SerialSimulation:SimluateCast(
 							casts_IsActivelyResimulating[id] = false
 							self:QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 							self:QueueEvent(id, "CastTerminating")
+							self:QueueVisualize(id, {
+								atCF = CFrame.new(point),
+								wasPierce = false,
+								sub = true
+							}:: any)
+
 							return
 						else
 							self:QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
+							self:QueueVisualize(id, {
+								atCF = CFrame.new(point),
+								wasPierce = true,
+								sub = true
+							}:: any)
 						end
+					else
+						self:QueueVisualize(id, {
+							castStartCFrame = CFrame.new(subPosition, subPosition+subVelocity),
+							sub = true
+						}:: any)
 					end
 				end
 				casts_IsActivelyResimulating[id] = false
@@ -665,16 +705,23 @@ function SerialSimulation:SimluateCast(
 					return
 				end
 			else
-
 				self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+				self:QueueVisualize(id, {
+					atCF = CFrame.new(point),
+					sub = false,
+					wasPierce = false
+				}:: any)
 				self:QueueEvent(id, "CastTerminating")
 
 				return
 			end
 		else
-
 			self:QueueEvent(id, "Pierced", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
-
+			self:QueueVisualize(id, {
+				atCF = CFrame.new(point),
+				sub = false,
+				wasPierce = true
+			}:: any)
 		end
 	end
 
@@ -795,6 +842,10 @@ function SerialSimulation:UpdateCasts(delta: number)
 	local eventsToProcess = queuedEvents
 	queuedEvents = {}
 	self:FireQueuedEvents(eventsToProcess)
+
+	local visualizesToProcess = queuedVisualizes
+	queuedVisualizes = {}
+	self:FireQueuedVisualizes(visualizesToProcess)
 end
 
 function SerialSimulation.new()
