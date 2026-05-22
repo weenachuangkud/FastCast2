@@ -11,7 +11,7 @@ Configs.DebugLogging = {
 	Casting = false,
 	Segment = false,
 	Hit = false,
-	RayPierce = false,
+	Pierced = false,
 	Calculation = false,
 }
 Configs.VisualizeCasts = true
