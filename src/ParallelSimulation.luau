@@ -504,10 +504,6 @@ function ParallelSimulation.Register(cast: any)
 	queuedEvents[id] = {}
 end
 
-function ParallelSimulation.SetPaused(castID: number, paused: boolean)
-	casts_Paused[castID] = paused
-end
-
 function ParallelSimulation.Unregister(castID: number)
 	casts_Paused[castID] = nil
 	casts_TotalRunTime[castID] = nil
