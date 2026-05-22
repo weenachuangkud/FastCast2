@@ -77,7 +77,7 @@ function ActiveCast.createCastData(
 				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce
 			},
 
-			VisualizeCasts = behavior.VisualizeCasts,
+			--VisualizeCasts = behavior.VisualizeCasts, -- I don't use this
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
 		},
 

@@ -420,7 +420,7 @@ export type CastStateInfo = {
 	IsActivelyResimulating: boolean,
 	CancelHighResCast: boolean,
 	Trajectory: CastTrajectory,
-	VisualizeCasts: boolean, 
+	--VisualizeCasts: boolean,  -- I don't use this anymore
 	VisualizeCastSettings: VisualizeCastSettings,
 
 	FastCastEventsConfig: FastCastEventsConfig,
