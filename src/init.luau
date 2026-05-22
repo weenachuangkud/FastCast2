@@ -621,6 +621,7 @@ function FastCastSerial:Destroy()
 	self.CastTerminating = nil
 	self.CastFire = nil
 
+	self.Destroy = function() end
 	setmetatable(self, nil)
 end
 
@@ -643,6 +644,7 @@ function FastCastParallel:Destroy()
 	if self.Dispatcher then
 		self.Dispatcher:Destroy()
 	end
+	self.Destroy = function() end
 	setmetatable(self, nil)
 end
 
