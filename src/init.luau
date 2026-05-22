@@ -312,15 +312,6 @@ end
 	@param velocity Vector3 | number -- The velocity of the raycast.
 	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
 ]=]
-local function cloneRaycastParams(p: RaycastParams): RaycastParams
-	local c = RaycastParams.new()
-	c.CollisionGroup = p.CollisionGroup
-	c.FilterType = p.FilterType
-	c.FilterDescendantsInstances = { table.unpack(p.FilterDescendantsInstances) }
-	c.IgnoreWater = p.IgnoreWater
-	return c
-end
-
 function FastCastParallel:RaycastFire(
 	origin: Vector3,
 	direction: Vector3,
@@ -334,16 +325,7 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	local dispatchData = BehaviorData
-	if (BehaviorData :: any).RaycastParams then
-		dispatchData = {}
-		for k, v in (BehaviorData :: any) do
-			dispatchData[k] = v
-		end
-		dispatchData.RaycastParams = cloneRaycastParams((BehaviorData :: any).RaycastParams)
-	end
-
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, dispatchData)
+	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -371,16 +353,7 @@ function FastCastParallel:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	local dispatchData = BehaviorData
-	if (BehaviorData :: any).RaycastParams then
-		dispatchData = {}
-		for k, v in (BehaviorData :: any) do
-			dispatchData[k] = v
-		end
-		dispatchData.RaycastParams = cloneRaycastParams((BehaviorData :: any).RaycastParams)
-	end
-
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, dispatchData)
+	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -408,16 +381,7 @@ function FastCastParallel:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	local dispatchData = BehaviorData
-	if (BehaviorData :: any).RaycastParams then
-		dispatchData = {}
-		for k, v in (BehaviorData :: any) do
-			dispatchData[k] = v
-		end
-		dispatchData.RaycastParams = cloneRaycastParams((BehaviorData :: any).RaycastParams)
-	end
-
-	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, dispatchData)
+	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[=[
