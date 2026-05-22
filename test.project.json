@@ -1,0 +1,17 @@
+{
+	"name": "FastCast2-Tests",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedFirst": {
+			"FastCast2_Tests": {
+				"$path": "tests"
+			}
+		},
+		"ReplicatedStorage": {
+			"FastCast2": {
+				"$path": "src"
+			},
+			"$ignoreUnknownInstances": true
+		}
+	}
+}
