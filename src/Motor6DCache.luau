@@ -49,7 +49,7 @@ end
 
 function Motor6DCache:GrowPool(target: number)
 	local growth = target - self.PoolSize
-	for i = 1, growth do
+	for _ = 1, growth do
 		local motor6d = Instance.new("Motor6D")
 		motor6d.Name = "FastCastMotor6D"
 		table.insert(self.FreeMotor6Ds, motor6d)
