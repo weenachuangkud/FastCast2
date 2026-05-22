@@ -325,7 +325,6 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	warn(("[DEBUG] INIT RaycastFire: BehaviorData=%s, BehaviorData.RaycastParams=%s"):format(tostring(BehaviorData), tostring(BehaviorData.RaycastParams)))
 	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
 end
 

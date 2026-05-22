@@ -823,7 +823,7 @@ test("RaycastParams is cloned, not shared with behavior", function()
 
 	if castRef then
 		local castParams = castRef.RayInfo.Parameters
-		assert(castParams ~= origParams, "Cast params reference the same object as behavior params")
+		assert(not rawequal(castParams, origParams), "Cast params reference the same object as behavior params")
 		assert(castParams.CollisionGroup == "TestCollisionGroup", "Cast params did not inherit CollisionGroup")
 		if castRef.Caster then
 			FastCast:TerminateCast(castRef)

@@ -429,7 +429,6 @@ test("RaycastParams cloned at fire time (parallel)", function()
 	local castRef = nil
 	c.CastFire = function(cast)
 		castRef = cast
-		warn(("[DEBUG] CastFire fired, cast.RayInfo.Parameters=%s, cast.RayInfo=%s"):format(tostring(cast.RayInfo and cast.RayInfo.Parameters), tostring(cast.RayInfo)))
 	end
 	c.Hit = function() end
 	c.CastTerminating = function() end
@@ -441,7 +440,7 @@ test("RaycastParams cloned at fire time (parallel)", function()
 
 	if castRef then
 		local castParams = castRef.RayInfo.Parameters
-		assert(castParams ~= origParams, "Cast params reference the same object as behavior params")
+		assert(not rawequal(castParams, origParams), "Cast params reference the same object as behavior params")
 		assert(castParams.CollisionGroup == "TestGroup", "Cast params did not copy CollisionGroup")
 		FastCast:TerminateCast(castRef)
 	end

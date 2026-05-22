@@ -35,8 +35,6 @@ actor:BindToMessage("Raycast", function(
 	velocity: Vector3 | number,
 	behavior: any
 )
-	warn(("[DEBUG] VM RECV Raycast: behavior=%s, behavior.RaycastParams=%s"):format(tostring(behavior), tostring(behavior and behavior.RaycastParams)))
-
 	BaseCast:Raycast(origin, direction, velocity, behavior)
 end)
 

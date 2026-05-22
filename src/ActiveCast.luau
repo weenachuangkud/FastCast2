@@ -36,7 +36,6 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	clone.FilterType = params.FilterType
 	clone.FilterDescendantsInstances = {table.unpack(params.FilterDescendantsInstances)}
 	clone.IgnoreWater = params.IgnoreWater
-	warn(("[DEBUG] CloneCastParams: params=%s clone=%s same=%s"):format(tostring(params), tostring(clone), tostring(params == clone)))
 	return clone
 end
 
@@ -82,19 +81,7 @@ function ActiveCast.createCastData(
 		},
 
 		RayInfo = {
-			Parameters = (function()
-				local p = behavior.RaycastParams
-				local result
-				if p then
-					warn(("[DEBUG] createCastData: behavior.RaycastParams=%s, calling CloneCastParams"):format(tostring(p)))
-					result = CloneCastParams(p)
-				else
-					warn("[DEBUG] createCastData: behavior.RaycastParams is nil, using RaycastParams.new()")
-					result = RaycastParams.new()
-				end
-				warn(("[DEBUG] createCastData: result=%s, result==p=%s"):format(tostring(result), tostring(result == p)))
-				return result
-			end)(),
+			Parameters = behavior.RaycastParams and CloneCastParams(behavior.RaycastParams) or RaycastParams.new(),
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
