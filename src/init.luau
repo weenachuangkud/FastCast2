@@ -621,7 +621,6 @@ function FastCastSerial:Destroy()
 	self.CastTerminating = nil
 	self.CastFire = nil
 
-	self.Destroy = function() end
 	setmetatable(self, nil)
 end
 
@@ -644,7 +643,6 @@ function FastCastParallel:Destroy()
 	if self.Dispatcher then
 		self.Dispatcher:Destroy()
 	end
-	self.Destroy = function() end
 	setmetatable(self, nil)
 end
 
@@ -755,10 +753,6 @@ function FastCast:PauseCast(cast: vaildcast, value: boolean)
 	cast.StateInfo.Paused = value
 	local caster = cast.Caster
 	if caster and caster.SyncChange then
-		local actor = caster.SyncChange.Parent :: Actor?
-		if actor then
-			actor:SetAttribute("FC2_Paused_" .. cast.ID, value)
-		end
 		caster.SyncChange:Fire(cast)
 	end
 end

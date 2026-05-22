@@ -137,7 +137,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 		end
 	end)
 
-	ParallelSimulation.Init(self, Actor)
+	ParallelSimulation.Init(self)
 
 	ParallelSimulation.SetMovementMode(CurrentMovementMode, true)
 
