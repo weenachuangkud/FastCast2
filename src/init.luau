@@ -751,10 +751,6 @@ Pauses or resumes simulation for an ActiveCast.
 ]=]
 function FastCast:PauseCast(cast: vaildcast, value: boolean)
 	cast.StateInfo.Paused = value
-	local caster = cast.Caster
-	if caster and caster.SyncChange then
-		caster.SyncChange:Fire(cast)
-	end
 end
 
 --[=[
