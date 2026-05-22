@@ -7,6 +7,10 @@
 	Drop into ServerScriptService; runs automatically on server start.
 --]]
 
+print("Testing starting")
+
+task.wait(5)
+
 local FastCast = require(game:GetService("ReplicatedStorage"):WaitForChild("FastCast2"))
 local RunService = game:GetService("RunService")
 

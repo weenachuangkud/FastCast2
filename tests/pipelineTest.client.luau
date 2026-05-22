@@ -7,6 +7,10 @@
 	Drop into StarterPlayerScripts or similar; runs automatically.
 --]]
 
+print("Testing starting")
+
+task.wait(5)
+
 local FastCast = require(game:GetService("ReplicatedStorage"):WaitForChild("FastCast2"))
 local RunService = game:GetService("RunService")
 local RepFirst = game:GetService("ReplicatedFirst")
