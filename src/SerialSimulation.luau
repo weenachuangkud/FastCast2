@@ -74,7 +74,6 @@ type QueuedVisualizeHitData = {
 local queuedEvents: { [number]: { QueuedEventData } } = {}
 local queuedVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeHitData }} = {}
 
-local ActivesRef: any = nil
 local BaseCastRef = nil :: any
 
 local castHandlers = {
@@ -600,7 +599,7 @@ function SerialSimulation:SimluateCast(
 	if part and part ~= casts_RayInfo[id].CosmeticBulletObject then
 		if 
 			CanPiercefn == nil
-			or CanPiercefn(ActivesRef[id], resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
+			or CanPiercefn(self.ActivesRef[id], resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
 		then
 
 			casts_IsActivelyResimulating[id] = false
@@ -668,7 +667,7 @@ function SerialSimulation:SimluateCast(
 
 						if 
 							CanPiercefn == nil
-							or CanPiercefn(ActivesRef[id], subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
+							or CanPiercefn(self.ActivesRef[id], subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject) == false
 						then
 							casts_IsActivelyResimulating[id] = false
 							self:QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
