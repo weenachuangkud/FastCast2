@@ -171,65 +171,7 @@ test("Double TerminateCast does not error", function()
 	end
 end)
 
--- 5. PauseCast: StateInfo.Paused = true → UpdateCasts skips (SerialSimulation:735-737)
-test("PauseCast prevents hit while paused", function()
-	local c = FastCast.new()
-	c:Init("BulkMoveTo")
-
-	local castRef = nil
-	local hitFired = false
-	c.CastFire = function(cast)
-		castRef = cast
-	end
-	c.Hit = function()
-		hitFired = true
-	end
-	c.CastTerminating = function() end
-
-	fire(c, Vector3.new(0, 10, 0), Vector3.new(0, -1, 0), 50)
-	waitFrames(1)
-
-	if castRef then
-		FastCast:PauseCast(castRef, true)
-		waitFrames(5)
-		assert(not hitFired, "Hit fired while cast was paused")
-		if castRef.Caster then
-			FastCast:TerminateCast(castRef)
-		end
-	end
-end)
-
--- 6. Resume after pause
-test("Resumed cast after pause still hits", function()
-	local c = FastCast.new()
-	c:Init("BulkMoveTo")
-
-	local castRef = nil
-	local hitFired = false
-	c.CastFire = function(cast)
-		castRef = cast
-	end
-	c.Hit = function()
-		hitFired = true
-	end
-	c.CastTerminating = function() end
-
-	fire(c, Vector3.new(0, 10, 0), Vector3.new(0, -1, 0), 50)
-	waitFrames(1)
-
-	if castRef then
-		FastCast:PauseCast(castRef, true)
-		waitFrames(3)
-		FastCast:PauseCast(castRef, false)
-		waitFrames(5)
-		assert(hitFired, "Hit did not fire after resume")
-		if castRef.Caster then
-			FastCast:TerminateCast(castRef)
-		end
-	end
-end)
-
--- 7. GetVelocityCast / SetVelocityCast
+-- 5. GetVelocityCast / SetVelocityCast
 --    init.luau:606-613 (GetVelocityAtTime), 658-659 (ModifyTransformation)
 --    ModifyTransformation: resets StartTime = TotalRuntime, sets CancelHighResCast = true
 test("GetVelocityCast and SetVelocityCast modify trajectory", function()
@@ -261,7 +203,7 @@ test("GetVelocityCast and SetVelocityCast modify trajectory", function()
 	end
 end)
 
--- 8. GetPositionCast / SetPositionCast
+-- 6. GetPositionCast / SetPositionCast
 --    init.luau:638-646 (GetPositionAtTime), 684-685 (ModifyTransformation with position)
 test("GetPositionCast and SetPositionCast", function()
 	local c = FastCast.new()
@@ -289,7 +231,7 @@ test("GetPositionCast and SetPositionCast", function()
 	end
 end)
 
--- 9. GetAccelerationCast / SetAccelerationCast
+-- 7. GetAccelerationCast / SetAccelerationCast
 --    init.luau:626 (returns Trajectory.Acceleration directly), 672-673 (ModifyTransformation with acceleration)
 test("GetAccelerationCast and SetAccelerationCast", function()
 	local c = FastCast.new()
@@ -321,7 +263,7 @@ test("GetAccelerationCast and SetAccelerationCast", function()
 	end
 end)
 
--- 10. Add-prefixed methods: read → modify → write through ModifyTransformation
+-- 8. Add-prefixed methods: read → modify → write through ModifyTransformation
 test("AddVelocityCast / AddAccelerationCast / AddPositionCast", function()
 	local c = FastCast.new()
 	c:Init("BulkMoveTo")
@@ -351,7 +293,7 @@ test("AddVelocityCast / AddAccelerationCast / AddPositionCast", function()
 	end
 end)
 
--- 11. CanPierce returning true → Pierced event fires, simulation continues, Hit eventually fires
+-- 9. CanPierce returning true → Pierced event fires, simulation continues, Hit eventually fires
 --     SerialSimulation:603-725: CanPiercefn(...) == false → Hit path; == true → Pierced path + continue
 test("CanPierce returns true → Pierced fires, cast continues", function()
 	local wall1 = Instance.new("Part")
@@ -404,7 +346,7 @@ test("CanPierce returns true → Pierced fires, cast continues", function()
 	wall2:Destroy()
 end)
 
--- 12. CanPierce returning false → Hit fires, Pierced never fires
+-- 10. CanPierce returning false → Hit fires, Pierced never fires
 --     SerialSimulation:604-606: CanPiercefn == nil or returns false → Hit path
 test("CanPierce returns false → Hit fires, no Pierced", function()
 	local wall = Instance.new("Part")
@@ -440,7 +382,7 @@ test("CanPierce returns false → Hit fires, no Pierced", function()
 	wall:Destroy()
 end)
 
--- 13. No CanPierce function set → Hit fires (nil treated same as "can't pierce")
+-- 11. No CanPierce function set → Hit fires (nil treated same as "can't pierce")
 --     SerialSimulation:604-606: CanPiercefn == nil → enters Hit path
 test("No CanPierce function → Hit fires (nil = can't pierce)", function()
 	local wall = Instance.new("Part")
@@ -474,7 +416,7 @@ test("No CanPierce function → Hit fires (nil = can't pierce)", function()
 	wall:Destroy()
 end)
 
--- 14. FastCastEventsConfig event gating
+-- 12. FastCastEventsConfig event gating
 --     BaseCastSerial:102: CastFire gated by UseCastFire
 --     SerialSimulation FireQueuedEvents: Hit gated by UseHit (line 483), Pierced gated by UsePierced (line 492)
 --     CastTerminating in serial FireQueuedEvents: NOT gated by UseCastTerminating (line 496-500 — calls unconditionally)
@@ -509,7 +451,7 @@ test("FastCastEventsConfig: UseCastFire/UseHit=false suppresses those events", f
 	assert(not hitFired, "Hit fired despite UseHit=false")
 end)
 
--- 15. LengthChanged: UseLengthChanged=false by default, enable and verify it fires
+-- 13. LengthChanged: UseLengthChanged=false by default, enable and verify it fires
 --     SerialSimulation:586 queues LengthChanged, FireQueuedEvents:474 gates on UseLengthChanged
 test("LengthChanged fires when UseLengthChanged=true (default is false)", function()
 	local c = FastCast.new()
@@ -534,7 +476,7 @@ test("LengthChanged fires when UseLengthChanged=true (default is false)", functi
 	assert(lcFired, "LengthChanged did not fire (UseLengthChanged=true)")
 end)
 
--- 16. Nil Behavior auto-fills defaults
+-- 14. Nil Behavior auto-fills defaults
 --     init.luax:486-488: if BehaviorData == nil → BehaviorData = FastCast.newBehavior()
 test("Nil Behavior parameter auto-fills defaults", function()
 	local c = FastCast.new()
@@ -553,7 +495,7 @@ test("Nil Behavior parameter auto-fills defaults", function()
 	assert(hitFired, "Hit did not fire with nil Behavior")
 end)
 
--- 17. Double Init: warns and returns early (init.luau:443-446)
+-- 15. Double Init: warns and returns early (init.luau:443-446)
 test("Double Init warns and is idempotent", function()
 	local c = FastCast.new()
 	c:Init("BulkMoveTo")
@@ -561,7 +503,7 @@ test("Double Init warns and is idempotent", function()
 	assert(c.MovementMode == "BulkMoveTo", "Double Init changed movement mode")
 end)
 
--- 18. Fire before Init: errors (init.luau:483-485)
+-- 16. Fire before Init: errors (init.luau:483-485)
 test("Fire before Init errors correctly", function()
 	local c = FastCast.new()
 	local ok, err = pcall(function()
@@ -571,7 +513,7 @@ test("Fire before Init errors correctly", function()
 	assert(err ~= nil, "Error message should be non-nil")
 end)
 
--- 19. SetObjectCacheEnabled: BaseCastSerial:207-236 (BulkMoveTo)
+-- 17. SetObjectCacheEnabled: BaseCastSerial:207-236 (BulkMoveTo)
 test("SetObjectCacheEnabled toggles cache", function()
 	local template = Instance.new("Part")
 	template.Name = "TestTemplate"
@@ -602,7 +544,7 @@ test("SetObjectCacheEnabled toggles cache", function()
 	template:Destroy()
 end)
 
--- 20. Destroy: nils events, removes metatable (init.luau:563-576)
+-- 18. Destroy: nils events, removes metatable (init.luau:563-576)
 test("Destroy nils events and removes metatable", function()
 	local c = FastCast.new()
 	c:Init("BulkMoveTo")
@@ -616,7 +558,7 @@ test("Destroy nils events and removes metatable", function()
 	assert(getmetatable(c) == nil, "Metatable not removed after Destroy")
 end)
 
--- 21. Double Destroy: no error
+-- 19. Double Destroy: no error
 test("Double Destroy does not error", function()
 	local c = FastCast.new()
 	c:Init("BulkMoveTo")
@@ -624,7 +566,7 @@ test("Double Destroy does not error", function()
 	c:Destroy()
 end)
 
--- 22. Cosmetic bullet: ActiveCast.luau:124-131 clones template, parents to container
+-- 20. Cosmetic bullet: ActiveCast.luau:124-131 clones template, parents to container
 test("Cosmetic bullet cloned from template when container provided", function()
 	local template = Instance.new("Part")
 	template.Name = "TestCosmetic"
@@ -669,7 +611,7 @@ test("Cosmetic bullet cloned from template when container provided", function()
 	container:Destroy()
 end)
 
--- 23. AutoIgnoreContainer: ActiveCast.luau:138-144 adds container to filter
+-- 21. AutoIgnoreContainer: ActiveCast.luau:138-144 adds container to filter
 test("AutoIgnoreContainer adds container to RaycastParams filter", function()
 	local template = Instance.new("Part")
 	template.Anchored = true
@@ -720,7 +662,7 @@ test("AutoIgnoreContainer adds container to RaycastParams filter", function()
 	container:Destroy()
 end)
 
--- 24. HighFidelityBehavior.Always (3): always subdivides the frame
+-- 22. HighFidelityBehavior.Always (3): always subdivides the frame
 --     SerialSimulation:750-835: Always branch computes frame displacement,
 --     divides into subsegments, calls SimluateCast per subsegment
 test("HighFidelity = Always: all events fire", function()
@@ -751,7 +693,7 @@ test("HighFidelity = Always: all events fire", function()
 	assert(events.CastTerminating, "CastTerminating did not fire (Always mode)")
 end)
 
--- 25. HighFidelityBehavior.Automatic (2): subdivides on hit
+-- 23. HighFidelityBehavior.Automatic (2): subdivides on hit
 --     SerialSimulation:611-706: Automatic branch only subdivides when a hit is found
 test("HighFidelity = Automatic: all events fire", function()
 	local c = FastCast.new()
@@ -781,7 +723,7 @@ test("HighFidelity = Automatic: all events fire", function()
 	assert(events.CastTerminating, "CastTerminating did not fire (Automatic mode)")
 end)
 
--- 26. Velocity as number → direction * velocity (ActiveCast.luau:68)
+-- 24. Velocity as number → direction * velocity (ActiveCast.luau:68)
 test("Velocity as number is converted to direction*velocity", function()
 	local c = FastCast.new()
 	c:Init("BulkMoveTo")
@@ -809,7 +751,7 @@ test("Velocity as number is converted to direction*velocity", function()
 	end
 end)
 
--- 27. newBehavior deep copy (init.luau:180-190, 197-199)
+-- 25. newBehavior deep copy (init.luau:180-190, 197-199)
 test("newBehavior returns independent copy from defaults", function()
 	local b1 = FastCast.newBehavior()
 	local b2 = FastCast.newBehavior()
@@ -817,14 +759,14 @@ test("newBehavior returns independent copy from defaults", function()
 	assert(b2.MaxDistance == 1000, "b2.MaxDistance changed when b1 modified")
 end)
 
--- 28. newBehavior().VisualizeCastSettings defaults
+-- 26. newBehavior().VisualizeCastSettings defaults
 test("VisualizeCastSettings defaults are present", function()
 	local b = FastCast.newBehavior()
 	assert(b.VisualizeCastSettings ~= nil, "VisualizeCastSettings is nil")
 	assert(b.VisualizeCastSettings.Debug_RayLifetime == 1, "Debug_RayLifetime default should be 1, got " .. tostring(b.VisualizeCastSettings.Debug_RayLifetime))
 end)
 
--- 29. Acceleration on behavior affects trajectory
+-- 27. Acceleration on behavior affects trajectory
 --     ActiveCast.luau:69: cast.StateInfo.Trajectory.Acceleration = behavior.Acceleration
 --     SimluateCast:552: acceleration = trajectory.Acceleration
 test("Behavior.Acceleration modifies cast trajectory", function()
@@ -854,7 +796,7 @@ test("Behavior.Acceleration modifies cast trajectory", function()
 	end
 end)
 
--- 30. RaycastParams cloned at fire time (not shared with behavior)
+-- 28. RaycastParams cloned at fire time (not shared with behavior)
 --     ActiveCast.luax:85: CloneCastParams(behavior.RaycastParams) or RaycastParams.new()
 test("RaycastParams is cloned, not shared with behavior", function()
 	local origParams = RaycastParams.new()

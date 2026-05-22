@@ -54,7 +54,6 @@ function ActiveCast.createCastData(
 	local cast = {
 		Caster = BaseCast,
 		StateInfo = {
-			Paused = false,
 			TotalRuntime = 0,
 			DistanceCovered = 0,
 			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,

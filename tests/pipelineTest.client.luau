@@ -219,69 +219,7 @@ test("Double TerminateCast no error (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 5. PauseCast: StateInfo.Paused = true → UpdateCasts skips
-test("PauseCast prevents hit in parallel", function()
-	local vn = makeVMNames()
-	local c = newParallelCaster(vn)
-
-	local castRef = nil
-	local hitFired = false
-	c.CastFire = function(cast)
-		castRef = cast
-	end
-	c.Hit = function()
-		hitFired = true
-	end
-	c.CastTerminating = function() end
-
-	fire(c, Vector3.new(0, 10, 0), Vector3.new(0, -1, 0), 50)
-	waitFrames(2)
-
-	if castRef then
-		FastCast:PauseCast(castRef, true)
-		waitFrames(5)
-		assert(not hitFired, "Hit fired while paused (parallel)")
-		FastCast:TerminateCast(castRef)
-	end
-
-	c:Destroy()
-	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
-end)
-
--- 6. Resume after pause
-test("Resumed cast after pause hits", function()
-	local vn = makeVMNames()
-	local c = newParallelCaster(vn)
-
-	local castRef = nil
-	local hitFired = false
-	c.CastFire = function(cast)
-		castRef = cast
-	end
-	c.Hit = function()
-		hitFired = true
-	end
-	c.CastTerminating = function() end
-
-	fire(c, Vector3.new(0, 10, 0), Vector3.new(0, -1, 0), 50)
-	waitFrames(2)
-
-	if castRef then
-		FastCast:PauseCast(castRef, true)
-		waitFrames(3)
-		FastCast:PauseCast(castRef, false)
-		waitFrames(5)
-		assert(hitFired, "Hit did not fire after resume (parallel)")
-		if castRef.Caster then
-			FastCast:TerminateCast(castRef)
-		end
-	end
-
-	c:Destroy()
-	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
-end)
-
--- 7. GetVelocityCast / SetVelocityCast (same API as serial, uses ModifyTransformation)
+-- 5. GetVelocityCast / SetVelocityCast (same API as serial, uses ModifyTransformation)
 test("GetVelocityCast and SetVelocityCast (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -311,7 +249,7 @@ test("GetVelocityCast and SetVelocityCast (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 8. GetPositionCast / SetPositionCast
+-- 6. GetPositionCast / SetPositionCast
 test("GetPositionCast and SetPositionCast (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -341,7 +279,7 @@ test("GetPositionCast and SetPositionCast (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 9. SyncChangesToCast — fires SyncChange BindableEvent
+-- 7. SyncChangesToCast — fires SyncChange BindableEvent
 --    init.luau:753-757: cast.Caster.SyncChange:Fire(cast)
 --    BaseCastParallel:110-135: SyncChanges handler merges trajectory/state from main thread cast into VM's copy
 test("SyncChangesToCast fires without error", function()
@@ -371,7 +309,7 @@ test("SyncChangesToCast fires without error", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 10. No FastCastEventsModule → CanPierce is nil → Hit fires (not Pierced)
+-- 8. No FastCastEventsModule → CanPierce is nil → Hit fires (not Pierced)
 --     ParallelSimulation:642-647: canPierceCheckfn = FastCastEventsModule.CanPierce or nil
 --     Without module, FastCastEvents is nil → CanPierceCheckfn is nil → Hit path
 test("No FastCastEventsModule → Hit fires (CanPierce is nil)", function()
@@ -409,7 +347,7 @@ test("No FastCastEventsModule → Hit fires (CanPierce is nil)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 11. Destroy (parallel): nils events, destroys Dispatcher → sends "Destroy" to all VMs
+-- 9. Destroy (parallel): nils events, destroys Dispatcher → sends "Destroy" to all VMs
 --     init.luau:583-592
 test("Destroy nils events and dispatcher (parallel)", function()
 	local vn = makeVMNames()
@@ -426,7 +364,7 @@ test("Destroy nils events and dispatcher (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 12. Double Destroy
+-- 10. Double Destroy
 test("Double Destroy no error (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -435,7 +373,7 @@ test("Double Destroy no error (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 13. Fire before Init errors (init.luau:312-314)
+-- 11. Fire before Init errors (init.luau:312-314)
 test("Fire before Init errors (parallel)", function()
 	local c = FastCast.newParallel()
 	local ok, err = pcall(function()
@@ -445,7 +383,7 @@ test("Fire before Init errors (parallel)", function()
 	assert(tostring(err):find("Init") ~= nil, "Error message should mention Init")
 end)
 
--- 14. Double Init warns
+-- 12. Double Init warns
 test("Double Init warns (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -462,7 +400,7 @@ test("Double Init warns (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 15. newBehavior deep copy
+-- 13. newBehavior deep copy
 test("newBehavior deep copy (parallel context)", function()
 	local b1 = FastCast.newBehavior()
 	local b2 = FastCast.newBehavior()
@@ -470,7 +408,7 @@ test("newBehavior deep copy (parallel context)", function()
 	assert(b2.MaxDistance == 1000, "newBehavior not deep-copied")
 end)
 
--- 16. VisualizeCastSettings stored on cast
+-- 14. VisualizeCastSettings stored on cast
 --     ActiveCast.luau:81: cast.StateInfo.VisualizeCastSettings = behavior.VisualizeCastSettings
 test("VisualizeCastSettings stored on cast (parallel)", function()
 	local vn = makeVMNames()
@@ -499,7 +437,7 @@ test("VisualizeCastSettings stored on cast (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 17. RaycastParams cloned at fire time (ActiveCast.luau:85)
+-- 15. RaycastParams cloned at fire time (ActiveCast.luau:85)
 test("RaycastParams cloned at fire time (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -532,7 +470,7 @@ test("RaycastParams cloned at fire time (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 18. Cosmetic bullet: template cloned, parented to container (ActiveCast.luau:124-131)
+-- 16. Cosmetic bullet: template cloned, parented to container (ActiveCast.luau:124-131)
 test("Cosmetic bullet created (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -576,7 +514,7 @@ test("Cosmetic bullet created (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 19. AutoIgnoreContainer (ActiveCast.luau:138-144)
+-- 17. AutoIgnoreContainer (ActiveCast.luau:138-144)
 test("AutoIgnoreContainer adds container to filter (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -627,7 +565,7 @@ test("AutoIgnoreContainer adds container to filter (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 20. Nil Behavior auto-defaults (init.luau:315-317)
+-- 18. Nil Behavior auto-defaults (init.luau:315-317)
 test("Nil Behavior auto-defaults (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -648,7 +586,7 @@ test("Nil Behavior auto-defaults (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 21. FastCastEventsConfig disables events
+-- 19. FastCastEventsConfig disables events
 --     BaseCastParallel:180-182: CastFire gated by UseCastFire
 --     ParallelSimulation FireQueuedEvents: Hit gated by UseHit (line 385)
 --     ParallelSimulation TerminateCast (line 144): CastTerminating gated by UseCastTerminating
@@ -693,7 +631,7 @@ test("FastCastEventsConfig disables event dispatch (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 22. HighFidelityBehavior.Always (3) — parallel path
+-- 20. HighFidelityBehavior.Always (3) — parallel path
 --     ParallelSimulation:799-891: Always branch subdivides, calls SimluateCast per segment
 test("HighFidelity = Always fires all events (parallel)", function()
 	local vn = makeVMNames()
@@ -723,7 +661,7 @@ test("HighFidelity = Always fires all events (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 23. SetMovementMode dispatches to VMs (init.luau:385-393)
+-- 21. SetMovementMode dispatches to VMs (init.luau:385-393)
 --     Self.MovementMode set synchronously; VMs receive async
 test("SetMovementMode (parallel)", function()
 	local vn = makeVMNames()
@@ -740,7 +678,7 @@ test("SetMovementMode (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 24. SetMovementMode before Init warns (no error)
+-- 22. SetMovementMode before Init warns (no error)
 test("SetMovementMode before Init warns (parallel)", function()
 	local c = FastCast.newParallel()
 	local ok, err = pcall(function()
@@ -749,7 +687,7 @@ test("SetMovementMode before Init warns (parallel)", function()
 	assert(ok, "SetMovementMode before Init should warn, not error: " .. tostring(err))
 end)
 
--- 25. Velocity as number → ActiveCast.luau:68 converts number → direction * velocity
+-- 23. Velocity as number → ActiveCast.luau:68 converts number → direction * velocity
 test("Velocity as number (parallel)", function()
 	local vn = makeVMNames()
 	local c = newParallelCaster(vn)
@@ -773,7 +711,7 @@ test("Velocity as number (parallel)", function()
 	cleanupVMNames({ vn.vmFolderName, vn.vmContainerFolderName })
 end)
 
--- 26. LengthChanged event: enabled by default? No — UseLengthChanged=false by default.
+-- 24. LengthChanged event: enabled by default? No — UseLengthChanged=false by default.
 --     ParallelSimulation:628 queues LengthChanged; FireQueuedEvents:372 gates on UseLengthChanged
 test("LengthChanged fires when UseLengthChanged=true (parallel)", function()
 	local vn = makeVMNames()

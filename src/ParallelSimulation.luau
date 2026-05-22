@@ -24,7 +24,6 @@ local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 
 -- Variables
 
-local casts_Paused = {} :: { [number]: boolean }
 local casts_TotalRunTime = {} :: { [number]: number }
 local casts_DistanceCovered = {} :: { [number]: number }
 local casts_HighFidelitySegmentSize = {} :: { [number]: number }
@@ -457,7 +456,6 @@ end
 function ParallelSimulation.Register(cast: any)
 	local id = cast.ID
 
-	casts_Paused[id] = cast.StateInfo.Paused or false
 	casts_TotalRunTime[id] = cast.StateInfo.TotalRuntime or 0
 	casts_DistanceCovered[id] = 0
 	casts_HighFidelitySegmentSize[id] = cast.StateInfo.HighFidelitySegmentSize or 0.1
@@ -505,7 +503,6 @@ function ParallelSimulation.Register(cast: any)
 end
 
 function ParallelSimulation.Unregister(castID: number)
-	casts_Paused[castID] = nil
 	casts_TotalRunTime[castID] = nil
 	casts_DistanceCovered[castID] = nil
 	casts_HighFidelitySegmentSize[castID] = nil
@@ -779,10 +776,6 @@ end
 
 local function UpdateCasts(delta: number)
 	for _, id in casts_ID do
-		if casts_Paused[id] then
-			continue
-		end
-
 		if DebugLogging.Casting then
 			print("Casting for frame - UpdateCasts")
 		end

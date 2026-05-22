@@ -741,20 +741,6 @@ end
 
 --[=[
 
-Pauses or resumes simulation for an ActiveCast.
-
-	@method PauseCast
-	@param cast vaildcast -- The active cast to modify.
-	@param value boolean -- Whether to pause (true) or resume (false) the cast.
-	@within FastCast
-
-]=]
-function FastCast:PauseCast(cast: vaildcast, value: boolean)
-	cast.StateInfo.Paused = value
-end
-
---[=[
-
 Add position to an ActiveCast with the specified Vector3.
 
 	@method AddPositionCast
