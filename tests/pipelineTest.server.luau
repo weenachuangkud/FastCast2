@@ -332,8 +332,8 @@ test("CanPierce returns true → Pierced fires, cast continues", function()
 	c.CastTerminating = function()
 		termFired = true
 	end
-	c.CanPierce = function()
-		return true
+	c.CanPierce = function(_, result)
+		return result.Instance ~= floor
 	end
 
 	local b = defaultBehavior()
