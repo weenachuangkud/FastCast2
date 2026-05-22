@@ -35,9 +35,7 @@ actor:BindToMessage("Raycast", function(
 	velocity: Vector3 | number,
 	behavior: any
 )
-	--print(behavior)
-	--print(SharedCasters[casterID])
-	--StoredCasts[casterID][ID] = ActiveCast.new(bindableEvent, origin, direction, velocity, behavior)
+	warn(("[DEBUG] VM RECV Raycast: behavior=%s, behavior.RaycastParams=%s"):format(tostring(behavior), tostring(behavior and behavior.RaycastParams)))
 
 	BaseCast:Raycast(origin, direction, velocity, behavior)
 end)

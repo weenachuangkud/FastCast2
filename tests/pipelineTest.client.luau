@@ -429,6 +429,7 @@ test("RaycastParams cloned at fire time (parallel)", function()
 	local castRef = nil
 	c.CastFire = function(cast)
 		castRef = cast
+		warn(("[DEBUG] CastFire fired, cast.RayInfo.Parameters=%s, cast.RayInfo=%s"):format(tostring(cast.RayInfo and cast.RayInfo.Parameters), tostring(cast.RayInfo)))
 	end
 	c.Hit = function() end
 	c.CastTerminating = function() end
