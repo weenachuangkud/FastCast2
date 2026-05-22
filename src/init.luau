@@ -66,7 +66,6 @@
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
 local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
-
 local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
 
@@ -88,6 +87,16 @@ local VALID_EVENTS = {
 -- FastCast
 
 local FastCast = {}
+FastCast.HighFidelityBehavior = {
+	Default = 1,
+	Automatic = 2,
+	Always = 3
+}
+FastCast.CastType = {
+	Raycast = 1,
+	Blockcast = 2,
+	Spherecast = 3
+}
 local FastCastSerial = {}
 local FastCastParallel = {}
 
@@ -303,6 +312,15 @@ end
 	@param velocity Vector3 | number -- The velocity of the raycast.
 	@param BehaviorData FastCastBehavior? -- The behavior data for the raycast.
 ]=]
+local function cloneRaycastParams(p: RaycastParams): RaycastParams
+	local c = RaycastParams.new()
+	c.CollisionGroup = p.CollisionGroup
+	c.FilterType = p.FilterType
+	c.FilterDescendantsInstances = { table.unpack(p.FilterDescendantsInstances) }
+	c.IgnoreWater = p.IgnoreWater
+	return c
+end
+
 function FastCastParallel:RaycastFire(
 	origin: Vector3,
 	direction: Vector3,
@@ -316,7 +334,16 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
+	local dispatchData = BehaviorData
+	if (BehaviorData :: any).RaycastParams then
+		dispatchData = {}
+		for k, v in (BehaviorData :: any) do
+			dispatchData[k] = v
+		end
+		dispatchData.RaycastParams = cloneRaycastParams((BehaviorData :: any).RaycastParams)
+	end
+
+	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, dispatchData)
 end
 
 --[=[
@@ -343,8 +370,17 @@ function FastCastParallel:BlockcastFire(
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
 	end
-	
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
+
+	local dispatchData = BehaviorData
+	if (BehaviorData :: any).RaycastParams then
+		dispatchData = {}
+		for k, v in (BehaviorData :: any) do
+			dispatchData[k] = v
+		end
+		dispatchData.RaycastParams = cloneRaycastParams((BehaviorData :: any).RaycastParams)
+	end
+
+	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, dispatchData)
 end
 
 --[=[
@@ -372,7 +408,16 @@ function FastCastParallel:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
+	local dispatchData = BehaviorData
+	if (BehaviorData :: any).RaycastParams then
+		dispatchData = {}
+		for k, v in (BehaviorData :: any) do
+			dispatchData[k] = v
+		end
+		dispatchData.RaycastParams = cloneRaycastParams((BehaviorData :: any).RaycastParams)
+	end
+
+	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, dispatchData)
 end
 
 --[=[
@@ -561,6 +606,10 @@ end
 	@within FastCastSerial
 ]=]
 function FastCastSerial:Destroy()
+	if getmetatable(self) ~= FastCastSerial then
+		return
+	end
+
 	if self.BaseCast then
 		self.BaseCast:Destroy()
 	end
@@ -581,14 +630,19 @@ end
 	@within FastCastParallel
 ]=]
 function FastCastParallel:Destroy()
-	-- I'm making sure that everything is destroyed here lmao
+	if getmetatable(self) ~= FastCastParallel then
+		return
+	end
+
 	self.LengthChanged = nil
 	self.Hit = nil
 	self.Pierced = nil
 	self.CastTerminating = nil
 	self.CastFire = nil
 
-	self.Dispatcher:Destroy()
+	if self.Dispatcher then
+		self.Dispatcher:Destroy()
+	end
 	setmetatable(self, nil)
 end
 
@@ -697,6 +751,10 @@ Pauses or resumes simulation for an ActiveCast.
 ]=]
 function FastCast:PauseCast(cast: vaildcast, value: boolean)
 	cast.StateInfo.Paused = value
+	local caster = cast.Caster
+	if caster and caster.SyncChange then
+		caster.SyncChange:Fire(cast)
+	end
 end
 
 --[=[
