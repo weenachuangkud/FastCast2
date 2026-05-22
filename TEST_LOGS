@@ -1,0 +1,49 @@
+ ๒๑:๓๐:๔๑.๔๙๗  ============================================================  -  Client - UnitTest:104
+  ๒๑:๓๐:๔๑.๔๙๗  FastCast2 Client (Parallel) Pipeline Test  -  Client - UnitTest:105
+  ๒๑:๓๐:๔๑.๔๙๗  ============================================================  -  Client - UnitTest:106
+  ๒๑:๓๐:๔๙.๖๕๐  [PASS] Parallel Init + RaycastFire + events fire  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๒.๑๔๘  [PASS] Events set after Init fire (parallel dispatcher callback)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๓.๒๑๕  [PASS] TerminateCast fires CastTerminating in parallel  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๓.๖๓๑  [PASS] Double TerminateCast no error (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๔.๖๒๐  [FAIL] PauseCast prevents hit in parallel: Hit fired while paused (parallel)
+Workspace.Mawin_CK.UnitTest:98
+Workspace.Mawin_CK.UnitTest:85 function test
+Workspace.Mawin_CK.UnitTest:199
+  -  Client - UnitTest:91
+  ๒๑:๓๐:๕๔.๙๗๕  [PASS] GetVelocityCast and SetVelocityCast (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๕.๓๒๓  [PASS] GetPositionCast and SetPositionCast (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๕.๖๕๗  [PASS] SyncChangesToCast fires without error  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๖.๔๔๒  [PASS] No CanPierce module → Hit fires (parallel default)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๖.๕๕๗  [PASS] Destroy nils events and dispatcher (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๖.๖๖๕  [FAIL] Double Destroy no error (parallel): Workspace.Mawin_CK.UnitTest:360: attempt to call missing method 'Destroy' of table
+Workspace.Mawin_CK.UnitTest:360
+Workspace.Mawin_CK.UnitTest:85 function test
+Workspace.Mawin_CK.UnitTest:356
+  -  Client - UnitTest:91
+  ๒๑:๓๐:๕๖.๗๒๒  [PASS] Fire before Init errors (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๖.๘๑๙  Cannot Init more than 1  -  Client - FastCast2:236
+  ๒๑:๓๐:๕๖.๘๒๐  [PASS] Double Init warns (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๖.๘๗๑  [PASS] newBehavior deep copy (parallel context)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๗.๓๐๗  [PASS] VisualizeCastSettings stored on cast (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๗.๖๓๘  [FAIL] RaycastParams cloned at fire time (parallel): Cast params reference the same object as behavior params
+Workspace.Mawin_CK.UnitTest:98
+Workspace.Mawin_CK.UnitTest:85 function test
+Workspace.Mawin_CK.UnitTest:424
+  -  Client - UnitTest:91
+  ๒๑:๓๐:๕๘.๐๙๐  [PASS] Cosmetic bullet created (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๘.๔๒๒  [PASS] AutoIgnoreContainer adds container to filter (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๐:๕๙.๑๘๙  [PASS] Nil Behavior auto-defaults (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๑:๐๐.๕๒๒  [PASS] FastCastEventsConfig disables events (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๑:๐๐.๖๒๗  [FAIL] HighFidelity = Always fires all events (parallel): Workspace.Mawin_CK.UnitTest:594: attempt to index nil with 'Always'
+Workspace.Mawin_CK.UnitTest:594
+Workspace.Mawin_CK.UnitTest:85 function test
+Workspace.Mawin_CK.UnitTest:584
+  -  Client - UnitTest:91
+  ๒๑:๓๑:๐๑.๐๗๒  [PASS] Velocity as number → direction * velocity (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๑:๐๑.๑๖๕  [PASS] SetMovementMode dispatches to VMs (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๑:๐๑.๒๒๓  Caster not initialized  ▶ {...}  -  Client - FastCast2:387
+  ๒๑:๓๑:๐๑.๒๒๙  [PASS] SetMovementMode before Init warns (parallel)  -  Client - UnitTest:88
+  ๒๑:๓๑:๐๑.๒๘๗  ============================================================  -  Client - UnitTest:660
+  ๒๑:๓๑:๐๑.๒๘๗  Client (parallel) pipeline: 20 passed, 4 failed  -  Client - UnitTest:661
+  ๒๑:๓๑:๐๑.๒๘๗  ============================================================  -  Client - UnitTest:662
+  ๒๑:๓๑:๐๑.๒๘๗  [FASTCAST2 CLIENT] Some tests failed — review warnings above  -  Client - UnitTest:665
