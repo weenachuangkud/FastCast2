@@ -22,11 +22,11 @@ type SpherecastVariant = { CastType: number, Radius: number }
 type CastVariants = BlockcastVariant | SpherecastVariant
 
 
-local CastVariantTypes = {
+--[[local CastVariantTypes = {
 	[EnumCastTypes.Raycast] = "Raycast",
 	[EnumCastTypes.Blockcast] = "Blockcast",
 	[EnumCastTypes.Spherecast] = "Spherecast"
-}
+}]]
 
 local ActiveCast = {}
 
@@ -90,7 +90,7 @@ function ActiveCast.createCastData(
 			FastCastModule = eventModule
 		},
 
-		Type = CastVariantTypes[variant.CastType],
+		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
 		ID = activeCastID
