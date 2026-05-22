@@ -245,7 +245,7 @@ function FastCastParallel:Init(
 		warn("Cannot Init more than 1")
 		return
 	end
-	assert(numWorkers >= 1, "numWorker must be more than 1")
+	assert(numWorkers > 1, "numWorker must be more than 1")
 
 	local DispatcherClone = DispatcherModule:Clone()
 	DispatcherClone.Parent = newParent
