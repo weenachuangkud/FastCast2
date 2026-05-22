@@ -130,8 +130,22 @@ local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastT
 		castTerminatingFunction((cast :: any))
 	end
 
+	-- Preserve StateInfo and RayInfo so post-completion reads still work
+	local preserved = {
+		StateInfo = cast.StateInfo,
+		RayInfo = cast.RayInfo,
+		ID = cast.ID,
+		CFrame = cast.CFrame,
+		Caster = cast.Caster,
+		Type = cast.Type,
+		CastVariant = cast.CastVariant,
+		UserData = cast.UserData,
+	}
 	for key, _ in (cast :: any) do
 		cast[key] = nil
+	end
+	for key, value in preserved do
+		cast[key] = value
 	end
 end
 
