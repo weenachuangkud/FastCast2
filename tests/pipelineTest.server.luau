@@ -298,25 +298,23 @@ test("AddVelocityCast / AddAccelerationCast / AddPositionCast", function()
 end)
 
 -- 9. CanPierce returning true → Pierced event fires, simulation continues, Hit eventually fires
---     Parametric trajectory: after piercing wall1 at Y=7 on frame 1, frame 2's ray starts
---     at the parametric Y=-35 (50 studs/frame = 0.1s * 500).  Any secondary objects must
---     be below Y=-35 to be reachable on frame 2.
+--     SerialSimulation:603-725: CanPiercefn(...) == false → Hit path; == true → Pierced path + continue
 test("CanPierce returns true → Pierced fires, cast continues", function()
-	local wall = Instance.new("Part")
-	wall.Anchored = true
-	wall.Size = Vector3.new(10, 0.2, 10)
-	wall.Position = Vector3.new(0, 7, 0)
-	wall.CanCollide = true
-	wall.CanQuery = true
-	wall.Parent = workspace
+	local wall1 = Instance.new("Part")
+	wall1.Anchored = true
+	wall1.Size = Vector3.new(10, 0.2, 10)
+	wall1.Position = Vector3.new(0, 7, 0)
+	wall1.CanCollide = true
+	wall1.CanQuery = true
+	wall1.Parent = workspace
 
-	local ground = Instance.new("Part")
-	ground.Anchored = true
-	ground.Size = Vector3.new(100, 1, 100)
-	ground.Position = Vector3.new(0, -40, 0)
-	ground.CanCollide = true
-	ground.CanQuery = true
-	ground.Parent = workspace
+	local wall2 = Instance.new("Part")
+	wall2.Anchored = true
+	wall2.Size = Vector3.new(10, 0.2, 10)
+	wall2.Position = Vector3.new(0, 4, 0)
+	wall2.CanCollide = true
+	wall2.CanQuery = true
+	wall2.Parent = workspace
 
 	local c = FastCast.new()
 	c:Init("BulkMoveTo")
@@ -335,7 +333,7 @@ test("CanPierce returns true → Pierced fires, cast continues", function()
 		termFired = true
 	end
 	c.CanPierce = function(_, result)
-		return result.Instance ~= ground
+		return result.Instance ~= floor
 	end
 
 	local b = defaultBehavior()
@@ -348,8 +346,8 @@ test("CanPierce returns true → Pierced fires, cast continues", function()
 	assert(hitFired, "Hit did not fire after all pierces exhausted")
 	assert(termFired, "CastTerminating did not fire")
 
-	wall:Destroy()
-	ground:Destroy()
+	wall1:Destroy()
+	wall2:Destroy()
 end)
 
 -- 10. CanPierce returning false → Hit fires, Pierced never fires

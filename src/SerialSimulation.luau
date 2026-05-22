@@ -732,6 +732,10 @@ function SerialSimulation:SimluateCast(
 				sub = false,
 				wasPierce = true
 			}:: any)
+
+			casts_Trajectory[id].Origin = point
+			casts_Trajectory[id].Position = point
+			casts_Trajectory[id].StartTime = casts_TotalRunTime[id]
 		end
 	end
 
