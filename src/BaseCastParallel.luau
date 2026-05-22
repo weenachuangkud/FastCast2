@@ -126,9 +126,6 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 						else
 							TargetCast[i][k] = v2
 						end
-						if k == "Paused" then
-							ParallelSimulation.SetPaused(ID, v2)
-						end
 					end
 				else
 					TargetCast[i] = v
