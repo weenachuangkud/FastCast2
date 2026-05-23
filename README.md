@@ -125,22 +125,16 @@ behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
 behavior.CosmeticBulletTemplate = ProjectileTemplate
 
--- MovementMethod: "BulkMoveTo" (default) or "Transform" (Motor6D)
-behavior.MovementMethod = "BulkMoveTo"
 
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-Caster:Init(true, false) -- useBulkMoveTo, useObjectCache
+Caster:Init("BulkMoveTo") -- useBulkMoveTo, useObjectCache
 
 -- Events
-Caster.CastTerminating:Connect(function(cast)
-	local obj = cast.RayInfo.CosmeticBulletObject
-	if obj then obj:Destroy() end
-end)
 
-Caster.Hit:Connect(function(cast, result, velocity, bullet)
+Caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit: " .. result.Instance.Name)
-end)
+end
 
 -- Fire
 local function fire()
@@ -170,12 +164,12 @@ Caster:Init(
 	workspace,      -- ContainerParent
 	"VMContainer", -- Container name
 	"VM",           -- VM name
-	true,           -- useBulkMoveTo
+	"BulkMoveTo"    -- MovementMode
 	nil,            -- FastCastEventsModule
 	false           -- useObjectCache
 )
 
--- Fire same as serial
+-- Fire the same as serial
 Caster:RaycastFire(origin, direction, SPEED, behavior)
 ```
 
