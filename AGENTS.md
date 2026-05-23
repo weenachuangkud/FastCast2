@@ -19,26 +19,38 @@ FastCast2 is a Roblox projectile library written in Luau, providing high-perform
 ## Project Structure
 
 ```
-src/FastCast2/           # Main source code (synced to ReplicatedStorage)
-.default.project.json    # Rojo project configuration
+src/
+├── init.luau                    # Entry: FastCast (static), FastCastSerial, FastCastParallel
+├── BaseCastSerial.luau          # Serial: cast handler, routes events to SerialSimulation
+├── BaseCastParallel.luau        # Parallel: runs inside each Actor VM, casts per-VM
+├── SerialSimulation.luau        # Serial: SoA physics engine, single-threaded
+├── ParallelSimulation.luau      # Parallel: SoA physics engine, one per Actor VM
+├── ActiveCast.luau              # Cast data container (used by both modes)
+├── ObjectCache.luau             # Cosmetic bullet part pooling
+├── Motor6DCache.luau            # Motor6D pooling for Transform movement mode
+├── TypeDefinitions.luau         # All Luau type definitions
+├── FastCastEnums.luau           # Enum values (HighFidelityBehavior, CastType)
+├── Config.luau                  # Debug logging flags
+├── DefaultConfigs.luau          # Default FastCastBehavior values
+└── FastCastVMs/
+    ├── init.luau               # Dispatcher: creates/manages Actor VMs, load balancing
+    ├── ClientVM.client.luau    # Client-side Actor script
+    ├── ServerVM.server.luau    # Server-side Actor script
+    └── *.meta.json             # Rojo metadata (Enabled = false)
 ```
 
 ## Testing
 
-There are no automated tests in this project. Testing is done manually through Roblox Studio.
+There are no automated tests. Testing is manual via Roblox Studio.
 
 ## Code Style
 
-- Uses Luau static typing
-- Follows standard Luau conventions (PascalCase for types, camelCase for variables)
-- Modules are required via `require(path)`
-
-## Important Notes
-
-- Requires Roblox Studio to run/test code
-- Parallel casting requires `VMsDispatcher` module
-- Cosmetic bullets should have `CanTouch = false`, `CanCollide = false`, `CanQuery = false`
+- Luau static typing throughout
+- PascalCase for types, camelCase for variables/functions
+- Two-space indentation
+- SoA (Structure of Arrays) pattern for simulation data
 
 ## Agent Skills
+
 To understand specific project workflows, refer to the skills defined here:
 - @skills/architecture.md
