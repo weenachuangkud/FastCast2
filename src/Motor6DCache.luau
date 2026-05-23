@@ -93,6 +93,9 @@ function Motor6DCache:Disconnect(motor6d: Motor6D?)
 end
 
 function Motor6DCache:Destroy()
+	for _, motor6d in self.FreeMotor6Ds do
+		motor6d:Destroy()
+	end
 	self.Motor6DFolder:Destroy()
 	self.FreeMotor6Ds = {}
 	self.PoolSize = 0
