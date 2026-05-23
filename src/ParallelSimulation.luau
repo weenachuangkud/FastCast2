@@ -480,7 +480,7 @@ function ParallelSimulation.Register(cast: any)
 	casts_ID_Index[id] = #casts_ID
 
 	local eventModule = cast.RayInfo.FastCastEventsModule
-	casts_FastCastEvents[id] = typeof(eventModule) == "ModuleScript" and require(eventModule) or nil
+	casts_FastCastEvents[id] = (typeof(eventModule) == "ModuleScript" or (typeof(eventModule) == "Instance" and eventModule:IsA("ModuleScript"))) and require(eventModule) or nil
 
 	local position = GetPositionAtTime(
 		casts_TotalRunTime[id],
