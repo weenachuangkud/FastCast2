@@ -61,7 +61,7 @@ function Cache:_GetNew(Amount: number, Warn: boolean)
 		local Object = Template:Clone()
 		local ObjectRoot: BasePart = if IsTemplateModel then (Object:: Model).PrimaryPart:: BasePart else Object:: BasePart
 
-		FreeObjectsContainer[Index] = ObjectRoot
+		FreeObjectsContainer[Index] = Object
 
 		local OffsetIndex = Index - InitialLength
 		TargetParts[OffsetIndex] = ObjectRoot
@@ -79,9 +79,10 @@ function Cache:_GetNew(Amount: number, Warn: boolean)
 end
 
 function Cache:GetPart(PartCFrame: CFrame?): BasePart
-	local Part = table.remove(self._FreeObjects) or self:_GetNew(self._ExpandAmount, true)
+	local Object = table.remove(self._FreeObjects) or self:_GetNew(self._ExpandAmount, true)
+	local Part = if self._IsTemplateModel then (Object :: Model).PrimaryPart :: BasePart else Object :: BasePart
 
-	--local ID = HTTPS:GenerateGUID(false)
+	self._PartToObject[Part] = Object
 	self._Objects[Part] = nil
 	if PartCFrame then
 		table.insert(MovingParts, Part)
@@ -92,21 +93,24 @@ function Cache:GetPart(PartCFrame: CFrame?): BasePart
 			task.defer(UpdateMovementThread)
 		end
 	end
-	
-	--Part:SetAttribute("ID", ID)
-	--print("GET " .. ID)
+
 	return Part
 end
 function Cache:ReturnPart(Part: BasePart)
-	--print("RET " .. Part:GetAttribute("ID"))
 	if self._Objects[Part] then
 		return
 	end
-	--print("RETURNED")
 
 	self._Objects[Part] = true
 
-	table.insert(self._FreeObjects, Part)
+	local Object = self._PartToObject[Part]
+	if Object then
+		self._PartToObject[Part] = nil
+	else
+		Object = Part
+	end
+
+	table.insert(self._FreeObjects, Object)
 	table.insert(MovingParts, Part)
 	table.insert(MovingCFrames, FAR_AWAY_CFRAME)
 
@@ -188,8 +192,9 @@ function Constructor.new(Template: BasePart | Model, CacheSize: number?, CachesC
 		CacheHolder = CacheParent,
 		_ExpandAmount = EXPAND_BY_AMOUNT,
 		_Template = Template,
-		_FreeObjects = TargetParts,
+		_FreeObjects = FreeObjects,
 		_Objects = Objects,
+		_PartToObject = {},
 		_IsTemplateModel = IsTemplateModel,
 		_PreallocatedAmount = PreallocAmount,
 		Type = "ObjectCache"
