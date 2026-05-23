@@ -36,6 +36,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 	clone.FilterType = params.FilterType
 	clone.FilterDescendantsInstances = {table.unpack(params.FilterDescendantsInstances)}
 	clone.IgnoreWater = params.IgnoreWater
+	clone.RespectCanCollide = params.RespectCanCollide
 	return clone
 end
 
@@ -76,7 +77,7 @@ function ActiveCast.createCastData(
 				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce
 			},
 
-			--VisualizeCasts = behavior.VisualizeCasts, -- I don't use this
+			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,
 		},
 
@@ -86,7 +87,7 @@ function ActiveCast.createCastData(
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
 			MovementMethod = behavior.MovementMethod or "BulkMoveTo",
-			FastCastModule = eventModule
+			FastCastEventsModule = eventModule
 		},
 
 		Type = variant.CastType,
@@ -117,13 +118,13 @@ function ActiveCast.createCastData(
 
 	local targetContainer: Instance?
 	if ObjectCacheRef then
-		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(CFrame.new(origin, origin + direction))
+		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin))
 		targetContainer = cast.Caster.CacheHolder
 	else
 		if cast.RayInfo.CosmeticBulletObject ~= nil then
 			local basePart = cast.RayInfo.CosmeticBulletObject
 			basePart = basePart:Clone()
-			basePart.CFrame = CFrame.new(origin, origin + direction)
+			basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
 			basePart.Parent = behavior.CosmeticBulletContainer
 
 			cast.RayInfo.CosmeticBulletObject = basePart
