@@ -3,8 +3,6 @@
 	- Date : 2025
 	
 ]]
--- Haha, noob
-
 local Configs = {}
 
 Configs.DebugLogging = {
