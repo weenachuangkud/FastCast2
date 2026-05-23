@@ -661,7 +661,7 @@ function SerialSimulation:SimulateCast(
 							self:QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 							self:QueueEvent(id, "CastTerminating")
 							self:QueueVisualize(id, {
-								atCF = CFrame.new(point),
+								atCF = CFrame.new(subResult.Position),
 								wasPierce = false,
 								sub = true
 							}:: any)
@@ -670,7 +670,7 @@ function SerialSimulation:SimulateCast(
 						else
 							self:QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 							self:QueueVisualize(id, {
-								atCF = CFrame.new(point),
+								atCF = CFrame.new(subResult.Position),
 								wasPierce = true,
 								sub = true
 							}:: any)
@@ -685,6 +685,11 @@ function SerialSimulation:SimulateCast(
 				casts_IsActivelyResimulating[id] = false
 				if not subHitFound then
 					self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+					self:QueueVisualize(id, {
+						atCF = CFrame.new(point),
+						sub = false,
+						wasPierce = false
+					}:: any)
 					self:QueueEvent(id, "CastTerminating")
 					return
 				end
@@ -712,6 +717,11 @@ function SerialSimulation:SimulateCast(
 	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
 		if resultOfCast then
 			self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+			self:QueueVisualize(id, {
+				atCF = CFrame.new(point),
+				sub = false,
+				wasPierce = false
+			}:: any)
 		end
 		self:QueueEvent(id, "CastTerminating")
 	end
@@ -826,10 +836,10 @@ function SerialSimulation:UpdateCasts(delta: number)
 
 	local eventsToProcess = queuedEvents
 	queuedEvents = {}
-	self:FireQueuedEvents(eventsToProcess)
-
 	local visualizesToProcess = queuedVisualizes
 	queuedVisualizes = {}
+
+	self:FireQueuedEvents(eventsToProcess)
 	self:FireQueuedVisualizes(visualizesToProcess)
 end
 

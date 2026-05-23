@@ -723,7 +723,7 @@ local function SimulateCast(
 							QueueEvent(id, "Hit", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 							QueueEvent(id, "CastTerminating", castTerminatingfn)
 							QueueVisualize(id, {
-								atCF = CFrame.new(point),
+								atCF = CFrame.new(subResult.Position),
 								wasPierce = false,
 								sub = true
 							} :: any)
@@ -731,7 +731,7 @@ local function SimulateCast(
 						else
 							QueueEvent(id, "Pierced", subResult, subVelocity, casts_RayInfo[id].CosmeticBulletObject)
 							QueueVisualize(id, {
-								atCF = CFrame.new(point),
+								atCF = CFrame.new(subResult.Position),
 								wasPierce = true,
 								sub = true
 							} :: any)
@@ -746,6 +746,11 @@ local function SimulateCast(
 				casts_IsActivelyResimulating[id] = false
 				if not subHitFound then
 					QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+					QueueVisualize(id, {
+						atCF = CFrame.new(point),
+						sub = false,
+						wasPierce = false
+					} :: any)
 					QueueEvent(id, "CastTerminating", castTerminatingfn)
 					return
 				end
@@ -771,6 +776,14 @@ local function SimulateCast(
 	end
 
 	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
+		if resultOfCast then
+			QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
+			QueueVisualize(id, {
+				atCF = CFrame.new(point),
+				sub = false,
+				wasPierce = false
+			}:: any)
+		end
 		QueueEvent(id, "CastTerminating", castTerminatingfn)
 	end
 end
@@ -893,10 +906,10 @@ local function UpdateCasts(delta: number)
 
 	local eventsToProcess = queuedEvents
 	queuedEvents = {}
-	FireQueuedEvents(eventsToProcess)
-
 	local visualizesToProcess = queuedVisualizes
 	queuedVisualizes = {}
+
+	FireQueuedEvents(eventsToProcess)
 	FireQueuedVisualizes(visualizesToProcess)
 end
 
