@@ -374,8 +374,6 @@ export type FastCastBehavior = {
 	CosmeticBulletContainer: Instance?,
 	AutoIgnoreContainer: boolean,
 
-	MovementMethod: "BulkMoveTo" | "Transform",
-
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
 	VisualizeCasts: boolean, 
 	VisualizeCastSettings: VisualizeCastSettings,
