@@ -128,10 +128,9 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
 
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo") -- useBulkMoveTo, useObjectCache
+Caster:Init("BulkMoveTo", false) -- movementMode, useObjectCache
 
--- Events
-
+-- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit: " .. result.Instance.Name)
 end
@@ -158,15 +157,15 @@ Parallel mode (for high-performance with multiple VMs):
 -- Parallel Caster (requires Init with worker count)
 local Caster = FastCast2.newParallel()
 Caster:Init(
-	4,              -- numWorkers (thread count)
-	workspace,      -- newParent (VM folder parent)
-	"FastCastVMs",  -- VM folder name
-	workspace,      -- ContainerParent
-	"VMContainer", -- Container name
-	"VM",           -- VM name
-	"BulkMoveTo"    -- MovementMode
-	nil,            -- FastCastEventsModule
-	false           -- useObjectCache
+	4,                 -- numWorkers
+	workspace,         -- VM folder parent
+	"FastCastVMs",     -- VM folder name
+	workspace,         -- container parent
+	"VMContainer",     -- container name
+	"VM",              -- VM name
+	"BulkMoveTo",      -- movementMode
+	nil,               -- FastCastEventsModule (optional)
+	false              -- useObjectCache
 )
 
 -- Fire the same as serial
@@ -234,13 +233,13 @@ end
 return module
 ```
 
-After this, add this piece of code below the `FastCast:Init(...)`:
+Register it on your parallel caster after `Init`:
 
 ```lua
-	Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
+Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
 ```
 
-(FastCastEventsModule can be used to optimize some FastCastEvents, like LengthChanged)
+> **Note**: `SetFastCastEventsModule` is only available on parallel casters. In serial mode, set event handlers directly on the caster (e.g., `Caster.Hit = function(...)`).
 
 ### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
 
