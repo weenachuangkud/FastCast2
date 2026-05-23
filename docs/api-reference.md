@@ -2,276 +2,302 @@
 
 ## 1. Caster
 
-### 1.1 How to construct and initialize Caster (`.new()`) - Serial Mode
+### 1.1 Serial Mode (`FastCast.new()`)
 
 Serial Caster runs all cast simulations on the main thread. Simpler to use but less performant than Parallel.
 
 ```lua
 local caster = FastCast2.new()
-caster:Init(useBulkMoveTo, useObjectCache, template, cacheSize, cacheHolder)
+caster:Init(movementMode, useObjectCache, template, cacheSize, cacheHolder)
 ```
 
-#### 1.1.1 How Initialization Works
+#### 1.1.1 Parameters
 
-- `Init()` sets up the Serial Caster with optional BulkMoveTo and ObjectCache
-- No Dispatcher needed - runs directly on main thread
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `movementMode` | `"BulkMoveTo" \| "Motor6D"` | How cosmetic bullets are moved each frame |
+| `useObjectCache` | `boolean` | Enable part pooling via ObjectCache |
+| `Template` | `BasePart \| Model?` | Template for ObjectCache |
+| `CacheSize` | `number?` | Pre-allocated cache size (default 500) |
+| `CacheHolder` | `Instance?` | Parent for cached objects (default workspace) |
 
-#### 1.1.2 ObjectCache
+#### 1.1.2 Events
+
+Events are assigned directly on the caster **before or after Init**:
+
+```lua
+caster.Hit = function(cast, result, velocity, cosmeticBullet) end
+caster.Pierced = function(cast, result, velocity, cosmeticBullet) end
+caster.LengthChanged = function(cast, lastPoint, rayDir, rayDisplacement) end
+caster.CastFire = function(cast, origin, direction, velocity, behavior) end
+caster.CastTerminating = function(cast) end
+caster.CanPierce = function(cast, result, velocity, cosmeticBullet) -> boolean end
+```
+
+#### 1.1.3 Movement Modes
+
+- **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. Good for many projectiles.
+- **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better visual smoothing.
+
+Switch modes at runtime with `caster:SetMovementMode(mode)`.
+
+#### 1.1.4 ObjectCache
 
 ObjectCache reuses projectile parts for better performance:
 
 ```lua
-caster:Init(true, true, projectileTemplate, 500, workspace)
--- useBulkMoveTo: true, useObjectCache: true, template, cacheSize, holder
+caster:Init("BulkMoveTo", true, projectileTemplate, 500, workspace)
 ```
-
-#### 1.1.3 Motor6D Transform
-
-Movement method for projectile animation:
-
-```lua
-local behavior = FastCast2.newBehavior()
-behavior.MovementMethod = "BulkMoveTo"  -- Default - uses BulkMoveTo
--- or
-behavior.MovementMethod = "Transform"   -- Uses Motor6D for better performance
-```
-
-#### 1.1.4 Fields and Properties
-
-- `caster.LengthChanged` - Signal fired when cast length changes
-- `caster.Hit` - Signal fired when cast hits something
-- `caster.Pierced` - Signal fired when cast pierces something
-- `caster.CastTerminating` - Signal fired when cast terminates
-- `caster.CastFire` - Signal fired when cast is fired
 
 ---
 
-### 1.2 How to construct and initialize Caster (`.newParallel()`) - Parallel Mode
+### 1.2 Parallel Mode (`FastCast.newParallel()`)
 
-Parallel Caster runs cast simulations on separate worker VMs for high-performance scenarios.
+Parallel Caster runs cast simulations on separate Actor VMs for high-performance scenarios.
 
 ```lua
 local caster = FastCast2.newParallel()
 caster:Init(
-    numWorkers,      -- number of worker VMs (must be > 1)
-    newParent,       -- Folder to place FastCastVMs
-    newName,         -- name for FastCastVMs folder
-    ContainerParent, -- parent for worker containers
-    VMContainerName, -- name for containers
-    VMname,          -- name for each worker VM
-    useBulkMoveTo,   -- enable BulkMoveTo
-    fastCastEventsModule, -- optional events module
-    useObjectCache,  -- enable ObjectCache
-    template,        -- ObjectCache template
-    cacheSize,       -- ObjectCache size
-    CacheHolder      -- ObjectCache parent
+    numWorkers,          -- number of worker VMs (must be > 1)
+    newParent,           -- Folder to place FastCastVMs
+    newName,             -- name for FastCastVMs folder
+    ContainerParent,     -- parent for worker containers
+    VMContainerName,     -- name for containers
+    VMname,              -- name for each worker VM
+    movementMode,        -- "BulkMoveTo" or "Motor6D"
+    fastCastEventsModule,-- optional ModuleScript
+    useObjectCache,      -- enable ObjectCache
+    template,            -- ObjectCache template
+    cacheSize,           -- ObjectCache size
+    CacheHolder          -- ObjectCache parent
 )
 ```
 
-#### 1.2.1 How Does Initialization Work
+#### 1.2.1 Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `numWorkers` | `number` | Number of Actor VMs. Must be > 1. |
+| `newParent` | `Folder` | Parent for the FastCastVMs Folder |
+| `newName` | `string` | Name for the FastCastVMs Folder |
+| `ContainerParent` | `Folder` | Parent for worker VM Containers |
+| `VMContainerName` | `string` | Name for VM Containers |
+| `VMname` | `string` | Name given to each worker VM |
+| `movementMode` | `"BulkMoveTo" \| "Motor6D"` | Movement method |
+| `fastCastEventsModule` | `ModuleScript?` | FastCastEvents module (see §4.1) |
+| `useObjectCache` | `boolean` | Enable ObjectCache |
+| `template` | `BasePart \| Model?` | ObjectCache template |
+| `cacheSize` | `number?` | ObjectCache size |
+| `CacheHolder` | `Instance?` | ObjectCache parent |
+
+#### 1.2.2 How It Works
 
 - Creates Actor-based worker VMs using VMsDispatcher
 - Each worker handles multiple casts in parallel via `ConnectParallel`
+- Fire requests are round-robined to workers for load balancing
 
-#### 1.2.2 numWorkers
-
-Number of parallel workers. More workers = more parallel processing but higher overhead.
-
-#### 1.2.3 What are FastCastVMs (VMsDispatcher)
-
-FastCastVMs is a dispatcher system that spawns Actor-based worker scripts to handle casts in parallel.
-
-#### 1.2.4 ObjectCache (Parallel)
-
-Same as Serial but shared across workers.
-
-#### 1.2.5 BulkMoveTo
-
-Moves cosmetic bullets efficiently:
+#### 1.2.3 Configuration Methods
 
 ```lua
-caster:SetBulkMoveEnabled(true)
+caster:SetFastCastEventsModule(moduleScript)  -- Parallel only
+caster:SetMovementMode(mode, enabled)
+caster:SetObjectCacheEnabled(enabled, template?, cacheSize?, cacheHolder?)
 ```
-
-#### 1.2.6 Motor6D Transform
-
-Same as Serial - set `MovementMethod` in behavior.
 
 ---
 
-### 1.3 Methods
+### 1.3 Fire Methods
 
-#### 1.3.1 `.newBehavior()`
-
-Creates a FastCastBehavior for configuring casts:
+All three casters share the same fire interface:
 
 ```lua
-local behavior = caster:newBehavior()
--- or
-local behavior = FastCast2.newBehavior()
+caster:RaycastFire(origin, direction, velocity, BehaviorData?)
+caster:BlockcastFire(origin, Size, direction, velocity, BehaviorData?)
+caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData?)
 ```
 
-#### 1.3.2 `:RaycastFire(origin, direction, velocity, behavior)`
-
-Fire a raycast projectile.
-
-#### 1.3.3 `:BlockcastFire(origin, size, direction, velocity, behavior)`
-
-Fire a blockcast projectile.
-
-#### 1.3.4 ':SpherecastFire(origin, radius, direction, velocity, behavior)'
-
-Fire a spherecast projectile.
-
-#### 1.3.5 - 1.3.14 Cast Manipulation
-
-- `GetVelocityCast(cast)` - Get projectile velocity
-- `GetAccelerationCast(cast)` - Get projectile acceleration
-- `GetPositionCast(cast)` - Get projectile position
-- `SetVelocityCast(cast, velocity)` - Set projectile velocity
-- `SetAccelerationCast(cast, acceleration)` - Set projectile acceleration
-- `SetPositionCast(cast, position)` - Set projectile position
-- `PauseCast(cast, paused)` - Pause/resume projectile
-- `AddPositionCast(cast, position)` - Add position offset
-- `AddVelocityCast(cast, velocity)` - Add velocity offset
-- `AddAccelerationCast(cast, acceleration)` - Add acceleration offset
-
-#### 1.3.15 `SyncChangesToCast(cast)`
-
-Sync changes to parallel workers (only needed in Parallel mode).
-
-#### 1.3.16 `TerminateCast(cast)`
-
-Forcefully terminate a cast.
-
-#### 1.3.17 - 1.3.20 Other Methods
-
-- `:SetBulkMoveEnabled(enabled)` - Enable/disable BulkMoveTo
-- `:SetObjectCacheEnabled(enabled)` - Enable/disable ObjectCache
-- ':SetFastCastEventsModule(module)' - Set events module (Parallel only)
-- `:Destroy()` - Destroy the caster
+- `velocity` can be a `Vector3` (exact velocity) or `number` (speed in the fire direction)
+- `BehaviorData` is a `FastCastBehavior` created with `FastCast2.newBehavior()`
 
 ---
 
-## 2. ActiveCastData
+### 1.4 Cast Manipulation (static methods on `FastCast`)
 
-### 2.1 What is ActiveCast
+```lua
+-- Getters
+FastCast.GetPositionCast(cast) → Vector3
+FastCast.GetVelocityCast(cast) → Vector3
+FastCast.GetAccelerationCast(cast) → Vector3
+
+-- Setters (modifies trajectory, triggers CancelHighResCast)
+FastCast.SetVelocityCast(cast, velocity) → ()
+FastCast.SetAccelerationCast(cast, acceleration) → ()
+FastCast.SetPositionCast(cast, position) → ()
+
+-- Adders (relative modification)
+FastCast.AddPositionCast(cast, position) → ()
+FastCast.AddVelocityCast(cast, velocity) → ()
+FastCast.AddAccelerationCast(cast, acceleration) → ()
+
+-- Termination
+FastCast.TerminateCast(cast) → ()
+```
+
+In **parallel mode**, call `caster:SyncChangesToCast(cast)` after any Set/Add to push state to the worker VM.
+
+---
+
+### 1.5 Lifecycle
+
+```lua
+caster:Destroy()  -- Cleans up all resources, actors, caches
+```
+
+---
+
+## 2. FastCastBehavior
+
+Created via `FastCast2.newBehavior()`. Configuration for cast behavior:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `RaycastParams` | `RaycastParams?` | `nil` | Filter rules for raycasting |
+| `MaxDistance` | `number` | `1000` | Max range before auto-termination |
+| `Acceleration` | `Vector3` | `(0,0,0)` | Constant acceleration applied each frame |
+| `HighFidelityBehavior` | `number` | `1` | Default(1) / Automatic(2) / Always(3) |
+| `HighFidelitySegmentSize` | `number` | `0.5` | Segment size for sub-stepping |
+| `CosmeticBulletTemplate` | `BasePart?` | `nil` | Visual projectile part |
+| `CosmeticBulletContainer` | `Instance?` | `nil` | Parent for non-cached bullets |
+| `AutoIgnoreContainer` | `boolean` | `true` | Auto-adds container to filter list |
+| `VisualizeCasts` | `boolean` | `false` | Debug visualization toggle |
+| `VisualizeCastSettings` | `table` | (defaults) | Debug viz colors, sizes, lifetimes |
+| `UserData` | `any` | `nil` | Arbitrary data accessible on the cast |
+
+### Event Configuration
+
+```lua
+behavior.FastCastEventsConfig = {
+    UseLengthChanged = false,
+    UseHit = true,
+    UsePierced = true,
+    UseCastTerminating = true,
+    UseCanPierce = true,
+    UseCastFire = true
+}
+
+behavior.FastCastEventsModuleConfig = {  -- Parallel only
+    UseLengthChanged = false,
+    UseHit = true,
+    UsePierced = true,
+    UseCastTerminating = true,
+    UseCanPierce = true,
+    UseCastFire = true
+}
+```
+
+---
+
+## 3. ActiveCastData
+
+### 3.1 What is ActiveCast
 
 ActiveCast represents a projectile in flight. It's a pure data structure (AoS) exposed to users, while internally FastCast2 uses SoA for performance.
 
-### 2.2 Data Structure
+### 3.2 Data Structure
 
 ```lua
-cast.Caster      -- Reference to parent Caster
-cast.StateInfo   -- Runtime state (paused, runtime, etc.)
-cast.RayInfo     -- Raycast parameters and result
-cast.UserData   -- User-defined data
-cast.Type       -- "Raycast", "Blockcast", or "Spherecast"
-cast.CFrame     -- Current position and rotation
-cast.ID         -- Unique cast identifier
+cast.ID: number              -- Unique identifier
+cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
+cast.UserData: any           -- From behavior.UserData
+cast.CastVariant: {          -- Cast type info
+    CastType: number,        -- 1=Raycast, 2=Blockcast, 3=Spherecast
+    Size: Vector3?,          -- Blockcast only
+    Radius: number?          -- Spherecast only
+}
 ```
 
-### 2.3 Variants
-
-- `ActiveCastData` - Standard raycast
-- `ActiveBlockcastData` - Has `.RayInfo.Size`
-- `ActiveSpherecastData` - Has `.RayInfo.Radius`
-
----
-
-## 3. TypeDefinitions
-
-### 3.1 Caster
-
-Properties exposed on Caster object:
-
-- `WorldRoot` - Workspace for raycasts
-- `Events` - Signal connections
-- `Dispatcher` - Parallel dispatcher (Parallel only)
-- `ObjectCache` - Object caching system
-- `ObjectCacheEnabled` - Whether ObjectCache is active
-- `BulkMoveEnabled` - Whether BulkMoveTo is active
-
-### 3.2 ActiveCastData
-
-#### 3.2.2 StateInfo
-
-- `HighFidelityBehavior` - Precision mode:
-  - `Default` (1) - Standard precision
-  - `Automatic` (2) - Auto-adjusts precision
-  - `Always` (3) - Always high precision
-- `HighFidelitySegmentSize` - Segment size for high-fidelity mode
-- `Paused` - Whether cast is paused
-- `TotalRuntime` - Time since cast started
-- `DistanceCovered` - Total distance traveled
-- `Trajectory` - Single trajectory object (Origin, Velocity, Acceleration, StartTime, EndTime)
-
-#### 3.2.3 RayInfo
-
-- `Parameters` - RaycastParams
-- `WorldRoot` - Target WorldRoot
-- `MaxDistance` - Maximum travel distance
-- `CosmeticBulletObject` - Visual projectile part
-- `MovementMethod` - "BulkMoveTo" or "Transform"
-
-### 3.3 FastCastBehavior
-
-Configuration for cast behavior:
+### 3.3 StateInfo
 
 ```lua
-local behavior = FastCast2.newBehavior()
-behavior.RaycastParams = RaycastParams.new()
-behavior.MaxDistance = 1000
-behavior.Acceleration = Vector3.new(0, -196.2, 0)  -- Gravity
-behavior.HighFidelityBehavior = 1  -- Default
-behavior.HighFidelitySegmentSize = 0.5
-behavior.MovementMethod = "BulkMoveTo"
-behavior.CosmeticBulletTemplate = part
-behavior.CosmeticBulletContainer = workspace
-behavior.AutoIgnoreContainer = true
+cast.StateInfo.TotalRuntime: number
+cast.StateInfo.HighFidelityBehavior: number
+cast.StateInfo.HighFidelitySegmentSize: number
+cast.StateInfo.IsActivelyResimulating: boolean
+cast.StateInfo.CancelHighResCast: boolean
+cast.StateInfo.VisualizeCasts: boolean
+cast.StateInfo.VisualizeCastSettings: VisualizeCastSettings
+cast.StateInfo.FastCastEventsConfig: FastCastEventsConfig
+cast.StateInfo.FastCastEventsModuleConfig: FastCastEventsModuleConfig  -- Parallel only
+
+cast.StateInfo.Trajectory = {
+    StartTime: number,
+    EndTime: number,            -- -1 if still active
+    Origin: Vector3,
+    InitialVelocity: Vector3,
+    Acceleration: Vector3
+}
+```
+
+### 3.4 RayInfo
+
+```lua
+cast.RayInfo.Parameters: RaycastParams
+cast.RayInfo.WorldRoot: WorldRoot
+cast.RayInfo.MaxDistance: number
+cast.RayInfo.CosmeticBulletObject: Instance?
+cast.RayInfo.Size: Vector3       -- Blockcast only
+cast.RayInfo.Radius: number      -- Spherecast only
 ```
 
 ---
 
-## 4. Special
+## 4. FastCastEventsModule
 
-### 4.1 FastCastEventsModule
-
-FastCastEventsModule is a ModuleScript with callback functions for parallel optimization.
+Parallel-mode only. A `ModuleScript` that returns a `FastCastEvents` table for direct (non-BindableEvent) callbacks, providing better performance for high-frequency events like `LengthChanged`.
 
 ```lua
--- In a ModuleScript
+-- In a ModuleScript (e.g., ReplicatedStorage.FastCastEventsModule)
 local module = {}
 
-module.LengthChanged = function(cast)
-    -- Called every frame
-end
-
 module.Hit = function(cast, result, velocity, bullet)
-    -- Called on hit
+    print("Hit:", result.Instance)
 end
 
 module.CanPierce = function(cast, result, velocity, bullet)
-    -- Return true to pierce, false to stop
-    return false
+    return result.Instance:GetAttribute("CanPierce") == true
+end
+
+module.LengthChanged = function(cast, lastPoint, rayDir, displacement)
+    -- Called every frame - more efficient than BindableEvent routing
 end
 
 return module
 ```
 
-Then set it:
+Register it:
 ```lua
 caster:SetFastCastEventsModule(pathToModule)
 ```
 
-Note: Not available in Serial mode - use standard Signals instead.
+> **Note**: Not available in Serial mode — use direct event callbacks instead.
 
 ---
 
-## Performance
+## 5. High-Fidelity Behavior
 
-FastCast2 uses:
-- **Serial Mode**: Single RunService with SoA for all casts
-- **Parallel Mode**: One RunService per Actor with SoA within each
+| Mode | Value | Description |
+|------|-------|-------------|
+| **Default** | `1` | Single cast per frame. Fastest, lowest accuracy. |
+| **Automatic** | `2` | On hit, subdivides the frame's cast into sub-segments to find precise hit point. |
+| **Always** | `3` | Always subdivides every frame. Most accurate, most expensive. |
 
-This approach replaces per-cast RunService connections for better performance.
+`HighFidelitySegmentSize` controls the segment size for sub-stepping (default 0.5 studs).
+
+---
+
+## 6. Performance
+
+- **Serial Mode**: Single RunService connection with SoA (Structure of Arrays) for all active casts
+- **Parallel Mode**: One RunService per Actor VM, each with its own SoA instance
+
+This eliminates per-cast RunService connections entirely, replacing them with dense array iteration — O(n) per frame regardless of mode.
