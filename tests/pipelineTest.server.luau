@@ -19,6 +19,7 @@ local FastCast = require(game:GetService("ReplicatedStorage"):WaitForChild("Fast
 local RunService = game:GetService("RunService")
 
 if not RunService:IsServer() then
+	warn("Please run this script as client sided")
 	return
 end
 

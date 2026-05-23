@@ -21,15 +21,8 @@ local RunService = game:GetService("RunService")
 local RepFirst = game:GetService("ReplicatedFirst")
 
 if not RunService:IsClient() then
+	warn("Please run this script as client sided")
 	return
-end
-
--- ─── Helpers ───
-
-local function waitFrames(n)
-	for _ = 1, n or 5 do
-		task.wait(0.1)
-	end
 end
 
 -- Create a floor for casts to hit
