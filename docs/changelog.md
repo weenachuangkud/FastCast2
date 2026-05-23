@@ -15,15 +15,15 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 ### Added
 - **Serial Mode** (`FastCast.new()`) - Main thread projectile simulation, simpler API
 - **Parallel Mode** (`FastCast.newParallel()`) - Worker VM based parallel simulation
-- **Motor6D Transform** - New movement method using Motor6D for better performance
-  - Set `behavior.MovementMethod = "Transform"` to use
+- **Motor6D movement mode** - New movement method using Motor6D for better performance
+  - Pass `"Motor6D"` as the movement mode to `caster:Init()`
 - **SerialSimulation** - Single RunService with SoA pattern for Serial casts
 - **ParallelSimulation** - Per-Actor SoA pattern for Parallel casts
-- **Motor6DPool** - Object pooling for Motor6D instances
+- **Motor6DCache** - Object pooling for Motor6D instances
 
 ### Changed
 - **API Restructure**:
-  - `.new()` now creates Serial caster (requires `Init(useBulkMoveTo, useObjectCache)`)
+  - `.new()` now creates Serial caster (requires `Init(movementMode, useObjectCache, ...)`)
   - `.newParallel()` creates Parallel caster (requires `Init(numWorkers, ...)`)
   - Removed `FastCastParallel.new()` - use `.newParallel()` instead
 - **ActiveCast** - Changed from OOP to pure data structure (AoS for users, SoA internally)
@@ -31,6 +31,9 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 - Removed **UpdateConnection** - No longer uses per-cast RunService connections
 - Removed **xpcall/pcall** from hot path for performance
 - Removed **FastCastEventsModule** from Serial mode (Parallel only)
+- Removed `PauseCast`/`ResumeCast` - cast manipulation now uses `ModifyTransformation` pattern
+- Renamed `SetBulkMoveEnabled` → `SetMovementMode(mode, enabled)`
+- Removed `behavior.MovementMethod` - movement mode is set via `caster:Init()` or `caster:SetMovementMode()`
 
 ### Fixed
 - **HighFidelityBehavior = 2 bug** - Fixed subRayDir calculation using `delta` instead of `timeIncrement`
