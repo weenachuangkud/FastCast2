@@ -264,7 +264,31 @@ function BaseCast:Destroy()
 	setmetatable(self, nil)
 end
 
--- Motor6D
+-- Utils
+
+function BaseCast:_TerminateCast(castID: number, castTerminatingfn: (...any) -> ())
+	if self.Actives[castID] then
+		local cast = self.Actives[castID]
+		if castTerminatingfn then
+			castTerminatingfn(cast)
+		end
+
+		if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
+			if self.ObjectCacheInstance then
+				self.ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+			else
+				cast.RayInfo.CosmeticBulletObject:Destroy()
+				cast.RayInfo.CosmeticBulletObject = nil
+			end
+		end
+
+		for key, _ in (cast :: any) do
+			cast[key] = nil
+		end
+		self.Actives[castID] = nil
+		self.SerialSimulation.Unregister(castID)
+	end
+end
 
 function BaseCast:_GetMotor6D(projectilePart: BasePart?)
 	if self.Motor6DCacheInstance and projectilePart then

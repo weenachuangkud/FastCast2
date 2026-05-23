@@ -74,8 +74,6 @@ type QueuedVisualizeHitData = {
 local queuedEvents: { [number]: { QueuedEventData } } = {}
 local queuedVisualizes: { [number]: { QueuedVisualizeCastData | QueuedVisualizeHitData }} = {}
 
-local BaseCastRef = nil :: any
-
 local castHandlers = {
 	[EnumCastTypes.Raycast] = function(
 		targetWorldRoot: WorldRoot,
@@ -123,30 +121,6 @@ end
 
 local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceleration: Vector3): Vector3
 	return initialVelocity + acceleration * time
-end
-
-local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
-	if castTerminatingFunction then
-		castTerminatingFunction((cast :: any))
-	end
-
-	-- Preserve StateInfo and RayInfo so post-completion reads still work
-	local preserved = {
-		StateInfo = cast.StateInfo,
-		RayInfo = cast.RayInfo,
-		ID = cast.ID,
-		CFrame = cast.CFrame,
-		Caster = cast.Caster,
-		Type = cast.Type,
-		CastVariant = cast.CastVariant,
-		UserData = cast.UserData,
-	}
-	for key, _ in (cast :: any) do
-		cast[key] = nil
-	end
-	for key, value in preserved do
-		cast[key] = value
-	end
 end
 
 local function DebrisAdd(obj: Instance, Lifetime: number)
@@ -303,8 +277,8 @@ function SerialSimulation:Register(cast: any)
 
 	if self.CurrentMovementMode == "Motor6D" and self.MovementEnabled then
 		local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
-		if cosmeticPart and BaseCastRef and BaseCastRef._GetMotor6D then
-			local motor6d = BaseCastRef:_GetMotor6D(cosmeticPart)
+		if cosmeticPart and self.BaseCastRef and self.BaseCastRef._GetMotor6D then
+			local motor6d = self.BaseCastRef:_GetMotor6D(cosmeticPart)
 			casts_ActiveMotor6Ds[id] = motor6d
 		end
 	end
@@ -335,8 +309,8 @@ function SerialSimulation:Unregister(castID: number)
 	casts_RayDisplacement[castID] = nil
 
 	if casts_ActiveMotor6Ds[castID] then
-		if BaseCastRef and BaseCastRef._ReturnMotor6D then
-			BaseCastRef:_ReturnMotor6D(casts_ActiveMotor6Ds[castID])
+		if self.BaseCastRef and self.BaseCastRef._ReturnMotor6D then
+			self.BaseCastRef:_ReturnMotor6D(casts_ActiveMotor6Ds[castID])
 		end
 		casts_ActiveMotor6Ds[castID] = nil
 	end
@@ -361,8 +335,8 @@ function SerialSimulation:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enable
 
 	if oldMode == "Motor6D" and mode ~= "Motor6D" then
 		for id, motor6d in casts_ActiveMotor6Ds do
-			if BaseCastRef and BaseCastRef._ReturnMotor6D then
-				BaseCastRef:_ReturnMotor6D(motor6d)
+			if self.BaseCastRef and self.BaseCastRef._ReturnMotor6D then
+				self.BaseCastRef:_ReturnMotor6D(motor6d)
 			end
 			casts_ActiveMotor6Ds[id] = nil
 		end
@@ -372,8 +346,8 @@ function SerialSimulation:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enable
 		for _, id in self.casts_ID do
 			if not casts_ActiveMotor6Ds[id] then
 				local cosmeticPart = casts_RayInfo[id] and casts_RayInfo[id].CosmeticBulletObject
-				if cosmeticPart and BaseCastRef and BaseCastRef._GetMotor6D then
-					local motor6d = BaseCastRef:_GetMotor6D(cosmeticPart)
+				if cosmeticPart and self.BaseCastRef and self.BaseCastRef._GetMotor6D then
+					local motor6d = self.BaseCastRef:_GetMotor6D(cosmeticPart)
 					casts_ActiveMotor6Ds[id] = motor6d
 				end
 			end
@@ -505,9 +479,8 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 				end
 
 			elseif eventType == "CastTerminating" then
-				TerminateCast(cast, eventsFunction.CastTerminating)
-				self:Unregister(castID)
-				self.ActivesRef[castID] = nil
+				local castTerminatingfn = args[1]
+				self.BaseCastRef:_TerminateCast(castID, castTerminatingfn)
 			end
 		end
 	end
