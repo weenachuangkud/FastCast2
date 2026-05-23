@@ -1,3 +1,7 @@
+print("Starting benchmark in 10 secs")
+
+task.wait(10)
+
 -- Services
 local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")

@@ -1,4 +1,4 @@
-print("Starting test in 10 seconds")
+print("Starting benchmark in 10 seconds")
 task.wait(10)
 
 -- Services
