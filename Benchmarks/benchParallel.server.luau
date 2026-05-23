@@ -6,6 +6,9 @@ local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")
 local SSS = game:GetService("ServerScriptService")
 
+-- Setting
+local Instanced = false
+
 -- Requires
 local FastCast = require(Rep:WaitForChild("FastCast2"))
 
@@ -70,7 +73,7 @@ castBehavior.HighFidelitySegmentSize = 1
 castBehavior.Acceleration = Vector3.new(0, 0, 0)
 castBehavior.AutoIgnoreContainer = true
 castBehavior.CosmeticBulletContainer = ProjectileContainer
-castBehavior.CosmeticBulletTemplate = ProjectileTemplate
+castBehavior.CosmeticBulletTemplate = Instanced and ProjectileTemplate or nil
 
 -- Parallel Caster
 local Caster = FastCast.newParallel()
@@ -98,7 +101,7 @@ local function summary()
 end
 
 -- Benchmark
-local AMOUNT = 1000
+local AMOUNT = 5000
 local BENCH_TIME = 5
 
 print("=== PARALLEL MODE BENCHMARK ===")
