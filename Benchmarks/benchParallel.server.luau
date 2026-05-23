@@ -8,6 +8,8 @@ local SSS = game:GetService("ServerScriptService")
 
 -- Setting
 local Instanced = false
+-- BulkMoveTo | Motor6D
+local MovementMode = "BulkMoveTo"
 
 -- Requires
 local FastCast = require(Rep:WaitForChild("FastCast2"))
@@ -83,7 +85,8 @@ Caster:Init(
 	"CastVMs",      -- newName
 	SSS,       -- ContainerParent
 	"CastVMContainer", -- VMContainerName
-	"CastVM"       -- VMname
+	"CastVM",       -- VMname
+	MovementMode
 )
 
 local activeCasts = {}
