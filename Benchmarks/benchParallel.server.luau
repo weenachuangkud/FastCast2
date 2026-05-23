@@ -4,8 +4,7 @@ task.wait(10)
 -- Services
 local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")
-local UIS = game:GetService("UserInputService")
-local RepFirst = game:GetService("ReplicatedFirst")
+local SSS = game:GetService("ServerScriptService")
 
 -- Requires
 local FastCast = require(Rep:WaitForChild("FastCast2"))
@@ -77,9 +76,9 @@ castBehavior.CosmeticBulletTemplate = ProjectileTemplate
 local Caster = FastCast.newParallel()
 Caster:Init(
 	4,              -- numWorkers
-	RepFirst,       -- newParent
+	SSS,       -- newParent
 	"CastVMs",      -- newName
-	RepFirst,       -- ContainerParent
+	SSS,       -- ContainerParent
 	"CastVMContainer", -- VMContainerName
 	"CastVM"       -- VMname
 )
@@ -99,7 +98,7 @@ local function summary()
 end
 
 -- Benchmark
-local AMOUNT = 500000
+local AMOUNT = 1000
 local BENCH_TIME = 5
 
 print("=== PARALLEL MODE BENCHMARK ===")
