@@ -30,6 +30,7 @@ local ObjectCacheInstance: any = nil
 local Motor6DCacheInstance: any = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
+local SyncChangesConnection: RBXScriptConnection? = nil
 local CastFireFunc = nil
 local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
 
@@ -111,7 +112,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	SyncChanges.Name = "SyncChanges"
 	SyncChanges.Parent = Actor
 
-	SyncChanges.Event:Connect(function(cast: TypeDef.ActiveCastData)
+	SyncChangesConnection = SyncChanges.Event:Connect(function(cast: TypeDef.ActiveCastData)
 		local ID = cast.ID
 		local TargetCast = self.Actives[ID]
 
@@ -374,7 +375,16 @@ function BaseCast:Destroy()
 
 	FastCastEventsModule = nil
 
+	if SyncChangesConnection then
+		SyncChangesConnection:Disconnect()
+		SyncChangesConnection = nil
+	end
+
+	local activeList = {}
 	for _, v in self.Actives do
+		table.insert(activeList, v)
+	end
+	for _, v in activeList do
 		TerminateCast(v)
 	end
 
