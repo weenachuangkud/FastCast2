@@ -155,6 +155,7 @@ local function DebrisAdd(obj: Instance, Lifetime: number)
 	end
 	if Lifetime <= 0 then
 		obj:Destroy()
+		return
 	end
 
 	task.delay(Lifetime, function()
@@ -546,13 +547,13 @@ function SerialSimulation:UpdateMotor6Ds()
 end
 
 -- RS
-function SerialSimulation:SimluateCast(
+function SerialSimulation:SimulateCast(
 	id: number,
 	delta: number,
 	CanPiercefn: TypeDef.CanPierceFunction?
 )
 	if DebugLogging.Casting then
-		print("Casting for frame - SimluateCast")
+		print("Casting for frame - SimulateCast")
 	end
 	local trajectory = casts_Trajectory[id]
 
@@ -591,7 +592,7 @@ function SerialSimulation:SimluateCast(
 	local rayDisplacement = (point - lastPoint).Magnitude
 	casts_RayDisplacement[id] = rayDisplacement
 
-	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+	casts_CFrame[id] = (if rayDir ~= Vector3.new() then CFrame.new(lastPoint, lastPoint + rayDir) else CFrame.new(lastPoint)) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	self:QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
 
@@ -734,7 +735,6 @@ function SerialSimulation:SimluateCast(
 			}:: any)
 
 			casts_Trajectory[id].Origin = point
-			casts_Trajectory[id].Position = point
 			casts_Trajectory[id].StartTime = casts_TotalRunTime[id]
 		end
 	end
@@ -830,20 +830,22 @@ function SerialSimulation:UpdateCasts(delta: number)
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
-				self:SimluateCast(id, delta, self.Events.CanPierce)
+				self:SimulateCast(id, delta, self.Events.CanPierce)
 			end
 
 			if cast_nil then
+				casts_IsActivelyResimulating[id] = false
 				continue
 			end
 
 			-- Double check again
 			if self.ActivesRef[id] == nil then
+				casts_IsActivelyResimulating[id] = false
 				continue
 			end
 			casts_IsActivelyResimulating[id] = false
 		else
-			self:SimluateCast(id, delta, self.Events.CanPierce)
+			self:SimulateCast(id, delta, self.Events.CanPierce)
 		end
 	end
 
