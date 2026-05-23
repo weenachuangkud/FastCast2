@@ -909,8 +909,8 @@ local function UpdateCasts(delta: number)
 	local visualizesToProcess = queuedVisualizes
 	queuedVisualizes = {}
 
-	FireQueuedEvents(eventsToProcess)
 	FireQueuedVisualizes(visualizesToProcess)
+	FireQueuedEvents(eventsToProcess)
 end
 
 function ParallelSimulation.Start()

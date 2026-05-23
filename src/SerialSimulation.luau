@@ -839,8 +839,8 @@ function SerialSimulation:UpdateCasts(delta: number)
 	local visualizesToProcess = queuedVisualizes
 	queuedVisualizes = {}
 
-	self:FireQueuedEvents(eventsToProcess)
 	self:FireQueuedVisualizes(visualizesToProcess)
+	self:FireQueuedEvents(eventsToProcess)
 end
 
 function SerialSimulation.new()
