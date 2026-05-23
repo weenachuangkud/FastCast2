@@ -1,5 +1,10 @@
 --[[
-	FastCast2 Pipeline Test — Client-side (parallel caster).
+	- Author: Mawin CK
+	- Date: 2026
+]]
+
+--[[
+	FastCast2 Pipeline Test — Client-side
 
 	Requires ReplicatedFirst to be available for VM storage.
 	Tests Init, fire, events, terminate, sync, pierce, and lifecycle.

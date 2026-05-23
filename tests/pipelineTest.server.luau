@@ -1,5 +1,9 @@
 --[[
-	FastCast2 Pipeline Test — Server-side (serial caster).
+	- Author: Mawin CK
+]]
+
+--[[
+	FastCast2 Pipeline Test — Server-side
 
 	Traces the actual source to test real behavior — not assumptions.
 	Each scenario documents what it tests, why, and which lines of code it covers.

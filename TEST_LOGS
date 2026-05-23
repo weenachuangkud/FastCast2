@@ -1,107 +1,43 @@
-๒๒:๕๔:๓๙.๑๙๖  ============================================================  -  Server - UnitTest:69
-  ๒๒:๕๔:๓๙.๑๙๖  FastCast2 Server Pipeline Test (serial caster)  -  Server - UnitTest:70
-  ๒๒:๕๔:๓๙.๑๙๗  ============================================================  -  Server - UnitTest:71
-  ๒๒:๕๔:๔๐.๑๐๒  [PASS] Basic raycast: CastFire, Hit, CastTerminating all fire  -  Server - UnitTest:26
-  ๒๒:๕๔:๔๕.๔๙๓  ============================================================  -  Client - UnitTest:104
-  ๒๒:๕๔:๔๕.๔๙๓  FastCast2 Client (Parallel) Pipeline Test  -  Client - UnitTest:105
-  ๒๒:๕๔:๔๕.๔๙๓  ============================================================  -  Client - UnitTest:106
-  ๒๒:๕๔:๕๐.๗๑๘  [PASS] Events set after Init fire via __newindex  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๑.๙๙๓  [PASS] FastCast:TerminateCast clears cast keys in serial  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๒.๓๐๘  [PASS] Double TerminateCast does not error  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๒.๕๓๖  [PASS] GetVelocityCast and SetVelocityCast modify trajectory  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๒.๗๓๑  [PASS] GetPositionCast and SetPositionCast  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๒.๗๔๗  [PASS] Parallel Init + RaycastFire + events fire  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๓.๐๑๖  [PASS] GetAccelerationCast and SetAccelerationCast  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๓.๒๒๑  [FAIL] AddVelocityCast / AddAccelerationCast / AddPositionCast: ReplicatedStorage.FastCast2:661: attempt to index nil with 'Trajectory'
-ReplicatedStorage.FastCast2:661 function GetVelocityCast
-ServerScriptService.UnitTest:281
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:267
-  -  Server - UnitTest:29
-  ๒๒:๕๔:๕๕.๕๖๔  [PASS] Events set after Init fire (parallel dispatcher callback)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๕.๖๖๕  [FAIL] CanPierce returns true → Pierced fires, cast continues: Hit did not fire after all pierces exhausted
-ServerScriptService.UnitTest:36
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:298
-  -  Server - UnitTest:29
-  ๒๒:๕๔:๕๖.๒๖๓  [PASS] CanPierce returns false → Hit fires, no Pierced  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๖.๔๐๕  [PASS] TerminateCast fires CastTerminating in parallel  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๖.๘๐๘  [PASS] No CanPierce function → Hit fires (nil = can't pierce)  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๖.๘๑๒  [PASS] Double TerminateCast no error (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๗.๑๗๙  [PASS] GetVelocityCast and SetVelocityCast (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๗.๓๔๕  [PASS] FastCastEventsConfig: UseCastFire/UseHit=false suppresses those events  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๗.๕๗๗  [PASS] GetPositionCast and SetPositionCast (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๗.๗๕๘  [PASS] LengthChanged fires when UseLengthChanged=true (default is false)  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๗.๙๑๐  [PASS] SyncChangesToCast fires without error  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๘.๑๕๘  [PASS] Nil Behavior parameter auto-fills defaults  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๘.๒๒๖  Serial Caster already initialized  -  Server - FastCast2:489
-  ๒๒:๕๔:๕๘.๒๒๖  [PASS] Double Init warns and is idempotent  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๘.๒๙๑  [PASS] Fire before Init errors correctly  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๘.๖๕๙  [PASS] SetObjectCacheEnabled toggles cache  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๘.๖๖๒  [PASS] No CanPierce module → Hit fires (parallel default)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๘.๗๒๕   ▶ Cannot set event, not a function (x6)  -  Server - FastCast2:118
-  ๒๒:๕๔:๕๘.๗๒๕  [PASS] Destroy nils events and removes metatable  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๘.๗๗๕  [PASS] Destroy nils events and dispatcher (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๘.๗๘๑   ▶ Cannot set event, not a function (x6)  -  Server - FastCast2:118
-  ๒๒:๕๔:๕๘.๗๘๒  [FAIL] Double Destroy does not error: ServerScriptService.UnitTest:566: attempt to call missing method 'Destroy' of table
-ServerScriptService.UnitTest:566
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:562
-  -  Server - UnitTest:29
-  ๒๒:๕๔:๕๘.๘๙๕  [FAIL] Double Destroy no error (parallel): Workspace.Mawin_CK.UnitTest:355: attempt to call missing method 'Destroy' of table
-Workspace.Mawin_CK.UnitTest:355
-Workspace.Mawin_CK.UnitTest:85 function test
-Workspace.Mawin_CK.UnitTest:351
-  -  Client - UnitTest:91
-  ๒๒:๕๔:๕๘.๙๕๙  [PASS] Fire before Init errors (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๙.๐๗๒  [FAIL] Cosmetic bullet cloned from template when container provided: ServerScriptService.UnitTest:601: attempt to index nil with 'CosmeticBulletObject'
-ServerScriptService.UnitTest:601
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:570
-  -  Server - UnitTest:29
-  ๒๒:๕๔:๕๙.๐๗๓  Cannot Init more than 1  -  Client - FastCast2:245
-  ๒๒:๕๔:๕๙.๐๗๔  [PASS] Double Init warns (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๙.๑๒๖  [PASS] newBehavior deep copy (parallel context)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๙.๒๓๘  [FAIL] AutoIgnoreContainer adds container to RaycastParams filter: ServerScriptService.UnitTest:647: attempt to index nil with 'Parameters'
-ServerScriptService.UnitTest:647
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:615
-  -  Server - UnitTest:29
-  ๒๒:๕๔:๕๙.๕๖๐  [PASS] VisualizeCastSettings stored on cast (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๔:๕๙.๗๔๒  [PASS] HighFidelity = Always: all events fire  -  Server - UnitTest:26
-  ๒๒:๕๔:๕๙.๙๑๑  [FAIL] RaycastParams cloned at fire time (parallel): Cast params reference the same object as behavior params
-Workspace.Mawin_CK.UnitTest:98
-Workspace.Mawin_CK.UnitTest:85 function test
-Workspace.Mawin_CK.UnitTest:418
-  -  Client - UnitTest:91
-  ๒๒:๕๕:๐๐.๒๔๒  [PASS] HighFidelity = Automatic: all events fire  -  Server - UnitTest:26
-  ๒๒:๕๕:๐๐.๓๖๑  [PASS] Cosmetic bullet created (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๐.๔๒๕  [FAIL] Velocity as number is converted to direction*velocity: ServerScriptService.UnitTest:743: attempt to index nil with 'Trajectory'
-ServerScriptService.UnitTest:743
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:727
-  -  Server - UnitTest:29
-  ๒๒:๕๕:๐๐.๔๗๘  [PASS] newBehavior returns independent copy from defaults  -  Server - UnitTest:26
-  ๒๒:๕๕:๐๐.๕๔๒  [PASS] VisualizeCastSettings defaults are present  -  Server - UnitTest:26
-  ๒๒:๕๕:๐๐.๗๐๙  [PASS] Behavior.Acceleration modifies cast trajectory  -  Server - UnitTest:26
-  ๒๒:๕๕:๐๐.๗๑๐  [PASS] AutoIgnoreContainer adds container to filter (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๐.๘๙๑  [FAIL] RaycastParams is cloned, not shared with behavior: ServerScriptService.UnitTest:821: attempt to index nil with 'Parameters'
-ServerScriptService.UnitTest:821
-ServerScriptService.UnitTest:23 function test
-ServerScriptService.UnitTest:801
-  -  Server - UnitTest:29
-  ๒๒:๕๕:๐๐.๙๔๒  ============================================================  -  Server - UnitTest:832
-  ๒๒:๕๕:๐๐.๙๔๓  Server pipeline: 21 passed, 7 failed  -  Server - UnitTest:833
-  ๒๒:๕๕:๐๐.๙๔๓  ============================================================  -  Server - UnitTest:834
-  ๒๒:๕๕:๐๐.๙๔๓  [FASTCAST2 SERVER] Some tests failed — review warnings above  -  Server - UnitTest:837
-  ๒๒:๕๕:๐๑.๔๘๓  [PASS] Nil Behavior auto-defaults (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๒.๒๒๙  [PASS] FastCastEventsConfig disables events (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๓.๒๑๐  [PASS] HighFidelity = Always fires all events (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๓.๖๔๓  [PASS] Velocity as number (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๓.๗๔๕  [PASS] SetMovementMode dispatches to VMs (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๓.๘๐๙  Caster not initialized  ▶ {...}  -  Client - FastCast2:432
-  ๒๒:๕๕:๐๓.๘๑๒  [PASS] SetMovementMode before Init warns (parallel)  -  Client - UnitTest:88
-  ๒๒:๕๕:๐๓.๘๗๖  ============================================================  -  Client - UnitTest:676
-  ๒๒:๕๕:๐๓.๘๗๖  Client (parallel) pipeline: 21 passed, 2 failed  -  Client - UnitTest:677
-  ๒๒:๕๕:๐๓.๘๗๖  ============================================================  -  Client - UnitTest:678
-  ๒๒:๕๕:๐๓.๘๗๖  [FASTCAST2 CLIENT] Some tests failed — review warnings above  -  Client - UnitTest:681
+๒๓:๔๑:๐๔.๒๐๗  Testing starting  -  Server - UnitTest:10
+  ๒๓:๔๑:๑๓.๔๐๑  ============================================================  -  Server - UnitTest:73
+  ๒๓:๔๑:๑๓.๔๐๑  FastCast2 Server Pipeline Test (serial caster)  -  Server - UnitTest:74
+  ๒๓:๔๑:๑๓.๔๐๑  ============================================================  -  Server - UnitTest:75
+  ๒๓:๔๑:๑๕.๙๐๓  [PASS] Basic raycast: CastFire, Hit, CastTerminating all fire  -  Server - UnitTest:30
+  ๒๓:๔๑:๑๖.๖๓๓  [PASS] Events set after Init fire via __newindex  -  Server - UnitTest:30
+  ๒๓:๔๑:๑๗.๑๔๖  [PASS] FastCast:TerminateCast clears cast keys in serial  -  Server - UnitTest:30
+  ๒๓:๔๑:๑๘.๑๑๐  [PASS] Double TerminateCast does not error  -  Server - UnitTest:30
+  ๒๓:๔๑:๑๘.๔๒๒  [PASS] GetVelocityCast and SetVelocityCast modify trajectory  -  Server - UnitTest:30
+  ๒๓:๔๑:๑๙.๑๓๔  [PASS] GetPositionCast and SetPositionCast  -  Server - UnitTest:30
+  ๒๓:๔๑:๑๙.๓๑๔  [PASS] GetAccelerationCast and SetAccelerationCast  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๐.๐๙๐  [PASS] AddVelocityCast / AddAccelerationCast / AddPositionCast  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๒.๑๐๓  [FAIL] CanPierce returns true → Pierced fires, cast continues: Hit did not fire after all pierces exhausted
+ServerScriptService.UnitTest:40
+ServerScriptService.UnitTest:27 function test
+ServerScriptService.UnitTest:302
+  -  Server - UnitTest:33
+  ๒๓:๔๑:๒๒.๘๖๒  [PASS] CanPierce returns false → Hit fires, no Pierced  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๓.๓๕๕  [PASS] No CanPierce function → Hit fires (nil = can't pierce)  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๔.๐๗๑  [PASS] FastCastEventsConfig: UseCastFire/UseHit=false suppresses those events  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๔.๕๐๓  [PASS] LengthChanged fires when UseLengthChanged=true (default is false)  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๔.๘๘๘  [PASS] Nil Behavior parameter auto-fills defaults  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๔.๙๕๕  Serial Caster already initialized  -  Server - FastCast2:453
+  ๒๓:๔๑:๒๔.๙๕๕  [PASS] Double Init warns and is idempotent  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๕.๐๒๑  [PASS] Fire before Init errors correctly  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๕.๔๒๑  [PASS] SetObjectCacheEnabled toggles cache  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๕.๔๘๗   ▶ Cannot set event, not a function (x6)  -  Server - FastCast2:118
+  ๒๓:๔๑:๒๕.๔๘๘  [PASS] Destroy nils events and removes metatable  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๕.๕๔๐   ▶ Cannot set event, not a function (x6)  -  Server - FastCast2:118
+  ๒๓:๔๑:๒๕.๕๔๑  [PASS] Double Destroy does not error  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๕.๘๓๙  [PASS] Cosmetic bullet cloned from template when container provided  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๖.๐๑๒  [PASS] AutoIgnoreContainer adds container to RaycastParams filter  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๖.๕๒๒  [PASS] HighFidelity = Always: all events fire  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๐๐๓  [PASS] HighFidelity = Automatic: all events fire  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๑๗๐  [PASS] Velocity as number is converted to direction*velocity  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๒๒๑  [PASS] newBehavior returns independent copy from defaults  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๒๘๙  [PASS] VisualizeCastSettings defaults are present  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๔๕๓  [PASS] Behavior.Acceleration modifies cast trajectory  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๖๐๔  [PASS] RaycastParams is cloned, not shared with behavior  -  Server - UnitTest:30
+  ๒๓:๔๑:๒๗.๖๕๕  ============================================================  -  Server - UnitTest:836
+  ๒๓:๔๑:๒๗.๖๕๖  Server pipeline: 27 passed, 1 failed  -  Server - UnitTest:837
+  ๒๓:๔๑:๒๗.๖๕๖  ============================================================  -  Server - UnitTest:838
+  ๒๓:๔๑:๒๗.๖๕๖  [FASTCAST2 SERVER] Some tests failed — review warnings above  -  Server - UnitTest:841
