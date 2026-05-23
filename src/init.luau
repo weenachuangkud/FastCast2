@@ -558,10 +558,20 @@ end
 	@method SetObjectCacheEnabled
 	@within FastCastSerial
 ]=]
-function FastCastSerial:SetObjectCacheEnabled(enabled: boolean)
+function FastCastSerial:SetObjectCacheEnabled(
+	enabled: boolean,
+	Template: BasePart | Model,
+	CacheSize: number,
+	CacheHolder: Instance
+)
 	if not self.BaseCast then return end
 
-	self.BaseCast:BindObjectCache(enabled)
+	self.BaseCast:BindObjectCache(
+		enabled,
+		Template,
+		CacheSize,
+		CacheHolder
+	)
 	self.ObjectCacheEnabled = enabled
 end
 
