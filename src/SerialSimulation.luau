@@ -705,9 +705,6 @@ function SerialSimulation:SimulateCast(
 				sub = false,
 				wasPierce = true
 			}:: any)
-
-			casts_Trajectory[id].Origin = point
-			casts_Trajectory[id].StartTime = casts_TotalRunTime[id]
 		end
 	end
 
@@ -802,7 +799,7 @@ function SerialSimulation:UpdateCasts(delta: number)
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
-				self:SimulateCast(id, delta, self.Events.CanPierce)
+				self:SimulateCast(id, timeIncrement, self.Events.CanPierce)
 			end
 
 			if cast_nil then

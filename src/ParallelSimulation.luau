@@ -867,7 +867,7 @@ local function UpdateCasts(delta: number)
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
-				SimulateCast(id, delta, FastCastEvents)
+				SimulateCast(id, timeIncrement, FastCastEvents)
 			end
 
 			if cast_nil then
