@@ -161,6 +161,7 @@ local function DebrisAdd(obj: Instance, Lifetime: number)
 	end
 	if Lifetime <= 0 then
 		obj:Destroy()
+		return
 	end
 
 	task.delay(Lifetime, function()
@@ -574,7 +575,7 @@ function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enab
 end
 
 -- RS
-local function SimluateCast(
+local function SimulateCast(
 	id: number,
 	delta: number, 
 	FastCastEvents 
@@ -620,7 +621,7 @@ local function SimluateCast(
 	local rayDisplacement = (point - lastPoint).Magnitude
 	casts_RayDisplacement[id] = rayDisplacement
 
-	casts_CFrame[id] = CFrame.new(lastPoint, lastPoint + rayDir) * CFrame.new(0, 0, -rayDisplacement / 2)
+	casts_CFrame[id] = (if rayDir ~= Vector3.new() then CFrame.new(lastPoint, lastPoint + rayDir) else CFrame.new(lastPoint)) * CFrame.new(0, 0, -rayDisplacement / 2)
 
 	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
 
@@ -866,20 +867,22 @@ local function UpdateCasts(delta: number)
 					print("[" .. segmentIndex .. "] Subcast of time increment " .. timeIncrement)
 				end
 
-				SimluateCast(id, delta, FastCastEvents)
+				SimulateCast(id, delta, FastCastEvents)
 			end
 
 			if cast_nil then
+				casts_IsActivelyResimulating[id] = false
 				continue
 			end
 
 			-- Double check again
 			if ActivesRef[id] == nil then
+				casts_IsActivelyResimulating[id] = false
 				continue
 			end
 			casts_IsActivelyResimulating[id] = false
 		else
-			SimluateCast(id, delta, FastCastEvents)
+			SimulateCast(id, delta, FastCastEvents)
 		end
 	end
 
