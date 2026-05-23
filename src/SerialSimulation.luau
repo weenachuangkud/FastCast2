@@ -480,7 +480,7 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 
 			elseif eventType == "CastTerminating" then
 				self.BaseCastRef:_TerminateCast(castID, eventsFunction.CastTerminating)
-				self:Unregsiter(castID)
+				self:Unregister(castID)
 			end
 		end
 	end
