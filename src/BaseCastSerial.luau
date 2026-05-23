@@ -286,7 +286,6 @@ function BaseCast:_TerminateCast(castID: number, castTerminatingfn: (...any) -> 
 			cast[key] = nil
 		end
 		self.Actives[castID] = nil
-		self.SerialSimulation.Unregister(castID)
 	end
 end
 
