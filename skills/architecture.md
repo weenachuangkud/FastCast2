@@ -2,401 +2,217 @@
 
 ## Overview
 
-FastCast2 is a high-performance raycast library for Roblox with two execution modes:
-- **Parallel**: Multi-threaded via Actor VMs, using SoA (Structure of Arrays) pattern
-- **Serial**: Single-threaded with SoA pattern (simpler, lower performance)
+FastCast2 is a Roblox projectile library in Luau that simulates projectile physics using **workspace raycasting** (not Roblox physics). It supports **raycast, blockcast, and spherecast** casting types, each following the same projectile simulation lifecycle.
 
-## Module Structure
+The library provides two execution modes:
 
-```
-FastCast2/
-├── init.luau                    # Entry point, creates casters
-├── BaseCast.luau                # Parallel mode cast handler
-├── BaseCastSerial.luau          # Serial mode cast handler
-├── ParallelSimulation.luau      # Parallel SoA simulation (one per Actor)
-├── SerialSimulation.luau       # Serial SoA simulation (single instance)
-├── ActiveCast.luau              # Cast data container (AoS pattern)
-├── ActiveCastSerial.luau       # Serial cast data
-├── Motor6DPool.luau            # Motor6D object pooling
-├── ObjectCache.luau             # Cosmetic bullet object pooling
-├── Signal.luau                  # Event signal system
-├── FastCastEnums.luau          # Enum definitions
-├── TypeDefinitions.luau        # TypeScript-style type definitions
-├── Configs.luau                 # Configuration
-├── DefaultConfigs.luau         # Default behavior config
-└── FastCastVMs/
-    ├── init.luau               # Dispatcher (manages Actors)
-    ├── ServerVM.server.luau    # Server Actor script
-    └── ClientVM.client.luau    # Client Actor script
-```
+| Mode | Execution | Threading | Caster Factory | Simulation | BaseCast |
+|------|-----------|-----------|----------------|------------|----------|
+| **Serial** (`FastCast.new()`) | Main thread | Single RunService connection | `FastCastSerial` | `SerialSimulation` | `BaseCastSerial` |
+| **Parallel** (`FastCast.newParallel()`) | Actor VMs | One VM per worker, round-robin dispatch | `FastCastParallel` | `ParallelSimulation` | `BaseCastParallel` |
 
-## Execution Modes
+---
 
-### Parallel Mode (`FastCast.newParallel()`)
+## Module Layout (`src/`)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     FastCastParallel                        
-│                    (init.luau)                              
-│                         │                                   
-│          ┌──────────────┴──────────────┐                    
-│          │        Dispatcher           │                    
-│          │     (FastCastVMs)           │                    
-│          │                             │                    
-│          ▼                             ▼                    
-│   ┌──────────┐    ┌──────────┐    ┌──────────┐              
-│   │  Actor  │    │  Actor  │    │  Actor  │  ...           │
-│   │ (VM #1) │    │ (VM #2) │    │ (VM #3) │                │
-│   │         │    │         │    │         │                │
-│   │BaseCast │    │BaseCast │    │BaseCast │                │
-│   │    │    │    │    │    │    │    │   |
-│   │    ▼    │    │    ▼    │    │    ▼   │                │
-│   │Parallel │    │Parallel │    │Parallel │                │
-│   │ Sim     │    │ Sim     │    │ Sim     │                │
-│   │ (SoA)   │    │ (SoA)   │    │ (SoA)   │                │
-│   └─────────┘    └─────────┘    └─────────┘                
-└─────────────────────────────────────────────────────────────┘
-```
+| File | Role |
+|------|------|
+| `init.luau` | Entry point. Exports `FastCast` static methods + `FastCastSerial` / `FastCastParallel` caster constructors. |
+| `BaseCastSerial.luau` | Serial-mode caster handler. Owns `ObjectCache`, `Motor6DCache`, `SerialSimulation`. Routes `Raycast/Blockcast/Spherecast` calls to simulation. |
+| `BaseCastParallel.luau` | Parallel-mode caster handler. Same responsibility but lives inside each Actor VM (module-scoped state). |
+| `SerialSimulation.luau` | SoA physics engine (serial). Connected to RunService on main thread. |
+| `ParallelSimulation.luau` | SoA physics engine (parallel). Connected via `ConnectParallel` inside Actor VM. |
+| `ActiveCast.luau` | Cast data factory. Creates the cast data table used by both modes. |
+| `ObjectCache.luau` | Cosmetic bullet part pooling (bulk-move based). |
+| `Motor6DCache.luau` | Motor6D pooling for Transform movement mode. |
+| `TypeDefinitions.luau` | All Luau type exports. |
+| `FastCastEnums.luau` | Enums: `HighFidelityBehavior` (Default/Automatic/Always), `CastType` (Raycast/Blockcast/Spherecast). |
+| `Config.luau` | Debug logging toggles. |
+| `DefaultConfigs.luau` | Default `FastCastBehavior` values. |
+| `FastCastVMs/init.luau` | VM Dispatcher — creates/manages Actor VMs, round-robins fire requests. |
+| `FastCastVMs/ClientVM.client.luau` | Client-side Actor script running inside each VM. |
+| `FastCastVMs/ServerVM.server.luau` | Server-side Actor script running inside each VM. |
 
-**How Parallel Mode Works:**
+---
 
-1. **Dispatcher** (`FastCastVMs/init.luau`) creates N Actor VMs
-2. Each **Actor** runs its own **BaseCast + ParallelSimulation**
-3. When `RaycastFire()` is called:
-   - Dispatcher selects Actor with lowest `Tasks` attribute (load balancing)
-   - Sends `Raycast` message to that Actor
-4. Each **ParallelSimulation** instance:
-   - Uses `PreRender:ConnectParallel` (client) or `Heartbeat` (server)
-   - Stores casts in SoA arrays (one set per Actor)
-   - Runs parallel physics calculations
-   - Uses **event queue** for cross-thread communication
+## Execution Flow
 
-### Serial Mode (`FastCast.new()`)
+### Initialization
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     FastCastSerial                         │
-│                    (init.luau)                              │
-│                         │                                   │
-│                         ▼                                   │
-│                   BaseCastSerial                           │
-│                         │                                   │
-│                         ▼                                   │
-│                SerialSimulation                           │
-│                 (single instance)                         │
-│                    (SoA arrays)                            │
-└─────────────────────────────────────────────────────────────┘
+FastCast.new() or FastCast.newParallel()
+  └─> Returns FastCastSerial / FastCastParallel metatable
+
+caster:Init(...)
+  └─> Serial: creates BaseCastSerial → SerialSimulation → Start() (RunService.Heartbeat/PreSimulation)
+  └─> Parallel: creates VM Dispatcher → spawns Actor VMs → each VM creates BaseCastParallel → ParallelSimulation → Start() (ConnectParallel)
 ```
 
-**How Serial Mode Works:**
+### Firing a Cast
 
-1. Single **BaseCastSerial** handles all casts
-2. **SerialSimulation** runs on `Heartbeat` (single thread)
-3. All casts stored in single SoA array set
-4. Event queue dispatches callbacks after simulation
+```
+caster:RaycastFire(origin, direction, velocity, behavior)
+    OR
+caster:BlockcastFire(origin, size, direction, velocity, behavior)
+    OR
+caster:SpherecastFire(origin, radius, direction, velocity, behavior)
+  └─> Serial: BaseCastSerial creates ActiveCast data → SerialSimulation.Register() → fires CastFire event
+  └─> Parallel: Dispatcher:Dispatch() → round-robins to next Actor VM → BaseCastParallel creates ActiveCast data → ParallelSimulation.Register() → fires CastFire event
+```
+
+### Per-Frame Simulation
+
+Each frame the simulation engine:
+
+1. **Iterates all registered cast IDs** stored in a dense `casts_ID` array (fast iteration).
+2. **Computes position** at current runtime using kinematic equation: `P(t) = origin + velocity*t + 0.5*acceleration*t²`
+3. **Performs a workspace cast** (Raycast/Blockcast/Spherecast) from the last position toward the current position.
+4. **Handles hits** — if a part is hit:
+   - Checks `CanPierce` callback
+   - If not piercing: queues `Hit` + `CastTerminating` events (with optional High-Fidelity sub-stepping)
+   - If piercing: queues `Pierced` event, continues simulation
+5. **Checks MaxDistance** — terminates if exceeded.
+6. **Queues events** (`LengthChanged`, `Hit`, `Pierced`, `CastTerminating`) for deferred firing.
+7. **Updates cosmetic bullet position** via `BulkMoveTo` or `Motor6D.Transform`.
+8. **Fires queued events** sorted by cast ID.
+
+---
 
 ## SoA (Structure of Arrays) Pattern
 
-Instead of storing casts as individual objects:
-```lua
--- Bad: Array of Structures (AoS)
-casts = { {id=1, origin=..., velocity=...}, {id=2, origin=..., velocity=...} }
-```
-
-FastCast2 uses Structure of Arrays:
-```lua
--- Good: Structure of Arrays (SoA)
-castIDs = {1, 2, 3, ...}
-castOrigin = {Vector3, Vector3, Vector3, ...}
-castVelocity = {Vector3, Vector3, Vector3, ...}
-castAcceleration = {Vector3, Vector3, Vector3, ...}
-```
-
-**Benefits:**
-- Better cache locality (all velocities adjacent in memory)
-- Single iteration updates all casts
-- Reduced heap allocations
-
-## Threading Model
-
-### Parallel Mode Threading
-
-Each Actor VM runs in **separate Lua environment** with its own:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Actor (per VM)                        │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │         ParallelSimulation                      │   │
-│  │                                                 │   │
-│  │  RunService (PreRender:ConnectParallel)        │   │
-│  │    │                                            │   │
-│  │    ├── Parallel math/raycast calculations      │   │
-│  │    │   (task.defer/disconnect allowed)          │   │
-│  │    │                                            │   │
-│  │    └── task.synchronize()                       │   │
-│  │           │                                    │   │
-│  │           ▼                                    │   │
-│  │  ┌──────────────────────────────────────┐     │   │
-│  │  │     BulkMoveTo / Motor6D updates      │     │   │
-│  │  │   (task.sync / BindableEvent fire)    │     │   │
-│  │  └──────────────────────────────────────┘     │   │
-│  └─────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Key Points:**
-
-1. **`task.synchronize()`** - Called after parallel calculations
-   - Forces all parallel tasks to complete
-   - Required before modifying shared state
-
-2. **`task.defer()` / disconnect** - Allowed in parallel phase
-   - Used for cleanup operations
-
-3. **`task.sync()` / BindableEvent** - Used for sync phase
-   - Queues callbacks to run after synchronization
-   - Events fire on main thread
-
-### Event Queue System
-
-Both simulations use an event queue to batch callbacks:
+Both `SerialSimulation` and `ParallelSimulation` use the SoA pattern for cache-efficient per-frame iteration:
 
 ```lua
-local QueuedEvents = {}
-
-local function QueueFire(caster, eventName, ...)
-    if caster and caster.Output then
-        caster.Output:Fire(eventName, ...)
-    end
-end
-
--- In simulation loop (parallel or serial):
-QueueFire(caster, "LengthChanged", cast, pos, dir, displacement, vel, bullet)
-QueueFire(caster, "Hit", cast, result, vel, bullet)
-
--- After simulation, dispatch all at once:
-for _, event in QueuedEvents do
-    event.Callback(unpack(event.Args))
-end
-table.clear(QueuedEvents)
+local casts_TotalRunTime = {} :: { [number]: number }
+local casts_Trajectory = {} :: { [number]: CastTrajectory }
+local casts_RayInfo = {} :: { [number]: CastRayInfo }
+-- ... ~20 SoA arrays total
+local casts_ID = {} :: { number }           -- dense active-ID list
+local casts_ID_Index = {} :: { [number]: number }  -- reverse lookup
 ```
 
-## Module Descriptions
+- **Registration**: Cast data is split across arrays by `cast.ID`.
+- **Iteration**: The dense `casts_ID` list is iterated each frame with a simple numeric `for` loop.
+- **Unregistration**: O(1) removal via swap-and-pop: the last ID replaces the removed ID's slot.
 
-### `init.luau` - Entry Point
-- Creates `FastCast` table with two modes
-- `FastCast.new()` - Returns Serial caster
-- `FastCast.newParallel()` - Returns Parallel caster
-- Handles Signal creation (LengthChanged, Hit, Pierced, etc.)
+---
 
-### `BaseCast.luau` - Parallel Cast Handler
-- Runs inside each Actor VM
-- Handles Raycast/Blockcast/Spherecast methods
-- Manages BulkMoveTo connection (`PreRender:ConnectParallel`)
-- Uses `ParallelSimulation.Register()` to add casts
-- Syncs changes via `BindableEvent`
+## High-Fidelity Sub-Stepping
 
-### `BaseCastSerial.luau` - Serial Cast Handler
-- Single-threaded cast handler
-- Registers casts with `SerialSimulation`
-- Simpler, no Actor overhead
+Three modes controlled by `HighFidelityBehavior`:
 
-### `ParallelSimulation.luau` - Parallel Physics Engine
-- **One instance per Actor VM**
-- Auto-starts with `PreRender:ConnectParallel` (client) or `Heartbeat` (server)
-- SoA arrays for all cast data
-- Motor6D/BulkMoveTo handled in sync phase
-- Event queue for cross-thread communication
+| Mode | Behavior |
+|------|----------|
+| **Default (1)** | Single cast per frame. Fastest, lowest accuracy. |
+| **Automatic (2)** | Upon hit, subdivides the frame's displacement into `displacement / HighFidelitySegmentSize` segments and recasts each. Finds the precise hit point. |
+| **Always (3)** | Always subdivides every frame's cast. Most accurate, most expensive. |
 
-### `SerialSimulation.luau` - Serial Physics Engine
-- **Single global instance**
-- Runs on `Heartbeat`
-- SoA arrays (same structure as ParallelSimulation)
-- Simpler threading model
+---
 
-### `ActiveCast.luau` - Cast Data Container
-- AoS (Array of Structures) for cast metadata
-- Contains:
-  - `StateInfo`: trajectory, timing, high-fidelity settings
-  - `RayInfo`: raycast params, world root, max distance
-  - `UserData`: user-defined data
+## Cast Customization
 
-### `Motor6DPool.luau` - Transform Mode Support
-- Object pool for Motor6D instances
-- Efficient for moving cosmetic bullets via `Transform` property
-- Grows dynamically (2x growth rate)
-- Used when `MovementMethod == "Transform"`
+### FastCastBehavior
 
-### `ObjectCache.luau` - Cosmetic Bullet Pooling
-- Pool of reusable cosmetic bullet parts
-- Reduces Clone() overhead
-- `GetPart(cframe)` and `ReturnPart(part)` interface
+Configured via `FastCast.newBehavior()` then populated:
 
-### `Signal.luau` - Event System
-- Custom signal implementation
-- Supports Connect, Once, Wait, Fire
-- Uses thread pooling for performance
-- Threaded signal firing via `task.spawn`
+| Field | Type | Purpose |
+|-------|------|---------|
+| `RaycastParams` | `RaycastParams?` | Filter rules |
+| `MaxDistance` | `number` | Max range before auto-termination |
+| `Acceleration` | `Vector3` | Constant acceleration applied each frame |
+| `HighFidelityBehavior` | `number` | Default / Automatic / Always |
+| `HighFidelitySegmentSize` | `number` | Segment size for sub-stepping |
+| `CosmeticBulletTemplate` | `BasePart?` | Visual bullet part |
+| `CosmeticBulletContainer` | `Instance?` | Parent for non-cached bullet instances |
+| `AutoIgnoreContainer` | `boolean` | Auto-adds bullet container to filter list |
+| `FastCastEventsConfig` | table | Enables/disables built-in event callbacks |
+| `FastCastEventsModuleConfig` | table | Enables/disables module-script event callbacks |
+| `VisualizeCasts` | `boolean` | Debug visualization |
+| `VisualizeCastSettings` | table | Visualization colors/sizes |
+| `UserData` | `any` | Arbitrary user data attached to the cast |
 
-### `FastCastVMs/init.luau` - Dispatcher
-- Manages Actor VM pool
-- Load balancing via `Tasks` attribute
-- `Dispatch()` - Sends to least-loaded Actor
-- `DispatchAll()` - Broadcasts to all Actors
+---
 
-### `FastCastVMs/ServerVM.server.luau` and `FastCastVMs/ClientVM.client.luau` - Actors
-- Handles messages from Dispatcher
-- Initializes BaseCast on `Init` message
-- Processes Raycast/Blockcast/Spherecast
+## Event System
 
-## How Connections Work
+Two event channels exist in **parallel mode**; serial mode uses direct callbacks:
 
-### Cast Flow (Parallel Mode)
+1. **FastCastEvents** (built-in) — configured via `FastCastEventsConfig`:
+   - `CastFire`, `Hit`, `Pierced`, `LengthChanged`, `CastTerminating`, `CanPierce`
+
+2. **FastCastEventsModule** (user-supplied ModuleScript) — configured via `FastCastEventsModuleConfig`:
+   - Same event names, resolved via `require()`. Only available in parallel mode.
+
+### Parallel Event Routing
 
 ```
-User calls caster:RaycastFire(origin, direction, velocity, behavior)
-        │
-        ▼
-FastCastParallel:RaycastFire() [init.luau]
-        │
-        ▼
-Dispatcher:Dispatch("Raycast", ...)
-        │
-        ▼
-Dispatcher selects Actor with lowest Tasks
-        │
-        ▼
-Actor receives "Raycast" message
-        │
-        ▼
-BaseCast:Raycast() [BaseCast.luau]
-        │
-        ├── Creates ActiveCast data
-        │
-        ▼
-ParallelSimulation.Register(cast)
-        │
-        └── Stores in Actor-local SoA arrays
-        │
-        ▼
-ParallelSimulation.UpdateCasts() [PreRender:ConnectParallel]
-        │
-        ├── For each cast (parallel):
-        │   ├── Calculate position/velocity
-        │   ├── Raycast physics
-        │   └── Update cosmetic bullet
-        │
-        ├── task.synchronize()
-        │
-        └── Fire events via queue
-        │
-        ▼
-Event callbacks fire (LengthChanged, Hit, etc.)
+BaseCastParallel
+  ├─> Output:BindableEvent:Fire("Hit", cast, ...)  → Dispatcher callback → user event handler
+  └─> CastFireFunc functions (from module) → direct call
 ```
 
-### BulkMoveTo Connection (Parallel)
+### Serial Event Routing
 
-```lua
--- In BaseCast.luau:
-BulkMoveToConnection = RS.PreRender:ConnectParallel(HandleBulkMoveTo)
-
-function HandleBulkMoveTo()
-    -- Collect all CFrame updates from SoA arrays
-    for _, ActiveCasts in Actives do
-        table.insert(Parts, ActiveCasts.RayInfo.CosmeticBulletObject)
-        table.insert(CFrames, ActiveCasts.CFrame)
-    end
-
-    task.synchronize()  -- Wait for parallel calcs
-
-    workspace:BulkMoveTo(Parts, CFrames, Enum.BulkMoveMode.FireCFrameChanged)
-end
+```
+BaseCastSerial
+  └─> user-provided events table → direct callbacks during FireQueuedEvents
 ```
 
-### Motor6D Transform Mode
+---
 
-```lua
--- In ParallelSimulation.Register():
-if cast.RayInfo.MovementMethod == "Transform" then
-    castMotor6D[id] = Motor6DPool.Connect(id, cosmeticBullet)
-end
+## Caching Systems
 
--- In UpdateCasts():
-if motor6d then
-    motor6d.Transform = newCFrame  -- Efficient, no physics sync needed
-end
+### ObjectCache (`ObjectCache.luau`)
+
+- Pools cosmetic bullet parts/models for reuse.
+- Uses `BulkMoveTo` to move parts to/from a far-away CFrame.
+- Pre-allocates on init, auto-expands by 50 when exhausted.
+
+### Motor6DCache (`Motor6DCache.luau`)
+
+- Pools `Motor6D` instances for Transform movement mode.
+- Connects cosmetic parts to an invisible anchored anchor part via Motor6Ds.
+- Movement is applied by setting `Motor6D.Transform` each frame.
+
+---
+
+## Parallel Architecture (`FastCastVMs/`)
+
+### VM Dispatcher (`FastCastVMs/init.luau`)
+
+- Creates a template `Actor` with a `ClientVM` or `ServerVM` script inside.
+- Clones the actor `N` times into a container folder.
+- `Dispatch()` sends a message to the next actor in round-robin order.
+- `DispatchAll()` sends to every actor (for settings changes).
+
+### Actor Scripts (`ClientVM.client.luau`, `ServerVM.server.luau`)
+
+- Receive `"Init"` message → create `BaseCastParallel`.
+- Receive `"Raycast"` / `"Blockcast"` / `"Spherecast"` messages → call corresponding `BaseCastParallel` method.
+- Receive `"BindObjectCache"` / `"SetMovementMode"` / `"SetFastCastEventsModule"` → update shared state.
+- Receive `"Destroy"` → cleanup.
+
+### Data Flow
+
 ```
-
-## Key Design Patterns
-
-### 1. SoA Arrays
-```lua
--- ParallelSimulation.luau lines 58-83
-local castCount = 0
-local casts = {}
-local castIDs = {}
-local castOrigin = {}
-local castVelocity = {}
-local castAcceleration = {}
--- ... all arrays indexed by cast ID
+Script requiring FastCast2
+  ├─> init.luau (entry)
+  │    ├─> FastCastSerial (metatable for serial casters)
+  │    └─> FastCastParallel (metatable for parallel casters)
+  │
+  ├─> FastCastVMs/init.luau (Dispatcher)
+  │    └─> Spawns N Actor VMs
+  │         ├─> ClientVM / ServerVM (Actor script)
+  │         │    └─> BaseCastParallel (inside VM)
+  │         │         ├─> ParallelSimulation (SoA engine)
+  │         │         ├─> ActiveCast (cast data factory)
+  │         │         ├─> ObjectCache (bullet pooling)
+  │         │         └─> Motor6DCache (Motor6D pooling)
+  │         └─> ... repeat for N workers
+  │
+  └─> BaseCastSerial (used for serial casters)
+       ├─> SerialSimulation (SoA engine)
+       ├─> ActiveCast (cast data factory)
+       ├─> ObjectCache (bullet pooling)
+       └─> Motor6DCache (Motor6D pooling)
 ```
-
-### 2. Event Queue (Sync Phase)
-```lua
--- Events queued during parallel phase, dispatched after sync
-QueueFire(caster, "Hit", cast, result, vel, bullet)
--- ... later:
-DispatchAllEvents()
-```
-
-### 3. Load Balancing
-```lua
--- Dispatcher:Dispatch() sorts by Tasks attribute
-table.sort(Threads, function(a, b)
-    return a:GetAttribute("Tasks") < b:GetAttribute("Tasks")
-end)
-Threads[1]:SendMessage("Raycast", ...)
-```
-
-### 4. Motor6D Pooling
-```lua
--- Efficient Transform mode without per-bullet physics
-local motor6d = Motor6DPool.Connect(castID, part)
-motor6d.Transform = newCFrame  -- Set without parenting complexity
-```
-
-## Configuration
-
-### FastCastBehavior Properties
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `RaycastParams` | RaycastParams | nil | Collision filtering |
-| `MaxDistance` | number | 1000 | Max cast distance |
-| `Acceleration` | Vector3 | (0,0,0) | Gravity effect |
-| `HighFidelityBehavior` | number | 1 | Hit verification mode |
-| `HighFidelitySegmentSize` | number | 0.1 | Sub-cast segment size |
-| `CosmeticBulletTemplate` | Instance | nil | Visual bullet part |
-| `CosmeticBulletContainer` | Instance | nil | Parent for bullets |
-| `MovementMethod` | string | "BulkMoveTo" | "BulkMoveTo" or "Transform" |
-| `VisualizeCasts` | boolean | false | Show debug rays |
-
-## Performance Considerations
-
-1. **SoA vs AoS**: SoA provides ~2-3x better cache performance
-2. **BulkMoveTo**: Batches part updates efficiently
-3. **Motor6D Pool**: Avoids CreateInstance overhead
-4. **Event Queue**: Reduces cross-thread communication
-5. **Parallel Simulation**: Scales with Actor count
-6. **Load Balancing**: Prevents Actor overload
-
-## Summary
-
-FastCast2 uses modern game engine techniques adapted for Roblox:
-- **Multi-threading via Actors**
-- **SoA data layout for cache efficiency**
-- **Event queue for thread-safe communication**
-- **Object pooling for memory efficiency**
-- **Bulk operations for reduced overhead**
