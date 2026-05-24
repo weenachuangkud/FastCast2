@@ -262,7 +262,8 @@ function FastCastParallel:Init(
 			Template = Template,
 			CacheSize = CacheSize,
 			CacheHolder = CacheHolder
-		}
+		},
+		FastCastModule = script
 	}
 	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName: string, ...)
 		local f = self[signalName]
