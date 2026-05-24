@@ -119,6 +119,17 @@ caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData?)
 - `velocity` can be a `Vector3` (exact velocity) or `number` (speed in the fire direction)
 - `BehaviorData` is a `FastCastBehavior` created with `FastCast2.newBehavior()`
 
+```lua
+-- Raycast: simple line-of-sight
+caster:RaycastFire(Vector3.new(0, 5, 0), Vector3.new(0, 0, -1), 500, behavior)
+
+-- Blockcast: pass a Vector3 size after origin
+caster:BlockcastFire(Vector3.new(0, 5, 0), Vector3.new(2, 4, 2), Vector3.new(0, 0, -1), 500, behavior)
+
+-- Spherecast: pass a radius after origin
+caster:SpherecastFire(Vector3.new(0, 5, 0), 3, Vector3.new(0, 0, -1), 500, behavior)
+```
+
 ---
 
 ### 1.4 Cast Manipulation (static methods on `FastCast`)
@@ -145,6 +156,20 @@ FastCast.TerminateCast(cast) → ()
 
 In **parallel mode**, call `caster:SyncChangesToCast(cast)` after any Set/Add to push state to the worker VM.
 
+```lua
+-- Example: modify a cast mid-flight
+local function onHit(cast, result, velocity, bullet)
+	-- Deflect the projectile upward on hit
+	FastCast.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+	FastCast.SetPositionCast(cast, result.Position + Vector3.new(0, 2, 0))
+
+	-- In parallel mode, push changes to the worker VM
+	if caster.SyncChangesToCast then
+		caster:SyncChangesToCast(cast)
+	end
+end
+```
+
 ---
 
 ### 1.5 Lifecycle
@@ -158,6 +183,24 @@ caster:Destroy()  -- Cleans up all resources, actors, caches
 ## 2. FastCastBehavior
 
 Created via `FastCast2.newBehavior()`. Configuration for cast behavior:
+
+```lua
+local behavior = FastCast2.newBehavior()
+behavior.MaxDistance = 500
+behavior.RaycastParams = RaycastParams.new()
+behavior.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+behavior.RaycastParams.FilterDescendantsInstances = {character}
+behavior.Acceleration = Vector3.new(0, -workspace.Gravity, 0)
+behavior.CosmeticBulletContainer = workspace.Projectiles
+behavior.CosmeticBulletTemplate = ReplicatedStorage.Projectile
+behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Automatic
+behavior.HighFidelitySegmentSize = 0.5
+behavior.VisualizeCasts = true
+behavior.VisualizeCastSettings = {
+	Debug_SegmentColor = Color3.new(1, 1, 0),
+	Debug_HitColor = Color3.new(1, 0, 0),
+}
+```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|

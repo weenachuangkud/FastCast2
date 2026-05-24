@@ -22,3 +22,24 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Improves development productivity
 - High Performance
 - Completely free
+
+<br />
+
+# Quick start
+
+```lua
+local FastCast2 = require(ReplicatedStorage:WaitForChild("FastCast2"))
+
+local caster = FastCast2.new()
+caster:Init("BulkMoveTo", false)
+
+caster.Hit = function(cast, result, velocity, bullet)
+	print("Hit:", result.Instance)
+end
+
+-- Raycast, Blockcast, or Spherecast
+caster:RaycastFire(origin, direction, 500, behavior)
+
+-- Blockcast: caster:BlockcastFire(origin, Vector3.new(2,2,2), direction, 500, behavior)
+-- Spherecast: caster:SpherecastFire(origin, 3, direction, 500, behavior)
+```

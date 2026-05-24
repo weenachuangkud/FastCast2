@@ -4,6 +4,19 @@ sidebar_position: 2
 
 # FastCast2 CheatSheet
 
+## Quick Example
+
+```lua
+local caster = FastCast2.new()
+caster:Init("BulkMoveTo", false)
+
+caster.Hit = function(cast, result, velocity, bullet)
+	print("Hit:", result.Instance)
+end
+
+caster:RaycastFire(origin, direction, 500, behavior)
+```
+
 ## Caster — Serial Mode
 
 ```luau
@@ -36,11 +49,20 @@ Caster:RaycastFire(origin, direction, velocity, BehaviorData)
 Caster:BlockcastFire(origin, Size, direction, velocity, BehaviorData)
 Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 
+-- Example:
+-- caster:RaycastFire(Vector3.new(0,5,0), Vector3.new(0,0,-1), 500, behavior)
+-- caster:BlockcastFire(Vector3.new(0,5,0), Vector3.new(2,2,2), Vector3.new(0,0,-1), 500, behavior)
+-- caster:SpherecastFire(Vector3.new(0,5,0), 3, Vector3.new(0,0,-1), 500, behavior)
+
 
 --// Configuration
 
 Caster:SetMovementMode(mode: "BulkMoveTo" | "Motor6D") → ()
 Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → ()
+
+-- Motor6D mode enables smooth visual interpolation:
+-- caster:Init("Motor6D", false)
+-- caster:SetMovementModeEnabled(true, "Motor6D")
 
 
 --// Lifecycle
@@ -80,6 +102,11 @@ Caster:RaycastFire(origin, direction, velocity, BehaviorData)
 Caster:BlockcastFire(origin, Size, direction, velocity, BehaviorData)
 Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 
+-- Example:
+-- caster:RaycastFire(Vector3.new(0,5,0), Vector3.new(0,0,-1), 500, behavior)
+-- caster:BlockcastFire(Vector3.new(0,5,0), Vector3.new(2,2,2), Vector3.new(0,0,-1), 500, behavior)
+-- caster:SpherecastFire(Vector3.new(0,5,0), 3, Vector3.new(0,0,-1), 500, behavior)
+
 
 --// Configuration
 
@@ -106,6 +133,9 @@ FastCast.AddAccelerationCast(cast, acceleration) → ()
 Caster:SyncChangesToCast(cast) → ()
 
 FastCast.TerminateCast(cast) → ()
+-- TerminateCast fires CastTerminating, returns cosmetic to cache, and unregisters the cast.
+-- Call from Hit/Pierced callback to stop a cast early:
+-- caster.Hit = function(cast) FastCast.TerminateCast(cast) end
 
 
 --// Lifecycle

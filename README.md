@@ -151,10 +151,34 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
 end)
 ```
 
-Parallel mode (for high-performance with multiple VMs):
+### Blockcast & Spherecast
+
+Swap `RaycastFire` for `BlockcastFire` or `SpherecastFire` to change cast type:
 
 ```lua
--- Parallel Caster (requires Init with worker count)
+-- Blockcast: pass a Vector3 size after origin
+Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
+
+-- Spherecast: pass a number radius after origin
+Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
+```
+
+### ObjectCache (bullet pooling)
+
+ObjectCache reuses cosmetic bullet instances instead of creating/destroying them every shot:
+
+```lua
+local Caster = FastCast2.new()
+Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
+--                                    ^template   ^size  ^holder
+```
+
+The cache pre-allocates 500 parts by default, auto-expands when exhausted, and moves retired
+parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction overhead.
+
+### Parallel mode (high-performance with multiple VMs)
+
+```lua
 local Caster = FastCast2.newParallel()
 Caster:Init(
 	4,                 -- numWorkers
@@ -168,8 +192,21 @@ Caster:Init(
 	false              -- useObjectCache
 )
 
+-- Events work the same as serial
+Caster.Hit = function(cast, result, velocity, bullet)
+	print("Hit: " .. result.Instance.Name)
+end
+
+--[[
+	-- Except:
+	-- Caster.CanPierce
+	--> You will have to use FastCastEventsModule for that
+]]
+
 -- Fire the same as serial
 Caster:RaycastFire(origin, direction, SPEED, behavior)
+Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
+Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
 <br />
@@ -240,6 +277,49 @@ Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
 ```
 
 > **Note**: `SetFastCastEventsModule` is only available on parallel casters. In serial mode, set event handlers directly on the caster (e.g., `Caster.Hit = function(...)`).
+
+### Motor6D movement mode
+
+Motor6D mode uses `Motor6D.Transform` for more performance instead of `BulkMoveTo`:
+
+```lua
+local Caster = FastCast2.new()
+Caster:Init("Motor6D", false) -- movementMode = "Motor6D"
+```
+
+All active casts automatically get a Motor6D connection on registration and disconnection on cleanup.
+You can switch modes at runtime:
+
+```lua
+Caster:SetMovementModeEnabled(true, "Motor6D")   -- enable Motor6D
+Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- switch back
+```
+
+### Cast manipulation
+
+Modify active casts at runtime using the static `FastCast` methods:
+
+```lua
+-- Read state
+local pos = FastCast2.GetPositionCast(cast)
+local vel = FastCast2.GetVelocityCast(cast)
+local accel = FastCast2.GetAccelerationCast(cast)
+
+-- Modify state (automatically rebases trajectory)
+FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+
+-- Relative changes
+FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+
+-- Terminate a cast early (fires CastTerminating and cleans up)
+FastCast2.TerminateCast(cast)
+```
+
+> **Tip**: In parallel mode, call `Caster:SyncChangesToCast(cast)` after modifying to push changes into the worker VM.
 
 ### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
 
