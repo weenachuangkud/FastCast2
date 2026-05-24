@@ -5,24 +5,19 @@
 
 -- Modules
 
--- REPLACE WITH ACTUAL PATH (Just use ObjectValue lol)
---local Rep = game:GetService("ReplicatedStorage")
---local FastCast2Module = Rep:WaitForChild("FastCast2")
-
-local FastCast2Module: ModuleScript = script:WaitForChild("FastCast2", 10).Value :: ModuleScript
-
-local BaseCastParallel = require(FastCast2Module:WaitForChild("BaseCastParallel"))
-
 -- Variables
 local actor = script:GetActor()
 if actor == nil then 
 	error("The script must placed inside of actor")
 end
+
+local BaseCastParallel = nil
 local BaseCast = nil
 
 -- Listeners
 
 actor:BindToMessage("Init", function(Data : any?)
+	BaseCastParallel = require(Data.FastCastModule:WaitForChild("BaseCastParallel"))
 	BaseCast = BaseCastParallel.Init(
 		script.Parent:WaitForChild("Output"), 
 		Data

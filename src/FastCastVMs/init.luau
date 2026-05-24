@@ -163,7 +163,7 @@ function Dispatcher:Allocate(Threads: number, Data: any?, Callback: (...any) -> 
 		Actor.Parent = Container
 
 		local controller = Actor:FindFirstChild(ControllerName)
-		
+
 		if Callback then
 			local Output = Instance.new("BindableEvent")
 			Output.Name = "Output"
@@ -171,7 +171,7 @@ function Dispatcher:Allocate(Threads: number, Data: any?, Callback: (...any) -> 
 
 			Actor.Output.Event:Connect(Callback)
 		end
-		
+
 		if controller then
 			controller.Enabled = true
 		end
