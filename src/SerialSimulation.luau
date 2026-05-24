@@ -328,7 +328,7 @@ function SerialSimulation:Unregister(castID: number)
 	queuedVisualizes[castID] = nil
 end
 
-function SerialSimulation:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+function SerialSimulation:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	local oldMode = self.CurrentMovementMode
 	self.CurrentMovementMode = mode
 	self.MovementEnabled = enabled

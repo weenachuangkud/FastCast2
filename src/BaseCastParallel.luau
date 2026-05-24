@@ -137,7 +137,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	ParallelSimulation.Init(self)
 
-	ParallelSimulation.SetMovementMode(CurrentMovementMode, true)
+	ParallelSimulation.SetMovementModeEnabled(true, CurrentMovementMode)
 
 	ParallelSimulation.Start()
 
@@ -304,7 +304,7 @@ end
 	Sets the movement mode for the casts. This determines how the cast's position is updated during simulation.
 
 ]=]
-function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+function BaseCast:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	CurrentMovementMode = mode
 
 	if mode == "Motor6D" and enabled then
@@ -318,7 +318,7 @@ function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boole
 		end
 	end
 
-	ParallelSimulation.SetMovementMode(mode, enabled)
+	ParallelSimulation.SetMovementModeEnabled(enabled, mode)
 end
 
 function BaseCast:BindObjectCache(

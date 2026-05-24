@@ -187,7 +187,7 @@ end
 	Sets the movement mode for the casts. This determines how the cast's position is updated during simulation.
 
 ]=]
-function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+function BaseCast:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	self.CurrentMovementMode = mode
 
 	if mode == "Motor6D" and enabled then
@@ -201,7 +201,7 @@ function BaseCast:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boole
 		end
 	end
 
-	self.SerialSimulation:SetMovementMode(mode, enabled)
+	self.SerialSimulation:SetMovementModeEnabled(enabled, mode)
 end
 
 function BaseCast:BindObjectCache(

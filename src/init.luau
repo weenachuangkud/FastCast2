@@ -388,16 +388,17 @@ end
 	Sets the movement mode for casts.
 
 	@method SetMovementMode
+	@param enabled boolean -- Is enabled
 	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set for casts.
 	@within FastCastParallel
 ]=]
-function FastCastParallel:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+function FastCastParallel:SetMovementMode(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
 		return
 	end
 
-	self.Dispatcher:DispatchAll("SetMovementMode", mode, enabled)
+	self.Dispatcher:DispatchAll("SetMovementModeEnabled", enabled, mode)
 	self.MovementMode = mode
 end
 
@@ -543,14 +544,16 @@ end
 
 --[[
 	@method SetMovementMode
-	@within FastCastSerial
+	@param enabled boolean -- Is enabled
+	@param mode "BulkMoveTo" | "Motor6D" -- MovementMode
 
+	@within FastCastSerial
 	Sets movement mode for the Serial Caster.
 ]]
-function FastCastSerial:SetMovementMode(mode: "BulkMoveTo" | "Motor6D")
+function FastCastSerial:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	if not self.BaseCast then return end
 
-	self.BaseCast:SetMovementMode(mode)
+	self.BaseCast:SetMovementModeEnabled(enabled, mode)
 	self.MovementMode = mode
 end
 

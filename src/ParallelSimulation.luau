@@ -547,7 +547,7 @@ function ParallelSimulation.Unregister(castID: number)
 	queuedVisualizes[castID] = nil
 end
 
-function ParallelSimulation.SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+function ParallelSimulation.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	local oldMode = CurrentMovementMode
 	CurrentMovementMode = mode
 	MovementEnabled = enabled
