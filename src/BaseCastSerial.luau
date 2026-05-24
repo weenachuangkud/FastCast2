@@ -67,7 +67,7 @@ function BaseCast.Init(events: TypeDef.FastCastEvents, Data: any)
 	self.SerialSimulation = SerialSimulation.new()
 	self.SerialSimulation:Init(self, events)
 
-	self.SerialSimulation:SetMovementModeEnabled(self.CurrentMovementMode, true)
+	self.SerialSimulation:SetMovementModeEnabled(true, self.CurrentMovementMode)
 
 	self.SerialSimulation:Start()
 
