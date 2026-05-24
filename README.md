@@ -63,24 +63,39 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 ---
 
+## Install with Rojo
+
+1. Install the [Rojo CLI](https://rojo.space/docs/installation/) for your system.
+2. Clone this repository:
+   ```bash
+   git clone https://github.com/weenachuangkud/FastCast2.git
+   cd FastCast2
+   rm -rf .git
+   ```
+3. Sync to Roblox:
+   ```bash
+   rojo sync -o <place-name>
+   ```
+   Or serve live with:
+   ```bash
+   rojo serve
+   ```
+   Then connect in Roblox Studio via **Studio → Plugins → Rojo**.
+
+---
+
 # Code example
 
-Shooting projectiles from your head
+Shooting projectiles from your head (Serial mode - simpler, main thread):
 
 ```lua
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
-local RepFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-
--- Modules
-local FastCast2 = Rep:WaitForChild("FastCast2")
 
 -- Requires
-local FastCastTypes = require(FastCast2:WaitForChild("TypeDefinitions"))
-local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
-local FastCastM = require(FastCast2)
+local FastCast2 = require(Rep:WaitForChild("FastCast2"))
+local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
 
 -- CONSTANTS
 local SPEED = 500
@@ -89,14 +104,10 @@ local SPEED = 500
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local Head = character:WaitForChild("Head")
-
 local Mouse = player:GetMouse()
 
 local ProjectileContainer = workspace:WaitForChild("Projectiles")
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
-
-local debounce = false
-local debounce_time = 0.05
 
 -- CastParams
 local CastParams = RaycastParams.new()
@@ -104,76 +115,98 @@ CastParams.FilterDescendantsInstances = {character}
 CastParams.FilterType = Enum.RaycastFilterType.Exclude
 CastParams.IgnoreWater = true
 
--- Behavior
-local castBehavior: FastCastTypes = FastCastM.newBehavior()
-castBehavior.MaxDistance = 1000
-castBehavior.RaycastParams = CastParams
-castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
-castBehavior.HighFidelitySegmentSize = 1
-castBehavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
-castBehavior.AutoIgnoreContainer = true
-castBehavior.CosmeticBulletContainer = ProjectileContainer
-castBehavior.CosmeticBulletTemplate = ProjectileTemplate
-castBehavior.UserData = {} -- Initial UserData when ActiveCast created
-castBehavior.FastCastEventsConfig = {
-	UseHit = true,
-	UseLengthChanged = false, -- Warning: Setting this to true will make your FPS tank when there are 100-200+ projectiles
-	UseCastTerminating = true,
-	UseCastFire = true,
-	UsePierced = false
-}
+-- Behavior (FastCastBehavior)
+local behavior = FastCast2.newBehavior()
+behavior.MaxDistance = 1000
+behavior.RaycastParams = CastParams
+behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+behavior.HighFidelitySegmentSize = 1
+behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
+behavior.CosmeticBulletContainer = ProjectileContainer
+behavior.CosmeticBulletTemplate = ProjectileTemplate
 
--- Caster
-local Caster = FastCastM.new()
-Caster:Init(
-	4,
-	RepFirst,
-	"CastVMs",
-	RepFirst,
-	"CastVMContainer",
-	"CastVM",
-	true
-)
 
--- Functions
+-- Serial Caster (runs on main thread, simpler)
+local Caster = FastCast2.new()
+Caster:Init("BulkMoveTo", false) -- movementMode, useObjectCache
 
-local function OnCastTerminating(cast: FastCastTypes.ActiveCastData)
-	local obj = cast.RayInfo.CosmeticBulletObject
-	if obj then 
-		obj:Destroy()
-	end
+-- Events (can be set before Init)
+Caster.Hit = function(cast, result, velocity, bullet)
+	print("Hit: " .. result.Instance.Name)
 end
 
-local function OnHit()
-	print("Hit!")
+-- Fire
+local function fire()
+	local origin = Head.Position
+	local direction = (Mouse.Hit.Position - origin).Unit
+	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
 
-local function OnCastFire()
-	print("CastFire!")
-end
-
--- Connections
-
-Caster.CastTerminating:Connect(OnCastTerminating)
-Caster.Hit:Connect(OnHit)
-Caster.CastFire:Connect(OnCastFire)
-
-UIS.InputBegan:Connect(function(Input: InputObject, gp: boolean)
-	if gp then return end
-	if debounce then return end
-	
-	if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-		debounce = true
-		
-		local Origin = Head.Position
-		local Direction = (Mouse.Hit.Position - Origin).Unit
-		
-		Caster:RaycastFire(Origin, Direction, SPEED, castBehavior)
-		
-		task.wait(debounce_time)
-		debounce = false
+-- Input
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		fire()
 	end
 end)
+```
+
+### Blockcast & Spherecast
+
+Swap `RaycastFire` for `BlockcastFire` or `SpherecastFire` to change cast type:
+
+```lua
+-- Blockcast: pass a Vector3 size after origin
+Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
+
+-- Spherecast: pass a number radius after origin
+Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
+```
+
+### ObjectCache (bullet pooling)
+
+ObjectCache reuses cosmetic bullet instances instead of creating/destroying them every shot:
+
+```lua
+local Caster = FastCast2.new()
+Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
+--                                    ^template   ^size  ^holder
+```
+
+The cache pre-allocates 500 parts by default, auto-expands when exhausted, and moves retired
+parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction overhead.
+
+### Parallel mode (high-performance with multiple VMs)
+
+```lua
+local Caster = FastCast2.newParallel()
+Caster:Init(
+	4,                 -- numWorkers
+	workspace,         -- VM folder parent
+	"FastCastVMs",     -- VM folder name
+	workspace,         -- container parent
+	"VMContainer",     -- container name
+	"VM",              -- VM name
+	"BulkMoveTo",      -- movementMode
+	nil,               -- FastCastEventsModule (optional)
+	false              -- useObjectCache
+)
+
+-- Events work the same as serial
+Caster.Hit = function(cast, result, velocity, bullet)
+	print("Hit: " .. result.Instance.Name)
+end
+
+--[[
+	-- Except:
+	-- Caster.CanPierce
+	--> You will have to use FastCastEventsModule for that
+]]
+
+-- Fire the same as serial
+Caster:RaycastFire(origin, direction, SPEED, behavior)
+Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
+Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
 <br />
@@ -216,7 +249,7 @@ module.CastTerminating = function()
 	print("CastTerminating!")
 end
 
-module.RayHit = function()
+module.Hit = function()
 	print("Hit!")
 end
 
@@ -237,13 +270,56 @@ end
 return module
 ```
 
-After this, add this piece of code below the `FastCast:Init(...)`:
+Register it on your parallel caster after `Init`:
 
 ```lua
-	Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
+Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
 ```
 
-(FastCastEventsModule can be used to optimize some FastCastEvents, like LengthChanged)
+> **Note**: `SetFastCastEventsModule` is only available on parallel casters. In serial mode, set event handlers directly on the caster (e.g., `Caster.Hit = function(...)`).
+
+### Motor6D movement mode
+
+Motor6D mode uses `Motor6D.Transform` for more performance instead of `BulkMoveTo`:
+
+```lua
+local Caster = FastCast2.new()
+Caster:Init("Motor6D", false) -- movementMode = "Motor6D"
+```
+
+All active casts automatically get a Motor6D connection on registration and disconnection on cleanup.
+You can switch modes at runtime:
+
+```lua
+Caster:SetMovementModeEnabled(true, "Motor6D")   -- enable Motor6D
+Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- switch back
+```
+
+### Cast manipulation
+
+Modify active casts at runtime using the static `FastCast` methods:
+
+```lua
+-- Read state
+local pos = FastCast2.GetPositionCast(cast)
+local vel = FastCast2.GetVelocityCast(cast)
+local accel = FastCast2.GetAccelerationCast(cast)
+
+-- Modify state (automatically rebases trajectory)
+FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+
+-- Relative changes
+FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+
+-- Terminate a cast early (fires CastTerminating and cleans up)
+FastCast2.TerminateCast(cast)
+```
+
+> **Tip**: In parallel mode, call `Caster:SyncChangesToCast(cast)` after modifying to push changes into the worker VM.
 
 ### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
 

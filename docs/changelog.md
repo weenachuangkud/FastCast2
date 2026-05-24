@@ -7,7 +7,40 @@ sidebar_position: 3
 All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
-and this project adheres to Semantic Versioning (https://semver.org/).
+
+---
+
+## [0.1.0] — 2026-05-07
+
+### Added
+- **Serial Mode** (`FastCast.new()`) - Main thread projectile simulation, simpler API
+- **Parallel Mode** (`FastCast.newParallel()`) - Worker VM based parallel simulation
+- **Motor6D movement mode** - New movement method using Motor6D for better performance
+  - Pass `"Motor6D"` as the movement mode to `caster:Init()`
+- **SerialSimulation** - Single RunService with SoA pattern for Serial casts
+- **ParallelSimulation** - Per-Actor SoA pattern for Parallel casts
+- **Motor6DCache** - Object pooling for Motor6D instances
+
+### Changed
+- **API Restructure**:
+  - `.new()` now creates Serial caster (requires `Init(movementMode, useObjectCache, ...)`)
+  - `.newParallel()` creates Parallel caster (requires `Init(numWorkers, ...)`)
+  - Removed `FastCastParallel.new()` - use `.newParallel()` instead
+- **ActiveCast** - Changed from OOP to pure data structure (AoS for users, SoA internally)
+- **Trajectories** → **Trajectory** - Single object instead of array (saves memory)
+- Removed **UpdateConnection** - No longer uses per-cast RunService connections
+- Removed **xpcall/pcall** from hot path for performance
+- Removed **FastCastEventsModule** from Serial mode (Parallel only)
+- Removed `PauseCast`/`ResumeCast` - cast manipulation now uses `ModifyTransformation` pattern
+- Renamed `SetBulkMoveEnabled` → `SetMovementMode(mode, enabled)`
+- Removed `behavior.MovementMethod` - movement mode is set via `caster:Init()` or `caster:SetMovementMode()`
+
+### Fixed
+- **HighFidelityBehavior = 2 bug** - Fixed subRayDir calculation using `delta` instead of `timeIncrement`
+
+### Performance
+- Serial: 1 global RunService handling all casts with SoA arrays
+- Parallel: 1 RunService per Actor with SoA arrays within each
 
 ---
 

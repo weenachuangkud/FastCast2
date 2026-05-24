@@ -1,7 +1,7 @@
 --[[
 	- Author : Mawin_CK
 	- Date : 2025
-	-- Verison : 0.0.6
+	
 ]]
 
 --!strict
@@ -23,24 +23,13 @@ Defaults.FastCastBehavior = {
 	RaycastParams = nil,
 	Acceleration = Vector3.new(),
 	MaxDistance = 1000,
-	CanPierceFunction = nil,
 	HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default,
 	HighFidelitySegmentSize = 0.5,
 
 	CosmeticBulletTemplate = nil,
-	CosmeticBulletProvider = nil,
 	CosmeticBulletContainer = nil,
 
 	AutoIgnoreContainer = true,
-
-	SimulateAfterPhysic = true,
-
-	-- Performance
-	AutomaticPerformance = true,
-	AdaptivePerformance = {
-		HighFidelitySegmentSizeIncrease = 0.5,
-		LowerHighFidelityBehavior = true
-	},
 
 	-- Debug
 	VisualizeCasts = false,
@@ -64,7 +53,7 @@ Defaults.FastCastBehavior = {
 		Debug_RayLifetime = 1, 
 		Debug_HitLifetime = 1
 	},
-	
+
 	FastCastEventsModuleConfig = {
 		UseLengthChanged = false,
 		UseHit = true,
@@ -79,6 +68,7 @@ Defaults.FastCastBehavior = {
 		UseHit = true,
 		UsePierced = true,
 		UseCastTerminating = true,
+		UseCanPierce = true,
 		UseCastFire = true
 	}
 } :: TypeDefinitions.FastCastBehavior
