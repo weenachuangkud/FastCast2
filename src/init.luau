@@ -587,7 +587,8 @@ function FastCastSerial:Destroy()
 	if getmetatable(self) ~= FastCastSerial then
 		return
 	end
-
+	setmetatable(self, nil)
+	
 	if self.BaseCast then
 		self.BaseCast:Destroy()
 	end
@@ -600,7 +601,6 @@ function FastCastSerial:Destroy()
 	self.CastFire = nil
 
 	self.Destroy = function() end
-	setmetatable(self, nil)
 end
 
 --[=[
