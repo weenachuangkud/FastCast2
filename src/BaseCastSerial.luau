@@ -181,7 +181,7 @@ end
 
 --[=[
 
-@method SetMovementMode
+@method SetMovementModeEnabled
 @within BaseCast
 
 	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set.
