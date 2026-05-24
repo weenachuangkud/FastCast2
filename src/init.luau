@@ -388,12 +388,12 @@ end
 --[=[
 	Sets the movement mode for casts.
 
-	@method SetMovementMode
+	@method SetMovementModeEnabled
 	@param enabled boolean -- Is enabled
 	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode to set for casts.
 	@within FastCastParallel
 ]=]
-function FastCastParallel:SetMovementMode(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
+function FastCastParallel:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	if not self.AlreadyInit or not self.Dispatcher then
 		warn("Caster not initialized", self)
 		return
@@ -544,7 +544,7 @@ function FastCastSerial:SpherecastFire(
 end
 
 --[[
-	@method SetMovementMode
+	@method SetMovementModeEnabled
 	@param enabled boolean -- Is enabled
 	@param mode "BulkMoveTo" | "Motor6D" -- MovementMode
 
