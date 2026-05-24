@@ -3,6 +3,9 @@
 	- Date: 2026
 ]]
 
+--!native
+--!optimize 2
+
 -- Services
 
 local RS = game:GetService("RunService")
