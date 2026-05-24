@@ -74,7 +74,7 @@ actor:BindToMessage("Spherecast", function(
 end)
 
 actor:BindToMessage("SetMovementModeEnabled", function(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
-	BaseCast:SetMovementModeEnabled(mode, enabled)
+	BaseCast:SetMovementModeEnabled(enabled, mode)
 end)
 
 actor:BindToMessage("BindObjectCache", function(
