@@ -2,10 +2,5 @@
   "className": "LocalScript",
   "properties": {
     "Disabled": true
-  },
-  "children": {
-    "FastCast2": {
-      "className": "ObjectValue"
-    }
   }
 }
