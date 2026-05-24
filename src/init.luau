@@ -785,25 +785,36 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast:TerminateCast(cast: vaildcast)
+	if cast._Destroying then return end
+	(cast :: any)._Destroying = true
+
 	local caster = cast.Caster
 	if caster == nil then return end
 
 	local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
 
 	if caster.Output then
-		-- Parallel mode
+		-- Parallel mode: fire event + cleaner, but don't nil cast keys
 		if eventsCfg and eventsCfg.UseCastTerminating then
 			caster.Output:Fire("CastTerminating", cast)
 		end
 		caster.ActiveCastCleaner:Fire(cast.ID)
 	elseif caster.SerialSimulation then
-		-- Serial mode
-		caster.SerialSimulation:Unregister(cast.ID)
-		caster.Actives[cast.ID] = nil
-	end
+		-- Serial mode: fire callback sync, destroy cosmetic immediately, queue cleanup
+		if eventsCfg and eventsCfg.UseCastTerminating and caster.SerialSimulation.Events.CastTerminating then
+			caster.SerialSimulation.Events.CastTerminating(cast)
+		end
 
-	for key, _ in (cast :: any) do
-		cast[key] = nil
+		if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
+			if caster.ObjectCacheInstance then
+				caster.ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+			else
+				cast.RayInfo.CosmeticBulletObject:Destroy()
+			end
+			(cast :: any).RayInfo.CosmeticBulletObject = nil
+		end
+
+		caster.SerialSimulation:QueueEvent(cast.ID, "CastTerminating")
 	end
 end
 

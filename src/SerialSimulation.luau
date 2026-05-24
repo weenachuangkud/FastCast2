@@ -733,6 +733,9 @@ function SerialSimulation:UpdateCasts(delta: number)
 			print("Casting for frame - UpdateCasts")
 		end
 
+		if self.ActivesRef[id] and self.ActivesRef[id]._Destroying then
+			continue
+		end
 
 		local Trajectory: TypeDef.CastTrajectory = casts_Trajectory[id]
 

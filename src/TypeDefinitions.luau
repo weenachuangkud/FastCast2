@@ -488,6 +488,7 @@ export type ActiveCastData = {
 	RayInfo: CastRayInfo,
 	UserData: { [any]: any },
 
+	_Destroying: boolean,
 	Type : "Raycast",
 	CFrame: CFrame,
 	ID: number | string
@@ -505,6 +506,7 @@ export type ActiveBlockcastData = {
 	RayInfo: BlockCastRayInfo,
 	UserData: { [any]: any },
 
+	_Destroying: boolean,
 	Type : "Blockcast",
 	CFrame: CFrame,
 	ID: number | string
@@ -522,6 +524,7 @@ export type ActiveSpherecastData = {
 	RayInfo: SphereCastRayInfo,
 	UserData: { [any]: any },
 
+	_Destroying: boolean,
 	Type : "Spherecast",
 	CFrame: CFrame,
 	ID: number | string

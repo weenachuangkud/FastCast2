@@ -45,6 +45,9 @@ local function SendCastFire(
 end
 
 local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	if cast._Destroying then return end
+	cast._Destroying = true
+
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
 		cast.Caster.Output:Fire("CastTerminating", cast)

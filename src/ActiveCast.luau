@@ -89,6 +89,7 @@ function ActiveCast.createCastData(
 			FastCastEventsModule = eventModule
 		},
 
+		_Destroying = false,
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),

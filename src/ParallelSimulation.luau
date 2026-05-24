@@ -139,6 +139,9 @@ local function GetVelocityAtTime(time: number, initialVelocity: Vector3, acceler
 end
 
 local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	if cast._Destroying then return end
+	cast._Destroying = true
+
 	local FastCastEventsConfig = cast.StateInfo.FastCastEventsConfig
 	if FastCastEventsConfig and FastCastEventsConfig.UseCastTerminating then
 		cast.Caster.Output:Fire("CastTerminating", cast)
@@ -149,10 +152,6 @@ local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastT
 	end
 
 	cast.Caster.ActiveCastCleaner:Fire(cast.ID)
-
-	for key, _ in (cast :: any) do
-		cast[key] = nil
-	end
 end
 
 local function DebrisAdd(obj: Instance, Lifetime: number)
@@ -794,6 +793,9 @@ local function UpdateCasts(delta: number)
 			print("Casting for frame - UpdateCasts")
 		end
 
+		if ActivesRef[id] and ActivesRef[id]._Destroying then
+			continue
+		end
 
 		local Trajectory: TypeDef.CastTrajectory = casts_Trajectory[id]
 

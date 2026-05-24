@@ -25,6 +25,9 @@ local DEFAULT_CACHE_HOLDER = workspace
 local NextProjectileID = 0
 
 local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastTerminatingFunction?)
+	if cast._Destroying then return end
+	cast._Destroying = true
+
 	if castTerminatingFunction then
 		castTerminatingFunction((cast :: any))
 	end
@@ -269,8 +272,12 @@ end
 function BaseCast:_TerminateCast(castID: number, castTerminatingfn: (...any) -> ())
 	if self.Actives[castID] then
 		local cast = self.Actives[castID]
-		if castTerminatingfn then
-			castTerminatingfn(cast)
+
+		if not cast._Destroying then
+			cast._Destroying = true
+			if castTerminatingfn then
+				castTerminatingfn(cast)
+			end
 		end
 
 		if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
