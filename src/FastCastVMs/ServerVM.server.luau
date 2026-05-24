@@ -81,8 +81,17 @@ actor:BindToMessage("Spherecast", function(
 	BaseCast:Spherecast(origin, radius, direction, velocity, behavior)
 end)
 
-actor:BindToMessage("SetMovementModeEnabled", function(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
-	BaseCast:SetMovementModeEnabled(enabled, mode)
+actor:BindToMessage("SetMovementMode", function(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+	BaseCast:SetMovementMode(mode, enabled)
+end)
+
+actor:BindToMessage("BindObjectCache", function(
+	enabled: boolean,
+	Template: BasePart?,
+	CacheSize: number?,
+	CacheHolder: Instance?
+)
+	BaseCast:BindObjectCache(enabled, Template, CacheSize, CacheHolder)
 end)
 
 -- CleanUp
