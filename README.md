@@ -35,7 +35,8 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Parallel scripting support
 - Easy to use and integrate
 - Raycast and Blockcast, Spherecast support
-- BulkMoveTo support
+- BulkMoveTo/Motor6D support
+- Built-in castVisualization
 - Built-in ObjectCache
 - Flexible and extensible design
 - Improves development productivity
