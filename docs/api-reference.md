@@ -104,7 +104,7 @@ caster:Init(
 
 ```lua
 caster:SetFastCastEventsModule(moduleScript)  -- Parallel only
-caster:SetMovementMode(enabled, mode)
+caster:SetMovementModeEnabled(enabled, mode)
 caster:SetObjectCacheEnabled(enabled, template?, cacheSize?, cacheHolder?)
 ```
 
