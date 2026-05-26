@@ -88,7 +88,6 @@ end)
 
 -- castParams, to not make projectiles hit ground and gone
 local castParams = RaycastParams.new()
-castParams.FilterDescendantsInstances = {workspace}
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.IgnoreWater = true
 

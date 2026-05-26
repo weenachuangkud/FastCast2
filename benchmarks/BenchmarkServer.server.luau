@@ -5,6 +5,7 @@ task.wait(10)
 local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")
 local SSS = game:GetService("ServerScriptService")
+local Players = game:GetService("Players")
 
 -- Setting
 local numWorkers = 4
@@ -64,9 +65,13 @@ RS.Heartbeat:Connect(function(dt: number)
 	end
 end)
 
+-- Character
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
 -- CastParams
 local CastParams = RaycastParams.new()
-CastParams.FilterDescendantsInstances = {}
+CastParams.FilterDescendantsInstances = {character}
 CastParams.FilterType = Enum.RaycastFilterType.Exclude
 CastParams.IgnoreWater = true
 
@@ -80,7 +85,6 @@ castBehavior.Acceleration = Vector3.new(0, 0, 0)
 castBehavior.AutoIgnoreContainer = true
 castBehavior.CosmeticBulletContainer = ProjectileContainer
 castBehavior.CosmeticBulletTemplate = Instanced and ProjectileTemplate or nil
-castBehavior.RaycastParams = {workspace}
 
 -- Parallel Caster
 local Caster = FastCast.newParallel()
