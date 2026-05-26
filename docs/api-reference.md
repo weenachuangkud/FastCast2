@@ -36,8 +36,8 @@ caster.CanPierce = function(cast, result, velocity, cosmeticBullet) -> boolean e
 
 #### 1.1.3 Movement Modes
 
-- **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. Good for many projectiles.
-- **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better visual smoothing.
+- **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. (General/Default)
+- **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better for performance.
 
 Switch modes at runtime with `caster:SetMovementMode(mode)`.
 
