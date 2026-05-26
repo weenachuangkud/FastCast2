@@ -48,12 +48,6 @@
 
 
 
---[=[
-	@class FastCastParallel
-
-	FastCastParallel is the root class of the module and offers the surface level methods required to make it work. This is the object returned from `require(FastCastParallel)`.
-]=]
-
 -- Services
 
 --local HTTPService = game:GetService("HttpService")
@@ -84,7 +78,12 @@ local VALID_EVENTS = {
 	["CanPierce"] = true
 }
 
--- FastCast
+--[=[
+	@class FastCast
+
+	FastCast provides static utility methods for manipulating active casts (velocity, position, acceleration)
+	and serves as the module root for constructing new Serial and Parallel casters.
+]=]
 
 local FastCast = {}
 FastCast.HighFidelityBehavior = {
@@ -97,7 +96,17 @@ FastCast.CastType = {
 	Blockcast = 2,
 	Spherecast = 3
 }
+--[=[
+	@class FastCastSerial
+
+	FastCastSerial is the serial caster class that runs all cast simulations on the main thread.
+]=]
 local FastCastSerial = {}
+--[=[
+	@class FastCastParallel
+
+	FastCastParallel is the parallel caster class that runs cast simulations on separate worker VMs.
+]=]
 local FastCastParallel = {}
 
 --[[
