@@ -15,6 +15,12 @@ local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 
 local EnumCastTypes = FastCastEnums.CastType
 
+--[=[
+	@class BaseCast
+
+	BaseCast is the underlying class that manages cast simulation, lifecycle, and movement modes.
+	It is used internally by FastCastSerial and FastCastParallel.
+]=]
 local BaseCast = {}
 BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
