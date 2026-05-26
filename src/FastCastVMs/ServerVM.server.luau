@@ -5,27 +5,20 @@
 
 -- Modules
 
--- REPLACE WITH ACTUAL PATH (Just use ObjectValue lol)
---local Rep = game:GetService("ReplicatedStorage")
---local FastCast2Module = Rep:WaitForChild("FastCast2")
-
-local FastCast2Module: ModuleScript = script:WaitForChild("FastCast2").Value :: ModuleScript
-
-
-local TypeDefinitions = require(FastCast2Module:WaitForChild("TypeDefinitions"))
-
-local BaseCast = require(FastCast2Module:WaitForChild("BaseCast"))
-
 -- Variables
 local actor = script:GetActor()
 if actor == nil then 
 	error("The script must placed inside of actor")
 end
 
+local BaseCastParallel = nil
+local BaseCast = nil
+
 -- Listeners
 
 actor:BindToMessage("Init", function(Data : any?)
-	BaseCast = BaseCast.Init(
+	BaseCastParallel = require(Data.FastCastModule:WaitForChild("BaseCastParallel"))
+	BaseCast = BaseCastParallel.Init(
 		script.Parent:WaitForChild("Output"), 
 		Data
 	)
@@ -35,7 +28,7 @@ actor:BindToMessage("Raycast", function(
 	origin : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior
+	behavior : any
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])
@@ -69,7 +62,7 @@ actor:BindToMessage("Blockcast", function(
 	size : Vector3,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior
+	behavior : any
 )
 	--print(behavior)
 	--print(SharedCasters[casterID])
@@ -83,17 +76,22 @@ actor:BindToMessage("Spherecast", function(
 	radius : number,
 	direction : Vector3,
 	velocity : Vector3 | number,
-	behavior : TypeDefinitions.FastCastBehavior
+	behavior : any
 )
 	BaseCast:Spherecast(origin, radius, direction, velocity, behavior)
 end)
 
-actor:BindToMessage("BindBulkMoveTo", function(bool : boolean)
-	BaseCast:BindBulkMoveTo(bool)
+actor:BindToMessage("SetMovementModeEnabled", function(mode: "BulkMoveTo" | "Motor6D", enabled: boolean)
+	BaseCast:SetMovementModeEnabled(enabled, mode)
 end)
 
-actor:BindToMessage("BindObjectCache", function(bool : boolean)
-	BaseCast:BindObjectCache(bool)
+actor:BindToMessage("BindObjectCache", function(
+	enabled: boolean,
+	Template: BasePart?,
+	CacheSize: number?,
+	CacheHolder: Instance?
+)
+	BaseCast:BindObjectCache(enabled, Template, CacheSize, CacheHolder)
 end)
 
 -- CleanUp
