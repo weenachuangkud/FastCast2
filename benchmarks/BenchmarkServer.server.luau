@@ -12,7 +12,7 @@ local Instanced = false
 -- BulkMoveTo | Motor6D
 local MovementMode = "BulkMoveTo"
 local UseObjectCache = false
-local ProjectileAmount = 500000
+local ProjectileAmount = 500
 local BENCH_TIME = 5
 
 -- Requires
