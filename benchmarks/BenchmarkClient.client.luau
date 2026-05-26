@@ -32,7 +32,7 @@ local ProjectileAmount = 500
 local Instanced = true
 local VisualizeCasts = false
 
-local VECLOITY = 6
+local VELOCITY = 6
 
 -- Modules
 local FastCastM = Path:WaitForChild("FastCast2")
@@ -178,7 +178,7 @@ UIS.InputBegan:Connect(function(input, gp)
 					math.random(-1, 1) * 1,
 					math.random(-1, 1) * 1
 				),
-				VECLOITY,
+				VELOCITY,
 				castBehavior
 			)
 		end
