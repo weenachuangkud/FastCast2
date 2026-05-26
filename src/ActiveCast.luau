@@ -4,7 +4,6 @@
 	
 
 	ActiveCastSerial - Serial mode with single RunService, SoA pattern, queue technique
-	Similar to SwiftCast implementation
 ]]
 
 local FastCastModule = script.Parent
