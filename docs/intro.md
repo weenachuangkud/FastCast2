@@ -325,7 +325,7 @@ FastCast2.TerminateCast(cast)
 
 > **Tip**: In parallel mode, call `Caster:SyncChangesToCast(cast)` after modifying to push changes into the worker VM.
 
-### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/)
+### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
 
 ---
 
