@@ -248,10 +248,10 @@ UIS.InputBegan:Connect(function(input, gp)
 		end
 		
 		if Caster.MovementMode == "BulkMoveTo" then
-			Caster:SetMovementMode("Motor6D", true)
+			Caster:SetMovementModeEnabled(true, "Motor6D")
 			print("MovementMode: Motor6D")
 		else
-			Caster:SetMovementMode("BulkMoveTo", true)
+			Caster:SetMovementModeEnabled(true, "BulkMoveTo")
 			print("MovementMode: BulkMoveTo")
 		end
 		
