@@ -120,7 +120,7 @@ end
 -- Benchmark
 
 print("=== PARALLEL MODE BENCHMARK ===")
-print(string.format("Firing %d projectiles...", ProjectileAmount))
+print(string.format("Firing %d projectiles...", ProjectileTemplate))
 
 for _ = 1, ProjectileAmount do
 	Caster:RaycastFire(
