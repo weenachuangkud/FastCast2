@@ -630,7 +630,7 @@ function SerialSimulation:SimulateCast(
 					end
 
 					local subPosition = GetPositionAtTime(
-						totalDelta + (timeIncrement * segmentIndex),
+						lastDelta + (timeIncrement * segmentIndex),
 						origin, 
 						initialVelocity, 
 						acceleration
@@ -640,9 +640,14 @@ function SerialSimulation:SimulateCast(
 						initialVelocity, 
 						acceleration
 					)
-					local subRayDir = subVelocity * delta
-					local subResult = castHandler(targetWorldRoot, subPosition, subRayDir, casts_RayInfo[id].Parameters)
-
+					local subRayDir = subVelocity * timeIncrement
+					local subResult = castHandler(
+						targetWorldRoot,
+						subPosition,
+						subRayDir,
+						casts_RayInfo[id].Parameters,
+						casts_CastVariant[id]
+					)
 
 					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
 
@@ -717,7 +722,7 @@ function SerialSimulation:SimulateCast(
 		end
 	end
 
-	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
+	if casts_DistanceCovered[id] >= casts_MaxDistance[id] then
 		if resultOfCast then
 			self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 			self:QueueVisualize(id, {

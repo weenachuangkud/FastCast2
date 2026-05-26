@@ -18,7 +18,8 @@ type CastVariant = { CastType: number, Size: Vector3?, Radius: number? }
 
 type BlockcastVariant = { CastType: number, Size: Vector3}
 type SpherecastVariant = { CastType: number, Radius: number }
-type CastVariants = BlockcastVariant | SpherecastVariant
+type RaycastVariant = { CastType: number }
+type CastVariants = RaycastVariant | BlockcastVariant | SpherecastVariant
 
 
 --[[local CastVariantTypes = {

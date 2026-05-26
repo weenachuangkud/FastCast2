@@ -693,7 +693,7 @@ local function SimulateCast(
 					end
 
 					local subPosition = GetPositionAtTime(
-						totalDelta + (timeIncrement * segmentIndex),
+						lastDelta + (timeIncrement * segmentIndex),
 						origin, 
 						initialVelocity, 
 						acceleration
@@ -703,8 +703,14 @@ local function SimulateCast(
 						initialVelocity, 
 						acceleration
 					)
-					local subRayDir = subVelocity * delta
-					local subResult = castHandler(targetWorldRoot, subPosition, subRayDir, casts_RayInfo[id].Parameters)
+					local subRayDir = subVelocity * timeIncrement
+					local subResult = castHandler(
+						targetWorldRoot,
+						subPosition,
+						subRayDir,
+						casts_RayInfo[id].Parameters,
+						casts_CastVariant[id]
+					)
 
 
 					--local subDisplacement = (subPosition - (subPosition + subVelocity)).Magnitude
@@ -777,7 +783,7 @@ local function SimulateCast(
 		end
 	end
 
-	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
+	if casts_DistanceCovered[id] >= casts_MaxDistance[id] then
 		if resultOfCast then
 			QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 			QueueVisualize(id, {

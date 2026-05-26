@@ -18,7 +18,7 @@ FastCast2 is a Roblox projectile library written in Luau, providing high-perform
 
 ## Project Structure
 
-```
+```plaintext
 src/
 ├── init.luau                    # Entry: FastCast (static), FastCastSerial, FastCastParallel
 ├── BaseCastSerial.luau          # Serial: cast handler, routes events to SerialSimulation
