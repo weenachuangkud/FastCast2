@@ -22,19 +22,8 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 - **Motor6DCache** - Object pooling for Motor6D instances
 
 ### Changed
-- **API Restructure**:
-  - `.new()` now creates Serial caster (requires `Init(movementMode, useObjectCache, ...)`)
-  - `.newParallel()` creates Parallel caster (requires `Init(numWorkers, ...)`)
-  - Removed `FastCastParallel.new()` - use `.newParallel()` instead
-- **ActiveCast** - Changed from OOP to pure data structure (AoS for users, SoA internally)
-- **Trajectories** → **Trajectory** - Single object instead of array (saves memory)
-- Removed **UpdateConnection** - No longer uses per-cast RunService connections
-- Removed **xpcall/pcall** from hot path for performance
-- Removed **FastCastEventsModule** from Serial mode (Parallel only)
-- Removed `PauseCast`/`ResumeCast` - cast manipulation now uses `ModifyTransformation` pattern
-- Renamed `SetBulkMoveEnabled` → `SetMovementMode(mode, enabled)`
-- Removed `behavior.MovementMethod` - movement mode is set via `caster:Init()` or `caster:SetMovementMode()`
-
+NONE
+ 
 ### Fixed
 - **HighFidelityBehavior = 2 bug** - Fixed subRayDir calculation using `delta` instead of `timeIncrement`
 
