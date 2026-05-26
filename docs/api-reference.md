@@ -72,6 +72,9 @@ caster:Init(
     CacheHolder          -- ObjectCache parent
 )
 ```
+> [!NOTE]
+> FastCastParallel does not use Caster.CanPierce
+> Only available on FastCastEventsModule for performance reasons
 
 #### 1.2.1 Parameters
 
