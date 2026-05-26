@@ -17,6 +17,7 @@ This project is open-source and community-driven, and **all kinds of help are we
    - Commit your changes
    - Push to your fork
    - Open a **Pull Request** against the `main` branch
+   - You must provide **RBXM** or **RBXL** file to the author for release
 
 All pull requests will go through **code review** before merging.
 
@@ -52,4 +53,5 @@ Feel free to ask anything:
 - Or ping me directly
 
 Thanks again for helping make FastCast2 better!  
-— Mawin CK
+
+   Mawin CK - 2025
