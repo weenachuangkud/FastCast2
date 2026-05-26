@@ -196,7 +196,6 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("=== CLEANUP ===")
 		
 		for i = #activeCasts, 1, -1 do
-			-- This is kinda broken when you're using it with Caster serial
 			FastCast:TerminateCast(activeCasts[i])
 		end
 		
