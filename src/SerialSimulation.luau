@@ -717,7 +717,7 @@ function SerialSimulation:SimulateCast(
 		end
 	end
 
-	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
+	if casts_DistanceCovered[id] >= casts_MaxDistance[id] then
 		if resultOfCast then
 			self:QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 			self:QueueVisualize(id, {

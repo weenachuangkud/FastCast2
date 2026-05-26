@@ -783,7 +783,7 @@ local function SimulateCast(
 		end
 	end
 
-	if casts_DistanceCovered[id] >= casts_RayInfo[id].MaxDistance then
+	if casts_DistanceCovered[id] >= casts_MaxDistance[id] then
 		if resultOfCast then
 			QueueEvent(id, "Hit", resultOfCast, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 			QueueVisualize(id, {
