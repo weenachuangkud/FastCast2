@@ -17,7 +17,7 @@ This project is open-source and community-driven, and **all kinds of help are we
    - Commit your changes
    - Push to your fork
    - Open a **Pull Request** against the `main` branch
-   - You must provide **RBXM** or **RBXL** file to the author for release
+   - You must provide **RBXM** file to the author for release
 
 All pull requests will go through **code review** before merging.
 
