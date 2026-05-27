@@ -38,8 +38,6 @@ local casts_UserData = {} :: { [number]: any }
 local casts_CFrame = {} :: { [number]: CFrame }
 local casts_CastType = {} :: { [number]: number }
 local casts_CastVariant = {} :: { [number]: CastVariants }
-local casts_Origin = {} :: { [number]: Vector3 }
-local casts_Acceleration = {} :: { [number]: Vector3 }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
 local casts_RayDisplacement = {} :: { [number]: number }
@@ -262,8 +260,6 @@ function SerialSimulation:Register(cast: any)
 	casts_UserData[id] = cast.UserData
 	casts_CastType[id] = cast.CastVariant.CastType
 	casts_CastVariant[id] = cast.CastVariant
-	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
-	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration
 	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
 	table.insert(self.casts_ID, id)
 	self.casts_ID_Index[id] = #self.casts_ID
@@ -306,9 +302,6 @@ function SerialSimulation:Unregister(castID: number)
 	casts_CFrame[castID] = nil
 	casts_CastType[castID] = nil
 	casts_CastVariant[castID] = nil
-	casts_Origin[castID] = nil
-	casts_Acceleration[castID] = nil
-	casts_MaxDistance[castID] = nil
 	casts_RayDisplacement[castID] = nil
 
 	if casts_ActiveMotor6Ds[castID] then
@@ -840,7 +833,18 @@ function SerialSimulation:UpdateCasts(delta: number)
 		end
 	end
 
-	-- BulkMoveTo, UpdateMotor6Ds, FireQueuedEvents
+	-- Write-back SoA -> ActiveCast so ActivesRef[id] has current values
+	for _, id in self.casts_ID do
+		local cast = self.ActivesRef[id]
+		if cast then
+			cast.StateInfo.TotalRuntime = casts_TotalRunTime[id]
+			cast.StateInfo.DistanceCovered = casts_DistanceCovered[id]
+			cast.CFrame = casts_CFrame[id]
+		end
+	end
+
+	-- Motor6D, BulkMoveTo, FireQueuedVisualizes, FireQueuedEvents
+	-- NOTE: Do not change these if you don't knows how it works
 
 	self:UpdateMotor6Ds()
 	self:BulkMoveTo()
