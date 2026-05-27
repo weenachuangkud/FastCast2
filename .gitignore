@@ -15,3 +15,6 @@
 # FastCast2 related stuff
 /src/*.legacy.luau
 .aider*
+
+# Agents related stuff
+.omo
