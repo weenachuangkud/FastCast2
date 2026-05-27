@@ -44,8 +44,6 @@ local casts_UserData = {} :: { [number]: any }
 local casts_CFrame = {} :: { [number]: CFrame }
 local casts_CastType = {} :: { [number]: number }
 local casts_CastVariant = {} :: { [number]: CastVariants }
-local casts_Origin = {} :: { [number]: Vector3 }
-local casts_Acceleration = {} :: { [number]: Vector3 }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
 local casts_RayDisplacement = {} :: { [number]: number }
@@ -475,8 +473,6 @@ function ParallelSimulation.Register(cast: any)
 	casts_UserData[id] = cast.UserData
 	casts_CastType[id] = cast.CastVariant.CastType
 	casts_CastVariant[id] = cast.CastVariant
-	casts_Origin[id] = cast.StateInfo.Trajectory.Origin
-	casts_Acceleration[id] = cast.StateInfo.Trajectory.Acceleration
 	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
@@ -523,8 +519,6 @@ function ParallelSimulation.Unregister(castID: number)
 	casts_CFrame[castID] = nil
 	casts_CastType[castID] = nil
 	casts_CastVariant[castID] = nil
-	casts_Origin[castID] = nil
-	casts_Acceleration[castID] = nil
 	casts_MaxDistance[castID] = nil
 	casts_RayDisplacement[castID] = nil
 
@@ -911,6 +905,19 @@ local function UpdateCasts(delta: number)
 	end
 
 	task.synchronize()
+
+	-- Write-back SoA -> ActiveCast so ActivesRef[id] has current values
+	for _, id in casts_ID do
+		local cast = ActivesRef[id]
+		if cast then
+			cast.StateInfo.TotalRuntime = casts_TotalRunTime[id]
+			cast.StateInfo.DistanceCovered = casts_DistanceCovered[id]
+			cast.CFrame = casts_CFrame[id]
+		end
+	end
+
+	-- Motor6D, BulkMoveTo, FireQueuedVisualizes, FireQueuedEvents
+	-- NOTE: Do not change these if you don't knows how it works
 
 	UpdateMotor6Ds()
 	BulkMoveTo()
