@@ -16,6 +16,8 @@ print("Press J to switch BulkMoveTo or Motor6D")
 print("Press Y to Enable or disable ObjectCache")
 print("Press V to Enable or disable VisualizeCasts")
 print("Press B to switch Serial or Parallel")
+print("Press [ to increment numWorkers")
+print("Press ] to decrement numWorkers")
 print("Press H to show keys again")
 
 -- Services
@@ -353,7 +355,79 @@ UIS.InputBegan:Connect(function(input, gp)
 		task.wait(2.5)
 		IsDIFSJFJSIUET = false
 		print("Done!")
+
+	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
+		if IsBenchmarking then 
+			return
+		end
 		
+		if IsDIFSJFJSIUET then
+			return
+		end
+
+		IsDIFSJFJSIUET = true
+		
+		numWorkers += 1
+
+		if Parallel then
+			Caster:Destroy()
+			
+			Caster = FastCast.newParallel()
+			Caster:Init(
+				numWorkers,
+				RepFirst,
+				"CastVMs",
+				RepFirst,
+				"CastVMContainer",
+				"CastVM",
+				"BulkMoveTo"
+			)
+			Caster.CastFire = function(cast)
+				table.insert(activeCasts, cast)
+			end
+		end
+
+		print("numWorkers: ", numWorkers)
+
+		task.wait(0.05)
+
+		IsDIFSJFJSIUET = false
+	elseif input.KeyCode == Enum.KeyCode.RightBracket then
+		
+		if IsBenchmarking then
+			return
+		end
+
+		if IsDIFSJFJSIUET then
+			return
+		end
+
+		numWorkers -= 1
+
+		if Parallel then
+			Caster:Destroy()
+			
+			Caster = FastCast.newParallel()
+			Caster:Init(
+				numWorkers,
+				RepFirst,
+				"CastVMs",
+				RepFirst,
+				"CastVMContainer",
+				"CastVM",
+				"BulkMoveTo"
+			)
+			Caster.CastFire = function(cast)
+				table.insert(activeCasts, cast)
+			end
+		end
+
+		print("numWorkers: ", numWorkers)
+
+		task.wait(0.05)
+
+		IsDIFSJFJSIUET = false
+
 	elseif input.KeyCode == Enum.KeyCode.H then
 		print("Press P to benchmark")
 		print("Press L to increase projectile amount by 500")
@@ -363,5 +437,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("Press Y to Enable or disable ObjectCache")
 		print("Press V to Enable or disable VisualizeCasts")
 		print("Press B to switch Serial or Parallel")
+		print("Press [ to increment numWorkers")
+		print("Press ] to decrement numWorkers")
 	end
 end)
