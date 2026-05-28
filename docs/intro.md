@@ -41,6 +41,7 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - BulkMoveTo/Motor6D support
 - Built-in castVisualization
 - Built-in ObjectCache
+- Built-in HighFidelitySegment control
 - Flexible and extensible design
 - Improves development productivity
 - High Performance
