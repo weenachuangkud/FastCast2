@@ -143,7 +143,7 @@ end
 -- UIS
 local IsBenchmarking = false
 local IsDIFSJFJSIUET = false
-local BENCH_TIME = 5
+local BENCH_TIME = 6
 local MODE = Parallel and "PARALLEL" or "SERIAL"
 
 UIS.InputBegan:Connect(function(input, gp)
@@ -162,6 +162,41 @@ UIS.InputBegan:Connect(function(input, gp)
 		
 		IsBenchmarking = true
 		print(string.format("=== %s MODE BENCHMARK ===", MODE))
+		local IsObjCache = false
+		if Caster.BaseCastSerial and Caster.BaseCastSerial.ObjectCacheInstance then
+			IsObjCache = true
+		end
+
+		if Caster.ObjectCacheEnabled then
+			IsObjCache = true
+		end
+		
+		if IsObjCache then
+			print("ObjectCache Enabled")
+		else
+			print("ObjectCache Disabled")
+		end
+
+		if VisualizeCasts then
+			print("VisualizeCasts: Enabled")
+		else
+			print("VisualizeCasts: Disabled")
+		end
+
+		if Caster.MovementMode == "BulkMoveTo" then
+			print("MovementMode: BulkMoveTo")
+		else
+			print("MovementMode: Motor6D")
+		end
+
+		local ksfsha = Instanced and "Instanced" or "Instanceless"
+
+		print(ksfsha)
+
+		if Parallel then
+			print("numWorkers: ", numWorkers)
+		end
+
 		print(string.format("Firing %d projectiles...", ProjectileAmount))
 
 		for _ = 1, ProjectileAmount do
@@ -274,7 +309,7 @@ UIS.InputBegan:Connect(function(input, gp)
 				Caster:SetObjectCacheEnabled(
 					true,
 					ProjectileTemplate,
-					1000,
+					ProjectileAmount,
 					ProjectileContainer
 				)
 				print("ObjectCache Enabled")
@@ -287,7 +322,7 @@ UIS.InputBegan:Connect(function(input, gp)
 				Caster:SetObjectCacheEnabled(
 					true,
 					ProjectileTemplate,
-					1000,
+					ProjectileAmount,
 					ProjectileContainer
 				)
 				print("ObjectCache Enabled")
@@ -337,6 +372,8 @@ UIS.InputBegan:Connect(function(input, gp)
 				table.insert(activeCasts, cast)
 			end
 			print("Switched to Parallel..")
+
+			MODE = "PARALLEL"
 		else
 			Caster:Destroy()
 			
@@ -348,6 +385,8 @@ UIS.InputBegan:Connect(function(input, gp)
 				table.insert(activeCasts, cast)
 			end
 			print("Switched to Serial..")
+
+			MODE = "SERIAL"
 		end
 		
 		activeCasts = {}
