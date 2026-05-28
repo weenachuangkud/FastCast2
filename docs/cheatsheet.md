@@ -57,12 +57,8 @@ Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 
 --// Configuration
 
-Caster:SetMovementMode(mode: "BulkMoveTo" | "Motor6D") → ()
+Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
 Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → ()
-
--- Motor6D mode enables smooth visual interpolation:
--- caster:Init("Motor6D", false)
--- caster:SetMovementModeEnabled(true, "Motor6D")
 
 
 --// Lifecycle
@@ -111,7 +107,7 @@ Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 --// Configuration
 
 Caster:SetFastCastEventsModule(moduleScript: ModuleScript) → ()
-Caster:SetMovementMode(mode: "BulkMoveTo" | "Motor6D", enabled: boolean) → ()
+Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
 Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → ()
 
 
