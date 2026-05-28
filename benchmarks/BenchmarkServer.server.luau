@@ -1,3 +1,8 @@
+--[[
+	- Author Mawin CK
+	- Date: 2026
+]]
+
 print("Starting benchmark in 10 seconds")
 task.wait(10)
 
