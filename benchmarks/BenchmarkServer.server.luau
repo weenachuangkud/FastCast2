@@ -10,7 +10,6 @@ task.wait(10)
 local RS = game:GetService("RunService")
 local Rep = game:GetService("ReplicatedStorage")
 local SSS = game:GetService("ServerScriptService")
-local Players = game:GetService("Players")
 
 -- Setting
 local numWorkers = 4
@@ -23,6 +22,7 @@ local BENCH_TIME = 5
 
 -- Requires
 local FastCast = require(Rep:WaitForChild("FastCast2"))
+local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
 
 -- Variables
 local ProjectileContainer = Instance.new("Folder")
@@ -70,13 +70,8 @@ RS.Heartbeat:Connect(function(dt: number)
 	end
 end)
 
--- Character
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
 -- CastParams
 local CastParams = RaycastParams.new()
-CastParams.FilterDescendantsInstances = {character}
 CastParams.FilterType = Enum.RaycastFilterType.Exclude
 CastParams.IgnoreWater = true
 
@@ -84,7 +79,7 @@ CastParams.IgnoreWater = true
 local castBehavior = FastCast.newBehavior()
 castBehavior.MaxDistance = 999999999
 castBehavior.RaycastParams = CastParams
-castBehavior.HighFidelityBehavior = 1
+castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 castBehavior.HighFidelitySegmentSize = 1
 castBehavior.Acceleration = Vector3.new(0, 0, 0)
 castBehavior.AutoIgnoreContainer = true
@@ -129,7 +124,7 @@ end
 -- Benchmark
 
 print("=== PARALLEL MODE BENCHMARK ===")
-print(string.format("Firing %d projectiles...", ProjectileTemplate))
+print(string.format("Firing %d projectiles...", ProjectileAmount))
 
 for _ = 1, ProjectileAmount do
 	Caster:RaycastFire(
@@ -142,9 +137,9 @@ for _ = 1, ProjectileAmount do
 			math.random(-100, 100)
 		),
 		Vector3.new(
-			math.random(-1, 1) * 1,
-			math.random(-1, 1) * 1,
-			math.random(-1, 1) * 1
+			math.random() * 2 - 1,
+			math.random() * 2 - 1,
+			math.random() * 2 - 1
 		),
 		6,
 		castBehavior
