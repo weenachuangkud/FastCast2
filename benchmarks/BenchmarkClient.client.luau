@@ -15,6 +15,9 @@ print("Press U to switch Instanced or Instanceless")
 print("Press J to switch BulkMoveTo or Motor6D")
 print("Press Y to Enable or disable ObjectCache")
 print("Press V to Enable or disable VisualizeCasts")
+print("Press X to cycle HighFidelityBehavior")
+print("Press > to increase HighFidelitySegmentSize")
+print("Press < to decrease HighFidelitySegmentSize")
 print("Press B to switch Serial or Parallel")
 print("Press [ to increment numWorkers")
 print("Press ] to decrement numWorkers")
@@ -41,6 +44,7 @@ local FastCastM = Path:WaitForChild("FastCast2")
 
 -- Requires
 local FastCast = require(FastCastM)
+local FastCastEnums = require(FastCastM:WaitForChild("FastCastEnums"))
 
 -- Variables
 local ProjectileContainer = Instance.new("Folder")
@@ -97,7 +101,7 @@ castParams.IgnoreWater = true
 -- Behavior
 local castBehavior = FastCast.newBehavior()
 castBehavior.MaxDistance = 999999999
-castBehavior.HighFidelityBehavior = 1
+castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 castBehavior.HighFidelitySegmentSize = 1
 castBehavior.Acceleration = Vector3.new(0, 0, 0)
 castBehavior.AutoIgnoreContainer = true
@@ -163,7 +167,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		IsBenchmarking = true
 		print(string.format("=== %s MODE BENCHMARK ===", MODE))
 		local IsObjCache = false
-		if Caster.BaseCastSerial and Caster.BaseCastSerial.ObjectCacheInstance then
+		if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
 			IsObjCache = true
 		end
 
@@ -210,9 +214,9 @@ UIS.InputBegan:Connect(function(input, gp)
 					math.random(-100, 100)
 				),
 				Vector3.new(
-					math.random(-1, 1) * 1,
-					math.random(-1, 1) * 1,
-					math.random(-1, 1) * 1
+					math.random() * 2 - 1,
+					math.random() * 2 - 1,
+					math.random() * 2 - 1
 				),
 				VELOCITY,
 				castBehavior
@@ -252,7 +256,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		end
 		
 		ProjectileAmount += 500
-		print(string.format("ProjectileTemplate: %d", ProjectileAmount))
+		print(string.format("ProjectileAmount: %d", ProjectileAmount))
 
 	elseif input.KeyCode == Enum.KeyCode.K then
 		
@@ -315,7 +319,7 @@ UIS.InputBegan:Connect(function(input, gp)
 				print("ObjectCache Enabled")
 			end
 		else
-			if Caster.BaseCastSerial and Caster.BaseCastSerial.ObjectCacheInstance then
+			if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
 				Caster:SetObjectCacheEnabled(false)
 				print("ObjectCache: Disabled")
 			else
@@ -340,6 +344,24 @@ UIS.InputBegan:Connect(function(input, gp)
 			print("VisualizeCasts: Enabled")
 		else
 			print("VisualizeCasts: Disabled")
+		end
+		
+	elseif input.KeyCode == Enum.KeyCode.X then
+		
+		if IsBenchmarking then
+			return
+		end
+		
+		local current = castBehavior.HighFidelityBehavior
+		if current == FastCastEnums.HighFidelityBehavior.Default then
+			castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Automatic
+			print("HighFidelityBehavior: Automatic")
+		elseif current == FastCastEnums.HighFidelityBehavior.Automatic then
+			castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
+			print("HighFidelityBehavior: Always")
+		else
+			castBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+			print("HighFidelityBehavior: Default")
 		end
 		
 	elseif input.KeyCode == Enum.KeyCode.B then
@@ -395,7 +417,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		IsDIFSJFJSIUET = false
 		print("Done!")
 
-	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
+	elseif input.KeyCode == Enum.KeyCode.RightBracket then
 		if IsBenchmarking then 
 			return
 		end
@@ -431,13 +453,17 @@ UIS.InputBegan:Connect(function(input, gp)
 		task.wait(0.05)
 
 		IsDIFSJFJSIUET = false
-	elseif input.KeyCode == Enum.KeyCode.RightBracket then
+	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
 		
 		if IsBenchmarking then
 			return
 		end
 
 		if IsDIFSJFJSIUET then
+			return
+		end
+
+		if numWorkers <= 2 then
 			return
 		end
 
@@ -467,6 +493,24 @@ UIS.InputBegan:Connect(function(input, gp)
 
 		IsDIFSJFJSIUET = false
 
+	elseif input.KeyCode == Enum.KeyCode.Period then
+		
+		if IsBenchmarking then
+			return
+		end
+		
+		castBehavior.HighFidelitySegmentSize += 0.05
+		print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
+		
+	elseif input.KeyCode == Enum.KeyCode.Comma then
+		
+		if IsBenchmarking then
+			return
+		end
+		
+		castBehavior.HighFidelitySegmentSize = math.max(0.05, castBehavior.HighFidelitySegmentSize - 0.05)
+		print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
+		
 	elseif input.KeyCode == Enum.KeyCode.H then
 		print("Press P to benchmark")
 		print("Press L to increase projectile amount by 500")
@@ -475,6 +519,9 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("Press J to switch BulkMoveTo or Motor6D")
 		print("Press Y to Enable or disable ObjectCache")
 		print("Press V to Enable or disable VisualizeCasts")
+		print("Press X to cycle HighFidelityBehavior")
+		print("Press > to increase HighFidelitySegmentSize")
+		print("Press < to decrease HighFidelitySegmentSize")
 		print("Press B to switch Serial or Parallel")
 		print("Press [ to increment numWorkers")
 		print("Press ] to decrement numWorkers")
