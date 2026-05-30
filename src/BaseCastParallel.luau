@@ -173,7 +173,8 @@ function BaseCast:Raycast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		SyncChange = SyncChanges
+		SyncChange = SyncChanges,
+		CacheHolder = ObjectCacheInstance and ObjectCacheInstance.CacheHolder
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
 	} :: any, ObjectCacheInstance, true)
@@ -236,7 +237,8 @@ function BaseCast:Blockcast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		SyncChange = SyncChanges
+		SyncChange = SyncChanges,
+		CacheHolder = ObjectCacheInstance and ObjectCacheInstance.CacheHolder
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
@@ -280,7 +282,8 @@ function BaseCast:Spherecast(
 	local cast = ActiveCast.createCastData({
 		Output = Output,
 		ActiveCastCleaner = ActiveCastCleaner,
-		SyncChange = SyncChanges
+		SyncChange = SyncChanges,
+		CacheHolder = ObjectCacheInstance and ObjectCacheInstance.CacheHolder
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
