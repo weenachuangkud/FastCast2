@@ -8,6 +8,7 @@
 	But who cares.
 ]]
 
+print("=== FastCast2 Client Benchmark ===")
 print("Press P to benchmark")
 print("Press L to increase projectile amount by 500")
 print("Press K to decrease projectile amount by 500")
