@@ -135,6 +135,55 @@ local function summary()
 	print(string.format("Min FPS: %.2f", minFps))
 end
 
+local function printBenchmarkInfo()
+	print(string.format("=== %s MODE BENCHMARK ===", MODE))
+
+	local isObjCache = false
+	if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
+		isObjCache = true
+	end
+
+	if Caster.ObjectCacheEnabled then
+		isObjCache = true
+	end
+
+	if Instanced and isObjCache then
+		print("ObjectCache Enabled")
+	else
+		print("ObjectCache Disabled")
+	end
+
+	if VisualizeCasts then
+		print("VisualizeCasts: Enabled")
+	else
+		print("VisualizeCasts: Disabled")
+	end
+
+	local currentHF = castBehavior.HighFidelityBehavior
+	if currentHF == FastCastEnums.HighFidelityBehavior.Default then
+		print("HighFidelityBehavior: Default")
+	elseif currentHF == FastCastEnums.HighFidelityBehavior.Automatic then
+		print("HighFidelityBehavior: Automatic")
+	else
+		print("HighFidelityBehavior: Always")
+	end
+
+	print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
+
+	if Caster.MovementMode == "BulkMoveTo" then
+		print("MovementMode: BulkMoveTo")
+	else
+		print("MovementMode: Motor6D")
+	end
+
+	local modeLabel = Instanced and "Instanced" or "Instanceless"
+	print(modeLabel)
+
+	if Parallel then
+		print("numWorkers: ", numWorkers)
+	end
+end
+
 -- UIS
 local IsBenchmarking = false
 local IsReconfiguring = false
@@ -575,7 +624,11 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("Press B to switch Serial or Parallel")
 		print("Press [ to decrement numWorkers")
 		print("Press ] to increment numWorkers")
+		print("Press I to show benchmark info")
 		print("Press H to show keys again")
+
+	elseif input.KeyCode == Enum.KeyCode.I then
+		printBenchmarkInfo()
 	end
 end)
 
@@ -593,53 +646,7 @@ print("Press < to decrease HighFidelitySegmentSize")
 print("Press B to switch Serial or Parallel")
 print("Press [ to decrement numWorkers")
 print("Press ] to increment numWorkers")
+print("Press I to show benchmark info")
 print("Press H to show keys again")
 
-print("=== FastCast2 Client Benchmark Info ===")
-
-print(string.format("=== %s MODE BENCHMARK ===", MODE))
-
-local isObjCache = false
-if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
-	isObjCache = true
-end
-
-if Caster.ObjectCacheEnabled then
-	isObjCache = true
-end
-
-if Instanced and isObjCache then
-	print("ObjectCache Enabled")
-else
-	print("ObjectCache Disabled")
-end
-
-if VisualizeCasts then
-	print("VisualizeCasts: Enabled")
-else
-	print("VisualizeCasts: Disabled")
-end
-
-local currentHF = castBehavior.HighFidelityBehavior
-if currentHF == FastCastEnums.HighFidelityBehavior.Default then
-	print("HighFidelityBehavior: Default")
-elseif currentHF == FastCastEnums.HighFidelityBehavior.Automatic then
-	print("HighFidelityBehavior: Automatic")
-else
-	print("HighFidelityBehavior: Always")
-end
-
-print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
-
-if Caster.MovementMode == "BulkMoveTo" then
-	print("MovementMode: BulkMoveTo")
-else
-	print("MovementMode: Motor6D")
-end
-
-local modeLabel = Instanced and "Instanced" or "Instanceless"
-print(modeLabel)
-
-if Parallel then
-	print("numWorkers: ", numWorkers)
-end
+printBenchmarkInfo()

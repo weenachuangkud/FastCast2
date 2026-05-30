@@ -25,6 +25,7 @@ Fires projectiles and tracks FPS using keyboard controls. Supports both serial a
 | B | Switch serial / parallel caster |
 | [ | Decrement numWorkers (floor 2, parallel only) |
 | ] | Increment numWorkers (parallel only) |
+| I | Show benchmark info |
 | H | Show controls |
 
 > Note: `[` decrements and `]` increments (bigger key = more workers).
@@ -70,6 +71,7 @@ Type the letter in chat:
 | < | Decrease HighFidelitySegmentSize by 0.05 |
 | [ | Decrement numWorkers (floor 2) |
 | ] | Increment numWorkers |
+| i | Show benchmark info |
 | h | Show commands |
 
 ### Settings
