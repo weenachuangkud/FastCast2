@@ -8,22 +8,6 @@
 	But who cares.
 ]]
 
-print("=== FastCast2 Client Benchmark ===")
-print("Press P to benchmark")
-print("Press L to increase projectile amount by 500")
-print("Press K to decrease projectile amount by 500")
-print("Press U to switch Instanced or Instanceless")
-print("Press J to switch BulkMoveTo or Motor6D")
-print("Press Y to Enable or disable ObjectCache")
-print("Press V to Enable or disable VisualizeCasts")
-print("Press X to cycle HighFidelityBehavior")
-print("Press > to increase HighFidelitySegmentSize")
-print("Press < to decrease HighFidelitySegmentSize")
-print("Press B to switch Serial or Parallel")
-print("Press [ to decrement numWorkers")
-print("Press ] to increment numWorkers")
-print("Press H to show keys again")
-
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
 local RepFirst = game:GetService("ReplicatedFirst")
@@ -196,6 +180,17 @@ UIS.InputBegan:Connect(function(input, gp)
 		else
 			print("VisualizeCasts: Disabled")
 		end
+
+		local currentHF = castBehavior.HighFidelityBehavior
+		if currentHF == FastCastEnums.HighFidelityBehavior.Default then
+			print("HighFidelityBehavior: Default")
+		elseif currentHF == FastCastEnums.HighFidelityBehavior.Automatic then
+			print("HighFidelityBehavior: Automatic")
+		else
+			print("HighFidelityBehavior: Always")
+		end
+
+		print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
 
 		if Caster.MovementMode == "BulkMoveTo" then
 			print("MovementMode: BulkMoveTo")
@@ -566,6 +561,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
 		
 	elseif input.KeyCode == Enum.KeyCode.H then
+		print("=== FastCast2 Client Benchmark Keys ===")
 		print("Press P to benchmark")
 		print("Press L to increase projectile amount by 500")
 		print("Press K to decrease projectile amount by 500")
@@ -582,3 +578,68 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("Press H to show keys again")
 	end
 end)
+
+print("=== FastCast2 Client Benchmark Keys ===")
+print("Press P to benchmark")
+print("Press L to increase projectile amount by 500")
+print("Press K to decrease projectile amount by 500")
+print("Press U to switch Instanced or Instanceless")
+print("Press J to switch BulkMoveTo or Motor6D")
+print("Press Y to Enable or disable ObjectCache")
+print("Press V to Enable or disable VisualizeCasts")
+print("Press X to cycle HighFidelityBehavior")
+print("Press > to increase HighFidelitySegmentSize")
+print("Press < to decrease HighFidelitySegmentSize")
+print("Press B to switch Serial or Parallel")
+print("Press [ to decrement numWorkers")
+print("Press ] to increment numWorkers")
+print("Press H to show keys again")
+
+print("=== FastCast2 Client Benchmark Info ===")
+
+print(string.format("=== %s MODE BENCHMARK ===", MODE))
+
+local isObjCache = false
+if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
+	isObjCache = true
+end
+
+if Caster.ObjectCacheEnabled then
+	isObjCache = true
+end
+
+if Instanced and isObjCache then
+	print("ObjectCache Enabled")
+else
+	print("ObjectCache Disabled")
+end
+
+if VisualizeCasts then
+	print("VisualizeCasts: Enabled")
+else
+	print("VisualizeCasts: Disabled")
+end
+
+local currentHF = castBehavior.HighFidelityBehavior
+if currentHF == FastCastEnums.HighFidelityBehavior.Default then
+	print("HighFidelityBehavior: Default")
+elseif currentHF == FastCastEnums.HighFidelityBehavior.Automatic then
+	print("HighFidelityBehavior: Automatic")
+else
+	print("HighFidelityBehavior: Always")
+end
+
+print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
+
+if Caster.MovementMode == "BulkMoveTo" then
+	print("MovementMode: BulkMoveTo")
+else
+	print("MovementMode: Motor6D")
+end
+
+local modeLabel = Instanced and "Instanced" or "Instanceless"
+print(modeLabel)
+
+if Parallel then
+	print("numWorkers: ", numWorkers)
+end

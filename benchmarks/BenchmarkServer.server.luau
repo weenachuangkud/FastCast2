@@ -175,6 +175,8 @@ local function runBenchmark()
 		print("HighFidelityBehavior: Always")
 	end
 
+	print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
+
 	if Caster.MovementMode == "BulkMoveTo" then
 		print("MovementMode: BulkMoveTo")
 	else
@@ -384,6 +386,7 @@ local function onChatMessage(_, message)
 		IsReconfiguring = false
 
 	elseif msg == "h" then
+		print("=== FastCast2 Server Benchmark Keys ===")
 		print("Type in chat to control the benchmark:")
 		print("p - Start benchmark")
 		print("l - Increase projectile amount by 500")
@@ -410,7 +413,7 @@ end)
 -- Initial setup
 setupCaster()
 
-print("=== FastCast2 Server Benchmark ===")
+print("=== FastCast2 Server Benchmark Keys ===")
 print("Type in chat to control the benchmark:")
 print("p - Start benchmark")
 print("l - Increase projectile amount by 500")
@@ -425,3 +428,41 @@ print("< - Decrease HighFidelitySegmentSize")
 print("] - Increment numWorkers")
 print("[ - Decrement numWorkers")
 print("h - Show this help")
+
+print("=== FastCast2 Server Benchmark Info ===")
+
+print("=== PARALLEL MODE BENCHMARK ===")
+
+if Instanced and UseObjectCache then
+	print("ObjectCache Enabled")
+else
+	print("ObjectCache Disabled")
+end
+
+if VisualizeCasts then
+	print("VisualizeCasts: Enabled")
+else
+	print("VisualizeCasts: Disabled")
+end
+
+local current = castBehavior.HighFidelityBehavior
+if current == FastCastEnums.HighFidelityBehavior.Default then
+	print("HighFidelityBehavior: Default")
+elseif current == FastCastEnums.HighFidelityBehavior.Automatic then
+	print("HighFidelityBehavior: Automatic")
+else
+	print("HighFidelityBehavior: Always")
+end
+
+print(string.format("HighFidelitySegmentSize: %.2f", castBehavior.HighFidelitySegmentSize))
+
+if Caster.MovementMode == "BulkMoveTo" then
+	print("MovementMode: BulkMoveTo")
+else
+	print("MovementMode: Motor6D")
+end
+
+local mode = Instanced and "Instanced" or "Instanceless"
+print(mode)
+
+print("numWorkers: ", numWorkers)
