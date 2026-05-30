@@ -63,7 +63,6 @@ function BaseCast.Init(events: TypeDef.FastCastEvents, Data: any)
 		end
 
 		self.ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
-		self.CacheHolder = self.ObjectCacheInstance.CacheHolder
 	end
 
 	self.CurrentMovementMode = Data.movementMode or "BulkMoveTo"
