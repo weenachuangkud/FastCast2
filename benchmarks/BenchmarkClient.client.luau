@@ -175,7 +175,7 @@ UIS.InputBegan:Connect(function(input, gp)
 			IsObjCache = true
 		end
 		
-		if IsObjCache then
+		if Instanced and IsObjCache then
 			print("ObjectCache Enabled")
 		else
 			print("ObjectCache Disabled")
