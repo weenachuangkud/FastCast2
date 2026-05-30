@@ -19,8 +19,8 @@ print("Press X to cycle HighFidelityBehavior")
 print("Press > to increase HighFidelitySegmentSize")
 print("Press < to decrease HighFidelitySegmentSize")
 print("Press B to switch Serial or Parallel")
-print("Press [ to increment numWorkers")
-print("Press ] to decrement numWorkers")
+print("Press [ to decrement numWorkers")
+print("Press ] to increment numWorkers")
 print("Press H to show keys again")
 
 -- Services
@@ -36,6 +36,12 @@ local numWorkers = 4
 local ProjectileAmount = 500
 local Instanced = true
 local VisualizeCasts = false
+local BENCH_TIME = 6
+local MovementMode = "BulkMoveTo"
+local ObjectCacheEnabled = false
+local VMName = "CastVMs"
+local VMContainerName = "CastVMContainer"
+local VMTemplateName = "CastVM"
 
 local VELOCITY = 6
 
@@ -117,16 +123,16 @@ if Parallel then
 	Caster:Init(
 		numWorkers,
 		RepFirst,
-		"CastVMs",
+		VMName,
 		RepFirst,
-		"CastVMContainer",
-		"CastVM",
-		"BulkMoveTo"
+		VMContainerName,
+		VMTemplateName,
+		MovementMode
 	)
 else
 	Caster = FastCast.new()
 	Caster:Init(
-		"BulkMoveTo"
+		MovementMode
 	)
 end
 
@@ -146,8 +152,7 @@ end
 
 -- UIS
 local IsBenchmarking = false
-local IsDIFSJFJSIUET = false
-local BENCH_TIME = 6
+local IsReconfiguring = false
 local MODE = Parallel and "PARALLEL" or "SERIAL"
 
 UIS.InputBegan:Connect(function(input, gp)
@@ -156,7 +161,7 @@ UIS.InputBegan:Connect(function(input, gp)
 	end
 
 	if input.KeyCode == Enum.KeyCode.P then
-		if IsDIFSJFJSIUET then
+		if IsReconfiguring then
 			return
 		end
 		
@@ -165,6 +170,10 @@ UIS.InputBegan:Connect(function(input, gp)
 		end
 		
 		IsBenchmarking = true
+
+		maxFps = 0
+		minFps = math.huge
+
 		print(string.format("=== %s MODE BENCHMARK ===", MODE))
 		local IsObjCache = false
 		if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
@@ -193,9 +202,9 @@ UIS.InputBegan:Connect(function(input, gp)
 			print("MovementMode: Motor6D")
 		end
 
-		local ksfsha = Instanced and "Instanced" or "Instanceless"
+		local modeLabel = Instanced and "Instanced" or "Instanceless"
 
-		print(ksfsha)
+		print(modeLabel)
 
 		if Parallel then
 			print("numWorkers: ", numWorkers)
@@ -264,7 +273,7 @@ UIS.InputBegan:Connect(function(input, gp)
 			return
 		end
 		
-		ProjectileAmount -= 500
+		ProjectileAmount = math.max(0, ProjectileAmount - 500)
 		print(string.format("ProjectileAmount: %d", ProjectileAmount))
 
 	elseif input.KeyCode == Enum.KeyCode.U then
@@ -279,7 +288,7 @@ UIS.InputBegan:Connect(function(input, gp)
 
 	elseif input.KeyCode == Enum.KeyCode.J then
 		
-		if IsDIFSJFJSIUET then
+		if IsReconfiguring then
 			return
 		end
 		
@@ -289,15 +298,17 @@ UIS.InputBegan:Connect(function(input, gp)
 		
 		if Caster.MovementMode == "BulkMoveTo" then
 			Caster:SetMovementModeEnabled(true, "Motor6D")
+			MovementMode = "Motor6D"
 			print("MovementMode: Motor6D")
 		else
 			Caster:SetMovementModeEnabled(true, "BulkMoveTo")
+			MovementMode = "BulkMoveTo"
 			print("MovementMode: BulkMoveTo")
 		end
 		
 	elseif input.KeyCode == Enum.KeyCode.Y then
 		
-		if IsDIFSJFJSIUET then
+		if IsReconfiguring then
 			return
 		end
 		
@@ -308,6 +319,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		if Parallel then
 			if Caster.ObjectCacheEnabled then
 				Caster:SetObjectCacheEnabled(false)
+				ObjectCacheEnabled = false
 				print("ObjectCache: Disabled")
 			else
 				Caster:SetObjectCacheEnabled(
@@ -316,11 +328,13 @@ UIS.InputBegan:Connect(function(input, gp)
 					ProjectileAmount,
 					ProjectileContainer
 				)
+				ObjectCacheEnabled = true
 				print("ObjectCache Enabled")
 			end
 		else
 			if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
 				Caster:SetObjectCacheEnabled(false)
+				ObjectCacheEnabled = false
 				print("ObjectCache: Disabled")
 			else
 				Caster:SetObjectCacheEnabled(
@@ -329,6 +343,7 @@ UIS.InputBegan:Connect(function(input, gp)
 					ProjectileAmount,
 					ProjectileContainer
 				)
+				ObjectCacheEnabled = true
 				print("ObjectCache Enabled")
 			end
 		end
@@ -366,7 +381,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		
 	elseif input.KeyCode == Enum.KeyCode.B then
 		
-		if IsDIFSJFJSIUET then
+		if IsReconfiguring then
 			return
 		end
 		
@@ -374,7 +389,7 @@ UIS.InputBegan:Connect(function(input, gp)
 			return
 		end
 		
-		IsDIFSJFJSIUET = true
+		IsReconfiguring = true
 		
 		Parallel = not Parallel
 		if Parallel then
@@ -384,15 +399,25 @@ UIS.InputBegan:Connect(function(input, gp)
 			Caster:Init(
 				numWorkers,
 				RepFirst,
-				"CastVMs",
+				VMName,
 				RepFirst,
-				"CastVMContainer",
-				"CastVM",
-				"BulkMoveTo"
+				VMContainerName,
+				VMTemplateName,
+				MovementMode
 			)
 			Caster.CastFire = function(cast)
 				table.insert(activeCasts, cast)
 			end
+
+			if ObjectCacheEnabled then
+				Caster:SetObjectCacheEnabled(
+					true,
+					ProjectileTemplate,
+					ProjectileAmount,
+					ProjectileContainer
+				)
+			end
+
 			print("Switched to Parallel..")
 
 			MODE = "PARALLEL"
@@ -401,11 +426,21 @@ UIS.InputBegan:Connect(function(input, gp)
 			
 			Caster = FastCast.new()
 			Caster:Init(
-				"BulkMoveTo"
+				MovementMode
 			)
 			Caster.CastFire = function(cast)
 				table.insert(activeCasts, cast)
 			end
+
+			if ObjectCacheEnabled then
+				Caster:SetObjectCacheEnabled(
+					true,
+					ProjectileTemplate,
+					ProjectileAmount,
+					ProjectileContainer
+				)
+			end
+
 			print("Switched to Serial..")
 
 			MODE = "SERIAL"
@@ -414,7 +449,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		activeCasts = {}
 
 		task.wait(2.5)
-		IsDIFSJFJSIUET = false
+		IsReconfiguring = false
 		print("Done!")
 
 	elseif input.KeyCode == Enum.KeyCode.RightBracket then
@@ -422,11 +457,11 @@ UIS.InputBegan:Connect(function(input, gp)
 			return
 		end
 		
-		if IsDIFSJFJSIUET then
+		if IsReconfiguring then
 			return
 		end
 
-		IsDIFSJFJSIUET = true
+		IsReconfiguring = true
 		
 		numWorkers += 1
 
@@ -437,14 +472,23 @@ UIS.InputBegan:Connect(function(input, gp)
 			Caster:Init(
 				numWorkers,
 				RepFirst,
-				"CastVMs",
+				VMName,
 				RepFirst,
-				"CastVMContainer",
-				"CastVM",
-				"BulkMoveTo"
+				VMContainerName,
+				VMTemplateName,
+				MovementMode
 			)
 			Caster.CastFire = function(cast)
 				table.insert(activeCasts, cast)
+			end
+
+			if ObjectCacheEnabled then
+				Caster:SetObjectCacheEnabled(
+					true,
+					ProjectileTemplate,
+					ProjectileAmount,
+					ProjectileContainer
+				)
 			end
 		end
 
@@ -452,14 +496,14 @@ UIS.InputBegan:Connect(function(input, gp)
 
 		task.wait(0.05)
 
-		IsDIFSJFJSIUET = false
+		IsReconfiguring = false
 	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
 		
 		if IsBenchmarking then
 			return
 		end
 
-		if IsDIFSJFJSIUET then
+		if IsReconfiguring then
 			return
 		end
 
@@ -476,14 +520,23 @@ UIS.InputBegan:Connect(function(input, gp)
 			Caster:Init(
 				numWorkers,
 				RepFirst,
-				"CastVMs",
+				VMName,
 				RepFirst,
-				"CastVMContainer",
-				"CastVM",
-				"BulkMoveTo"
+				VMContainerName,
+				VMTemplateName,
+				MovementMode
 			)
 			Caster.CastFire = function(cast)
 				table.insert(activeCasts, cast)
+			end
+
+			if ObjectCacheEnabled then
+				Caster:SetObjectCacheEnabled(
+					true,
+					ProjectileTemplate,
+					ProjectileAmount,
+					ProjectileContainer
+				)
 			end
 		end
 
@@ -491,7 +544,7 @@ UIS.InputBegan:Connect(function(input, gp)
 
 		task.wait(0.05)
 
-		IsDIFSJFJSIUET = false
+		IsReconfiguring = false
 
 	elseif input.KeyCode == Enum.KeyCode.Period then
 		
@@ -523,7 +576,7 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("Press > to increase HighFidelitySegmentSize")
 		print("Press < to decrease HighFidelitySegmentSize")
 		print("Press B to switch Serial or Parallel")
-		print("Press [ to increment numWorkers")
-		print("Press ] to decrement numWorkers")
+		print("Press [ to decrement numWorkers")
+		print("Press ] to increment numWorkers")
 	end
 end)
