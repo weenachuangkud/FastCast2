@@ -98,7 +98,7 @@ RS.Heartbeat:Connect(function(dt: number)
 	end
 end)
 
--- castParams, to not make projectiles hit ground and gone
+-- castParams, Idk I just put this for a reason
 local castParams = RaycastParams.new()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.IgnoreWater = true
