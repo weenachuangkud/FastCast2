@@ -579,5 +579,6 @@ UIS.InputBegan:Connect(function(input, gp)
 		print("Press B to switch Serial or Parallel")
 		print("Press [ to decrement numWorkers")
 		print("Press ] to increment numWorkers")
+		print("Press H to show keys again")
 	end
 end)
