@@ -225,7 +225,7 @@ end
 -- Interactive controls via Chat
 local IsReconfiguring = false
 
-local function onChatMessage(player, message)
+local function onChatMessage(_, message)
 	local msg = message:lower()
 
 	if msg == "p" then
