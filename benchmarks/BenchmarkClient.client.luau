@@ -135,6 +135,10 @@ local function summary()
 	print(string.format("Min FPS: %.2f", minFps))
 end
 
+local IsBenchmarking = false
+local IsReconfiguring = false
+local MODE = Parallel and "PARALLEL" or "SERIAL"
+
 local function printBenchmarkInfo()
 	print(string.format("=== %s MODE BENCHMARK ===", MODE))
 
@@ -185,9 +189,6 @@ local function printBenchmarkInfo()
 end
 
 -- UIS
-local IsBenchmarking = false
-local IsReconfiguring = false
-local MODE = Parallel and "PARALLEL" or "SERIAL"
 
 UIS.InputBegan:Connect(function(input, gp)
 	if gp then
