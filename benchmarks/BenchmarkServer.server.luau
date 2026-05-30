@@ -22,6 +22,10 @@ local MovementMode = "BulkMoveTo"
 local UseObjectCache = false
 local ProjectileAmount = 500
 local VisualizeCasts = false
+local VMName = "CastVMs"
+local VMContainerName = "CastVMContainer"
+local VMTemplateName = "CastVM"
+
 local VELOCITY = 6
 
 -- Requires
@@ -104,10 +108,10 @@ local function setupCaster()
 	Caster:Init(
 		numWorkers,
 		SSS,
-		"CastVMs",
+		VMName,
 		SSS,
-		"CastVMContainer",
-		"CastVM",
+		VMContainerName,
+		VMTemplateName,
 		MovementMode
 	)
 
@@ -144,6 +148,9 @@ local function runBenchmark()
 	end
 
 	IsBenchmarking = true
+
+	maxFps = 0
+	minFps = math.huge
 
 	print("=== PARALLEL MODE BENCHMARK ===")
 
@@ -266,9 +273,11 @@ local function onChatMessage(_, message)
 
 		if Caster.MovementMode == "BulkMoveTo" then
 			Caster:SetMovementModeEnabled(true, "Motor6D")
+			MovementMode = "Motor6D"
 			print("MovementMode: Motor6D")
 		else
 			Caster:SetMovementModeEnabled(true, "BulkMoveTo")
+			MovementMode = "BulkMoveTo"
 			print("MovementMode: BulkMoveTo")
 		end
 
