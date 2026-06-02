@@ -450,6 +450,12 @@ local ParallelSimulation = {}
 ParallelSimulation.Connection = nil :: RBXScriptConnection?
 
 function ParallelSimulation.Init(baseCastRef: any)
+
+	if ActivesRef ~= nil then
+        warn("[FastCast2] ParallelSimulation already initialized. Skipping.")
+        return
+    end
+
 	BaseCastRef = baseCastRef
 	ActivesRef = baseCastRef.Actives
 end
