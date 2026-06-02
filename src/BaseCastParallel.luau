@@ -64,7 +64,16 @@ local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastT
 	end
 end
 
+local BaseCastInitialized = false
+local BaseCastInstance = nil
 function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
+
+	if BaseCastInitialized then
+        warn("[FastCast2] BaseCast already initialized in this Actor. Skipping.")
+        return BaseCastInstance
+    end
+    BaseCastInitialized = true
+	
 	local self = setmetatable({}, BaseCast)
 	Actor = BindableOutput.Parent
 	self.Actives = {}
@@ -144,6 +153,7 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	ParallelSimulation.Start()
 
+	BaseCastInstance = self
 	return self
 end
 
