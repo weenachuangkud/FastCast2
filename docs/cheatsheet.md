@@ -58,7 +58,7 @@ Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 --// Configuration
 
 Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
-Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → ()
+Caster:SetObjectCacheEnabled(enabled: boolean, Template?, CacheSize?, CacheHolder?) → ()
 
 
 --// Lifecycle
