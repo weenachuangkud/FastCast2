@@ -53,4 +53,4 @@ There are no automated tests. Testing is manual via Roblox Studio.
 ## Agent Skills
 
 To understand specific project workflows, refer to the skills defined here:
-- @skills/architecture.md
+- @skills/FastCast2/architecture.md
