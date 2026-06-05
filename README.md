@@ -328,7 +328,7 @@ FastCast2.TerminateCast(cast)
 ---
 
 # People behind FastCast2(Contributors)
-- [Mawin CK](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
+- [CK06](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 - [Per2iako](https://github.com/Per2iako): Fix ActivesRef was overwritten (BaseParallel, ParallelSimulation)
