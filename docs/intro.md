@@ -330,18 +330,20 @@ FastCast2.TerminateCast(cast)
 
 ---
 
-# People behind FastCast2
-- [Mawin CK](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
+# People behind FastCast2(Contributors)
+- [CK06](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
 - [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
-
-<br />
+- [Per2iako](https://github.com/Per2iako): Fix ActivesRef was overwritten (BaseParallel, ParallelSimulation)
 
 # Special Thanks
 
-Thanks to the following people from the **Suphi Kaner Discord Server**:
+Special thanks to the following people from the Suphi Kaner Discord Server:
 
+- @avibah — For helping me create VMDispatcher
+- @ace9b472eeec4f53ba9e8d91bo87c636 — For advice, feedback, and ideas
+- @23sinek345 — For code reviews, benchmark discussions, and improvement suggestions
 
-- **@avibah** — For helping me create **VMDispatcher**
-- **@ace9b472eeec4f53ba9e8d91bo87c636** — For advice and ideas
-- **@23sinek345** — For code review and improvement suggestions
+And thanks to everyone else in the server who helped along the way.
+
+More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not be where it is today without the contributions, feedback, and support of the community.
