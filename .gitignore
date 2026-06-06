@@ -4,6 +4,9 @@
 /*.rbxl
 /*.rbxlx
 
+# Rojo stuff
+sourcemap.json
+
 # Roblox Studio lock files
 /*.rbxlx.lock
 /*.rbxl.lock
@@ -18,3 +21,6 @@
 
 # Agents related stuff
 .omo
+
+# Development related stuff
+DevPackages
