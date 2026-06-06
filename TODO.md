@@ -1,14 +1,14 @@
-- [x] Support both parallel/nonParallel
-  - FastCast.new() for Serial, FastCast.newParallel() for Parallel
-- [x] ActiveCast should exposes AoS to users, and Internally using SoA for performances
-  - ActiveCast uses pure data structures (AoS), SerialSimulation/ParallelSimulation use SoA internally
-- [x] Consider using 1 RunService for each cores instead of using multiple
-  - Serial: 1 global RunService for all casts
-  - Parallel: 1 RunService per Actor
-- [x] Add Motor6D Transform feature
-  - MovementMethod in FastCastBehavior (BulkMoveTo/Transform)
-  - Motor6DPool for efficient pooling
-- [x] Fix HighFidelityBehavior = 2 bug - subRayDir used delta instead of timeIncrement
-- [x] ActiveCast.Trajectories -> ActiveCast.Trajectory
-- [x] Documentation updates
-- [x] Add benchmarks
+- [ ] Create multiple games, libraries, and frameworks using FastCast2, and showcase them in `docs/showcase.md`
+- [ ] Create a Debugger GUI for benchmarking and testing
+- [ ] Add automated testing
+- [ ] Add dynamic RunService event configuration for Caster
+- [ ] Add `BindToSimulation` and `UseFixedSimulation` features
+- [ ] Migration guide from FastCast Redux/FastCast (DOCS)
+- [ ] Performance guide and best practices (DOCS)
+- [ ] Common pitfalls and FAQ (DOCS)
+- [ ] Add benchmark pics to `docs/` and `README.md` (DOCS)
+- [ ] troubleshooting guide (DOCS)
+- [ ] advanced examples (DOCS)
+- [ ] Create a new FastCast2 cover image
+- [ ] Create a FastCast2 tutorial video
+- [ ] Include the `.rbxl` file in the latest release
