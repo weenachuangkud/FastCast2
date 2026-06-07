@@ -205,4 +205,140 @@ end
 
 -- ยิงเหมือนกับโหมดอนุกรม
 Caster:RaycastFire(origin, direction, SPEED, behavior)
-Caster:BlockcastFire(origin, Vector3.new(2, 4, 2),
+Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
+Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
+```
+
+<br />
+
+วิธีการตั้งค่า [FastCastEventsModule](https://weenachuangkud.github.io/FastCast2/api/TypeDefinitions/#FastCastEventsModule)
+
+```lua
+-- บริการ (Services)
+local Rep = game:GetService("ReplicatedStorage")
+
+-- โมดูล (Modules)
+
+local FastCast2 = Rep:WaitForChild("FastCast2")
+
+-- ต้องการ (Requires)
+local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
+
+-- โมดูล
+
+local module: TypeDef.FastCastEvents = {}
+
+local debounce = false
+local debounce_time = 0.2
+
+module.LengthChanged = function(cast : TypeDef.ActiveCastData)
+	if not debounce then
+		debounce = true
+		print("ทดสอบ OnLengthChanged")
+		task.delay(debounce_time, function()
+			debounce = false
+		end)
+	end
+end
+
+module.CastFire = function()
+	print("ยิงแคสต์!")
+end
+
+module.CastTerminating = function()
+	print("แคสต์กำลังจะสิ้นสุด!")
+end
+
+module.Hit = function()
+	print("ตี!")
+end
+
+module.CanPierce = function(cast : TypeDef.ActiveCastData, resultOfCast : RaycastResult, segmentVelocity, CosmeticBulletObject)
+	local CanPierce = false
+	if resultOfCast.Instance:GetAttribute("CanPierce") == true then
+		CanPierce = true
+	end
+	print(CanPierce)
+	return CanPierce
+end
+
+module.Pierced = function()
+	print("เจาะทะลุ!")
+end
+
+
+return module
+```
+
+ลงทะเบียนไว้กับ parallel caster ของคุณหลังจาก `Init`:
+
+```lua
+Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
+```
+
+> **หมายเหตุ**: `SetFastCastEventsModule` มีเฉพาะใน parallel casters เท่านั้น ในโหมดอนุกรม ให้ตั้งค่าตัวจัดการเหตุการณ์โดยตรงบน caster (เช่น `Caster.Hit = function(...)`)
+
+### โหมดการเคลื่อนไหว Motor6D
+
+โหมด Motor6D ใช้ `Motor6D.Transform` เพื่อประสิทธิภาพที่ดีขึ้นแทน `BulkMoveTo`:
+
+```lua
+local Caster = FastCast2.new()
+Caster:Init("Motor6D", false) -- โหมดการเคลื่อนไหว = "Motor6D"
+```
+
+แคสต์ที่ใช้งานอยู่ทั้งหมดจะได้รับการเชื่อมต่อ Motor6D โดยอัตโนมัติเมื่อลงทะเบียนและตัดการเชื่อมต่อเมื่อทำความสะอาด
+คุณสามารถสลับโหมดเมื่อต้องการ:
+
+```lua
+Caster:SetMovementModeEnabled(true, "Motor6D")   -- เปิดใช้ Motor6D
+Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- สลับกลับ
+```
+
+### การจัดการแคสต์
+
+ปรับเปลี่ยนแคสต์ที่ใช้งานอยู่เมื่อต้องการโดยใช้เมธอด FastCast แบบคงที่:
+
+```lua
+-- อ่านสถานะ
+local pos = FastCast2.GetPositionCast(cast)
+local vel = FastCast2.GetVelocityCast(cast)
+local accel = FastCast2.GetAccelerationCast(cast)
+
+-- ปรับเปลี่ยนสถานะ (โดยอัตโนมัติจะปรับเส้นทางใหม่)
+FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+
+-- การเปลี่ยนแปลงสัมพัทธ์
+FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+
+-- สิ้นสุดแคสต์ก่อนเวลาอันควร (ไฟร์ CastTerminating และทำความสะอาด)
+FastCast2.TerminateCast(cast)
+```
+
+> **เคล็ดลับ**: ในโหมดขนาน โทร `Caster:SyncChangesToCast(cast)` หลังจากปรับเปลี่ยนเพื่อดันการเปลี่ยนแปลงเข้าสู่เวิร์กเกอร์ VM
+
+### -> เริ่มต้นใช้ [เอกสาร FastCast2](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
+
+---
+
+# คนที่อยู่เบื้องหลัง FastCast2 (ผู้มีส่วนร่วม)
+- [CK06](https://github.com/weenachuangkud): นักพัฒนาหลัก ผู้บำรุงรักษา ออกแบบกราฟิก
+- [Naymmmm](https://github.com/Naymmmm): ช่วยเหลือในเอกสารที่เหมาะสม CI, รองรับ Rojo, รองรับ wally, Github pages(Moonwave)
+- [EtiTheSpirit](https://github.com/EtiTheSpirit): นักพัฒนาต้นฉบับ
+- [Per2iako](https://github.com/Per2iako): แก้ ActivesRef ถูกเขียนทับ (BaseParallel, ParallelSimulation)
+
+# ขอบคุณพิเศษ
+
+ขอบคุณอย่างสูงต่อคนต่างๆ ต่อไปนี้จาก Suphi Kaner Discord Server:
+
+- @avibah — สำหรับการช่วยเหลือฉันในการสร้าง VMDispatcher
+- @ace9b472eeec4f53ba9e8d91bo87c636 — สำหรับคำแนะนำ ข้อเสนอแนะ และความคิด
+- @23sinek345 — สำหรับการตรวจสอบโค้ด การสนทนาเกี่ยวกับเกณฑ์มาตรฐาน และการแนะนำการปรับปรุง
+
+และขอบคุณสำหรับทุกคนอื่นๆ ในเซิร์ฟเวอร์ที่ช่วยเหลือไป
+
+โดยทั่วไป ข้อเสนอแนะของชุมชนมีบทบาทสำคัญในการมีอยู่และการพัฒนาของ FastCast2 ความคิด การสนทนา และแหล่งที่มาของแรงจูงใจจำนวนมากมาจากการสนทนาภายในเซิร์ฟเวอร์ Discord ของ Suphi Kaner FastCast2 จะไม่อยู่ในสถานที่ที่ปัจจุบันโดยไม่มีการมีส่วนร่วม ข้อเสนอแนะ และการสนับสนุนของชุมชน
