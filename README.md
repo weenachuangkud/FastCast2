@@ -1,4 +1,3 @@
-
 <div style={{ textAlign: "center", marginBottom: 32 }}>
   <img
     src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb"
@@ -11,14 +10,16 @@
   />
 </div>
 
-<div style="text-align: center;">
+<div align="center">
 
 ![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
 [![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-> Unofficial continuation of FastCast for Roblox
-
 </div>
+
+<div align="center">
+
+Unofficial continuation of FastCast for Roblox
 
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br /> **A powerful modern projectile** library
 
@@ -26,7 +27,11 @@
 
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
+</div>
+
 <br />
+
+---
 
 # Benefits of using FastCast2
 
