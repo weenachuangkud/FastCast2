@@ -330,7 +330,7 @@ FastCast2.TerminateCast(cast)
 
 # คนที่อยู่เบื้องหลัง FastCast2 (ผู้มีส่วนร่วม)
 - [CK06](https://github.com/weenachuangkud): นักพัฒนาหลัก ผู้บำรุงรักษา ออกแบบกราฟิก
-- [Naymmmm](https://github.com/Naymmmm): ช่วยเหลือในเอกสารที่เหมาะสม CI, รองรับ Rojo, รองรับ wally, Github pages(Moonwave)
+- [Naymmmm](https://github.com/Naymmmm): ช่วยทํา docs เเละ CI ให้, เพิ่ม Rojo, เพิ่ม wally, เพิ่ม Github pages(Moonwave)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): นักพัฒนาต้นฉบับ
 - [Per2iako](https://github.com/Per2iako): แก้ ActivesRef ถูกเขียนทับ (BaseParallel, ParallelSimulation)
 
