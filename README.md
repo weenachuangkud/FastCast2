@@ -347,7 +347,7 @@ Special thanks to the following people from the Suphi Kaner Discord Server:
 
 And thanks to everyone else in the server who helped along the way.
 
-More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not be where it is today without the contributions, feedback, and support of the community.
+More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of the community.
 
 # Dependency
 - [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
