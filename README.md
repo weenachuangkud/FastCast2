@@ -11,14 +11,14 @@
   />
 </div>
 
-![Roblox](https://img.shields.io/badge/made%20for-Roblox-blue?style=for-the-badge&logo=roblox)
-![Luau](https://img.shields.io/badge/language-Luau-blueviolet?style=for-the-badge)
+<div style="text-align: center;">
+
 ![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
 [![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-# FastCast2
-
 > Unofficial continuation of FastCast for Roblox
+
+</div>
 
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br /> **A powerful modern projectile** library
 
