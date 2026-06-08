@@ -12,20 +12,22 @@
 
 <div align="center">
 
-![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
-[![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+Unofficial continuation of FastCast for Roblox
+
+**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br /> **A powerful modern projectile** library
 
 </div>
 
 <div align="center">
 
-Unofficial continuation of FastCast for Roblox
+![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
+[![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br /> **A powerful modern projectile** library <br>
 [English](README.md) |
 [ภาษาไทย](README.th.md)
 
 </div>
+
 
 </br>
 
