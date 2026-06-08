@@ -12,16 +12,17 @@
 
 <div align="center">
 
-![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
-[![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+ ความต่อเนื่องที่ไม่ใช่อย่างเป็นทางการของ FastCast สำหรับ Roblox
+
+**เวอร์ชันที่ปรับปรุงแล้วของ [FastCast](https://etithespir.it/FastCastAPIDocs/)** พร้อม **Parallel luau**, **Extensions เพิ่มเติม**, และ **statically typed**. <br /> **ไลบรารีโปรเจกไทล์ที่ทรงพลังและทันสมัย**
 
 </div>
 
 <div align="center">
 
- ความต่อเนื่องที่ไม่ใช่อย่างเป็นทางการของ FastCast สำหรับ Roblox
+![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
+[![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
 
-**เวอร์ชันที่ปรับปรุงแล้วของ [FastCast](https://etithespir.it/FastCastAPIDocs/)** พร้อม **Parallel luau**, **Extensions เพิ่มเติม**, และ **statically typed**. <br /> **ไลบรารีโปรเจกไทล์ที่ทรงพลังและทันสมัย** </br>
 [English](README.md) |
 [ภาษาไทย](README.th.md)
 
@@ -29,6 +30,8 @@
 
 **FastCast2** เป็น **ไลบรารีโปรเจกไทล์ของ Roblox** ออกแบบมาเพื่อจำลอง**หลายพันโปรเจกไทล์** โดยไม่ต้องพึ่งพาการจำลองฟิสิกส์ </br>
 เนื่องจาก FastCast ไม่ได้รับการบำรุงรักษาอย่างแข็งขันโดย [EtiTheSpirit](https://github.com/EtiTheSpirit) ที่เก็บนี้จึงดำเนินโครงการต่อไปด้วยการปรับปรุงและปรับตัว
+
+---
 
 <br />
 
