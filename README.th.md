@@ -21,7 +21,9 @@
 
  ความต่อเนื่องที่ไม่ใช่อย่างเป็นทางการของ FastCast สำหรับ Roblox
 
-**เวอร์ชันที่ปรับปรุงแล้วของ [FastCast](https://etithespir.it/FastCastAPIDocs/)** พร้อม **Parallel luau**, **Extensions เพิ่มเติม**, และ **statically typed**. <br /> **ไลบรารีโปรเจกไทล์ที่ทรงพลังและทันสมัย**
+**เวอร์ชันที่ปรับปรุงแล้วของ [FastCast](https://etithespir.it/FastCastAPIDocs/)** พร้อม **Parallel luau**, **Extensions เพิ่มเติม**, และ **statically typed**. <br /> **ไลบรารีโปรเจกไทล์ที่ทรงพลังและทันสมัย** </br>
+[English](README.md) |
+[ภาษาไทย](README.th.md)
 
 </div>
 
