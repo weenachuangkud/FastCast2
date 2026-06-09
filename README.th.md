@@ -329,7 +329,7 @@ FastCast2:TerminateCast(cast)
 
 > **เคล็ดลับ**: ในโหมดขนาน โทร `Caster:SyncChangesToCast(cast)` หลังจากปรับเปลี่ยนเพื่อดันการเปลี่ยนแปลงเข้าสู่เวิร์กเกอร์ VM
 
-### -> เริ่มต้นใช้ [เอกสาร FastCast2](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
+### -> เริ่มต้นใช้ [docs FastCast2](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
 
 ---
 
@@ -351,6 +351,6 @@ FastCast2:TerminateCast(cast)
 
 ข้อเสนอแนะของชุมชนมีบทบาทสำคัญในการพัฒนาของ FastCast2 ความคิดเห็น การสนทนา และแหล่งที่มาของแรงจูงใจจำนวนมากมาจากการสนทนาภายในเซิร์ฟเวอร์ Discord ของ Suphi Kaner, FastCast2 คงจะไม่เกิดขึ้นถ้าไม่มีการมีส่วนร่วม ข้อเสนอแนะ และการสนับสนุนของชุมชน
 
-# การพึ่งพา
+# การพึ่งพา(Dependency)
 - [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
 - [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)
