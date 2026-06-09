@@ -113,25 +113,25 @@ Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → (
 
 --// Cast Manipulation  (use FastCast static methods)
 
-FastCast.GetPositionCast(cast) → Vector3
-FastCast.GetVelocityCast(cast) → Vector3
-FastCast.GetAccelerationCast(cast) → Vector3
+FastCast:GetPositionCast(cast) → Vector3
+FastCast:GetVelocityCast(cast) → Vector3
+FastCast:GetAccelerationCast(cast) → Vector3
 
-FastCast.SetVelocityCast(cast, velocity) → ()
-FastCast.SetAccelerationCast(cast, acceleration) → ()
-FastCast.SetPositionCast(cast, position) → ()
+FastCast:SetVelocityCast(cast, velocity) → ()
+FastCast:SetAccelerationCast(cast, acceleration) → ()
+FastCast:SetPositionCast(cast, position) → ()
 
-FastCast.AddPositionCast(cast, position) → ()
-FastCast.AddVelocityCast(cast, velocity) → ()
-FastCast.AddAccelerationCast(cast, acceleration) → ()
+FastCast:AddPositionCast(cast, position) → ()
+FastCast:AddVelocityCast(cast, velocity) → ()
+FastCast:AddAccelerationCast(cast, acceleration) → ()
 
 -- ⚠ After any Set/Add, sync changes to push state to the worker VM:
 Caster:SyncChangesToCast(cast) → ()
 
-FastCast.TerminateCast(cast) → ()
+FastCast:TerminateCast(cast) → ()
 -- TerminateCast fires CastTerminating, returns cosmetic to cache, and unregisters the cast.
 -- Call from Hit/Pierced callback to stop a cast early:
--- caster.Hit = function(cast) FastCast.TerminateCast(cast) end
+-- caster.Hit = function(cast) FastCast:TerminateCast(cast) end
 
 
 --// Lifecycle
