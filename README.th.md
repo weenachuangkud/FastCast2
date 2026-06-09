@@ -309,22 +309,22 @@ Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- สลับกลับ
 
 ```lua
 -- อ่านสถานะ
-local pos = FastCast2.GetPositionCast(cast)
-local vel = FastCast2.GetVelocityCast(cast)
-local accel = FastCast2.GetAccelerationCast(cast)
+local pos = FastCast2:GetPositionCast(cast)
+local vel = FastCast2:GetVelocityCast(cast)
+local accel = FastCast2:GetAccelerationCast(cast)
 
 -- ปรับเปลี่ยนสถานะ (โดยอัตโนมัติจะปรับเส้นทางใหม่)
-FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
-FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
-FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+FastCast2:SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2:SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2:SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
 
 -- การเปลี่ยนแปลงสัมพัทธ์
-FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
-FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
-FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+FastCast2:AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2:AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2:AddAccelerationCast(cast, Vector3.new(0, -50, 0))
 
 -- สิ้นสุดแคสต์ก่อนเวลาอันควร (ไฟร์ CastTerminating และทำความสะอาด)
-FastCast2.TerminateCast(cast)
+FastCast2:TerminateCast(cast)
 ```
 
 > **เคล็ดลับ**: ในโหมดขนาน โทร `Caster:SyncChangesToCast(cast)` หลังจากปรับเปลี่ยนเพื่อดันการเปลี่ยนแปลงเข้าสู่เวิร์กเกอร์ VM
