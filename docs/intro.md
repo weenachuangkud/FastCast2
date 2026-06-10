@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 <div style={{ textAlign: "center", marginBottom: 32 }}>
   <img
     src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb"
@@ -14,22 +10,31 @@ sidebar_position: 1
   />
 </div>
 
-![Roblox](https://img.shields.io/badge/made%20for-Roblox-blue?style=for-the-badge&logo=roblox)
-![Luau](https://img.shields.io/badge/language-Luau-blueviolet?style=for-the-badge)
-![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
-[![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+<div align="center">
 
-# FastCast2
-
-> Unofficial continuation of FastCast for Roblox
+Unofficial continuation of FastCast for Roblox
 
 **An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br /> **A powerful modern projectile** library
 
-**FastCast2** It's a **Roblox projectile library** powered by [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher) designed to simulate **thousands** of projectiles without relying on physics replication.
+</div>
 
+<div align="center">
+
+![GitHub release](https://img.shields.io/github/v/release/weenachuangkud/FastCast2?style=for-the-badge)
+[![DevForum](https://img.shields.io/badge/discuss-DevForum-orange?style=for-the-badge&logo=roblox)](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+
+[English](README.md) |
+[ภาษาไทย](README.th.md)
+
+</div>
+
+
+<br>
+
+**FastCast2** It's a **Roblox projectile library**, designed to simulate **thousands** of projectiles without relying on physics replication. <br>
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
-<br />
+---
 
 # Benefits of using FastCast2
 
@@ -306,22 +311,22 @@ Modify active casts at runtime using the static `FastCast` methods:
 
 ```lua
 -- Read state
-local pos = FastCast2.GetPositionCast(cast)
-local vel = FastCast2.GetVelocityCast(cast)
-local accel = FastCast2.GetAccelerationCast(cast)
+local pos = FastCast2:GetPositionCast(cast)
+local vel = FastCast2:GetVelocityCast(cast)
+local accel = FastCast2:GetAccelerationCast(cast)
 
 -- Modify state (automatically rebases trajectory)
-FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
-FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
-FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+FastCast2:SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2:SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2:SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
 
 -- Relative changes
-FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
-FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
-FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+FastCast2:AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2:AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2:AddAccelerationCast(cast, Vector3.new(0, -50, 0))
 
 -- Terminate a cast early (fires CastTerminating and cleans up)
-FastCast2.TerminateCast(cast)
+FastCast2:TerminateCast(cast)
 ```
 
 > **Tip**: In parallel mode, call `Caster:SyncChangesToCast(cast)` after modifying to push changes into the worker VM.
@@ -346,4 +351,8 @@ Special thanks to the following people from the Suphi Kaner Discord Server:
 
 And thanks to everyone else in the server who helped along the way.
 
-More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not be where it is today without the contributions, feedback, and support of the community.
+More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of the community.
+
+# Dependency
+- [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
+- [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)
