@@ -31,7 +31,7 @@ Unofficial continuation of FastCast for Roblox
 
 <br>
 
-**FastCast2** It's a **Roblox projectile library**, designed to simulate **thousands** of projectiles without relying on physics replication. <br>
+**FastCast2** It's a **Roblox projectile library**, designed to simulate **thousands** of projectiles without relying on physics replication. <br/>
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
 ---
