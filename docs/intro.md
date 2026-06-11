@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 <div style={{ textAlign: "center", marginBottom: 32 }}>
   <img
     src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb"
@@ -33,9 +29,9 @@ Unofficial continuation of FastCast for Roblox
 </div>
 
 
-<br>
+<br />
 
-**FastCast2** It's a **Roblox projectile library**, designed to simulate **thousands** of projectiles without relying on physics replication. <br>
+**FastCast2** It's a **Roblox projectile library**, designed to simulate **thousands** of projectiles without relying on physics replication. <br />
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
 ---
