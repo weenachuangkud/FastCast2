@@ -16,9 +16,6 @@ url = "https://weenachuangkud.github.io"
 baseUrl = "/FastCast2"
 tagline = "Your project's tagline"
 
-metadata = [
-  { name = "google-site-verification", content = "kN_eRnuCxVbaSABQP47gkexzk3jxFG8OkMZSgki9o0k" }
-]
 
 [footer]
 style = "dark"
