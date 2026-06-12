@@ -1,0 +1,22 @@
+{
+  "title": "FastCast2",
+  "gitRepoUrl": "https://github.com/weenachuangkud/FastCast2",
+  "gitSourceBranch": "main",
+  "changelog": true,
+  "classOrder": [],
+  "docusaurus": {
+    "onBrokenLinks": "throw",
+    "onBrokenMarkdownLinks": "warn",
+    "organizationName": "weenachuangkud",
+    "projectName": "FastCast2",
+    "url": "https://weenachuangkud.github.io",
+    "baseUrl": "/FastCast2",
+    "tagline": "Your project's tagline",
+    "metadata": [
+      { "name": "google-site-verification", "content": "kN_eRnuCxVbaSABQP47gkexzk3jxFG8OkMZSgki9o0k" }
+    ]
+  },
+  "footer": {
+    "style": "dark"
+  }
+}
