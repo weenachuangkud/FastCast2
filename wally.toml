@@ -1,7 +1,31 @@
 [package]
-name = "weenachuangkud/fastcast2" # Replace with your Roblox username and project name
+name = "weenachuangkud/fastcast2"
 description = "An improved version of FastCast with Parallel scripting, more extensions, and statically typed"
-author = ["Mawin Chuangkud"]
+author = "Mawin Chuangkud"
 version = "0.1.0"
-registry = "https://github.com/weenachuangkud/FastCast2"
-realm = "shared" # Or "server" or "client" depending on your package's scope
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+exclude = [
+  "node_modules/**",
+  ".git/**",
+  "build/**",
+  "docs/**",
+  "benchmarks/**",
+  ".agents/**",
+  ".moonwave/**",
+  ".github/**",
+  ".vscode/**",
+  "README.md",
+  "README.th.md",
+  "TODO.md",
+  "moonwave.toml",
+  "selene.toml",
+  "package.json",
+  "package-lock.json",
+  "CONTRIBUTING.md",
+  "AGENTS.md",
+  "LICENSE-CC-BY-NC-ND",
+  "LICENSE-MIT",
+]
+
+[dependencies]
