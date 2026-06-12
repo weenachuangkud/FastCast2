@@ -140,22 +140,22 @@ caster:SpherecastFire(Vector3.new(0, 5, 0), 3, Vector3.new(0, 0, -1), 500, behav
 
 ```lua
 -- Getters
-FastCast.GetPositionCast(cast) → Vector3
-FastCast.GetVelocityCast(cast) → Vector3
-FastCast.GetAccelerationCast(cast) → Vector3
+FastCast:GetPositionCast(cast) → Vector3
+FastCast:GetVelocityCast(cast) → Vector3
+FastCast:GetAccelerationCast(cast) → Vector3
 
 -- Setters (modifies trajectory, triggers CancelHighResCast)
-FastCast.SetVelocityCast(cast, velocity) → ()
-FastCast.SetAccelerationCast(cast, acceleration) → ()
-FastCast.SetPositionCast(cast, position) → ()
+FastCast:SetVelocityCast(cast, velocity) → ()
+FastCast:SetAccelerationCast(cast, acceleration) → ()
+FastCast:SetPositionCast(cast, position) → ()
 
 -- Adders (relative modification)
-FastCast.AddPositionCast(cast, position) → ()
-FastCast.AddVelocityCast(cast, velocity) → ()
-FastCast.AddAccelerationCast(cast, acceleration) → ()
+FastCast:AddPositionCast(cast, position) → ()
+FastCast:AddVelocityCast(cast, velocity) → ()
+FastCast:AddAccelerationCast(cast, acceleration) → ()
 
 -- Termination
-FastCast.TerminateCast(cast) → ()
+FastCast:TerminateCast(cast) → ()
 ```
 
 In **parallel mode**, call `caster:SyncChangesToCast(cast)` after any Set/Add to push state to the worker VM.
