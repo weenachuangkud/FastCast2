@@ -7,6 +7,7 @@
 - [ ] Performance guide and best practices (DOCS)
 - [ ] Common pitfalls and FAQ (DOCS)
 - [ ] Add benchmark pics to `docs/` and `README.md` (DOCS)
+- [ ] Add benchmark GIF demo to `README.md` showing projectiles in action (DOCS)
 - [ ] troubleshooting guide (DOCS)
 - [ ] advanced examples (DOCS)
 - [ ] Create a new FastCast2 cover image (DOCS)
