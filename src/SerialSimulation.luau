@@ -369,7 +369,7 @@ function SerialSimulation:FireQueuedVisualizes(unFiredVisualizes: { [number]: { 
 		table.insert(sortedIDs, id)
 	end
 	table.sort(sortedIDs)
-	
+
 	for _, castID in sortedIDs do
 		local visualizesList = unFiredVisualizes[castID]
 		if not visualizesList or not next(visualizesList) then
@@ -451,9 +451,10 @@ function SerialSimulation:FireQueuedEvents(unFiredEvents: { [number]: { QueuedEv
 				local lastPoint = args[1]
 				local rayDir = args[2]
 				local rayDisplacement = args[3]
+				local segmentVelocity, CosmeticBulletObject = args[4], args[5]
 
 				if eventConfig and eventConfig.UseLengthChanged and eventsFunction.LengthChanged then
-					eventsFunction.LengthChanged(cast, lastPoint, rayDir, rayDisplacement)
+					eventsFunction.LengthChanged(cast, lastPoint, rayDir, rayDisplacement, segmentVelocity, CosmeticBulletObject)
 				end
 
 			elseif eventType == "Hit" then
@@ -563,7 +564,7 @@ function SerialSimulation:SimulateCast(
 
 	casts_CFrame[id] = (if rayDir ~= Vector3.new() then CFrame.new(lastPoint, lastPoint + rayDir) else CFrame.new(lastPoint)) * CFrame.new(0, 0, -rayDisplacement / 2)
 
-	self:QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
+	self:QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 
 	casts_DistanceCovered[id] += rayDisplacement
 
@@ -859,8 +860,8 @@ function SerialSimulation:UpdateCasts(delta: number)
 end
 
 function SerialSimulation.new()
-    local self = setmetatable({}, SerialSimulation)
-    self.Connection = nil
+	local self = setmetatable({}, SerialSimulation)
+	self.Connection = nil
 	self.CurrentMovementMode = "BulkMoveTo"
 	self.MovementEnabled = true
 	self.Events = {}

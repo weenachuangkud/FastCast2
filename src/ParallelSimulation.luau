@@ -285,7 +285,7 @@ local function FireQueuedVisualizes(unFiredVisualizes: { [number]: { QueuedVisua
 		table.insert(sortedIDs, id)
 	end
 	table.sort(sortedIDs)
-	
+
 	for _, castID in sortedIDs do
 		local visualizesList = unFiredVisualizes[castID]
 		if not visualizesList or not next(visualizesList) then
@@ -368,13 +368,14 @@ local function FireQueuedEvents(events: { [number]: { QueuedEventData } })
 				local lastPoint = args[1]
 				local rayDir = args[2]
 				local rayDisplacement = args[3]
+				local segmentVelocity, CosmeticBulletObject = args[4], args[5]
 
 				if eventConfig and eventConfig.UseLengthChanged then
-					caster.Output:Fire("LengthChanged", cast, lastPoint, rayDir, rayDisplacement)
+					caster.Output:Fire("LengthChanged", cast, lastPoint, rayDir, rayDisplacement, segmentVelocity, CosmeticBulletObject)
 				end
 
 				if moduleConfig and moduleConfig.UseLengthChanged and fastCastEvents and fastCastEvents.LengthChanged then
-					fastCastEvents.LengthChanged(cast, lastPoint, rayDir, rayDisplacement)
+					fastCastEvents.LengthChanged(cast, lastPoint, rayDir, rayDisplacement, segmentVelocity, CosmeticBulletObject)
 				end
 
 			elseif eventType == "Hit" then
@@ -625,7 +626,7 @@ local function SimulateCast(
 
 	casts_CFrame[id] = (if rayDir ~= Vector3.new() then CFrame.new(lastPoint, lastPoint + rayDir) else CFrame.new(lastPoint)) * CFrame.new(0, 0, -rayDisplacement / 2)
 
-	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement)
+	QueueEvent(id, "LengthChanged", lastPoint, rayDir.Unit, rayDisplacement, segmentVelocity, casts_RayInfo[id].CosmeticBulletObject)
 
 	casts_DistanceCovered[id] += rayDisplacement
 
@@ -873,7 +874,7 @@ local function UpdateCasts(delta: number)
 			end
 
 			local cast_nil = false
-			
+
 			for segmentIndex = 1, numSegmentsReal do
 
 				-- In case when cast Destroyed or not exist
