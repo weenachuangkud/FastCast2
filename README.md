@@ -337,12 +337,9 @@ FastCast2:TerminateCast(cast)
 
 # People behind FastCast2(Contributors)
 - [CK06](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
-- [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
+- [Naymmmm](https://github.com/Naymmmm): Maintainer (Inactive)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
-- [Per2iako](https://github.com/Per2iako):
-  - Fix: ActivesRef was overwritten (BaseParallel, ParallelSimulation)
-  - Resolved: LengthChanged missing a parameter in SerialSimulation.luau, ParallelSimulation.luau
-
+- [Per2iako](https://github.com/Per2iako): Maintainer
 
 # Special Thanks
 
