@@ -88,7 +88,7 @@ caster:Init(
 | `VMContainerName` | `string` | Name for VM Containers |
 | `VMname` | `string` | Name given to each worker VM |
 | `movementMode` | `"BulkMoveTo" \| "Motor6D"` | Movement method |
-| `fastCastEventsModule` | `ModuleScript?` | FastCastEvents module (see §4.1) |
+| `fastCastEventsModule` | `ModuleScript?` | FastCastEvents module |
 | `useObjectCache` | `boolean` | Enable ObjectCache |
 | `template` | `BasePart \| Model?` | ObjectCache template |
 | `cacheSize` | `number?` | ObjectCache size |
