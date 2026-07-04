@@ -14,3 +14,4 @@
 - [ ] Create a FastCast2 tutorial video
 - [ ] Include the `.rbxl` file in the latest release
 - [ ] Write a "Why FastCast2?" comparison post on DevForum vs original FastCast
+- [ ] Update Roblox Model of FastCast2
