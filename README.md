@@ -343,7 +343,7 @@ FastCast2:TerminateCast(cast)
 
 # Special Thanks
 
-Special thanks to the following people from the Suphi Kaner Discord Server:
+### Special thanks to the following people from the Suphi Kaner Discord Server:
 
 - @avibah — For helping me create VMDispatcher
 - @ace9b472eeec4f53ba9e8d91bo87c636 — For advice, feedback, and ideas
@@ -351,7 +351,10 @@ Special thanks to the following people from the Suphi Kaner Discord Server:
 
 And thanks to everyone else in the server who helped along the way.
 
-More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of the community.
+More broadly, this community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of this community.
+
+### Special thanks to the following people from [The Revolutionary Computer Union](https://www.roblox.com/communities/336090209/TRCU-The-Revolutionary-Computer-Union#!/about):
+- [@nerd0ne](https://github.com/nerd0ne) — Pointing out a broken Wally setup
 
 # Dependency
 - [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
