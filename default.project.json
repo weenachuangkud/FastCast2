@@ -1,9 +1,6 @@
 {
 	"name": "FastCast2",
 	"tree": {
-		"$path": "src/Packages",
-		"FastCast2": {
-			"$path": "src"
-		}
+		"$path": "src"
 	}
 }
