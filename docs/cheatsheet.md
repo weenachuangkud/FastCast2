@@ -19,7 +19,7 @@ caster:RaycastFire(origin, direction, 500, behavior)
 
 ## Caster — Serial Mode
 
-```luau
+```lua
 --// Construct & Init
 
 local Caster = FastCast2.new()  -- Construct a new Serial Caster
@@ -70,7 +70,7 @@ Caster:Destroy() → ()
 
 ## Caster — Parallel Mode
 
-```luau
+```lua
 --// Construct & Init
 
 local Caster = FastCast2.newParallel()
@@ -143,7 +143,7 @@ Caster:Destroy() → ()
 
 ## FastCastBehavior
 
-```luau
+```lua
 local behavior = FastCast2.newBehavior()
 
 behavior.RaycastParams = RaycastParams.new()
@@ -181,7 +181,7 @@ behavior.FastCastEventsModuleConfig = {
 
 ## ActiveCastData
 
-```luau
+```lua
 cast.ID: number              -- Unique cast identifier
 cast.Type: number            -- 1=Raycast, 2=Blockcast, 3=Spherecast
 cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
