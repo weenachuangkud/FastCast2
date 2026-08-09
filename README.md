@@ -73,24 +73,14 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 ---
 
-## Install with Rojo
+## Install with [Wally](https://wally.run/)
 
-1. Install the [Rojo CLI](https://rojo.space/docs/installation/) for your system.
-2. Clone this repository:
-   ```bash
-   git clone https://github.com/weenachuangkud/FastCast2.git
-   cd FastCast2
-   rm -rf .git
-   ```
-3. Sync to Roblox:
-   ```bash
-   rojo sync -o <place-name>
-   ```
-   Or serve live with:
-   ```bash
-   rojo serve
-   ```
-   Then connect in Roblox Studio via **Studio → Plugins → Rojo**.
+1. Make you have installed Wally: https://wally.run/install
+2. After you've installed Wally, make sure to `wally init`
+3. Then inside `wally.toml` below `[dependencies]` copy and paste `FastCast2 = "weenachuangkud/fastcast2@0.1.3"`
+4. Run `wally install`, and you're ready to use
+
+NOTE: This does not include rojo setup
 
 ---
 
