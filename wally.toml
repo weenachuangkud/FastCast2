@@ -2,7 +2,7 @@
 name = "weenachuangkud/fastcast2"
 description = "An improved version of FastCast with Parallel scripting, more extensions, and statically typed"
 author = "Mawin Chuangkud"
-version = "0.1.3" # bumped for publish
+version = "0.1.4" # bumped for publish
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 exclude = ["**"]
