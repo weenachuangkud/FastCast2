@@ -63,6 +63,37 @@ local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
 local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
 
+-- Type Exports
+export type FastCastEventsModule = TypeDef.FastCastEventsModule
+export type FastCastEvents = TypeDef.FastCastEvents
+
+export type CanPierceFunction = TypeDef.CanPierceFunction
+export type OnHitFunction = TypeDef.OnHitFunction
+export type OnPiercedFunction = TypeDef.OnPiercedFunction
+export type OnLengthChangedFunction = TypeDef.OnLengthChangedFunction
+export type OnCastTerminatingFunction = TypeDef.OnCastTerminatingFunction
+export type OnCastFireFunction = TypeDef.OnCastFireFunction
+
+export type VisualizeCastSettings = TypeDef.VisualizeCastSettings
+
+export type CasterParallel = TypeDef.CasterParallel
+export type CasterSerial = TypeDef.CasterSerial
+
+export type FastCastEventsModuleConfig = TypeDef.FastCastEventsModuleConfig
+export type FastCastEventsConfig = TypeDef.FastCastEventsConfig
+export type FastCastBehavior = TypeDef.FastCastBehavior
+
+export type CastTrajectory = TypeDef.CastTrajectory
+export type CastStateInfo = TypeDef.CastStateInfo
+export type CastRayInfo = TypeDef.CastRayInfo
+export type BlockCastRayInfo = TypeDef.BlockCastRayInfo
+export type SphereCastRayInfo = TypeDef.SphereCastRayInfo
+
+export type BaseCastData = TypeDef.BaseCastData
+export type ActiveCastData = TypeDef.ActiveCastData
+export type ActiveBlockcastData = TypeDef.ActiveBlockcastData
+export type ActiveSpherecastData = TypeDef.ActiveSpherecastData
+
 -- Types
 type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.ActiveSpherecastData
 
