@@ -77,7 +77,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 
 1. Make you have installed Wally: https://wally.run/install
 2. After you've installed Wally, make sure to `wally init`
-3. Then inside `wally.toml` below `[dependencies]` copy and paste `FastCast2 = "weenachuangkud/fastcast2@0.1.3"`
+3. Then inside `wally.toml` below `[dependencies]` copy and paste `FastCast2 = "weenachuangkud/fastcast2@0.1.4"`
 4. Run `wally install`, and you're ready to use
 
 NOTE: This does not include rojo setup

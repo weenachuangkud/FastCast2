@@ -76,7 +76,7 @@ FastCast2 เป็นโปรเจกต์ open-source และยินด
 
 1. ตรวจสอบว่าติดตั้ง Wally แล้ว: https://wally.run/install
 2. หลังติดตั้ง Wally เรียบร้อย ให้รัน `wally init`
-3. จากนั้นในไฟล์ `wally.toml` ใต้หัวข้อ `[dependencies]` ให้คัดลอกและวาง `FastCast2 = "weenachuangkud/fastcast2@0.1.3"`
+3. จากนั้นในไฟล์ `wally.toml` ใต้หัวข้อ `[dependencies]` ให้คัดลอกและวาง `FastCast2 = "weenachuangkud/fastcast2@0.1.4"`
 4. รัน `wally install` แล้วก็พร้อมใช้งานได้เลย
 
 หมายเหตุ: ขั้นตอนนี้ไม่รวมการตั้งค่า rojo
