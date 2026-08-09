@@ -333,7 +333,7 @@ FastCast2:TerminateCast(cast)
 
 # Special Thanks
 
-### Special thanks to the following people from the Suphi Kaner Discord Server:
+### Special thanks to the following people from the [the Suphi Kaner Discord Server](https://youtube.com/@5uphi?si=gWWZ6RNqaEYx26az):
 
 - @avibah — For helping me create VMDispatcher
 - @ace9b472eeec4f53ba9e8d91bo87c636 — For advice, feedback, and ideas
