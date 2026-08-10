@@ -343,8 +343,10 @@ And thanks to everyone else in the server who helped along the way.
 
 More broadly, this community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of this community.
 
-### Special thanks to the following people from [The Revolutionary Computer Union](https://www.roblox.com/communities/336090209/TRCU-The-Revolutionary-Computer-Union#!/about):
-- [@nerd0ne](https://github.com/nerd0ne) — Pointing out a broken Wally setup
+### Special thanks to the following people from [The Revolutionary Computer Union](https://www.roblox.com/communities/336090209/TRCU-The-Revolutionary-Computer-Union#!/about), [The Glorious Robot Army](https://www.roblox.com/communities/35956498/TRCU-The-Glorious-Robot-Army#!/about):
+
+- [nerd0ne](https://github.com/nerd0ne) — Pointing out a broken Wally setup
+- [90gq31](https://computerunion.miraheze.org/90gq31) — Giving me the opportunity to be part of the community
 
 # Dependency
 - [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
