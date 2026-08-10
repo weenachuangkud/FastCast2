@@ -40,6 +40,13 @@ Examples:
 
 (It's recommended to follow this Instruction guideline, but you can make lazy commits if you want, because even the main developer still does that)
 
+### Changelog Policy
+
+I'm not strict about changelogs, and I don't really bother writing explicit changelogs, but:
+
+- If you make any changes, modifications, or fixes to something, at least let me know.
+- I'll mostly use the DevForum to tell you guys about any changes or fixes.
+
 ### Communication
 - You can ask me questions, contact me through [devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed-a-powerful-modern-projectile-library/4093890) directly
 
