@@ -1,7 +1,7 @@
 # Contributing to FastCast2
 
 **Thank you** for considering contributing to FastCast2!  
-This project is open-source and community-driven, and **all kinds of help are welcome** — code, documentation, bug reports, examples, ideas, or even just spreading the word.
+This project is open-source and community-driven, and **all kinds of help are welcome** - code, documentation, bug reports, examples, ideas, or even just spreading the word.
 
 ### How to Contribute
 
@@ -27,7 +27,7 @@ All pull requests will go through **code review** before merging.
 - Code should be **clean, readable, and follow existing style** (Luau typing, naming conventions, etc.)
 - New features should have **basic tests** (when applicable) or clear usage examples
 - Documentation should be updated if the public API changes
-- Keep PRs **focused** — one feature/fix per pull request is ideal
+- Keep PRs **focused** - one feature/fix per pull request is ideal
 - Be prepared to make changes based on feedback
 
 ### Commit Message Guidelines
