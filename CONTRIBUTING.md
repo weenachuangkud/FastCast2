@@ -40,6 +40,9 @@ Examples:
 
 (It's recommended to follow this Instruction guideline, but you can make lazy commits if you want, because even the main developer still does that)
 
+### Communication
+- You can ask me questions, contact me through [devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed-a-powerful-modern-projectile-library/4093890) directly
+
 ### Rules
 
 - **Be respectful** — to everyone (maintainers, other contributors, users)
