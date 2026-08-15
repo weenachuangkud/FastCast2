@@ -1,7 +1,7 @@
 # Contributing to FastCast2
 
 **Thank you** for considering contributing to FastCast2!  
-This project is open-source and community-driven, and **all kinds of help are welcome** - code, documentation, bug reports, examples, ideas, or even just spreading the word.
+This project is open-source and community-driven, and **all kinds of help are welcome**, code or documentation, bug reports, examples, ideas, or even just spreading the word.
 
 ### How to Contribute
 
