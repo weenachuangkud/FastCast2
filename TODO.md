@@ -1,6 +1,7 @@
 - [ ] Create multiple games, libraries, and frameworks using FastCast2, and showcase them in `docs/showcase.md` (DOCS)
 - [ ] Create a Debugger GUI for benchmarking and testing (debuggergui)
 - [ ] Add automated testing (test)
+- [ ] Code improvements
 - [ ] Add dynamic RunService event configuration for Caster (feats)
 - [ ] Add `BindToSimulation` and `UseFixedSimulation` (feats)
 - [ ] Migration guide from FastCast Redux/FastCast (DOCS)
