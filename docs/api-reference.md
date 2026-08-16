@@ -326,7 +326,7 @@ Register it:
 caster:SetFastCastEventsModule(pathToModule)
 ```
 
-> **Note**: Not available in Serial mode — use direct event callbacks instead.
+> **Note**: Not available in Serial mode, it use direct event callbacks instead.
 
 ---
 
