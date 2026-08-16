@@ -4,7 +4,7 @@
 
 ### 1.1 Serial Mode (`FastCast.new()`)
 
-Serial Caster runs all cast simulations on the main thread. Simpler to use but less performant than Parallel.
+Serial Caster runs all cast simulations on the main thread. Simpler.
 
 ```lua
 local caster = FastCast2.new()
