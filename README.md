@@ -176,7 +176,7 @@ Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
 The cache pre-allocates 500 parts by default, auto-expands when exhausted, and moves retired
 parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction overhead.
 
-### Parallel mode (high-performance with multiple VMs)
+### Parallel mode
 
 ```lua
 local Caster = FastCast2.newParallel()
