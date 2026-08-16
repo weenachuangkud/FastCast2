@@ -339,12 +339,3 @@ caster:SetFastCastEventsModule(pathToModule)
 | **Always** | `3` | Always subdivides every frame. Most accurate, most expensive. |
 
 `HighFidelitySegmentSize` controls the segment size for sub-stepping (default 0.5 studs).
-
----
-
-## 6. Performance
-
-- **Serial Mode**: Single RunService connection with SoA (Structure of Arrays) for all active casts
-- **Parallel Mode**: One RunService per Actor VM, each with its own SoA instance
-
-This eliminates per-cast RunService connections entirely, replacing them with dense array iteration — O(n) per frame regardless of mode.
