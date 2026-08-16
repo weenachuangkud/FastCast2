@@ -43,7 +43,7 @@ Switch modes at runtime with `caster:SetMovementMode(mode)`.
 
 #### 1.1.4 ObjectCache
 
-ObjectCache reuses projectile parts for better performance:
+ObjectCache reuses projectile parts:
 
 ```lua
 caster:Init("BulkMoveTo", true, projectileTemplate, 500, workspace)
@@ -53,7 +53,7 @@ caster:Init("BulkMoveTo", true, projectileTemplate, 500, workspace)
 
 ### 1.2 Parallel Mode (`FastCast.newParallel()`)
 
-Parallel Caster runs cast simulations on separate Actor VMs for high-performance scenarios.
+Parallel Caster runs cast simulations on separate Actor VMs.
 
 ```lua
 local caster = FastCast2.newParallel()
