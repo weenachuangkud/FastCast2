@@ -163,7 +163,7 @@ Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
 Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
-### ObjectCache (bullet pooling)
+### ObjectCache (Or object pooling)
 
 ObjectCache reuses cosmetic bullet instances instead of creating/destroying them every shot:
 
