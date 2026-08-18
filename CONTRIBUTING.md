@@ -49,7 +49,7 @@ I'm not strict about changelogs, and I don't really bother writing explicit chan
 
 ### Communication
 - You can ask me questions, contact me through [devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed-a-powerful-modern-projectile-library/4093890) directly
-- Or through [Official Roblox FastCast2 discord community](https://discord.gg/TMZpxjZk)
+- Or through [Official Roblox FastCast2 discord community](https://discord.gg/MqxV6jFYKp)
 
 ### Rules
 
