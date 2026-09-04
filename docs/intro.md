@@ -64,33 +64,18 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 3. Go to **File → Import Roblox Model** and import the `.rbxm` file.
 4. After importing, **FastCast2** will appear in your Workspace.
 5. Drag **FastCast2** into **ReplicatedStorage**.
-6. Create a Part and set:
-   - Size to `1, 1, 1`
-   - `CanTouch` = false  
-   - `CanCollide` = false  
-   - `CanQuery` = false  
-7. Done — you’re ready to use FastCast2.
+6. Done — you’re ready to use FastCast2.
 
 ---
 
-## Install with Rojo
+## Install with [Wally](https://wally.run/)
 
-1. Install the [Rojo CLI](https://rojo.space/docs/installation/) for your system.
-2. Clone this repository:
-   ```bash
-   git clone https://github.com/weenachuangkud/FastCast2.git
-   cd FastCast2
-   rm -rf .git
-   ```
-3. Sync to Roblox:
-   ```bash
-   rojo sync -o <place-name>
-   ```
-   Or serve live with:
-   ```bash
-   rojo serve
-   ```
-   Then connect in Roblox Studio via **Studio → Plugins → Rojo**.
+1. Make you have installed Wally: https://wally.run/install
+2. After you've installed Wally, make sure to `wally init`
+3. Then inside `wally.toml` below `[dependencies]` copy and paste `FastCast2 = "weenachuangkud/fastcast2@0.1.4"`
+4. Run `wally install`, and you're ready to use
+
+NOTE: This does not include rojo setup
 
 ---
 
@@ -173,7 +158,7 @@ Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
 Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
-### ObjectCache (bullet pooling)
+### ObjectCache (Or object pooling)
 
 ObjectCache reuses cosmetic bullet instances instead of creating/destroying them every shot:
 
@@ -186,7 +171,7 @@ Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
 The cache pre-allocates 500 parts by default, auto-expands when exhausted, and moves retired
 parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction overhead.
 
-### Parallel mode (high-performance with multiple VMs)
+### Parallel mode
 
 ```lua
 local Caster = FastCast2.newParallel()
@@ -337,13 +322,13 @@ FastCast2:TerminateCast(cast)
 
 # People behind FastCast2(Contributors)
 - [CK06](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
-- [Naymmmm](https://github.com/Naymmmm): Help with proper docs, CI, Rojo supports, wally supports, Github pages(Moonwave)
+- [Naymmmm](https://github.com/Naymmmm): Maintainer (Inactive)
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
-- [Per2iako](https://github.com/Per2iako): Fix ActivesRef was overwritten (BaseParallel, ParallelSimulation)
+- [Per2iako](https://github.com/Per2iako): Maintainer
 
 # Special Thanks
 
-Special thanks to the following people from the Suphi Kaner Discord Server:
+### Special thanks to the following people from the [the Suphi Kaner Discord Server](https://youtube.com/@5uphi?si=gWWZ6RNqaEYx26az):
 
 - @avibah — For helping me create VMDispatcher
 - @ace9b472eeec4f53ba9e8d91bo87c636 — For advice, feedback, and ideas
@@ -351,7 +336,12 @@ Special thanks to the following people from the Suphi Kaner Discord Server:
 
 And thanks to everyone else in the server who helped along the way.
 
-More broadly, community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of the community.
+More broadly, this community feedback has played a significant role in FastCast2's existence and development. Many ideas, discussions, and sources of motivation came from conversations within the Suphi Kaner Discord server. FastCast2 would not exist today without the contributions, feedback, and support of this community.
+
+### Special thanks to the following people from [The Revolutionary Computer Union](https://www.roblox.com/communities/336090209/TRCU-The-Revolutionary-Computer-Union#!/about), [The Glorious Robot Army](https://www.roblox.com/communities/35956498/TRCU-The-Glorious-Robot-Army#!/about):
+
+- [nerd0ne](https://github.com/nerd0ne) — Pointing out a broken Wally setup
+- [90gq31](https://computerunion.miraheze.org/90gq31) — Giving me the opportunity to be part of the community
 
 # Dependency
 - [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
