@@ -155,7 +155,20 @@ behavior.CosmeticBulletTemplate = somePart  -- Visual projectile
 behavior.CosmeticBulletContainer = workspace  -- Parent for non-cached bullets
 behavior.AutoIgnoreContainer = true
 behavior.VisualizeCasts = false
-behavior.VisualizeCastSettings = { ... }  -- Debug viz colors/sizes
+behavior.VisualizeCastSettings = {
+	Debug_SegmentColor: Color3 ,
+	Debug_SegmentTransparency: number,
+	Debug_SegmentSize: number,
+	Debug_HitColor: Color3 ,
+	Debug_HitTransparency: number,
+	Debug_HitSize: number,
+	Debug_RayPierceColor: Color3 ,
+	Debug_RayPierceTransparency: number,
+	Debug_RayPierceSize: number,
+	Debug_RayLifetime: number,
+	Debug_HitLifetime: number
+}
+
 behavior.UserData = {}  -- Arbitrary data accessible on the cast
 
 behavior.FastCastEventsConfig = {
