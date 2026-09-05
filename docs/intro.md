@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 <div style={{ textAlign: "center", marginBottom: 32 }}>
   <img
     src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb"
