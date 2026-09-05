@@ -64,7 +64,7 @@ Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-imp
 3. Go to **File → Import Roblox Model** and import the `.rbxm` file.
 4. After importing, **FastCast2** will appear in your Workspace.
 5. Drag **FastCast2** into **ReplicatedStorage**.
-6. Done — you’re ready to use FastCast2.
+6. Done, and you’re ready to use FastCast2.
 
 ---
 
