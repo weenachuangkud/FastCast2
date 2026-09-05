@@ -16,4 +16,4 @@
 - [ ] Include the `.rbxl` file in the latest release
 - [ ] Update Roblox Model of FastCast2
 - [ ] Update README.md
-- [ ] FastCast2 fork: no Parallel
+- [ ] FastCast2 fork: no Parallel (Project)
