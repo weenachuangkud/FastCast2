@@ -12,8 +12,9 @@
 - [ ] troubleshooting guide (DOCS)
 - [ ] advanced examples (DOCS)
 - [ ] Create a new FastCast2 cover image (DOCS)
-- [ ] Create a FastCast2 tutorial video
-- [ ] Include the `.rbxl` file in the latest release
-- [ ] Update Roblox Model of FastCast2
-- [ ] Update README.md
-- [ ] FastCast2 fork: no Parallel (Project)
+- [ ] Create a FastCast2 tutorial video (DOCS)
+- [ ] Include the `.rbxl` file in the latest release (RELEASE)
+- [ ] Update Roblox Model of FastCast2 (RELEASE)
+- [ ] Update README.md (DOCS)
+- [ ] Add proper typechecking using [“t” - A Runtime Type Checker for Roblox](https://devforum.roblox.com/t/t-a-runtime-type-checker-for-roblox/139769)
+- [ ] FastCast2 fork: ParallelOnly, SerialOnly (Projects)
