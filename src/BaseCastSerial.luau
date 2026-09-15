@@ -22,8 +22,6 @@ local EnumCastTypes = FastCastEnums.CastType
 	It is used internally by FastCastSerial and FastCastParallel.
 ]=]
 local BaseCast = {}
-BaseCast.__index = BaseCast
-BaseCast.__type = "BaseCast"
 
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
@@ -43,14 +41,19 @@ local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastT
 	end
 end
 
+local Actives = {}
+local CastFirefn = nil
+local Motor6DCacheInstance = nil
+local ObjectCacheInstance = nil
+local CurrentMovementMode = "BulkMoveTo"
 
-function BaseCast.Init(events: TypeDef.FastCastEvents, Data: any)
-	local self = setmetatable({}, BaseCast)
-	self.Actives = {}
-	self.CastFirefn = events.CastFire
-	self.Motor6DCacheInstance = nil
-	self.ObjectCacheInstance = nil
-	self.CurrentMovementMode = "BulkMoveTo"
+function BaseCast.Init(events: any, Data: any)
+	BaseCast.Destroy()
+
+	CastFirefn = events.CastFire
+	Motor6DCacheInstance = nil
+	ObjectCacheInstance = nil
+	CurrentMovementMode = "BulkMoveTo"
 
 	if Data.useObjectCache then
 		local objectCacheArgs = Data.objectCacheArgs or {}
@@ -62,22 +65,19 @@ function BaseCast.Init(events: TypeDef.FastCastEvents, Data: any)
 			objectCacheArgs.CacheHolder = DEFAULT_CACHE_HOLDER
 		end
 
-		self.ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
+		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
 	end
 
-	self.CurrentMovementMode = Data.movementMode or "BulkMoveTo"
-	if self.CurrentMovementMode == "Motor6D" then
-		self.Motor6DCacheInstance = Motor6DCache.new()
+	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
+	if CurrentMovementMode == "Motor6D" then
+		Motor6DCacheInstance = Motor6DCache.new()
 	end
 
-	self.SerialSimulation = SerialSimulation.new()
-	self.SerialSimulation:Init(self, events)
+	SerialSimulation.Init(BaseCast, Actives, events)
 
-	self.SerialSimulation:SetMovementModeEnabled(true, self.CurrentMovementMode)
+	SerialSimulation.SetMovementModeEnabled(true, CurrentMovementMode)
 
-	self.SerialSimulation:Start()
-
-	return self
+	SerialSimulation.Start()
 end
 
 --[=[
@@ -94,22 +94,22 @@ end
 Create a raycast.
 
 ]=]
-function BaseCast:Raycast(
+function BaseCast.Raycast(
 	Origin: Vector3,
 	Direction: Vector3,
 	Velocity: Vector3 | number,
 	Behavior: TypeDef.FastCastBehavior
 )
 	NextProjectileID += 1
-	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Raycast
-	} :: any, self.ObjectCacheInstance)
+	} :: any, ObjectCacheInstance)
 
-	self.SerialSimulation:Register(cast)
-	self.Actives[cast.ID] = cast
+	SerialSimulation.Register(cast)
+	Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
-		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
+	if Behavior.FastCastEventsConfig.UseCastFire and CastFirefn then
+		CastFirefn(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -127,7 +127,7 @@ end
 Create a Blockcast.
 
 ]=]
-function BaseCast:Blockcast(
+function BaseCast.Blockcast(
 	Origin: Vector3,
 	Size: Vector3,
 	Direction: Vector3,
@@ -136,16 +136,16 @@ function BaseCast:Blockcast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any, self.ObjectCacheInstance)
+	} :: any, ObjectCacheInstance)
 
-	self.SerialSimulation:Register(cast)
-	self.Actives[cast.ID] = cast
+	SerialSimulation.Register(cast)
+	Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
-		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
+	if Behavior.FastCastEventsConfig.UseCastFire and CastFirefn then
+		CastFirefn(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -163,7 +163,7 @@ end
 Create a Spherecast.
 
 ]=]
-function BaseCast:Spherecast(
+function BaseCast.Spherecast(
 	Origin: Vector3,
 	Radius: number,
 	Direction: Vector3,
@@ -172,16 +172,16 @@ function BaseCast:Spherecast(
 )
 	NextProjectileID += 1
 
-	local cast = ActiveCast.createCastData(self, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any, self.ObjectCacheInstance)
+	} :: any, ObjectCacheInstance)
 
-	self.SerialSimulation:Register(cast)
-	self.Actives[cast.ID] = cast
+	SerialSimulation.Register(cast)
+	Actives[cast.ID] = cast
 
-	if Behavior.FastCastEventsConfig.UseCastFire and self.CastFirefn then
-		self.CastFirefn(cast, Origin, Direction, Velocity, Behavior)
+	if Behavior.FastCastEventsConfig.UseCastFire and CastFirefn then
+		CastFirefn(cast, Origin, Direction, Velocity, Behavior)
 	end
 end
 
@@ -196,31 +196,31 @@ end
 	Sets the movement mode for the casts. This determines how the cast's position is updated during simulation.
 
 ]=]
-function BaseCast:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
-	self.CurrentMovementMode = mode
+function BaseCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
+	CurrentMovementMode = mode
 
 	if mode == "Motor6D" and enabled then
-		if not self.Motor6DCacheInstance then
-			self.Motor6DCacheInstance = Motor6DCache.new()
+		if not Motor6DCacheInstance then
+			Motor6DCacheInstance = Motor6DCache.new()
 		end
 	else 
-		if self.Motor6DCacheInstance then
-			self.Motor6DCacheInstance:Destroy()
-			self.Motor6DCacheInstance = nil
+		if Motor6DCacheInstance then
+			Motor6DCacheInstance:Destroy()
+			Motor6DCacheInstance = nil
 		end
 	end
 
-	self.SerialSimulation:SetMovementModeEnabled(enabled, mode)
+	SerialSimulation.SetMovementModeEnabled(enabled, mode)
 end
 
-function BaseCast:BindObjectCache(
+function BaseCast.BindObjectCache(
 	enabled: boolean,
 	Template: BasePart?,
 	CacheSize: number?,
 	CacheHolder: Instance?
 )
 	if enabled then
-		if self.ObjectCacheInstance then
+		if ObjectCacheInstance then
 			return
 		end
 
@@ -235,11 +235,11 @@ function BaseCast:BindObjectCache(
 		if not CacheHolder then
 			CacheHolder = DEFAULT_CACHE_HOLDER
 		end
-		self.ObjectCacheInstance = ObjectCache.new(Template, CacheSize, CacheHolder)
+		ObjectCacheInstance = ObjectCache.new(Template, CacheSize, CacheHolder)
 	else
-		if self.ObjectCacheInstance then
-			self.ObjectCacheInstance:Destroy()
-			self.ObjectCacheInstance = nil
+		if ObjectCacheInstance then
+			ObjectCacheInstance:Destroy()
+			ObjectCacheInstance = nil
 		end
 	end
 end
@@ -252,43 +252,31 @@ end
 Destroys the BaseCast instance and cleans up resources.
 
 ]=]
-function BaseCast:Destroy()
-	if self.SerialSimulation then
-		self.SerialSimulation:Stop()
+function BaseCast.Destroy()
+	if ObjectCacheInstance then
+		ObjectCacheInstance:Destroy()
 	end
 
-	if self.ObjectCacheInstance then
-		self.ObjectCacheInstance:Destroy()
+	if Motor6DCacheInstance then
+		Motor6DCacheInstance:Destroy()
 	end
 
-	if self.Motor6DCacheInstance then
-		self.Motor6DCacheInstance:Destroy()
-	end
-
-	for _, v in self.Actives do
+	for _, v in Actives do
 		TerminateCast(v)
 	end
 
-	self.Actives = {}
-	setmetatable(self, nil)
+	Actives = {}
 end
 
 -- Utils
 
-function BaseCast:_TerminateCast(castID: number, castTerminatingfn: (...any) -> ())
-	if self.Actives[castID] then
-		local cast = self.Actives[castID]
-
-		if not cast._Destroying then
-			cast._Destroying = true
-			if castTerminatingfn then
-				castTerminatingfn(cast)
-			end
-		end
+function BaseCast._TerminateCast(castID: number)
+	if Actives[castID] then
+		local cast = Actives[castID]
 
 		if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-			if self.ObjectCacheInstance then
-				self.ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
+			if ObjectCacheInstance then
+				ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
 			else
 				cast.RayInfo.CosmeticBulletObject:Destroy()
 				cast.RayInfo.CosmeticBulletObject = nil
@@ -298,29 +286,29 @@ function BaseCast:_TerminateCast(castID: number, castTerminatingfn: (...any) -> 
 		for key, _ in (cast :: any) do
 			cast[key] = nil
 		end
-		self.Actives[castID] = nil
+		Actives[castID] = nil
 	end
 end
 
-function BaseCast:_GetMotor6D(projectilePart: BasePart?)
-	if self.Motor6DCacheInstance and projectilePart then
-		return self.Motor6DCacheInstance:Connect(projectilePart)
+function BaseCast._GetMotor6D(projectilePart: BasePart?)
+	if Motor6DCacheInstance and projectilePart then
+		return Motor6DCacheInstance:Connect(projectilePart)
 	end
 	return nil
 end
 
-function BaseCast:_ReturnMotor6D(motor6d: Motor6D?)
-	if self.Motor6DCacheInstance then
-		self.Motor6DCacheInstance:Disconnect(motor6d)
+function BaseCast._ReturnMotor6D(motor6d: Motor6D?)
+	if Motor6DCacheInstance then
+		Motor6DCacheInstance:Disconnect(motor6d)
 	end
 end
 
-function BaseCast:_UpdateEvents(eventName: string, newEventfn: (...any) -> ())
+function BaseCast._UpdateEvents(eventName: string, newEventfn: (...any) -> ())
 	if eventName == "CastFire" then 
-		self.CastFirefn = newEventfn
+		CastFirefn = newEventfn
 		return
 	end
-	self.SerialSimulation:_UpdateEvents(eventName, newEventfn)
+	SerialSimulation._UpdateEvent(eventName, newEventfn)
 end
 
 return BaseCast

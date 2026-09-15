@@ -515,7 +515,7 @@ function FastCastSerial:Init(
 		CastTerminating = self.CastTerminating
 	}
 
-	self.BaseCast = BaseCastSerial.Init(events, data)
+	BaseCastSerial.Init(events, data)
 
 	self.MovementMode = movementMode or "BulkMoveTo"
 	self.AlreadyInit = true
@@ -529,7 +529,7 @@ function FastCastSerial:RaycastFire(
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior?
+	BehaviorData: TypeDef.FastCastBehavior
 )
 	if not self.AlreadyInit then
 		error("Please Init caster first")
@@ -538,7 +538,7 @@ function FastCastSerial:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.BaseCast:Raycast(origin, direction, velocity, BehaviorData)
+	BaseCastSerial.Raycast(origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -550,7 +550,7 @@ function FastCastSerial:BlockcastFire(
 	Size: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior?
+	BehaviorData: TypeDef.FastCastBehavior
 )
 	if not self.AlreadyInit then
 		error("Please Init caster first")
@@ -559,7 +559,7 @@ function FastCastSerial:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.BaseCast:Blockcast(origin, Size, direction, velocity, BehaviorData)
+	BaseCastSerial.Blockcast(origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -571,7 +571,7 @@ function FastCastSerial:SpherecastFire(
 	Radius: number,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior?
+	BehaviorData: TypeDef.FastCastBehavior
 )
 	if not self.AlreadyInit then
 		error("Please Init caster first")
@@ -580,7 +580,7 @@ function FastCastSerial:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.BaseCast:Spherecast(origin, Radius, direction, velocity, BehaviorData)
+	BaseCastSerial.Spherecast(origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[[
@@ -594,7 +594,7 @@ end
 function FastCastSerial:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	if not self.BaseCast then return end
 
-	self.BaseCast:SetMovementModeEnabled(enabled, mode)
+	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
 	self.MovementMode = mode
 end
 
@@ -604,13 +604,11 @@ end
 ]=]
 function FastCastSerial:SetObjectCacheEnabled(
 	enabled: boolean,
-	Template: BasePart | Model,
+	Template: BasePart?,
 	CacheSize: number,
 	CacheHolder: Instance
 )
-	if not self.BaseCast then return end
-
-	self.BaseCast:BindObjectCache(
+	BaseCastSerial.BindObjectCache(
 		enabled,
 		Template,
 		CacheSize,
@@ -629,9 +627,7 @@ function FastCastSerial:Destroy()
 	end
 	setmetatable(self, nil)
 	
-	if self.BaseCast then
-		self.BaseCast:Destroy()
-	end
+	BaseCastSerial.Destroy()
 
 	self.LengthChanged = nil
 	self.Hit = nil
