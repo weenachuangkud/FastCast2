@@ -78,7 +78,6 @@ local caseIndex = 0
 
 local function runCase(castMode: string, projectileCount: number, instanced: boolean, movement: boolean)
 	caseIndex += 1
-	local suffix = tostring(caseIndex)
 
 	behavior.CosmeticBulletTemplate = if instanced then cosmeticTemplate else nil
 	behavior.CosmeticBulletContainer = if instanced then cosmeticContainer else nil
