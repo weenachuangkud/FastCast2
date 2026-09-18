@@ -190,11 +190,6 @@ local function createCaster()
 
 		newCaster:Init(
 			Config.NumWorkers,
-			ReplicatedFirst,
-			Config.VMName,
-			ReplicatedFirst,
-			Config.VMContainerName,
-			Config.VMTemplateName,
 			Config.MovementMode
 		)
 	else
