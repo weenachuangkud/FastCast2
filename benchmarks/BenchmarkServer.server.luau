@@ -50,10 +50,6 @@ local Config = {
 
 	BenchmarkDuration = 6,
 
-	VMName = "CastVMs",
-	VMContainerName = "CastVMContainer",
-	VMTemplateName = "CastVM",
-
 	ProjectileStep = 500,
 
 	WorkerStep = 1,
@@ -192,11 +188,6 @@ local function createCaster()
 
 	caster:Init(
 		Config.NumWorkers,
-		ServerScriptService,
-		Config.VMName,
-		ServerScriptService,
-		Config.VMContainerName,
-		Config.VMTemplateName,
 		Config.MovementMode
 	)
 
