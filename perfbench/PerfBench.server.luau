@@ -88,11 +88,6 @@ local function runCase(castMode: string, projectileCount: number, instanced: boo
 		caster = FastCast.newParallel()
 		caster:Init(
 			WORKERS,
-			ServerScriptService,
-			"PerfBenchVMs" .. suffix,
-			ServerScriptService,
-			"PerfBenchContainers" .. suffix,
-			"PerfBenchVM" .. suffix,
 			"BulkMoveTo"
 		)
 	else
