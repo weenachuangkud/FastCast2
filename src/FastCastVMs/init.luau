@@ -183,9 +183,29 @@ function Dispatcher:Allocate(Threads: number, Data: any?, Callback: (...any) -> 
 	--> Allow actors to start
 	RunService.PostSimulation:Wait()
 
-	--> Initialize actors
-	for _, Actor in Actors do
-		Actor:SendMessage("Init", Data)
+	--> Initialize actors. A message is dropped if the controller script has
+	--> not bound its topics yet, and client controllers can start a few
+	--> frames late, so retry until every actor reports that it initialized.
+	for attempt = 1, 30 do
+		local pending = false
+
+		for _, Actor in Actors do
+			if Actor:GetAttribute("FastCast2Ready") ~= true then
+				pending = true
+				Actor:SendMessage("Init", Data)
+			end
+		end
+
+		if not pending then
+			break
+		end
+
+		if attempt == 30 then
+			warn("[FastCastVMs] Some actors did not initialize. RunContext : "
+				.. (IS_SERVER and "Server" or "Client"))
+		end
+
+		RunService.PostSimulation:Wait()
 	end
 
 	--> Merge actors into threads

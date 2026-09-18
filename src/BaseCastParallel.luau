@@ -72,16 +72,20 @@ local BaseCastInstance = nil
 function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	if BaseCastInitialized then
-        warn("[FastCast2] BaseCast already initialized in this Actor. Skipping.")
-        return BaseCastInstance
-    end
-    BaseCastInitialized = true
-	
+		return BaseCastInstance
+	end
+	BaseCastInitialized = true
+
 	local self = setmetatable({}, BaseCast)
 	Actor = BindableOutput.Parent
 	self.Actives = {}
 	self.Actor = Actor
 	Output = BindableOutput
+
+	-- Signals the dispatcher that this actor's controller has initialized.
+	-- The dispatcher retries "Init" until every actor sets this, which matters
+	-- on the client where a controller script can start a few frames late.
+	Actor:SetAttribute("FastCast2Ready", true)
 
 	if Data.useObjectCache then
 		local objectCacheArgs = Data.objectCacheArgs or {}

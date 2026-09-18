@@ -466,6 +466,10 @@ end
 	@param Template BasePart | Model -- The template object to use for the ObjectCache (if enabled)
 	@param CacheSize number -- The size of the ObjectCache (if enabled)
 	@param CacheHolder Instance -- The Instance in which to place cached objects (if enabled)
+
+	Note: On the client, `ContainerParent` must be a script-enabled container
+	(for example `ReplicatedFirst`). Worker controllers placed in a container
+	that does not run scripts never initialize, and no casts are simulated.
 ]=]
 function FastCastParallel:Init(
 	numWorkers: number,
