@@ -133,6 +133,22 @@ local OUTPUT_EVENT_NAMES = {
 	[4] = "CastTerminating"
 }
 
+--[[
+	Note: On the client, `PARALLEL_PARENT` must be a script-enabled container
+	(for example `ReplicatedFirst`). Worker controllers placed in a container
+	that does not run scripts never initialize, and no casts are simulated.
+]]
+-- Parallel luau related
+local PARALLEL_PARENT
+if RunService:IsServer() then
+	PARALLEL_PARENT = game:GetService("ServerScriptService")
+else
+	PARALLEL_PARENT = game:GetService("ReplicatedFirst")
+end
+local VM_NAME = "FastCastVM"
+local VM_CONTAINER_NAME = "FastCastVMsContainer"
+local DISPATCHER_NAME = "FastCastVMs"
+
 local function NewCasterSignals()
 	return {
 		CastFire = Signal.new(),
@@ -453,31 +469,17 @@ end
 	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 	@method Init
 	@within FastCastParallel
-
-	@param numWorkers number -- The number of worker VMs to create for this Caster. Must be greater than 1.
-	@param newParent Folder -- The Folder in which to place the FastCastVMs Folder
-	@param newName string -- The name to give the FastCastVMs Folder containing worker scripts.
-	@param ContainerParent Folder -- The parent Folder in which to place the worker VM Containers.
-	@param VMContainerName Folder -- The name to give to the Containers housing each worker VM.
-	@param VMname string -- The name to give each worker VM.
-	@param useBulkMoveTo boolean -- Whether to enable BulkMoveTo for the [CosmeticBulletObjects](TypeDefinitions#CastRayInfo)
+	
+	@param numWorkers number -- Number of workers for parallel luau
+	@param movementMode "BulkMoveTo" | "Motor6D" -- MovementMode for projectiles
 	@param FastCastEventsModule ModuleScript -- The ModuleScript containing the FastCastEvents, A table of callback functions (events/hooks) used by ActiveCast..
 	@param useObjectCache boolean -- Whether to use ObjectCache for the [Caster](TypeDefinitions#Caster)
 	@param Template BasePart | Model -- The template object to use for the ObjectCache (if enabled)
 	@param CacheSize number -- The size of the ObjectCache (if enabled)
 	@param CacheHolder Instance -- The Instance in which to place cached objects (if enabled)
-
-	Note: On the client, `ContainerParent` must be a script-enabled container
-	(for example `ReplicatedFirst`). Worker controllers placed in a container
-	that does not run scripts never initialize, and no casts are simulated.
 ]=]
 function FastCastParallel:Init(
 	numWorkers: number,
-	newParent: Folder,
-	newName: string,
-	ContainerParent: Folder,
-	VMContainerName: string,
-	VMname: string,
 
 	movementMode: "BulkMoveTo" | "Motor6D",
 	FastCastEventsModule: ModuleScript,
@@ -494,12 +496,12 @@ function FastCastParallel:Init(
 	assert(numWorkers > 1, "numWorker must be more than 1")
 
 	local DispatcherClone = DispatcherModule:Clone()
-	DispatcherClone.Parent = newParent
-	DispatcherClone.Name = newName or "FastCastVMs"
+	DispatcherClone.Parent = PARALLEL_PARENT
+	DispatcherClone.Name = DISPATCHER_NAME
 
 	local newDispatcher: Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
 
-	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
+	newDispatcher.Init(PARALLEL_PARENT, VM_CONTAINER_NAME, VM_NAME)
 
 	local data = {
 		movementMode = movementMode,
