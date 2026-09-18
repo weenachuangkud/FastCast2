@@ -1,15 +1,15 @@
 - [ ] Create multiple games, libraries, and frameworks using FastCast2, and showcase them in `docs/showcase.md` (DOCS)
-- [ ] Create a Debugger GUI for benchmarking and testing (debuggergui)
-- [ ] Add a manual test checklist MD
-- [ ] Code improvements
+- [ ] ~~Create a Debugger GUI for benchmarking and testing (debuggergui)~~ (Cancalled)
+- [X] Add a manual test checklist MD
+- [X] Code improvements
 - [ ] ~~Add dynamic RunService event configuration for Caster (feats)~~ (Cancelled)
-- [ ] Add `BindToSimulation` and `UseFixedSimulation` (changes)
+- [X] Add `BindToSimulation` (changes)
 - [ ] Migration guide from FastCast Redux/FastCast (DOCS)
 - [ ] Performance guide and best practices (DOCS)
 - [ ] Common pitfalls and FAQ (DOCS)
-- [ ] Add benchmark pics to `docs/` and `README.md` (DOCS)
+- [X] ~~Add benchmark pics to `docs/` and `README.md` (DOCS)~~ (Naymmmm works)
 - [ ] Add benchmark GIF demo to `README.md` showing projectiles in action (DOCS)
-- [ ] troubleshooting guide (DOCS)
+- [ ] ~~troubleshooting guide (DOCS)~~ (Cancelled)
 - [ ] advanced examples (DOCS)
 - [ ] Create a new FastCast2 cover image (DOCS)
 - [ ] Create a FastCast2 tutorial video (DOCS)
