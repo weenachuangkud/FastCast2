@@ -36,7 +36,7 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 
 ---
 
-# Benefits of using FastCast2
+# Features
 
 - Highly customizable
 - Versatile projectile library
@@ -48,9 +48,7 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Built-in ObjectCache
 - Built-in HighFidelitySegment control
 - Flexible and extensible design
-- Improves development productivity
 - High Performance
-- Completely free
 
 FastCast2 is an open-source project, and contributions from the community are welcome. <br />
 Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
