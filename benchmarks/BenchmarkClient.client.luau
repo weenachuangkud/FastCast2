@@ -50,10 +50,6 @@ local Config = {
 
 	MovementMode = "BulkMoveTo",
 
-	VMName = "CastVMs",
-	VMContainerName = "CastVMContainer",
-	VMTemplateName = "CastVM",
-
 	HighFidelitySegmentSizeStep = 0.05,
 	MinHighFidelitySegmentSize = 0.05,
 
