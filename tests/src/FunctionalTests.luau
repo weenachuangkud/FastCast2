@@ -76,7 +76,6 @@ local parallelCounter = 0
 
 local function createParallelCaster(events: { [string]: any }?): any
 	parallelCounter += 1
-	local suffix = tostring(parallelCounter)
 	local caster = FastCast.newParallel()
 
 	for name, fn in events or {} do
@@ -85,11 +84,6 @@ local function createParallelCaster(events: { [string]: any }?): any
 
 	caster:Init(
 		2,
-		ServerScriptService,
-		"FastCast2TestVMs" .. suffix,
-		ServerScriptService,
-		"FastCast2TestContainers" .. suffix,
-		"FastCast2TestVM" .. suffix,
 		"BulkMoveTo"
 	)
 
