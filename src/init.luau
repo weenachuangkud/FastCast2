@@ -56,6 +56,10 @@
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
 
+-- Services
+
+local RunService = game:GetService("RunService")
+
 -- Requires
 local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
@@ -376,6 +380,75 @@ function FastCast.newBehavior(): TypeDef.FastCastBehavior
 	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
 end
 
+-- Batched parallel dispatch. Shots are queued and sent once per frame per
+-- worker instead of one message per shot, removing the per-shot cost of
+-- crossing the Actor boundary. The behavior is snapshotted when queued so
+-- per-shot mutations (such as the raycast filter) are preserved.
+
+local function CloneCastParams(params: RaycastParams): RaycastParams
+	local clone = RaycastParams.new()
+	clone.CollisionGroup = params.CollisionGroup
+	clone.FilterType = params.FilterType
+	clone.FilterDescendantsInstances = table.clone(params.FilterDescendantsInstances)
+	clone.IgnoreWater = params.IgnoreWater
+	clone.RespectCanCollide = params.RespectCanCollide
+	return clone
+end
+
+local function SnapshotBehavior(behavior: any): any
+	local copy = table.clone(behavior)
+	if behavior.RaycastParams then
+		copy.RaycastParams = CloneCastParams(behavior.RaycastParams)
+	end
+	return copy
+end
+
+local function QueueFire(self: any, request: { any })
+	local queue = self._fireQueue
+	queue[#queue + 1] = request
+end
+
+local function FlushFires(self: any)
+	local queue = self._fireQueue
+	local count = #queue
+	if count == 0 then
+		return
+	end
+
+	local dispatcher = self.Dispatcher
+	local threads = dispatcher and dispatcher.Threads
+	local workerCount = if threads then #threads else 0
+	if workerCount == 0 then
+		table.clear(queue)
+		return
+	end
+
+	local batches = self._fireBatches
+	local used = self._fireUsed
+	local usedCount = 0
+
+	for i = 1, count do
+		local worker = (i - 1) % workerCount + 1
+		local batch = batches[worker]
+		if not batch then
+			batch = {}
+			batches[worker] = batch
+			usedCount += 1
+			used[usedCount] = worker
+		end
+		batch[#batch + 1] = queue[i]
+	end
+	table.clear(queue)
+
+	for i = 1, usedCount do
+		local worker = used[i]
+		local batch = batches[worker]
+		threads[worker]:SendMessage("FireBatch", batch)
+		table.clear(batch)
+		used[i] = nil
+	end
+end
+
 --[=[
 	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 	@method Init
@@ -446,6 +519,13 @@ function FastCastParallel:Init(
 		end
 	end)
 
+	-- Queue shots and flush them once per frame (see FlushFires).
+	self._fireQueue = {}
+	self._fireBatches = {}
+	self._fireUsed = {}
+	self._flushConnection = RunService.PreSimulation:Connect(function()
+		FlushFires(self)
+	end)
 
 	self.AlreadyInit = true
 	self.ObjectCacheEnabled = useObjectCache
@@ -496,7 +576,13 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
+	QueueFire(self, {
+		1,
+		origin,
+		direction,
+		velocity,
+		SnapshotBehavior(BehaviorData)
+	})
 end
 
 --[=[
@@ -524,7 +610,14 @@ function FastCastParallel:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
+	QueueFire(self, {
+		2,
+		origin,
+		Size,
+		direction,
+		velocity,
+		SnapshotBehavior(BehaviorData)
+	})
 end
 
 --[=[
@@ -552,7 +645,14 @@ function FastCastParallel:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
+	QueueFire(self, {
+		3,
+		origin,
+		Radius,
+		direction,
+		velocity,
+		SnapshotBehavior(BehaviorData)
+	})
 end
 
 --[=[
@@ -772,6 +872,11 @@ end
 function FastCastParallel:Destroy()
 	if getmetatable(self) ~= FastCastParallel then
 		return
+	end
+
+	if self._flushConnection then
+		self._flushConnection:Disconnect()
+		self._flushConnection = nil
 	end
 
 	if self.Dispatcher then
