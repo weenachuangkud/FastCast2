@@ -99,15 +99,9 @@ local function createCaster(mode: string, config: any, activeCasts: { any }): an
 
 	if mode == "Parallel" then
 		parallelCounter += 1
-		local suffix = tostring(parallelCounter)
 		caster = FastCast.newParallel()
 		caster:Init(
 			config.parallelWorkers,
-			ServerScriptService,
-			"FastCast2BenchmarkVMs" .. suffix,
-			ServerScriptService,
-			"FastCast2BenchmarkContainers" .. suffix,
-			"FastCast2BenchmarkVM" .. suffix,
 			"BulkMoveTo"
 		)
 	else
