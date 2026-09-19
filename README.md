@@ -175,11 +175,6 @@ parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction
 local Caster = FastCast2.newParallel()
 Caster:Init(
 	4,                 -- numWorkers
-	workspace,         -- VM folder parent
-	"FastCastVMs",     -- VM folder name
-	workspace,         -- container parent
-	"VMContainer",     -- container name
-	"VM",              -- VM name
 	"BulkMoveTo",      -- movementMode
 	nil,               -- FastCastEventsModule (optional)
 	false              -- useObjectCache
