@@ -324,7 +324,7 @@ The automated suite runs the functional tests and the six-case benchmark matrix 
 
 # People behind FastCast2(Contributors)
 - [CK06](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
-- [Naymmmm](https://github.com/Naymmmm): Maintainer (Inactive)
+- [Naymmmm](https://github.com/Naymmmm): Maintainer
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 - [Per2iako](https://github.com/Per2iako): Maintainer
 
