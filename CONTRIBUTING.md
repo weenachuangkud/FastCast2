@@ -58,7 +58,9 @@ I'm not strict about changelogs, and I don't really bother writing explicit chan
 - Keep discussions technical and constructive
 
 ### Testing
-- Read manual testing instructions: https://github.com/weenachuangkud/FastCast2/blob/main/TESTS.md
+- Run the automated suite before opening a PR: `npm test` (or `lune run tests/run.luau`)
+- It runs the functional tests and benchmark matrix in Studio and uploads the report to paste.shellworks.dev; see [`tests/README.md`](tests/README.md)
+- Manual checklist / coverage reference: [`TESTS.md`](TESTS.md)
 
 ### Questions?
 

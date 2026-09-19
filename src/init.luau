@@ -56,16 +56,23 @@
 -- Modules
 --local BaseCast = script:WaitForChild("BaseCast")
 
+-- Services
+
+local RunService = game:GetService("RunService")
+
 -- Requires
+local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
 local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
+local SerialSimulation = require(script:WaitForChild("SerialSimulation"))
 local DispatcherModule = script:WaitForChild("FastCastVMs")
 local Dispatcher = require(DispatcherModule)
 
 -- Type Exports
 export type FastCastEventsModule = TypeDef.FastCastEventsModule
 export type FastCastEvents = TypeDef.FastCastEvents
+export type FastCastSignalEvents = TypeDef.FastCastSignalEvents
 
 export type CanPierceFunction = TypeDef.CanPierceFunction
 export type OnHitFunction = TypeDef.OnHitFunction
@@ -100,14 +107,169 @@ type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.
 -- CONSTANTS
 local DEFAULT_CACHE_SIZE = 500
 local DEFAULT_CACHE_HOLDER = workspace
-local VALID_EVENTS = {
+
+-- Events exposed on a Caster as a Signal. Assigning a function to one of these
+-- names is equivalent to connecting that function to the underlying Signal.
+local SIGNAL_EVENTS = {
 	["CastFire"] = true,
 	["CastTerminating"] = true,
 	["Hit"] = true,
 	["Pierced"] = true,
-	["LengthChanged"] = true,
+	["LengthChanged"] = true
+}
+
+-- CanPierce is a query (it has to return a boolean), so it stays a plain function.
+local QUERY_EVENTS = {
 	["CanPierce"] = true
 }
+
+-- Mirrors the EVT_* numeric constants in ParallelSimulation. Parallel workers
+-- send one "Batch" message per frame containing records tagged with these IDs;
+-- the main thread demuxes them back into the Caster's signals.
+local OUTPUT_EVENT_NAMES = {
+	[1] = "LengthChanged",
+	[2] = "Hit",
+	[3] = "Pierced",
+	[4] = "CastTerminating"
+}
+
+--[[
+	Note: On the client, `PARALLEL_PARENT` must be a script-enabled container
+	(for example `ReplicatedFirst`). Worker controllers placed in a container
+	that does not run scripts never initialize, and no casts are simulated.
+]]
+-- Parallel luau related
+local PARALLEL_PARENT
+if RunService:IsServer() then
+	PARALLEL_PARENT = game:GetService("ServerScriptService")
+else
+	PARALLEL_PARENT = game:GetService("ReplicatedFirst")
+end
+local VM_NAME = "FastCastVM"
+local VM_CONTAINER_NAME = "FastCastVMsContainer"
+local DISPATCHER_NAME = "FastCastVMs"
+
+local function NewCasterSignals()
+	return {
+		CastFire = Signal.new(),
+		CastTerminating = Signal.new(),
+		Hit = Signal.new(),
+		Pierced = Signal.new(),
+		LengthChanged = Signal.new()
+	}
+end
+
+local function DestroyCasterSignals(self)
+	local legacy = rawget(self, "_legacy")
+	if legacy then
+		for _, connection in legacy do
+			connection:Disconnect()
+		end
+		rawset(self, "_legacy", nil)
+	end
+
+	local events = rawget(self, "_events")
+	if events then
+		for _, signal in events do
+			signal:Destroy()
+		end
+		rawset(self, "_events", nil)
+	end
+
+	rawset(self, "CanPierce", nil)
+end
+
+local function IndexCaster(self, key)
+	local events = rawget(self, "_events")
+	if events then
+		local signal = events[key]
+		if signal ~= nil then
+			return signal
+		end
+	end
+
+	local mt = getmetatable(self)
+	if mt then
+		return mt[key]
+	end
+	return nil
+end
+
+local function NewIndexCaster(self, key, value)
+	if SIGNAL_EVENTS[key] then
+		local events = rawget(self, "_events")
+		if not events then
+			events = NewCasterSignals()
+			rawset(self, "_events", events)
+		end
+
+		if type(value) == "function" then
+			-- Backwards compatible assignment: connect the function, replacing
+			-- any previous function assigned this way.
+			local legacy = rawget(self, "_legacy")
+			if not legacy then
+				legacy = {}
+				rawset(self, "_legacy", legacy)
+			end
+
+			local previous = legacy[key]
+			if previous then
+				previous:Disconnect()
+			end
+
+			legacy[key] = events[key]:Connect(value)
+		elseif Signal.is(value) then
+			local legacy = rawget(self, "_legacy")
+			if legacy and legacy[key] then
+				legacy[key]:Disconnect()
+				legacy[key] = nil
+			end
+
+			events[key] = value
+		elseif value == nil then
+			local legacy = rawget(self, "_legacy")
+			if legacy and legacy[key] then
+				legacy[key]:Disconnect()
+				legacy[key] = nil
+			end
+		else
+			warn("[FastCast2] Cannot set event '" .. tostring(key) .. "', expected a function or Signal")
+		end
+		return
+	end
+
+	if QUERY_EVENTS[key] then
+		if value == nil or type(value) == "function" then
+			rawset(self, key, value)
+		else
+			warn("[FastCast2] Cannot set CanPierce, expected a function")
+		end
+		return
+	end
+
+	rawset(self, key, value)
+end
+
+-- Demux a batch of worker events (see ParallelSimulation.FireQueuedEvents).
+-- Record layout: { eventType, cast, args, argCount }
+local function DispatchOutputBatch(self, batch)
+	for i = 1, #batch do
+		local record = batch[i]
+		local signalName = OUTPUT_EVENT_NAMES[record[1]]
+
+		if signalName then
+			local signal = self[signalName]
+			if Signal.is(signal) then
+				local argCount = record[4]
+				if argCount > 0 then
+					signal:Fire(record[2], table.unpack(record[3], 1, argCount))
+				else
+					signal:Fire(record[2])
+				end
+			end
+		end
+	end
+end
 
 --[=[
 	@class FastCast
@@ -145,25 +307,12 @@ If true, verbose debug logging will be used,
 	printing detailed information about what's going on during processing to the output.
 ]]
 
-FastCastSerial.__index = FastCastSerial
-FastCastSerial.__newindex = function(self, key, value)
-	if VALID_EVENTS[key] then
-		if type(value) == "function" then
-			if self.BaseCast then
-				self.BaseCast:_UpdateEvents(key, value)
-			else
-				rawset(self, key, value)
-			end
-		else
-			warn("Cannot set event, not a function")
-		end
-	else
-		rawset(self, key, value)
-	end
-end
+FastCastSerial.__index = IndexCaster
+FastCastSerial.__newindex = NewIndexCaster
 FastCastSerial.__type = "FastCastSerial"
 
-FastCastParallel.__index = FastCastParallel
+FastCastParallel.__index = IndexCaster
+FastCastParallel.__newindex = NewIndexCaster
 FastCastParallel.__type = "FastCastParallel"
 
 -- Local functions
@@ -247,18 +396,82 @@ function FastCast.newBehavior(): TypeDef.FastCastBehavior
 	return deepCopyTable(DefaultConfigs.FastCastBehavior) :: TypeDef.FastCastBehavior
 end
 
+-- Batched parallel dispatch. Shots are queued and sent once per frame per
+-- worker instead of one message per shot, removing the per-shot cost of
+-- crossing the Actor boundary. The behavior is snapshotted when queued so
+-- per-shot mutations (such as the raycast filter) are preserved.
+
+local function CloneCastParams(params: RaycastParams): RaycastParams
+	local clone = RaycastParams.new()
+	clone.CollisionGroup = params.CollisionGroup
+	clone.FilterType = params.FilterType
+	clone.FilterDescendantsInstances = table.clone(params.FilterDescendantsInstances)
+	clone.IgnoreWater = params.IgnoreWater
+	clone.RespectCanCollide = params.RespectCanCollide
+	return clone
+end
+
+local function SnapshotBehavior(behavior: any): any
+	local copy = table.clone(behavior)
+	if behavior.RaycastParams then
+		copy.RaycastParams = CloneCastParams(behavior.RaycastParams)
+	end
+	return copy
+end
+
+local function QueueFire(self: any, request: { any })
+	local queue = self._fireQueue
+	queue[#queue + 1] = request
+end
+
+local function FlushFires(self: any)
+	local queue = self._fireQueue
+	local count = #queue
+	if count == 0 then
+		return
+	end
+
+	local dispatcher = self.Dispatcher
+	local threads = dispatcher and dispatcher.Threads
+	local workerCount = if threads then #threads else 0
+	if workerCount == 0 then
+		table.clear(queue)
+		return
+	end
+
+	local batches = self._fireBatches
+	local used = self._fireUsed
+	local usedCount = 0
+
+	for i = 1, count do
+		local worker = (i - 1) % workerCount + 1
+		local batch = batches[worker]
+		if not batch then
+			batch = {}
+			batches[worker] = batch
+			usedCount += 1
+			used[usedCount] = worker
+		end
+		batch[#batch + 1] = queue[i]
+	end
+	table.clear(queue)
+
+	for i = 1, usedCount do
+		local worker = used[i]
+		local batch = batches[worker]
+		threads[worker]:SendMessage("FireBatch", batch)
+		table.clear(batch)
+		used[i] = nil
+	end
+end
+
 --[=[
 	Initializes the Caster with the given parameters. This is required before firing using Raycasts in the Caster or nothing will happen!
 	@method Init
 	@within FastCastParallel
-
-	@param numWorkers number -- The number of worker VMs to create for this Caster. Must be greater than 1.
-	@param newParent Folder -- The Folder in which to place the FastCastVMs Folder
-	@param newName string -- The name to give the FastCastVMs Folder containing worker scripts.
-	@param ContainerParent Folder -- The parent Folder in which to place the worker VM Containers.
-	@param VMContainerName Folder -- The name to give to the Containers housing each worker VM.
-	@param VMname string -- The name to give each worker VM.
-	@param useBulkMoveTo boolean -- Whether to enable BulkMoveTo for the [CosmeticBulletObjects](TypeDefinitions#CastRayInfo)
+	
+	@param numWorkers number -- Number of workers for parallel luau
+	@param movementMode "BulkMoveTo" | "Motor6D" -- MovementMode for projectiles
 	@param FastCastEventsModule ModuleScript -- The ModuleScript containing the FastCastEvents, A table of callback functions (events/hooks) used by ActiveCast..
 	@param useObjectCache boolean -- Whether to use ObjectCache for the [Caster](TypeDefinitions#Caster)
 	@param Template BasePart | Model -- The template object to use for the ObjectCache (if enabled)
@@ -267,11 +480,6 @@ end
 ]=]
 function FastCastParallel:Init(
 	numWorkers: number,
-	newParent: Folder,
-	newName: string,
-	ContainerParent: Folder,
-	VMContainerName: string,
-	VMname: string,
 
 	movementMode: "BulkMoveTo" | "Motor6D",
 	FastCastEventsModule: ModuleScript,
@@ -288,12 +496,12 @@ function FastCastParallel:Init(
 	assert(numWorkers > 1, "numWorker must be more than 1")
 
 	local DispatcherClone = DispatcherModule:Clone()
-	DispatcherClone.Parent = newParent
-	DispatcherClone.Name = newName or "FastCastVMs"
+	DispatcherClone.Parent = PARALLEL_PARENT
+	DispatcherClone.Name = DISPATCHER_NAME
 
 	local newDispatcher: Dispatcher.Dispatcher = require(DispatcherClone) :: Dispatcher.Dispatcher
 
-	newDispatcher.Init(ContainerParent, VMContainerName, VMname)
+	newDispatcher.Init(PARALLEL_PARENT, VM_CONTAINER_NAME, VM_NAME)
 
 	local data = {
 		movementMode = movementMode,
@@ -305,17 +513,25 @@ function FastCastParallel:Init(
 		},
 		FastCastModule = script
 	}
-	self.Dispatcher = newDispatcher.new(numWorkers, data, function(signalName: string, ...)
-		local f = self[signalName]
-		if not f then
+	self.Dispatcher = newDispatcher.new(numWorkers, data, function(eventName: string, ...)
+		if eventName == "Batch" then
+			DispatchOutputBatch(self, ...)
 			return
 		end
 
-		if type(f) == "function" then
-			f(...)
+		local signal = self[eventName]
+		if Signal.is(signal) then
+			signal:Fire(...)
 		end
 	end)
 
+	-- Queue shots and flush them once per frame (see FlushFires).
+	self._fireQueue = {}
+	self._fireBatches = {}
+	self._fireUsed = {}
+	self._flushConnection = RunService.PreSimulation:Connect(function()
+		FlushFires(self)
+	end)
 
 	self.AlreadyInit = true
 	self.ObjectCacheEnabled = useObjectCache
@@ -366,7 +582,13 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Raycast", origin, direction, velocity, BehaviorData)
+	QueueFire(self, {
+		1,
+		origin,
+		direction,
+		velocity,
+		SnapshotBehavior(BehaviorData)
+	})
 end
 
 --[=[
@@ -394,7 +616,14 @@ function FastCastParallel:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Blockcast", origin, Size, direction, velocity, BehaviorData)
+	QueueFire(self, {
+		2,
+		origin,
+		Size,
+		direction,
+		velocity,
+		SnapshotBehavior(BehaviorData)
+	})
 end
 
 --[=[
@@ -422,7 +651,14 @@ function FastCastParallel:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.Dispatcher:Dispatch("Spherecast", origin, Radius, direction, velocity, BehaviorData)
+	QueueFire(self, {
+		3,
+		origin,
+		Radius,
+		direction,
+		velocity,
+		SnapshotBehavior(BehaviorData)
+	})
 end
 
 --[=[
@@ -506,7 +742,7 @@ function FastCastSerial:Init(
 		}
 	}
 
-	local events: TypeDef.FastCastEvents = {
+	local events: TypeDef.FastCastSignalEvents = {
 		CastFire = self.CastFire,
 		Pierced = self.Pierced,
 		Hit = self.Hit,
@@ -515,7 +751,8 @@ function FastCastSerial:Init(
 		CastTerminating = self.CastTerminating
 	}
 
-	self.BaseCast = BaseCastSerial.Init(events, data)
+	BaseCastSerial.Init(events, data)
+	self.BaseCast = BaseCastSerial
 
 	self.MovementMode = movementMode or "BulkMoveTo"
 	self.AlreadyInit = true
@@ -529,7 +766,7 @@ function FastCastSerial:RaycastFire(
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior?
+	BehaviorData: TypeDef.FastCastBehavior
 )
 	if not self.AlreadyInit then
 		error("Please Init caster first")
@@ -538,7 +775,7 @@ function FastCastSerial:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.BaseCast:Raycast(origin, direction, velocity, BehaviorData)
+	BaseCastSerial.Raycast(origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -550,7 +787,7 @@ function FastCastSerial:BlockcastFire(
 	Size: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior?
+	BehaviorData: TypeDef.FastCastBehavior
 )
 	if not self.AlreadyInit then
 		error("Please Init caster first")
@@ -559,7 +796,7 @@ function FastCastSerial:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.BaseCast:Blockcast(origin, Size, direction, velocity, BehaviorData)
+	BaseCastSerial.Blockcast(origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -571,7 +808,7 @@ function FastCastSerial:SpherecastFire(
 	Radius: number,
 	direction: Vector3,
 	velocity: Vector3 | number,
-	BehaviorData: TypeDef.FastCastBehavior?
+	BehaviorData: TypeDef.FastCastBehavior
 )
 	if not self.AlreadyInit then
 		error("Please Init caster first")
@@ -580,7 +817,7 @@ function FastCastSerial:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	self.BaseCast:Spherecast(origin, Radius, direction, velocity, BehaviorData)
+	BaseCastSerial.Spherecast(origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[[
@@ -594,7 +831,7 @@ end
 function FastCastSerial:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
 	if not self.BaseCast then return end
 
-	self.BaseCast:SetMovementModeEnabled(enabled, mode)
+	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
 	self.MovementMode = mode
 end
 
@@ -604,13 +841,11 @@ end
 ]=]
 function FastCastSerial:SetObjectCacheEnabled(
 	enabled: boolean,
-	Template: BasePart | Model,
+	Template: BasePart?,
 	CacheSize: number,
 	CacheHolder: Instance
 )
-	if not self.BaseCast then return end
-
-	self.BaseCast:BindObjectCache(
+	BaseCastSerial.BindObjectCache(
 		enabled,
 		Template,
 		CacheSize,
@@ -627,18 +862,10 @@ function FastCastSerial:Destroy()
 	if getmetatable(self) ~= FastCastSerial then
 		return
 	end
-	setmetatable(self, nil)
-	
-	if self.BaseCast then
-		self.BaseCast:Destroy()
-	end
 
-	self.LengthChanged = nil
-	self.Hit = nil
-	self.Pierced = nil
-	self.CanPierce = nil
-	self.CastTerminating = nil
-	self.CastFire = nil
+	BaseCastSerial.Destroy()
+	DestroyCasterSignals(self)
+	setmetatable(self, nil)
 
 	self.Destroy = function() end
 end
@@ -653,15 +880,16 @@ function FastCastParallel:Destroy()
 		return
 	end
 
-	self.LengthChanged = nil
-	self.Hit = nil
-	self.Pierced = nil
-	self.CastTerminating = nil
-	self.CastFire = nil
+	if self._flushConnection then
+		self._flushConnection:Disconnect()
+		self._flushConnection = nil
+	end
 
 	if self.Dispatcher then
 		self.Dispatcher:Destroy()
 	end
+
+	DestroyCasterSignals(self)
 	self.Destroy = function() end
 	setmetatable(self, nil)
 end
@@ -829,33 +1057,24 @@ function FastCast:TerminateCast(cast: vaildcast)
 	if cast._Destroying then return end
 	(cast :: any)._Destroying = true
 
-	local caster = cast.Caster
-	if caster == nil then return end
+	if cast.Mode == "Serial" then
+		local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
+		if eventsCfg and eventsCfg.UseCastTerminating then
+			local castTerminating = SerialSimulation.GetEvent("CastTerminating")
+			if castTerminating then
+				castTerminating:Fire(cast)
+			end
+		end
+		SerialSimulation.QueueEvent(cast.ID, "CastTerminating")
+	elseif cast.Mode == "Parallel" then
+		local caster = cast.Caster
+		if caster == nil then return end
 
-	local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
-
-	if caster.Output then
-		-- Parallel mode: fire event + cleaner, but don't nil cast keys
+		local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
 		if eventsCfg and eventsCfg.UseCastTerminating then
 			caster.Output:Fire("CastTerminating", cast)
 		end
-		caster.ActiveCastCleaner:Fire(cast.ID)
-	elseif caster.SerialSimulation then
-		-- Serial mode: fire callback sync, destroy cosmetic immediately, queue cleanup
-		if eventsCfg and eventsCfg.UseCastTerminating and caster.SerialSimulation.Events.CastTerminating then
-			caster.SerialSimulation.Events.CastTerminating(cast)
-		end
-
-		if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-			if caster.ObjectCacheInstance then
-				caster.ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
-			else
-				cast.RayInfo.CosmeticBulletObject:Destroy()
-			end
-			(cast :: any).RayInfo.CosmeticBulletObject = nil
-		end
-
-		caster.SerialSimulation:QueueEvent(cast.ID, "CastTerminating")
+		caster.Actor:SendMessage("Cleanup", cast.ID)
 	end
 end
 
@@ -872,12 +1091,7 @@ end
 ]=]
 function FastCast.new()
 	local fs = {
-		LengthChanged = nil,
-		Hit = nil,
-		Pierced = nil,
-		CanPierce = nil,
-		CastTerminating = nil,
-		CastFire = nil,
+		_events = NewCasterSignals(),
 		WorldRoot = workspace,
 	}
 	setmetatable(fs, FastCastSerial)
@@ -899,11 +1113,7 @@ end
 ]=]
 function FastCast.newParallel()
 	local fp = {
-		LengthChanged = nil,
-		Hit = nil,
-		Pierced = nil,
-		CastTerminating = nil,
-		CastFire = nil,
+		_events = NewCasterSignals(),
 		WorldRoot = workspace,
 		Dispatcher = nil,
 		AlreadyInit = false

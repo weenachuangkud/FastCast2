@@ -80,8 +80,7 @@ function Dispatcher.Init(newContainerParent : Instance, VMContainerName : string
 
 	-- Init
 
-	local Actor = Instance.new("Actor")
-	Actor:SetAttribute("Tasks", 0)		
+	local Actor = Instance.new("Actor")		
 
 	local Controller
 	if IS_SERVER then
@@ -158,9 +157,12 @@ function Dispatcher:Allocate(Threads: number, Data: any?, Callback: (...any) -> 
 	local Actors = {}
 
 	--> Create actors
-	for _ = 1, Threads do
+	for index = 1, Threads do
 		local Actor = Template:Clone()
 		Actor.Parent = Container
+
+		-- Stable per-worker index, used to phase-offset cosmetic updates.
+		Actor:SetAttribute("FastCastWorkerIndex", #self.Threads + index)
 
 		local controller = Actor:FindFirstChild(ControllerName)
 
@@ -181,9 +183,29 @@ function Dispatcher:Allocate(Threads: number, Data: any?, Callback: (...any) -> 
 	--> Allow actors to start
 	RunService.PostSimulation:Wait()
 
-	--> Initialize actors
-	for _, Actor in Actors do
-		Actor:SendMessage("Init", Data)
+	--> Initialize actors. A message is dropped if the controller script has
+	--> not bound its topics yet, and client controllers can start a few
+	--> frames late, so retry until every actor reports that it initialized.
+	for attempt = 1, 30 do
+		local pending = false
+
+		for _, Actor in Actors do
+			if Actor:GetAttribute("FastCast2Ready") ~= true then
+				pending = true
+				Actor:SendMessage("Init", Data)
+			end
+		end
+
+		if not pending then
+			break
+		end
+
+		if attempt == 30 then
+			warn("[FastCastVMs] Some actors did not initialize. RunContext : "
+				.. (IS_SERVER and "Server" or "Client"))
+		end
+
+		RunService.PostSimulation:Wait()
 	end
 
 	--> Merge actors into threads

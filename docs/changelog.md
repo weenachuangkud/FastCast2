@@ -10,6 +10,21 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [Unreleased]
+
+### Added
+- **`Signal`** - lightweight synchronous event dispatcher (`src/Signal.luau`) used for Caster events instead of `BindableEvent`
+- Caster events (`Hit`, `Pierced`, `LengthChanged`, `CastFire`, `CastTerminating`) are now Signals supporting multiple listeners, `Once`, `Wait`, `Disconnect`, `DisconnectAll`, and `Destroy`
+
+### Changed
+- Assigning a function to a caster event is now shorthand for `:Connect` (still supported for backwards compatibility)
+- `CanPierce` remains a single function because it has to return a boolean
+
+### Performance
+- Parallel workers now batch all queued events into a single `Output` message per frame instead of firing one `BindableEvent` message per event, reducing Actor-boundary crossings
+
+---
+
 ## [0.1.0] — 2026-05-07
 
 ### Added

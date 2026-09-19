@@ -175,11 +175,6 @@ parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction
 local Caster = FastCast2.newParallel()
 Caster:Init(
 	4,                 -- numWorkers
-	workspace,         -- VM folder parent
-	"FastCastVMs",     -- VM folder name
-	workspace,         -- container parent
-	"VMContainer",     -- container name
-	"VM",              -- VM name
 	"BulkMoveTo",      -- movementMode
 	nil,               -- FastCastEventsModule (optional)
 	false              -- useObjectCache
@@ -316,11 +311,20 @@ FastCast2:TerminateCast(cast)
 
 ### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
 
+## Benchmarks
+
+FastCast2 includes repeatable client and server benchmarks for raycasts, blockcasts, and spherecasts. They compare serial and parallel execution using creation/cleanup throughput and simulation frame-time percentiles. See the [benchmark guide](benchmarks/README.md) for controls and the ready-to-sync Rojo project.
+
+## Tests
+
+The automated suite runs the functional tests and the six-case benchmark matrix inside Roblox Studio, prints a Markdown results table, and uploads the report to [paste.shellworks.dev](https://paste.shellworks.dev). Run it with `npm test` (or `lune run tests/run.luau`). See the [test guide](tests/README.md) for prerequisites and flags.
+
+
 ---
 
 # People behind FastCast2(Contributors)
 - [CK06](https://github.com/weenachuangkud): Main developer, Maintainer, Graphic designer
-- [Naymmmm](https://github.com/Naymmmm): Maintainer (Inactive)
+- [Naymmmm](https://github.com/Naymmmm): Maintainer
 - [EtiTheSpirit](https://github.com/EtiTheSpirit): Original developer
 - [Per2iako](https://github.com/Per2iako): Maintainer
 

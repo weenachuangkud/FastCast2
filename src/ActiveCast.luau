@@ -93,7 +93,8 @@ function ActiveCast.createCastData(
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
-		ID = activeCastID
+		ID = activeCastID,
+		Mode = if _parallel then "Parallel" else "Serial",
 	}
 
 	if _parallel then
