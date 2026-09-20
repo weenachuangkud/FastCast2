@@ -189,11 +189,6 @@ export type CasterParallel = {
 	Init: (
 		self: CasterParallel,
 		numWorkers: number,
-		newParent: Folder,
-		newName: string,
-		ContainerParent: Folder,
-		VMContainerName: string,
-		VMname: string,
 		MovementMode: "BulkMoveTo" | "Motor6D",
 		FastCastEventsModule: ModuleScript,
 		useObjectCache: boolean,
