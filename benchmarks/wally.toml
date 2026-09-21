@@ -1,4 +1,9 @@
 [package]
+name = "your_username/your_project_name"
+description = "A short description of your Roblox game or package"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
 
 [dependencies]
 bytenet = "ffrostflame/bytenet@0.4.6"
