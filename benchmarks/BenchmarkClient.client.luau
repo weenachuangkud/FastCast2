@@ -20,6 +20,7 @@
 		]       Increase workers
 		I       Show benchmark information
 		H       Show controls
+		N       Toggle Client / Server input mode
 ]]
 
 --// Services
@@ -61,6 +62,7 @@ local Config = {
 local NUM_WORKERS_CHANGE_COOLDOWN = 4.5
 local MODE_CHANGE_COOLDOWN = 2.5
 local BENCHMARK_COOLDOWN = 2.5
+local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 
 --// Modules
 
@@ -69,6 +71,10 @@ local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 local FastCast = require(FastCastModule)
 local FastCastEnums = require(
 	FastCastModule:WaitForChild("FastCastEnums")
+)
+
+local BenchmarkPackets = require(
+	ReplicatedStorage:WaitForChild("BenchmarkPackets")
 )
 
 --// Objects
@@ -122,6 +128,8 @@ local ActiveCasts = {}
 
 local IsBenchmarking = false
 local IsReconfiguring = false
+
+local InputMode = "Client"
 
 --// Frame Statistics
 
@@ -272,6 +280,7 @@ local function printBenchmarkInfo()
 	print(("MovementMode: %s"):format(Config.MovementMode))
 
 	print(("Mode: %s"):format(getMode()))
+	print(("InputMode: %s"):format(InputMode))
 
 	if Config.Parallel then
 		print(("numWorkers: %d"):format(Config.NumWorkers))
@@ -590,6 +599,16 @@ end
 
 --// Mode Switching
 
+local function switchInputMode()
+	if IsBenchmarking or IsReconfiguring then
+		return
+	end
+
+	InputMode = if InputMode == "Client" then "Server" else "Client"
+
+	print(("InputMode: %s"):format(InputMode))
+end
+
 local function switchMode()
 	if IsBenchmarking or IsReconfiguring then
 		return
@@ -658,6 +677,7 @@ local function showControls()
 	print(">  - Increase HighFidelitySegmentSize")
 	print("<  - Decrease HighFidelitySegmentSize")
 	print("B  - Toggle Serial / Parallel")
+	print("N  - Toggle Client / Server input mode")
 	print("R  - Cycle Raycast / Blockcast / Spherecast")
 	print("[  - Decrease numWorkers")
 	print("]  - Increase numWorkers")
@@ -714,6 +734,7 @@ local Keybinds = {
 
 	[Enum.KeyCode.B] = switchMode,
 
+
 	[Enum.KeyCode.R] = function()
 		if not IsBenchmarking then
 			cycleCastType()
@@ -755,16 +776,32 @@ local Keybinds = {
 
 --// Input
 
+local function sendInputToServer(keyCode)
+	BenchmarkPackets.Input.send(keyCode.Name)
+end
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then
 		return
 	end
 
+	if input.KeyCode == INPUT_MODE_TOGGLE_KEY then
+		switchInputMode()
+		return
+	end
+
 	local callback = Keybinds[input.KeyCode]
 
-	if callback then
-		callback()
+	if not callback then
+		return
 	end
+
+	if InputMode == "Server" then
+		sendInputToServer(input.KeyCode)
+		return
+	end
+
+	callback()
 end)
 
 --// Startup
