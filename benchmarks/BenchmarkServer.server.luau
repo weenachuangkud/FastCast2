@@ -72,6 +72,10 @@ local FastCastEnums = require(
 	FastCastModule:WaitForChild("FastCastEnums")
 )
 
+local BenchmarkPackets = require(
+	ReplicatedStorage:WaitForChild("BenchmarkPackets")
+)
+
 --// Projectile Objects
 
 local ProjectileContainer = Instance.new("Folder")
@@ -749,11 +753,30 @@ local Commands = {
 	h = showHelp,
 }
 
---// Chat Handling
 
-local function onChatMessage(_, message)
-	local command = message:lower():gsub("^%s*(.-)%s*$", "%1")
+--// Input Handling
 
+-- Maps Enum.KeyCode names (sent by the client) to Commands keys.
+local KeyNameToCommand = {
+	P = "p",
+	L = "l",
+	K = "k",
+	U = "u",
+	J = "j",
+	Y = "y",
+	V = "v",
+	X = "x",
+	R = "r",
+	I = "i",
+	H = "h",
+
+	Period = ">",
+	Comma = "<",
+	LeftBracket = "[",
+	RightBracket = "]",
+}
+
+local function runCommand(command)
 	local handler = Commands[command]
 
 	if handler then
@@ -761,17 +784,25 @@ local function onChatMessage(_, message)
 	end
 end
 
-local function connectPlayer(player)
-	player.Chatted:Connect(function(message)
-		onChatMessage(player, message)
-	end)
-end
+--// ByteNet (client key input)
 
-Players.PlayerAdded:Connect(connectPlayer)
+BenchmarkPackets.Input.listen(function(keyName)
+	if typeof(keyName) ~= "string" then
+		return
+	end
 
-for _, player in Players:GetPlayers() do
-	connectPlayer(player)
-end
+	-- The server benchmark is parallel-only, so B has no effect here.
+	if keyName == "B" then
+		print("Serial / Parallel toggle isn't available on the server (Parallel only).")
+		return
+	end
+
+	local command = KeyNameToCommand[keyName]
+
+	if command then
+		runCommand(command)
+	end
+end)
 
 --// Initialization
 
