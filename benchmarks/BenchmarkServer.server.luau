@@ -218,17 +218,18 @@ end
 
 local function terminateActiveCasts()
 	for i = #ActiveCasts, 1, -1 do
-		task.spawn(function()
-			local cast = ActiveCasts[i]
+		local cast = ActiveCasts[i]
 
-			if cast then
-				FastCast:TerminateCast(cast)
-			end
+		if cast then
+			FastCast:TerminateCast(cast)
+		end
 
-			ActiveCasts[i] = nil
-		end)
+		ActiveCasts[i] = nil
 	end
+
+	table.clear(ActiveCasts)
 end
+
 
 local function destroyCaster()
 	if not Caster then
@@ -386,44 +387,96 @@ local function runBenchmark()
 	end
 
 	IsBenchmarking = true
-
-	printBenchmarkInfo()
-
-	print(("Firing %d projectiles..."):format(
-		Config.ProjectileAmount
-		))
-
-	local creationStarted = os.clock()
-	fireProjectiles()
-	local creationElapsed = os.clock() - creationStarted
-
-	-- Let the first batch begin processing.
-	task.wait()
-
-	printSection("CREATION COMPLETE")
-	printOperationStats(creationElapsed, Config.ProjectileAmount)
-
-	table.clear(FrameTimes)
-	IsMeasuringFrames = true
-	task.wait(Config.BenchmarkDuration)
 	IsMeasuringFrames = false
 
-	printSection("SIMULATION COMPLETE")
-	printFrameStats()
+	local success, err = xpcall(function()
 
-	printSection("CLEANUP")
+		printSection("BENCHMARK START")
+		printBenchmarkInfo()
 
-	local cleanupStarted = os.clock()
-	terminateActiveCasts()
-	local cleanupElapsed = os.clock() - cleanupStarted
-	printOperationStats(cleanupElapsed, Config.ProjectileAmount)
+		print(("Firing %d projectiles..."):format(
+			Config.ProjectileAmount
+			))
 
-	task.wait(BENCHMARK_COOLDOWN)
+		--// Creation
+		local creationStarted = os.clock()
 
-	printSection("DONE")
+		fireProjectiles()
 
+		local creationElapsed = os.clock() - creationStarted
+
+		-- Let Parallel FastCast begin processing.
+		task.wait()
+
+		printSection("CREATION COMPLETE")
+		printOperationStats(
+			creationElapsed,
+			Config.ProjectileAmount
+		)
+
+		--// Simulation
+		table.clear(FrameTimes)
+
+		IsMeasuringFrames = true
+
+		task.wait(Config.BenchmarkDuration)
+
+		IsMeasuringFrames = false
+
+		printSection("SIMULATION COMPLETE")
+		printFrameStats()
+
+		--// Cleanup
+		printSection("CLEANUP")
+
+		local cleanupStarted = os.clock()
+
+		terminateActiveCasts()
+
+		local cleanupElapsed = os.clock() - cleanupStarted
+
+		printOperationStats(
+			cleanupElapsed,
+			Config.ProjectileAmount
+		)
+
+		-- Give FastCast2's parallel workers time to finish
+		-- processing the terminated casts.
+		task.wait(BENCHMARK_COOLDOWN)
+
+		--// IMPORTANT
+		-- Destroy the old parallel caster and create a
+		-- completely fresh one for the next benchmark.
+		print("Rebuilding FastCast caster...")
+
+		rebuildCaster()
+
+		print("FastCast caster rebuilt.")
+
+		printSection("DONE")
+
+	end, debug.traceback)
+
+	-- Always restore benchmark state.
+	IsMeasuringFrames = false
 	IsBenchmarking = false
+
+	if not success then
+		warn("FastCast2 benchmark failed:")
+		warn(err)
+
+		-- Recover the caster if something failed during
+		-- the benchmark.
+		pcall(function()
+			rebuildCaster()
+		end)
+
+		print("FastCast caster recovered.")
+	end
+
+	print("Benchmark ready. Type 'p' to run again.")
 end
+
 
 local function cycleCastType()
 	if Config.CastType == "Raycast" then
