@@ -5,6 +5,9 @@
 		"ReplicatedStorage": {
 			"FastCast2": {
 				"$path": "src"
+			},
+			"Packages": {
+				"$path": "benchmarks/Packages"
 			}
 		},
 		"ReplicatedFirst": {
