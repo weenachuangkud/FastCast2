@@ -8,6 +8,9 @@
 			},
 			"Packages": {
 				"$path": "benchmarks/Packages"
+			},
+			"BenchmarkPackets": {
+				"$path": "benchmarks/BenchmarkPackets.luau"
 			}
 		},
 		"ReplicatedFirst": {
