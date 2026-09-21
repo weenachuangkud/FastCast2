@@ -1,2 +1,4 @@
+[package]
+
 [dependencies]
 bytenet = "ffrostflame/bytenet@0.4.6"
