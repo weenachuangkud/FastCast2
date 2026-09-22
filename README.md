@@ -47,7 +47,7 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Built-in castVisualization
 - Built-in ObjectCache
 - Built-in HighFidelitySegment control
-- Flexible, extensible, and easy to integrate
+- Flexible, extensible
 - High Performance
 
 FastCast2 is an open-source project, and contributions from the community are welcome — see [Contributing](#contributing) below.
