@@ -313,6 +313,19 @@ FastCast2:TerminateCast(cast)
 
 ### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
 
+---
+ 
+## Contributing
+ 
+FastCast2 is community-driven, and contributions of all kinds are welcome, code, documentation, bug reports, examples, or ideas.
+ 
+1. Found a bug or have an idea? Open an [Issue](https://github.com/weenachuangkud/FastCast2/issues) first.
+2. Want to submit code or docs? Fork the repo, branch off `main`, make your changes, and open a Pull Request.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for community expectations.
+
+<br>
+
+
 ## Benchmarks
 
 FastCast2 includes repeatable client and server benchmarks for raycasts, blockcasts, and spherecasts. They compare serial and parallel execution using creation/cleanup throughput and simulation frame-time percentiles. See the [benchmark guide](benchmarks/README.md) for controls and the ready-to-sync Rojo project.
