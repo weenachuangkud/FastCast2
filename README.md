@@ -47,67 +47,69 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Built-in castVisualization
 - Built-in ObjectCache
 - Built-in HighFidelitySegment control
-- Flexible and extensible design
+- Flexible, extensible, and easy to integrate
 - High Performance
 
-FastCast2 is an open-source project, and contributions from the community are welcome. <br />
-Read more on [FastCast2 devforum](https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed/4093890)
+FastCast2 is an open-source project, and contributions from the community are welcome — see [Contributing](#contributing) below.
 
 ---
-# Installation guide
+## Installation guide
 
 
-1. Go to [Releases](https://github.com/weenachuangkud/FastCast2/releases) and install the `.rbxm` file from the latest release.
+### 1. Model file (.rbxm)
+ 
+1. Go to [Releases](https://github.com/weenachuangkud/FastCast2/releases) and download the `.rbxm` file from the latest release.
 2. Open Roblox Studio and open any project.
 3. Go to **File → Import Roblox Model** and import the `.rbxm` file.
 4. After importing, **FastCast2** will appear in your Workspace.
 5. Drag **FastCast2** into **ReplicatedStorage**.
-6. Done, and you’re ready to use FastCast2.
+6. Done — you're ready to use FastCast2.
+
+### 2. Install with [Wally](https://wally.run/)
+ 
+1. Make sure you have [Wally installed](https://wally.run/install).
+2. Run `wally init` if you haven't already.
+3. Add FastCast2 under `[dependencies]` in your `wally.toml`:
+```toml
+   FastCast2 = "weenachuangkud/fastcast2@0.1.4"
+```
+ 
+4. Run `wally install` and you're ready to use it.
+> **Note:** This does not include a Rojo setup, you'll need your own `default.project.json` to sync `Packages` into your place.
 
 ---
 
-## Install with [Wally](https://wally.run/)
-
-1. Make you have installed Wally: https://wally.run/install
-2. After you've installed Wally, make sure to `wally init`
-3. Then inside `wally.toml` below `[dependencies]` copy and paste `FastCast2 = "weenachuangkud/fastcast2@0.1.4"`
-4. Run `wally install`, and you're ready to use
-
-NOTE: This does not include rojo setup
-
----
-
-# Code example
-
-Shooting projectiles from your head (Serial mode - simpler, main thread):
-
+## Quick start
+ 
+Shooting projectiles from your head (Serial mode, simpler, runs on the main thread):
+ 
 ```lua
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-
+ 
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
 local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
-
+ 
 -- CONSTANTS
 local SPEED = 500
-
+ 
 -- Variables
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local Head = character:WaitForChild("Head")
 local Mouse = player:GetMouse()
-
+ 
 local ProjectileContainer = workspace:WaitForChild("Projectiles")
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
-
+ 
 -- CastParams
 local CastParams = RaycastParams.new()
 CastParams.FilterDescendantsInstances = {character}
 CastParams.FilterType = Enum.RaycastFilterType.Exclude
 CastParams.IgnoreWater = true
-
+ 
 -- Behavior (FastCastBehavior)
 local behavior = FastCast2.newBehavior()
 behavior.MaxDistance = 1000
@@ -117,24 +119,23 @@ behavior.HighFidelitySegmentSize = 1
 behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
 behavior.CosmeticBulletTemplate = ProjectileTemplate
-
-
+ 
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
 Caster:Init("BulkMoveTo", false) -- movementMode, useObjectCache
-
+ 
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit: " .. result.Instance.Name)
 end
-
+ 
 -- Fire
 local function fire()
 	local origin = Head.Position
 	local direction = (Mouse.Hit.Position - origin).Unit
 	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
-
+ 
 -- Input
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
@@ -145,21 +146,21 @@ end)
 ```
 
 ### Blockcast & Spherecast
-
-Swap `RaycastFire` for `BlockcastFire` or `SpherecastFire` to change cast type:
-
+ 
+Swap `RaycastFire` for `BlockcastFire` or `SpherecastFire` to change the cast type:
+ 
 ```lua
 -- Blockcast: pass a Vector3 size after origin
 Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
-
+ 
 -- Spherecast: pass a number radius after origin
 Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
-### ObjectCache (Or object pooling)
-
+### ObjectCache (or object pooling)
+ 
 ObjectCache reuses cosmetic bullet instances instead of creating/destroying them every shot:
-
+ 
 ```lua
 local Caster = FastCast2.new()
 Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
@@ -167,10 +168,10 @@ Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
 ```
 
 The cache pre-allocates 500 parts by default, auto-expands when exhausted, and moves retired
-parts to a far-away CFrame via `BulkMoveTo` — no instance creation/destruction overhead.
+parts to a far-away CFrame via `BulkMoveTo`
 
 ### Parallel mode
-
+ 
 ```lua
 local Caster = FastCast2.newParallel()
 Caster:Init(
@@ -179,23 +180,24 @@ Caster:Init(
 	nil,               -- FastCastEventsModule (optional)
 	false              -- useObjectCache
 )
-
+ 
 -- Events work the same as serial
 Caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit: " .. result.Instance.Name)
 end
-
+ 
 --[[
 	-- Except:
 	-- Caster.CanPierce
 	--> You will have to use FastCastEventsModule for that
 ]]
-
+ 
 -- Fire the same as serial
 Caster:RaycastFire(origin, direction, SPEED, behavior)
 Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
 Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
+
 
 <br />
 
