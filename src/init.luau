@@ -13,7 +13,7 @@
 		YOU SHOULD ONLY CREATE ONE CASTER PER GUN.
 		YOU SHOULD >>>NEVER<<< CREATE A NEW CASTER EVERY TIME THE GUN NEEDS TO BE FIRED.
 		
-		A caster (created with FastCast.new() or FastCastParallel.new()) represents a "gun".
+		A caster (created with FastCast.new()) represents a "gun".
 		When you consider a gun, you think of stats like accuracy, bullet speed, etc. This is the info a caster stores. 
 	
 	--
@@ -31,7 +31,7 @@
 	Unfortunately, while reliable in terms of saying if something got hit or not, this method alone cannot be used if you wish
 	to implement bullet travel time into a weapon. As a result of that, I made this library - an excellent remedy to this dilemma.
 	
-	FastCastParallel is intended to be require()'d once in a script, as you can create as many casters as you need with FastCastParallel.new()
+	FastCast is intended to be require()'d once in a script, as you can create as many casters as you need with FastCast.new()
 	This is generally handy since you can store settings and information in these casters, and even send them out to other scripts via events
 	for use.
 	
@@ -39,11 +39,18 @@
 	Make the caster once, then use the caster to fire your bullets. Do not make a caster for each bullet.
 --]]
 
--- Mozilla Public License 2.0 (files originally from FastCastParallel)
+-- Mozilla Public License 2.0 (files originally from FastCast)
 
 --[[
 	- Modified by: Mawin CK 
 	- Date : 2025
+
+	NOTE:
+	For anyone who's reading this is FastCast2, An improved version of FastCast with Parallel scripting, more extensions, and statically typed.
+A powerful modern projectile library
+
+	Because FastCast is no longer actively maintained by EtiTheSpirit, this repository continues the project with updates and adaptations.
+	- Devforum: https://devforum.roblox.com/t/fastcast2-an-improved-version-of-fastcast-with-parallel-scripting-more-extensions-and-statically-typed-a-powerful-modern-projectile-library/4093890
 ]]
 
 
