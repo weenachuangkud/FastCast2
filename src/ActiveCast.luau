@@ -1,9 +1,6 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	
-
-	ActiveCastSerial - Serial mode with single RunService, SoA pattern, queue technique
 ]]
 
 local FastCastModule = script.Parent
