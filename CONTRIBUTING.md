@@ -17,8 +17,6 @@ This project is open-source and community-driven, and **all kinds of help are we
    - Commit your changes
    - Push to your fork
    - Open a **Pull Request** against the `main` branch
-   - You must provide **RBXM** file to the author for release (Optional) <br>
-   > (Only if the author aka **Mawin_CK** himself requested you to provide **RBXM** for the release)
 
 All pull requests will go through **code review** before merging.
 
@@ -58,7 +56,9 @@ I'm not strict about changelogs, and I don't really bother writing explicit chan
 - Keep discussions technical and constructive
 
 ### Testing
-- Read manual testing instructions: https://github.com/weenachuangkud/FastCast2/blob/main/TESTS.md
+- Run the automated suite before opening a PR: `npm test` (or `lune run tests/run.luau`)
+- It runs the functional tests and benchmark matrix in Studio and uploads the report to paste.shellworks.dev; see [`tests/README.md`](tests/README.md)
+- Manual checklist / coverage reference: [`TESTS.md`](TESTS.md)
 
 ### Questions?
 

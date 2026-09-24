@@ -23,16 +23,34 @@ caster:Init(movementMode, useObjectCache, template, cacheSize, cacheHolder)
 
 #### 1.1.2 Events
 
-Events are assigned directly on the caster **before or after Init**:
+Caster events are lightweight `Signal` objects (not `BindableEvent`s), so any
+number of listeners can connect and disconnect independently. Events can be
+connected **before or after Init**:
+
+```lua
+local connection = caster.Hit:Connect(function(cast, result, velocity, cosmeticBullet) end)
+connection:Disconnect() -- stop listening
+
+caster.Pierced:Connect(function(cast, result, velocity, cosmeticBullet) end)
+caster.LengthChanged:Connect(function(cast, lastPoint, rayDir, rayDisplacement, velocity, cosmeticBullet) end)
+caster.CastFire:Connect(function(cast, origin, direction, velocity, behavior) end)
+caster.CastTerminating:Connect(function(cast) end)
+```
+
+`CanPierce` is a query that must return a boolean, so it stays a single function:
+
+```lua
+caster.CanPierce = function(cast, result, velocity, cosmeticBullet) -> boolean end
+```
+
+For backwards compatibility, assigning a function to a signal event is shorthand
+for `:Connect` and replaces any previous function assigned this way:
 
 ```lua
 caster.Hit = function(cast, result, velocity, cosmeticBullet) end
-caster.Pierced = function(cast, result, velocity, cosmeticBullet) end
-caster.LengthChanged = function(cast, lastPoint, rayDir, rayDisplacement) end
-caster.CastFire = function(cast, origin, direction, velocity, behavior) end
-caster.CastTerminating = function(cast) end
-caster.CanPierce = function(cast, result, velocity, cosmeticBullet) -> boolean end
 ```
+
+`Signal` supports `Connect`, `Once`, `Wait`, `Fire`, `DisconnectAll`, and `Destroy`.
 
 #### 1.1.3 Movement Modes
 

@@ -77,11 +77,6 @@ local Caster = FastCast2.newParallel()
 
 Caster:Init(
     numWorkers: number,                 -- Number of Actor VMs. Must be > 1.
-    newParent: Folder,                  -- Parent for the FastCastVMs Folder.
-    newName: string,                    -- Name for the FastCastVMs Folder.
-    ContainerParent: Folder,            -- Parent for worker VM Containers.
-    VMContainerName: string,            -- Name for VM Containers.
-    VMname: string,                     -- Name given to each worker VM.
     movementMode: "BulkMoveTo" | "Motor6D",  -- Movement method.
     FastCastEventsModule: ModuleScript?,-- ModuleScript returning a FastCastEvents table.
     useObjectCache: boolean,            -- Enable ObjectCache for this Caster.

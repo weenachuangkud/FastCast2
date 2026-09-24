@@ -1,3 +1,23 @@
+# Testing FastCast2
+
+The checklist below is covered by the automated suite. Run it with one command
+from the repository root:
+
+```sh
+npm test
+# or
+lune run tests/run.luau
+```
+
+The runner builds the test place, runs it in Roblox Studio via
+`run-in-roblox`, prints a functional-test summary and a benchmark table, and
+uploads the full report to [paste.shellworks.dev](https://paste.shellworks.dev).
+See [`tests/README.md`](tests/README.md) for prerequisites, flags, and the
+project layout.
+
+The same cases can still be verified by hand if Studio automation is not
+available.
+
 ### Caster
 1. Initialization
 2. Basic raycast/blockcast/spherecast firing

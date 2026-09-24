@@ -1,9 +1,6 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	
-
-	ActiveCastSerial - Serial mode with single RunService, SoA pattern, queue technique
 ]]
 
 local FastCastModule = script.Parent
@@ -93,7 +90,8 @@ function ActiveCast.createCastData(
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
-		ID = activeCastID
+		ID = activeCastID,
+		Mode = if _parallel then "Parallel" else "Serial",
 	}
 
 	if _parallel then

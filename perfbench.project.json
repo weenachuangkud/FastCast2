@@ -1,0 +1,16 @@
+{
+	"name": "FastCast2PerfBench",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"FastCast2": {
+				"$path": "src"
+			}
+		},
+		"ServerScriptService": {
+			"PerfBench": {
+				"$path": "perfbench/PerfBench.server.luau"
+			}
+		}
+	}
+}

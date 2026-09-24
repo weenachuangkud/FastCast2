@@ -19,6 +19,7 @@ Fires projectiles and tracks FPS using keyboard controls. Supports both serial a
 | J | Toggle BulkMoveTo / Motor6D |
 | Y | Toggle ObjectCache |
 | V | Toggle VisualizeCasts |
+| R | Cycle Raycast / Blockcast / Spherecast |
 | X | Cycle HighFidelityBehavior (Default > Automatic > Always) |
 | > | Increase HighFidelitySegmentSize by 0.05 |
 | < | Decrease HighFidelitySegmentSize by 0.05 (floor 0.05) |
@@ -35,14 +36,17 @@ Fires projectiles and tracks FPS using keyboard controls. Supports both serial a
 Edit at the top of the file:
 
 ```lua
-local Parallel = true          -- true = parallel, false = serial
-local numWorkers = 4           -- number of VM workers (parallel only)
-local ProjectileAmount = 500   -- projectiles per benchmark run
-local Instanced = true         -- use cosmetic bullet instances
-local VisualizeCasts = false   -- show cast ray visualization
-local BENCH_TIME = 6           -- seconds to simulate after creation
-local MovementMode = "BulkMoveTo"
-local ObjectCacheEnabled = false
+local Config = {
+    Parallel = true,          -- true = parallel, false = serial
+    NumWorkers = 4,           -- number of VM workers (parallel only)
+    ProjectileAmount = 500,   -- projectiles per benchmark run
+    CastType = "Raycast",     -- Raycast, Blockcast, or Spherecast
+    Instanced = true,         -- use cosmetic bullet instances
+    VisualizeCasts = false,   -- show cast ray visualization
+    BenchmarkDuration = 6,    -- seconds to simulate after creation
+    MovementMode = "BulkMoveTo",
+    ObjectCacheEnabled = false,
+}
 ```
 
 ---
@@ -66,6 +70,7 @@ Type the letter in chat:
 | j | Toggle BulkMoveTo / Motor6D |
 | y | Toggle ObjectCache |
 | v | Toggle VisualizeCasts |
+| r | Cycle Raycast / Blockcast / Spherecast |
 | x | Cycle HighFidelityBehavior |
 | > | Increase HighFidelitySegmentSize by 0.05 |
 | < | Decrease HighFidelitySegmentSize by 0.05 |
@@ -79,13 +84,16 @@ Type the letter in chat:
 Edit at the top of the file:
 
 ```lua
-local numWorkers = 4
-local Instanced = false
-local MovementMode = "BulkMoveTo"
-local UseObjectCache = false
-local ProjectileAmount = 500
-local VisualizeCasts = false
-local VELOCITY = 6
+local Config = {
+    NumWorkers = 4,
+    Instanced = false,
+    MovementMode = "BulkMoveTo",
+    ObjectCacheEnabled = false,
+    ProjectileAmount = 500,
+    CastType = "Raycast",
+    VisualizeCasts = false,
+    Velocity = 6,
+}
 ```
 
 ---
@@ -100,29 +108,45 @@ ObjectCache Disabled
 VisualizeCasts: Disabled
 HighFidelityBehavior: Default
 MovementMode: BulkMoveTo
+CastType: Raycast
 Instanceless
 numWorkers:    4
 Firing 500 projectiles...
 === CREATION COMPLETE ===
-Delta: xx.xx ms
-Average FPS: xx.xx
-Max FPS: xx.xx
-Min FPS: xx.xx
+Elapsed: xx.xx ms
+Throughput: xx.xx projectiles/s
 === SIMULATION COMPLETE ===
-...
+Frames sampled: xxx
+Average frame time: xx.xx ms (xx.xx FPS)
+P50 / P95 / P99: xx.xx / xx.xx / xx.xx ms
+FPS range: xx.xx - xx.xx
+=== CLEANUP ===
+Elapsed: xx.xx ms
+Throughput: xx.xx projectiles/s
 === DONE ===
-Delta: xx.xx ms
-Average FPS: xx.xx
-Max FPS: xx.xx
-Min FPS: xx.xx
 ```
 
-- **Delta**: Frame time in milliseconds (lower is better)
-- **FPS** values are collected per-frame and averaged over 0.5s windows
-- `maxFps`/`minFps` reset at the start of each benchmark run
+- **Elapsed / throughput** measure synchronous projectile creation and cleanup work.
+- **Average frame time** is calculated from every heartbeat during the simulation window; FPS is derived from that average.
+- **P50 / P95 / P99** expose frame-time spikes that an FPS average can hide (lower is better).
+- Each run uses the same random seed, so different modes and settings receive identical projectile origins and directions.
 
 ## Quick Start
 
-1. Insert BenchmarkClient into ReplicatedFirst (or StarterPlayerScripts)
-2. Insert BenchmarkServer into ServerScriptService
-3. Play in Studio -- press P on the client or type p in chat on the server
+1. Run `rojo serve benchmarks.project.json` from the repository root.
+2. Connect an empty Studio place with the Rojo plugin.
+3. Play in Studio -- press P on the client or type p in chat on the server.
+
+The benchmark project mounts FastCast2 in `ReplicatedStorage`, the client benchmark in `ReplicatedFirst`, and the server benchmark in `ServerScriptService`. You can also insert either script manually in those locations if you do not use Rojo.
+
+For useful comparisons, change one setting at a time and run each configuration several times. In particular, compare all three cast types in serial and parallel modes with visualization disabled; Studio rendering, open windows, and plugins can otherwise add significant noise.
+
+## Automated suite
+
+The repeatable six-case matrix (Serial/Parallel x Raycast/Blockcast/Spherecast)
+now lives with the rest of the automated tests. It builds a Rojo place, runs it
+in Studio with `run-in-roblox`, prints a Markdown results table, and uploads the
+report to [paste.shellworks.dev](https://paste.shellworks.dev). See
+[`tests/README.md`](../tests/README.md) for prerequisites and usage; run it with
+`npm test` or `lune run tests/run.luau`.
+
