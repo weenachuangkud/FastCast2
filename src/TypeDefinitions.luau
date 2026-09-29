@@ -234,7 +234,7 @@ export type CasterParallel = {
 	SetVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),
 	GetVelocityCast: (CasterParallel, cast: vaildcast) -> Vector3,
 
-	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> Vector3,
+	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),
 	SetAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),
 	GetAccelerationCast: (CasterParallel, cast: vaildcast) -> Vector3,
 
@@ -314,7 +314,7 @@ export type CasterSerial = {
 	SetVelocityCast: (CasterSerial, cast: vaildcast, velocity: Vector3) -> (),
 	GetVelocityCast: (CasterSerial, cast: vaildcast) -> Vector3,
 
-	AddAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> Vector3,
+	AddAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> (),
 	SetAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> (),
 	GetAccelerationCast: (CasterSerial, cast: vaildcast) -> Vector3,
 
