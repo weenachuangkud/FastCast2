@@ -146,6 +146,8 @@ function BaseCast._TerminateCast(castID: number)
 
 	table.clear(cast :: any)
 	Actives[castID] = nil
+
+	SerialSimulation.Unregister(castID)
 end
 
 function BaseCast._GetMotor6D(projectilePart: BasePart?)
