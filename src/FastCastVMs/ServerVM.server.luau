@@ -98,15 +98,6 @@ actor:BindToMessage("SetMovementModeEnabled", function(enabled: boolean, mode: "
 	BaseCast:SetMovementModeEnabled(enabled, mode)
 end)
 
-actor:BindToMessage("BindObjectCache", function(
-	enabled: boolean,
-	Template: BasePart?,
-	CacheSize: number?,
-	CacheHolder: Instance?
-)
-	BaseCast:BindObjectCache(enabled, Template, CacheSize, CacheHolder)
-end)
-
 -- CleanUp
 
 actor:BindToMessage("Destroy", function()
