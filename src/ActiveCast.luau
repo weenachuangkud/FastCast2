@@ -118,6 +118,7 @@ function ActiveCast.createCastData(
 	
 	if cast.RayInfo.CosmeticBulletObject ~= nil then
 		local basePart = cast.RayInfo.CosmeticBulletObject
+		basePart = basePart:Clone()
 		basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
 		basePart.Parent = behavior.CosmeticBulletContainer
 
