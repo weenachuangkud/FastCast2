@@ -686,34 +686,6 @@ function FastCastParallel:SetMovementModeEnabled(enabled: boolean, mode: "BulkMo
 	self.MovementMode = mode
 end
 
---[=[
-	Sets whether ObjectCache is enabled for this Caster.
-	It is recommended to interface with this via [`FastCastParallel:Init()`](FastCastParallel#Init) instead.
-	@method SetObjectCacheEnabled
-	@within FastCastParallel
-
-	@param enabled boolean
-]=]
-function FastCastParallel:SetObjectCacheEnabled(
-	enabled: boolean,
-	Template: BasePart | Model,
-	CacheSize: number,
-	CacheHolder: Instance
-)
-	if not self.AlreadyInit then
-		error("Please Init caster")
-	end
-	local vmDispatcher = self.Dispatcher
-
-	if enabled then
-		vmDispatcher:DispatchAll("BindObjectCache", enabled, Template, CacheSize, CacheHolder)
-	else
-		vmDispatcher:DispatchAll("BindObjectCache", enabled)
-	end
-
-	self.ObjectCacheEnabled = enabled
-end
-
 -- Serial Caster Methods
 
 --[=[
@@ -840,25 +812,6 @@ function FastCastSerial:SetMovementModeEnabled(enabled: boolean, mode: "BulkMove
 
 	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
 	self.MovementMode = mode
-end
-
---[=[
-	@method SetObjectCacheEnabled
-	@within FastCastSerial
-]=]
-function FastCastSerial:SetObjectCacheEnabled(
-	enabled: boolean,
-	Template: BasePart?,
-	CacheSize: number,
-	CacheHolder: Instance
-)
-	BaseCastSerial.BindObjectCache(
-		enabled,
-		Template,
-		CacheSize,
-		CacheHolder
-	)
-	self.ObjectCacheEnabled = enabled
 end
 
 --[=[
