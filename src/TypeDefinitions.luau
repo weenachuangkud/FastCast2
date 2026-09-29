@@ -357,7 +357,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -375,6 +375,8 @@ export type FastCastBehavior = {
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
 	VisualizeCasts: boolean, 
 	VisualizeCastSettings: VisualizeCastSettings,
+
+	CloneTemplate: boolean,
 
 	FastCastEventsConfig: FastCastEventsConfig,
 	UserData: any
