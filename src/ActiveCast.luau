@@ -46,7 +46,6 @@ function ActiveCast.createCastData(
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants,
-	ObjectCacheRef: any,
 	_parallel: boolean?
 ): any
 	local cast = {
@@ -115,22 +114,17 @@ function ActiveCast.createCastData(
 	end
 
 	local targetContainer: Instance?
-	if ObjectCacheRef then
-		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin))
-		targetContainer = cast.Caster.CacheHolder
-	else
-		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			local basePart = cast.RayInfo.CosmeticBulletObject
-			basePart = basePart:Clone()
-			basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
-			basePart.Parent = behavior.CosmeticBulletContainer
+	
+	if cast.RayInfo.CosmeticBulletObject ~= nil then
+		local basePart = cast.RayInfo.CosmeticBulletObject
+		basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
+		basePart.Parent = behavior.CosmeticBulletContainer
 
-			cast.RayInfo.CosmeticBulletObject = basePart
-		end
+		cast.RayInfo.CosmeticBulletObject = basePart
+	end
 
-		if behavior.CosmeticBulletContainer then
-			targetContainer = behavior.CosmeticBulletContainer
-		end
+	if behavior.CosmeticBulletContainer then
+		targetContainer = behavior.CosmeticBulletContainer
 	end
 
 	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
