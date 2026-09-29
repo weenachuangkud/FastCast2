@@ -17,7 +17,6 @@ Fires projectiles and tracks FPS using keyboard controls. Supports both serial a
 | K | Decrease projectile count by 500 (floor 0) |
 | U | Toggle Instanced / Instanceless |
 | J | Toggle BulkMoveTo / Motor6D |
-| Y | Toggle ObjectCache |
 | V | Toggle VisualizeCasts |
 | R | Cycle Raycast / Blockcast / Spherecast |
 | X | Cycle HighFidelityBehavior (Default > Automatic > Always) |
@@ -45,7 +44,6 @@ local Config = {
     VisualizeCasts = false,   -- show cast ray visualization
     BenchmarkDuration = 6,    -- seconds to simulate after creation
     MovementMode = "BulkMoveTo",
-    ObjectCacheEnabled = false,
 }
 ```
 
@@ -68,7 +66,6 @@ Type the letter in chat:
 | k | Decrease projectile count by 500 (floor 0) |
 | u | Toggle Instanced / Instanceless |
 | j | Toggle BulkMoveTo / Motor6D |
-| y | Toggle ObjectCache |
 | v | Toggle VisualizeCasts |
 | r | Cycle Raycast / Blockcast / Spherecast |
 | x | Cycle HighFidelityBehavior |
@@ -88,7 +85,6 @@ local Config = {
     NumWorkers = 4,
     Instanced = false,
     MovementMode = "BulkMoveTo",
-    ObjectCacheEnabled = false,
     ProjectileAmount = 500,
     CastType = "Raycast",
     VisualizeCasts = false,
@@ -104,7 +100,6 @@ Both scripts print the same format after each run:
 
 ```
 === MODE BENCHMARK ===
-ObjectCache Disabled
 VisualizeCasts: Disabled
 HighFidelityBehavior: Default
 MovementMode: BulkMoveTo
