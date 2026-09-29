@@ -613,16 +613,17 @@ local function FireQueuedEvents()
 			end
 
 		elseif eventType == EVT_CAST_TERMINATING then
-			if not cast._Destroying then
+			if not cast._Destroying or cast._TerminationQueued then
 				cast._Destroying = true
+				cast._TerminationQueued = false
+
 				local castTerminating = FastCastEvents.CastTerminating
-				--local eventConfig = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
 				if eventConfig.UseCastTerminating and castTerminating then
 					castTerminating:Fire(cast)
 				end
 			end
+
 			BaseCastRef._TerminateCast(castID)
-			SerialSimulation_Unregister(castID)
 		end
 	end
 
