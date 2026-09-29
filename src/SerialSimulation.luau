@@ -1543,6 +1543,11 @@ function SerialSimulation.SetMovementModeEnabled(
 	SetMovementModeEnabled(enabled, mode)
 end
 
+--[[
+	Please do not make it OOP, because I don't want this to be OOP for performance reasons
+	- Mawin_CK
+]]
+
 function SerialSimulation.Start()
 	if SerialSimulation.Connection then
 		--warn("[FastCast2] SerialSimulation already started.")
