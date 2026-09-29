@@ -211,11 +211,21 @@ function BaseCast:Destroy()
 	if Motor6DCacheInstance then Motor6DCacheInstance:Destroy() end
 	FastCastEventsModule = nil
 	CastFireFunc = nil
-	ObjectCacheInstance = nil
 	if SyncChangesConnection then SyncChangesConnection:Disconnect(); SyncChangesConnection = nil end
+	
 	local activeList = {}
-	for _, v in self.Actives do table.insert(activeList, v) end
-	for _, v in activeList do TerminateCast(v) end
+	for _, v in self.Actives do
+		table.insert(activeList, v)
+	end
+
+	for _, v in activeList do
+		local castID = v.ID
+	
+		TerminateCast(v)
+		self.Actives[castID] = nil
+		ParallelSimulation.Unregister(castID)
+	end
+
 	self.Actives = {}
 	setmetatable(self, nil)
 end
