@@ -984,26 +984,32 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast:TerminateCast(cast: vaildcast)
-	if cast._Destroying then return end
-	(cast :: any)._Destroying = true
+	if cast._Destroying or cast._TerminationQueued then
+		return
+	end
 
 	if cast.Mode == "Serial" then
-		local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
-		if eventsCfg and eventsCfg.UseCastTerminating then
-			local castTerminating = SerialSimulation.GetEvent("CastTerminating")
-			if castTerminating then
-				castTerminating:Fire(cast)
-			end
-		end
-		SerialSimulation.QueueEvent(cast.ID, "CastTerminating")
+		cast._Destroying = true
+		cast._TerminationQueued = true
+
+		SerialSimulation.QueueEvent(
+			cast.ID,
+			"CastTerminating"
+		)
+
 	elseif cast.Mode == "Parallel" then
 		local caster = cast.Caster
-		if caster == nil then return end
+		if caster == nil then
+			return
+		end
+
+		cast._Destroying = true
 
 		local eventsCfg = cast.StateInfo and cast.StateInfo.FastCastEventsConfig
 		if eventsCfg and eventsCfg.UseCastTerminating then
 			caster.Output:Fire("CastTerminating", cast)
 		end
+
 		caster.Actor:SendMessage("Cleanup", cast.ID)
 	end
 end
