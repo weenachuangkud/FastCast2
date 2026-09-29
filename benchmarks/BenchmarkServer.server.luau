@@ -216,7 +216,6 @@ local function rebuildCaster()
 	destroyCaster()
 
 	Caster = createCaster()
-	applyObjectCache()
 end
 
 --// Benchmark Information
