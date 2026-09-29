@@ -31,7 +31,7 @@ All pull requests will go through **code review** before merging.
 ### Commit Message Guidelines
 
 Examples:
-- `fix: prevent nil reference in ObjectCache`
+- `fix: prevent nil reference in cast cleanup`
 - `feat: add BulkMoveTo support for parts.`
 - `docs: improve usage example for parallel mode.`
 - `chore: update Luau types in Caster.`
