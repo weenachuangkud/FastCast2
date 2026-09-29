@@ -17,14 +17,10 @@ local EnumCastTypes = FastCastEnums.CastType
 
 local BaseCast = {}
 
-local DEFAULT_CACHE_SIZE = 500
-local DEFAULT_CACHE_HOLDER = workspace
-
 local NextProjectileID = 0
 local Actives = {}
 local CastFirefn = nil
 local Motor6DCacheInstance = nil
-local ObjectCacheInstance = nil
 local CurrentMovementMode = "BulkMoveTo"
 
 function BaseCast.Init(events: any, Data: any)
@@ -32,23 +28,9 @@ function BaseCast.Init(events: any, Data: any)
 
 	CastFirefn = if type(events.CastFire) == "function" then events.CastFire else nil
 	Motor6DCacheInstance = nil
-	ObjectCacheInstance = nil
-	BaseCast.CacheHolder = nil
 	CurrentMovementMode = "BulkMoveTo"
 
 	Data = Data or {}
-	if Data.useObjectCache then
-		local objectCacheArgs = Data.objectCacheArgs or {}
-		local template = objectCacheArgs.Template
-		if not template then
-			error("Template must be provided when enabling ObjectCache.")
-		end
-
-		local cacheSize = objectCacheArgs.CacheSize or DEFAULT_CACHE_SIZE
-		local cacheHolder = objectCacheArgs.CacheHolder or DEFAULT_CACHE_HOLDER
-		ObjectCacheInstance = ObjectCache.new(template, cacheSize, cacheHolder) :: any
-		BaseCast.CacheHolder = ObjectCacheInstance.CacheHolder
-	end
 
 	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
 	if CurrentMovementMode == "Motor6D" then
@@ -75,7 +57,7 @@ function BaseCast.Raycast(
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Raycast
-	} :: any, ObjectCacheInstance)
+	} :: any)
 
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
@@ -93,7 +75,7 @@ function BaseCast.Blockcast(
 	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any, ObjectCacheInstance)
+	} :: any)
 
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
@@ -111,7 +93,7 @@ function BaseCast.Spherecast(
 	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any, ObjectCacheInstance)
+	} :: any)
 
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
@@ -135,35 +117,6 @@ function BaseCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | 
 	SerialSimulation.SetMovementModeEnabled(enabled, mode)
 end
 
-function BaseCast.BindObjectCache(
-	enabled: boolean,
-	Template: BasePart | Model?,
-	CacheSize: number?,
-	CacheHolder: Instance?
-)
-	if enabled then
-		if ObjectCacheInstance then
-			return
-		end
-		if not Template then
-			error("Template must be provided when enabling ObjectCache.")
-		end
-
-		ObjectCacheInstance = ObjectCache.new(
-			Template,
-			CacheSize or DEFAULT_CACHE_SIZE,
-			CacheHolder or DEFAULT_CACHE_HOLDER
-		)
-		BaseCast.CacheHolder = ObjectCacheInstance.CacheHolder
-	else
-		if ObjectCacheInstance then
-			ObjectCacheInstance:Destroy()
-		end
-		ObjectCacheInstance = nil
-		BaseCast.CacheHolder = nil
-	end
-end
-
 function BaseCast.Destroy()
 	if SerialSimulation then
 		SerialSimulation.Stop()
@@ -178,12 +131,6 @@ function BaseCast.Destroy()
 	end
 	Actives = {}
 
-	if ObjectCacheInstance then
-		ObjectCacheInstance:Destroy()
-		ObjectCacheInstance = nil
-	end
-	BaseCast.CacheHolder = nil
-
 	if Motor6DCacheInstance then
 		Motor6DCacheInstance:Destroy()
 		Motor6DCacheInstance = nil
@@ -196,15 +143,6 @@ function BaseCast._TerminateCast(castID: number)
 	local cast = Actives[castID]
 	if not cast then
 		return
-	end
-
-	if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-		if ObjectCacheInstance then
-			ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
-		else
-			cast.RayInfo.CosmeticBulletObject:Destroy()
-			cast.RayInfo.CosmeticBulletObject = nil
-		end
 	end
 
 	table.clear(cast :: any)
