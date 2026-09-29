@@ -10,7 +10,6 @@ local SerialSimulation = require(script.Parent.SerialSimulation)
 local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-local ObjectCache = require(FastCast2:WaitForChild("ObjectCache"))
 local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 
 local EnumCastTypes = FastCastEnums.CastType
