@@ -10,7 +10,6 @@ local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
 local ParallelSimulation = require(FastCast2:WaitForChild("ParallelSimulation"))
-local ObjectCache = require(FastCast2:WaitForChild("ObjectCache"))
 local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 local FastCastEventsModule: ModuleScript? = nil
 
@@ -20,12 +19,8 @@ local BaseCast = {}
 BaseCast.__index = BaseCast
 BaseCast.__type = "BaseCast"
 
-local DEFAULT_CACHE_SIZE = 500
-local DEFAULT_CACHE_HOLDER = workspace
-
 local Actor = nil
 local Output = nil
-local ObjectCacheInstance: any = nil
 local Motor6DCacheInstance: any = nil
 local NextProjectileID = 0
 local SyncChanges: BindableEvent = nil
@@ -55,14 +50,7 @@ local function TerminateCast(cast: any, castTerminatingFunction: TypeDef.OnCastT
 	if castTerminatingFunction then
 		castTerminatingFunction((cast :: any))
 	end
-
-	if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-		if ObjectCacheInstance then
-			ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
-		else
-			cast.RayInfo.CosmeticBulletObject:Destroy()
-		end
-	end
+	
 	table.clear(cast :: any)
 end
 
@@ -82,19 +70,6 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	Actor:SetAttribute("FastCast2Ready", true)
 
-	if Data.useObjectCache then
-		local objectCacheArgs = Data.objectCacheArgs or {}
-		if not objectCacheArgs.Template then
-			error("Template must be provided when enabling ObjectCache.")
-		end
-		objectCacheArgs.CacheSize = objectCacheArgs.CacheSize or DEFAULT_CACHE_SIZE
-		objectCacheArgs.CacheHolder = objectCacheArgs.CacheHolder or DEFAULT_CACHE_HOLDER
-		ObjectCacheInstance = ObjectCache.new(objectCacheArgs.Template, objectCacheArgs.CacheSize, objectCacheArgs.CacheHolder) :: any
-	end
-
-	self.ObjectCacheInstance = ObjectCacheInstance
-	self.CacheHolder = ObjectCacheInstance and ObjectCacheInstance.CacheHolder or nil
-
 	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
 	if CurrentMovementMode == "Motor6D" then
 		Motor6DCacheInstance = Motor6DCache.new()
@@ -103,14 +78,6 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 	Actor:BindToMessage("Cleanup", function(activeCastID: number)
 		if self.Actives[activeCastID] then
 			local cast = self.Actives[activeCastID]
-			if cast.RayInfo and cast.RayInfo.CosmeticBulletObject then
-				if ObjectCacheInstance then
-					ObjectCacheInstance:ReturnPart(cast.RayInfo.CosmeticBulletObject)
-				else
-					cast.RayInfo.CosmeticBulletObject:Destroy()
-					cast.RayInfo.CosmeticBulletObject = nil
-				end
-			end
 			self.Actives[activeCastID] = nil
 			ParallelSimulation.Unregister(activeCastID)
 		end
@@ -159,7 +126,7 @@ function BaseCast:Raycast(Origin: Vector3, Direction: Vector3, Velocity: Vector3
 		CacheHolder = self.CacheHolder
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Raycast
-	} :: any, self.ObjectCacheInstance, true)
+	} :: any, true)
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
 	if Behavior.FastCastEventsConfig.UseCastFire then
@@ -198,7 +165,7 @@ function BaseCast:Blockcast(Origin: Vector3, Size: Vector3, Direction: Vector3, 
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Blockcast,
 		Size = Size
-	} :: any, self.ObjectCacheInstance, true)
+	} :: any, true)
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
 	if Behavior.FastCastEventsConfig.UseCastFire then
@@ -219,7 +186,7 @@ function BaseCast:Spherecast(Origin: Vector3, Radius: number, Direction: Vector3
 	}, NextProjectileID, Origin, Direction, Velocity, Behavior, FastCastEventsModule, {
 		CastType = EnumCastTypes.Spherecast,
 		Radius = Radius
-	} :: any, self.ObjectCacheInstance, true)
+	} :: any, true)
 	ParallelSimulation.Register(cast)
 	self.Actives[cast.ID] = cast
 	if Behavior.FastCastEventsConfig.UseCastFire then
@@ -240,25 +207,8 @@ function BaseCast:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | 
 	ParallelSimulation.SetMovementModeEnabled(enabled, mode)
 end
 
-function BaseCast:BindObjectCache(enabled: boolean, Template: BasePart | Model?, CacheSize: number?, CacheHolder: Instance?)
-	if enabled then
-		if self.ObjectCacheInstance then return end
-		if not Template then error("Template must be provided when enabling ObjectCache.") end
-		local cache = ObjectCache.new(Template, CacheSize or DEFAULT_CACHE_SIZE, CacheHolder or DEFAULT_CACHE_HOLDER)
-		self.ObjectCacheInstance = cache
-		ObjectCacheInstance = cache
-		self.CacheHolder = cache.CacheHolder
-	else
-		if self.ObjectCacheInstance then self.ObjectCacheInstance:Destroy() end
-		self.ObjectCacheInstance = nil
-		self.CacheHolder = nil
-		ObjectCacheInstance = nil
-	end
-end
-
 function BaseCast:Destroy()
 	if ParallelSimulation then ParallelSimulation.Stop() end
-	if self.ObjectCacheInstance then self.ObjectCacheInstance:Destroy() end
 	if Motor6DCacheInstance then Motor6DCacheInstance:Destroy() end
 	FastCastEventsModule = nil
 	CastFireFunc = nil
