@@ -12,7 +12,6 @@
 		k  - -500 projectiles
 		u  - Toggle Instanced / Instanceless
 		j  - Toggle BulkMoveTo / Motor6D
-		y  - Toggle ObjectCache
 		v  - Toggle Cast Visualization
 		r  - Cycle cast type
 		x  - Cycle HighFidelityBehavior
@@ -38,7 +37,6 @@ local Config = {
 
 	Instanced = false,
 	MovementMode = "BulkMoveTo",
-	ObjectCacheEnabled = false,
 	ProjectileAmount = 500,
 	VisualizeCasts = false,
 	CastType = "Raycast",
@@ -155,22 +153,6 @@ local function getHighFidelityName()
 	end
 end
 
-local function getObjectCacheState()
-	if not Caster then
-		return false
-	end
-
-	if Caster.ObjectCacheEnabled then
-		return true
-	end
-
-	if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
-		return true
-	end
-
-	return false
-end
-
 local function getModeName()
 	return Config.Instanced and "Instanced" or "Instanceless"
 end
@@ -198,24 +180,6 @@ local function createCaster()
 	caster.CastFire = onCastFire
 
 	return caster
-end
-
-local function applyObjectCache()
-	if not Caster then
-		return
-	end
-
-	if not Config.ObjectCacheEnabled then
-		Caster:SetObjectCacheEnabled(false)
-		return
-	end
-
-	Caster:SetObjectCacheEnabled(
-		true,
-		ProjectileTemplate,
-		Config.ProjectileAmount,
-		ProjectileContainer
-	)
 end
 
 --// Cast Cleanup
@@ -530,19 +494,6 @@ local function toggleMovementMode()
 		))
 end
 
-local function toggleObjectCache()
-	Config.ObjectCacheEnabled =
-		not Config.ObjectCacheEnabled
-
-	applyObjectCache()
-
-	print(("ObjectCache: %s"):format(
-		Config.ObjectCacheEnabled
-			and "Enabled"
-			or "Disabled"
-		))
-end
-
 local function toggleVisualization()
 	Config.VisualizeCasts =
 		not Config.VisualizeCasts
@@ -647,7 +598,6 @@ local function showHelp()
 	print("k - Decrease projectile amount by 500")
 	print("u - Toggle Instanced / Instanceless")
 	print("j - Toggle BulkMoveTo / Motor6D")
-	print("y - Toggle ObjectCache")
 	print("v - Toggle VisualizeCasts")
 	print("r - Cycle Raycast / Blockcast / Spherecast")
 	print("x - Cycle HighFidelityBehavior")
@@ -685,12 +635,6 @@ local Commands = {
 	j = function()
 		if not IsBenchmarking and not IsReconfiguring then
 			toggleMovementMode()
-		end
-	end,
-
-	y = function()
-		if not IsBenchmarking and not IsReconfiguring then
-			toggleObjectCache()
 		end
 	end,
 
