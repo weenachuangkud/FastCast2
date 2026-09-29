@@ -9,7 +9,6 @@
 		K       -500 projectiles
 		U       Toggle Instanced / Instanceless
 		J       Toggle BulkMoveTo / Motor6D
-		Y       Toggle ObjectCache
 		V       Toggle Cast Visualization
 		X       Cycle HighFidelityBehavior
 		>       Increase HighFidelitySegmentSize
@@ -44,7 +43,6 @@ local Config = {
 	SpherecastRadius = 0.5,
 
 	Instanced = true,
-	ObjectCacheEnabled = false,
 	VisualizeCasts = false,
 
 	BenchmarkDuration = 6,
@@ -148,22 +146,6 @@ local function getMode()
 	return Config.Parallel and "PARALLEL" or "SERIAL"
 end
 
-local function getObjectCacheState()
-	if not Caster then
-		return false
-	end
-
-	if Caster.ObjectCacheEnabled then
-		return true
-	end
-
-	if Caster.BaseCast and Caster.BaseCast.ObjectCacheInstance then
-		return true
-	end
-
-	return false
-end
-
 local function getHighFidelityName()
 	local behavior = CastBehavior.HighFidelityBehavior
 
@@ -207,24 +189,6 @@ local function createCaster()
 	return newCaster
 end
 
-local function applyObjectCache()
-	if not Caster then
-		return
-	end
-
-	if not Config.ObjectCacheEnabled then
-		Caster:SetObjectCacheEnabled(false)
-		return
-	end
-
-	Caster:SetObjectCacheEnabled(
-		true,
-		ProjectileTemplate,
-		Config.ProjectileAmount,
-		ProjectileContainer
-	)
-end
-
 local function destroyCaster()
 	if Caster then
 		Caster:Destroy()
@@ -243,7 +207,6 @@ end
 
 -- Create initial caster.
 Caster = createCaster()
-applyObjectCache()
 
 --// Benchmark Information
 
@@ -253,12 +216,6 @@ local function printBenchmarkInfo()
 	print(("Projectiles: %d"):format(Config.ProjectileAmount))
 	print(("Velocity: %.2f"):format(Config.Velocity))
 	print(("CastType: %s"):format(Config.CastType))
-
-	print(
-		"ObjectCache: %s",
-		getObjectCacheState() and "Enabled" or "Disabled"
-	)
-
 	print(
 		"Instanced: %s",
 		Config.Instanced and "Enabled" or "Disabled"
@@ -525,18 +482,6 @@ local function toggleMovementMode()
 	print(("MovementMode: %s"):format(Config.MovementMode))
 end
 
-local function toggleObjectCache()
-	Config.ObjectCacheEnabled = not Config.ObjectCacheEnabled
-
-	applyObjectCache()
-
-	print(
-		("ObjectCache: %s"):format(
-			Config.ObjectCacheEnabled and "Enabled" or "Disabled"
-		)
-	)
-end
-
 local function toggleVisualization()
 	CastBehavior.VisualizeCasts =
 		not CastBehavior.VisualizeCasts
@@ -671,7 +616,6 @@ local function showControls()
 	print("K  - Decrease projectile amount by 500")
 	print("U  - Toggle Instanced / Instanceless")
 	print("J  - Toggle BulkMoveTo / Motor6D")
-	print("Y  - Toggle ObjectCache")
 	print("V  - Toggle VisualizeCasts")
 	print("X  - Cycle HighFidelityBehavior")
 	print(">  - Increase HighFidelitySegmentSize")
@@ -711,12 +655,6 @@ local Keybinds = {
 	[Enum.KeyCode.J] = function()
 		if not IsBenchmarking and not IsReconfiguring then
 			toggleMovementMode()
-		end
-	end,
-
-	[Enum.KeyCode.Y] = function()
-		if not IsBenchmarking and not IsReconfiguring then
-			toggleObjectCache()
 		end
 	end,
 
