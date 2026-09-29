@@ -45,7 +45,6 @@ Because FastCast is no longer actively maintained by [EtiTheSpirit](https://gith
 - Raycast and Blockcast, Spherecast support
 - BulkMoveTo/Motor6D support
 - Built-in castVisualization
-- Built-in ObjectCache
 - Built-in HighFidelitySegment control
 - Flexible, extensible
 - High Performance
@@ -122,7 +121,7 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
  
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo", false) -- movementMode, useObjectCache
+Caster:Init("BulkMoveTo") -- movementMode
  
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
@@ -157,20 +156,14 @@ Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
 Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
-### ObjectCache (or object pooling)
- 
-ObjectCache reuses cosmetic bullet instances instead of creating/destroying them every shot:
- 
-```lua
-local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
---                                    ^template   ^size  ^holder
-```
+### Cosmetic bullets
 
-The cache pre-allocates 500 parts by default, auto-expands when exhausted, and moves retired
-parts to a far-away CFrame via `BulkMoveTo`
+FastCast2 no longer includes a built-in ObjectCache. Manage cosmetic bullet instances yourself and provide them through `behavior.CosmeticBulletTemplate` and `behavior.CosmeticBulletContainer`.
+
+FastCast2 also does not automatically destroy or return cosmetic bullets when a cast terminates, so the caller controls their lifecycle.
 
 ### Parallel mode
+
  
 ```lua
 local Caster = FastCast2.newParallel()
@@ -178,7 +171,6 @@ Caster:Init(
 	4,                 -- numWorkers
 	"BulkMoveTo",      -- movementMode
 	nil,               -- FastCastEventsModule (optional)
-	false              -- useObjectCache
 )
  
 -- Events work the same as serial
@@ -285,6 +277,18 @@ Caster:SetMovementModeEnabled(true, "Motor6D")   -- enable Motor6D
 Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- switch back
 ```
 
+### Simulation configuration
+
+Simulation behavior can be configured in `src/Config.luau`:
+
+```lua
+Config.SimulationMode = "PerFrame" -- or "Fixed"
+Config.FixedSimulationFrequency = Enum.StepFrequency.Hz60
+Config.CosmeticUpdateInterval = 3
+```
+
+`PerFrame` uses `PreSimulation` on the client and `Heartbeat` on the server. `Fixed` uses `RunService:BindToSimulation()` at the configured step frequency. `CosmeticUpdateInterval` controls how often cosmetic bullet movement is applied; hit detection still runs every simulation step.
+
 ### Cast manipulation
 
 Modify active casts at runtime using the static `FastCast` methods:
@@ -361,5 +365,4 @@ More broadly, this community feedback has played a significant role in FastCast2
 - [90gq31](https://computerunion.miraheze.org/90gq31) — Giving me the opportunity to be part of the community
 
 # Dependency
-- [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
 - [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)
