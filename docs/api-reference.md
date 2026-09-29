@@ -58,18 +58,9 @@ Parallel Caster runs cast simulations on separate Actor VMs.
 ```lua
 local caster = FastCast2.newParallel()
 caster:Init(
-    numWorkers,          -- number of worker VMs (must be > 1)
-    newParent,           -- Folder to place FastCastVMs
-    newName,             -- name for FastCastVMs folder
-    ContainerParent,     -- parent for worker containers
-    VMContainerName,     -- name for containers
-    VMname,              -- name for each worker VM
+    numWorkers,          -- number of worker VMs (must be at least 1)
     movementMode,        -- "BulkMoveTo" or "Motor6D"
-    fastCastEventsModule,-- optional ModuleScript
-    useObjectCache,      -- enable ObjectCache
-    template,            -- ObjectCache template
-    cacheSize,           -- ObjectCache size
-    CacheHolder          -- ObjectCache parent
+    fastCastEventsModule -- optional ModuleScript
 )
 ```
 > [!NOTE]
