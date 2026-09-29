@@ -200,6 +200,7 @@ behavior.VisualizeCastSettings = {
 | `AutoIgnoreContainer` | `boolean` | `true` | Auto-adds container to filter list |
 | `VisualizeCasts` | `boolean` | `false` | Debug visualization toggle |
 | `VisualizeCastSettings` | `table` | (defaults) | Debug viz colors, sizes, lifetimes |
+| `CloneTemplate` | `boolean` | `true` | Clone CosmeticBulletTemplate or not  |
 | `UserData` | `any` | `nil` | Arbitrary data accessible on the cast |
 
 ### Event Configuration
