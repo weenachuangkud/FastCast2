@@ -77,7 +77,6 @@ function BaseCast.Init(BindableOutput: BindableEvent, Data: any)
 
 	Actor:BindToMessage("Cleanup", function(activeCastID: number)
 		if self.Actives[activeCastID] then
-			local cast = self.Actives[activeCastID]
 			self.Actives[activeCastID] = nil
 			ParallelSimulation.Unregister(activeCastID)
 		end
