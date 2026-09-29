@@ -8,20 +8,10 @@ Serial Caster runs all cast simulations on the main thread. Simpler.
 
 ```lua
 local caster = FastCast2.new()
-caster:Init(movementMode, useObjectCache, template, cacheSize, cacheHolder)
+caster:Init(movementMode)
 ```
 
-#### 1.1.1 Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `movementMode` | `"BulkMoveTo" \| "Motor6D"` | How cosmetic bullets are moved each frame |
-| `useObjectCache` | `boolean` | Enable part pooling via ObjectCache |
-| `Template` | `BasePart \| Model?` | Template for ObjectCache |
-| `CacheSize` | `number?` | Pre-allocated cache size (default 500) |
-| `CacheHolder` | `Instance?` | Parent for cached objects (default workspace) |
-
-#### 1.1.2 Events
+#### 1.1.1 Events
 
 Caster events are lightweight `Signal` objects (not `BindableEvent`s), so any
 number of listeners can connect and disconnect independently. Events can be
@@ -57,15 +47,7 @@ caster.Hit = function(cast, result, velocity, cosmeticBullet) end
 - **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. (General/Default)
 - **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better for performance.
 
-Switch modes at runtime with `caster:SetMovementMode(mode)`.
-
-#### 1.1.4 ObjectCache
-
-ObjectCache reuses projectile parts:
-
-```lua
-caster:Init("BulkMoveTo", true, projectileTemplate, 500, workspace)
-```
+Switch modes at runtime with `caster:SetMovementModeEnabled(enabled, mode)`.
 
 ---
 
@@ -99,18 +81,9 @@ caster:Init(
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `numWorkers` | `number` | Number of Actor VMs. Must be > 1. |
-| `newParent` | `Folder` | Parent for the FastCastVMs Folder |
-| `newName` | `string` | Name for the FastCastVMs Folder |
-| `ContainerParent` | `Folder` | Parent for worker VM Containers |
-| `VMContainerName` | `string` | Name for VM Containers |
-| `VMname` | `string` | Name given to each worker VM |
-| `movementMode` | `"BulkMoveTo" \| "Motor6D"` | Movement method |
-| `fastCastEventsModule` | `ModuleScript?` | FastCastEvents module |
-| `useObjectCache` | `boolean` | Enable ObjectCache |
-| `template` | `BasePart \| Model?` | ObjectCache template |
-| `cacheSize` | `number?` | ObjectCache size |
-| `CacheHolder` | `Instance?` | ObjectCache parent |
+| `numWorkers` | `number` | Number of worker VMs. Must be at least 1. |
+| `movementMode` | `"BulkMoveTo" | "Motor6D"` | Movement method |
+| `fastCastEventsModule` | `ModuleScript?` | Optional FastCastEvents module |
 
 #### 1.2.2 How It Works
 
@@ -123,7 +96,7 @@ caster:Init(
 ```lua
 caster:SetFastCastEventsModule(moduleScript)  -- Parallel only
 caster:SetMovementModeEnabled(enabled, mode)
-caster:SetObjectCacheEnabled(enabled, template?, cacheSize?, cacheHolder?)
+
 ```
 
 ---
