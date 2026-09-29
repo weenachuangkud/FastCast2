@@ -15,4 +15,4 @@
 - [ ] Create a FastCast2 tutorial video (DOCS)
 - [ ] Include the `.rbxl` file in the latest release (RELEASE)
 - [ ] Update Roblox Model of FastCast2 (RELEASE)
-- [ ] Update README.md (DOCS)
+- [X] Update README.md (DOCS)
