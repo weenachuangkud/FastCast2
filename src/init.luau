@@ -419,7 +419,7 @@ local function CloneCastParams(params: RaycastParams): RaycastParams
 end
 
 local function SnapshotBehavior(behavior: any): any
-	local copy = table.clone(behavior)
+	local copy = deepCopyTable(behavior)
 	if behavior.RaycastParams then
 		copy.RaycastParams = CloneCastParams(behavior.RaycastParams)
 	end
