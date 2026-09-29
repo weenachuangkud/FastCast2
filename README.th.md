@@ -275,7 +275,7 @@ Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
 
 ```lua
 local Caster = FastCast2.new()
-Caster:Init("Motor6D", false) -- movementMode = "Motor6D"
+Caster:Init("Motor6D") -- movementMode = "Motor6D"
 ```
 
 ทุก cast ที่ active จะได้รับการเชื่อมต่อ Motor6D โดยอัตโนมัติเมื่อลงทะเบียน และตัดการเชื่อมต่อเมื่อ cleanup
