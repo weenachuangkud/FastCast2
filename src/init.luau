@@ -480,21 +480,12 @@ end
 	@param numWorkers number -- Number of workers for parallel luau
 	@param movementMode "BulkMoveTo" | "Motor6D" -- MovementMode for projectiles
 	@param FastCastEventsModule ModuleScript -- The ModuleScript containing the FastCastEvents, A table of callback functions (events/hooks) used by ActiveCast..
-	@param useObjectCache boolean -- Whether to use ObjectCache for the [Caster](TypeDefinitions#Caster)
-	@param Template BasePart | Model -- The template object to use for the ObjectCache (if enabled)
-	@param CacheSize number -- The size of the ObjectCache (if enabled)
-	@param CacheHolder Instance -- The Instance in which to place cached objects (if enabled)
 ]=]
 function FastCastParallel:Init(
 	numWorkers: number,
 
 	movementMode: "BulkMoveTo" | "Motor6D",
-	FastCastEventsModule: ModuleScript,
-
-	useObjectCache: boolean,
-	Template: BasePart | Model,
-	CacheSize: number,
-	CacheHolder: Instance
+	FastCastEventsModule: ModuleScript
 )
 	if self.AlreadyInit then
 		warn("Cannot Init more than 1")
@@ -512,12 +503,6 @@ function FastCastParallel:Init(
 
 	local data = {
 		movementMode = movementMode,
-		useObjectCache = useObjectCache,
-		objectCacheArgs = {
-			Template = Template,
-			CacheSize = CacheSize,
-			CacheHolder = CacheHolder
-		},
 		FastCastModule = script
 	}
 	self.Dispatcher = newDispatcher.new(numWorkers, data, function(eventName: string, ...)
@@ -541,7 +526,6 @@ function FastCastParallel:Init(
 	end)
 
 	self.AlreadyInit = true
-	self.ObjectCacheEnabled = useObjectCache
 	self.MovementMode = movementMode
 
 	if FastCastEventsModule then
@@ -693,18 +677,10 @@ end
 	@method Init
 	@within FastCastSerial
 
-	@param useBulkMoveTo boolean -- Whether to use BulkMoveTo for projectile movement.
-	@param useObjectCache boolean -- Whether to use ObjectCache.
-	@param Template BasePart | Model? -- Template for ObjectCache.
-	@param CacheSize number? -- Size of ObjectCache.
-	@param CacheHolder Instance? -- Parent for cached objects.
+	@param movementMode: "BulkMoveTo" | "Motor6D" -- Whether to use BulkMoveTo or Motor6D Transform for projectile movement.
 ]=]
 function FastCastSerial:Init(
 	movementMode: "BulkMoveTo" | "Motor6D",
-	useObjectCache: boolean,
-	Template: BasePart | Model?,
-	CacheSize: number?,
-	CacheHolder: Instance?
 )
 	if self.BaseCast then
 		warn("Serial Caster already initialized")
@@ -712,13 +688,7 @@ function FastCastSerial:Init(
 	end
 
 	local data = {
-		movementMode = movementMode or "BulkMoveTo",
-		useObjectCache = useObjectCache,
-		objectCacheArgs = {
-			Template = Template,
-			CacheSize = CacheSize or DEFAULT_CACHE_SIZE,
-			CacheHolder = CacheHolder or DEFAULT_CACHE_HOLDER
-		}
+		movementMode = movementMode or "BulkMoveTo"
 	}
 
 	local events: TypeDef.FastCastSignalEvents = {
