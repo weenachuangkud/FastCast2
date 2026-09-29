@@ -86,6 +86,7 @@ function ActiveCast.createCastData(
 		},
 
 		_Destroying = false,
+		_TerminationQueued = false,
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
