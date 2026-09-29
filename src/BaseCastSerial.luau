@@ -18,14 +18,14 @@ local BaseCast = {}
 
 local NextProjectileID = 0
 local Actives = {}
-local CastFirefn = nil
+local CastFireEvent = nil
 local Motor6DCacheInstance = nil
 local CurrentMovementMode = "BulkMoveTo"
 
 function BaseCast.Init(events: any, Data: any)
 	BaseCast.Destroy()
 
-	CastFirefn = if type(events.CastFire) == "function" then events.CastFire else nil
+	CastFireEvent = events.CastFire
 	Motor6DCacheInstance = nil
 	CurrentMovementMode = "BulkMoveTo"
 
@@ -42,8 +42,8 @@ function BaseCast.Init(events: any, Data: any)
 end
 
 local function FireCastFire(cast, origin, direction, velocity, behavior)
-	if behavior.FastCastEventsConfig.UseCastFire and CastFirefn then
-		CastFirefn(cast, origin, direction, velocity, behavior)
+	if behavior.FastCastEventsConfig.UseCastFire and CastFireEvent then
+		CastFireEvent:Fire(cast, origin, direction, velocity, behavior)
 	end
 end
 
@@ -135,7 +135,7 @@ function BaseCast.Destroy()
 		Motor6DCacheInstance = nil
 	end
 
-	CastFirefn = nil
+	CastFireEvent = nil
 end
 
 function BaseCast._TerminateCast(castID: number)
