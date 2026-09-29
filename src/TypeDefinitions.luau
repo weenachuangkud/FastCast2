@@ -223,16 +223,9 @@ export type CasterParallel = {
 	) -> (),
 
 	SetMovementModeEnabled: (
-		enabled: boolean,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
-	SetObjectCacheEnabled: (
 		self: CasterParallel,
 		enabled: boolean,
-		Template: BasePart | Model,
-		CacheSize: number,
-		CacheHolder: Instance
+		mode: "BulkMoveTo" | "Motor6D"
 	) -> (),
 
 	SetFastCastEventsModule: (self: CasterParallel, moduleScript: ModuleScript) -> (),
@@ -312,16 +305,9 @@ export type CasterSerial = {
 	) -> (),
 
 	SetMovementModeEnabled: (
-		enabled: boolean,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
-	SetObjectCacheEnabled: (
 		self: CasterSerial,
 		enabled: boolean,
-		Template: BasePart | Model,
-		CacheSize: number,
-		CacheHolder: Instance
+		mode: "BulkMoveTo" | "Motor6D"
 	) -> (),
 
 	AddVelocityCast: (CasterSerial, cast: vaildcast, velocity: Vector3) -> (),
