@@ -22,12 +22,11 @@ available.
 1. Initialization
 2. Basic raycast/blockcast/spherecast firing
 3. All [events](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#112-events) should be able to works
-4. ObjectCache
-5. MovementMode
-6. Cast Manipulation
-7. Repeat the same tests above for parallel version
-8. SetFastCastEventsModule (Parallel)
-9. SyncChangesToCast (Parallel)
+4. MovementMode
+5. Cast Manipulation
+6. Repeat the same tests above for parallel version
+7. SetFastCastEventsModule (Parallel)
+8. SyncChangesToCast (Parallel)
 ### FastCastBehavior
 - https://weenachuangkud.github.io/FastCast2/docs/api-reference/#2-fastcastbehavior
 ### ActiveCastData
