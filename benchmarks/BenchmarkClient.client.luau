@@ -202,7 +202,6 @@ local function rebuildCaster()
 	destroyCaster()
 
 	Caster = createCaster()
-	applyObjectCache()
 end
 
 -- Create initial caster.
