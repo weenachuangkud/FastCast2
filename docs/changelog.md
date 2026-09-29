@@ -13,6 +13,47 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
+- Automated testing by @Naymmmm
+- Better performance benchmarks by @Naymmmm
+- `Config.SimulationMode` (`PerFrame`/`Fixed`) and `CosmeticUpdateInterval` by @Naymmmm
+- `RAY_SEARCH_OFFSET` for pierce prevention
+- `cast.Mode`
+- `Signal` event dispatcher for Caster events
+
+### Fixed
+- BenchmarkClient/BenchmarkServer
+- Various simulation logic bugs
+- `CastTerminating` callback/cleanup issues
+- Pierce prevention issues (`RAY_SEARCH_OFFSET` only applies after a pierce)
+- Motor6D movement issues
+- Parallel client initialization
+- Refactor regressions found by the test suite
+- An annoying warning
+- Duplicate Serial cast unregister cleanup
+- Parallel behavior snapshots now deep-copy nested configuration data
+
+### Changed
+- `SerialSimulation` is no longer OOP-based and no longer creates a per-instance connection.
+- Replaced `BindableEvent` with the Signal module.
+- Simplified `FastCastParallel:Init` API.
+- Added `BindToSimulation`.
+- Parallel fire requests are now batched into one message per worker per frame.
+- Improved Serial/Parallel event systems.
+- Caster events support both `:Connect()` and function assignment.
+- A lot of optimizations.
+- Major code improvements.
+- Improved documentation.
+
+### Removed
+- Built-in ObjectCache
+- Automatic `CosmeticBulletTemplate` cleanup
+
+### Cancelled
+- Dynamic RunService event configuration for Caster
+- Debugger GUI for benchmarking and testing
+
+
+### Added
 - **`Signal`** - lightweight synchronous event dispatcher (`src/Signal.luau`) used for Caster events instead of `BindableEvent`
 - Caster events (`Hit`, `Pierced`, `LengthChanged`, `CastFire`, `CastTerminating`) are now Signals supporting multiple listeners, `Once`, `Wait`, `Disconnect`, `DisconnectAll`, and `Destroy`
 
