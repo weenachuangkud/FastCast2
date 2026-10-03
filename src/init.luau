@@ -680,7 +680,7 @@ end
 	@param movementMode: "BulkMoveTo" | "Motor6D" -- Whether to use BulkMoveTo or Motor6D Transform for projectile movement.
 ]=]
 function FastCastSerial:Init(
-	movementMode: "BulkMoveTo" | "Motor6D",
+	movementMode: "BulkMoveTo" | "Motor6D"
 )
 	if self.BaseCast then
 		warn("Serial Caster already initialized")
