@@ -45,7 +45,6 @@
 - รองรับ Raycast, Blockcast และ Spherecast
 - รองรับ BulkMoveTo/Motor6D
 - มี castVisualization ในตัว
-- มี ObjectCache ในตัว
 - มีระบบควบคุม HighFidelitySegment ในตัว
 - ออกแบบมาให้ยืดหยุ่นและต่อยอดได้ง่าย
 - ช่วยเพิ่มประสิทธิภาพในการพัฒนา
@@ -127,7 +126,7 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
 
 -- Serial Caster (รันบน main thread ใช้งานง่ายกว่า)
 local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo", false) -- movementMode, useObjectCache
+Caster:Init("BulkMoveTo") -- movementMode
 
 -- Events (ตั้งค่าได้ก่อน Init)
 Caster.Hit = function(cast, result, velocity, bullet)
@@ -162,20 +161,14 @@ Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
 Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 ```
 
-### ObjectCache (bullet pooling)
+### Cosmetic bullet
 
-ObjectCache ช่วยนำ instance ของ cosmetic bullet กลับมาใช้ซ้ำ แทนที่จะสร้าง/ทำลายทุกครั้งที่ยิง:
+FastCast2 ไม่มี ObjectCache ในตัวแล้ว คุณสามารถจัดการ cosmetic bullet ด้วยระบบของคุณเอง และกำหนดผ่าน `behavior.CosmeticBulletTemplate` กับ `behavior.CosmeticBulletContainer` ได้
 
-```lua
-local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo", true, ProjectileTemplate, 500, workspace)
---                                    ^template   ^size  ^holder
-```
+FastCast2 จะไม่ลบหรือคืน cosmetic bullet ให้อัตโนมัติเมื่อ cast จบ ทำให้คุณควบคุม lifecycle ของ projectile visual ได้เอง
 
-โดยค่าเริ่มต้น cache จะเตรียม part ไว้ล่วงหน้า 500 ชิ้น และขยายเพิ่มอัตโนมัติเมื่อใช้จนหมด
-พร้อมทั้งย้าย part ที่เลิกใช้ไปไว้ที่ CFrame ระยะไกลผ่าน `BulkMoveTo` — ไม่มีภาระจากการสร้าง/ทำลาย instance
-
-### โหมด Parallel (ประสิทธิภาพสูงด้วยหลาย VM)
+### โหมด Parallel
+ (ประสิทธิภาพสูงด้วยหลาย VM)
 
 ```lua
 local Caster = FastCast2.newParallel()
@@ -188,7 +181,6 @@ Caster:Init(
 	"VM",              -- VM name
 	"BulkMoveTo",      -- movementMode
 	nil,               -- FastCastEventsModule (ไม่บังคับ)
-	false              -- useObjectCache
 )
 
 -- Events ทำงานเหมือนกับโหมด Serial
@@ -283,7 +275,7 @@ Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
 
 ```lua
 local Caster = FastCast2.new()
-Caster:Init("Motor6D", false) -- movementMode = "Motor6D"
+Caster:Init("Motor6D") -- movementMode = "Motor6D"
 ```
 
 ทุก cast ที่ active จะได้รับการเชื่อมต่อ Motor6D โดยอัตโนมัติเมื่อลงทะเบียน และตัดการเชื่อมต่อเมื่อ cleanup
@@ -293,6 +285,18 @@ Caster:Init("Motor6D", false) -- movementMode = "Motor6D"
 Caster:SetMovementModeEnabled(true, "Motor6D")   -- เปิดใช้งาน Motor6D
 Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- สลับกลับไปใช้ BulkMoveTo
 ```
+
+### การตั้งค่าการจำลอง
+
+สามารถตั้งค่ารูปแบบการจำลองได้ที่ `src/Config.luau`:
+
+```lua
+Config.SimulationMode = "PerFrame" -- หรือ "Fixed"
+Config.FixedSimulationFrequency = Enum.StepFrequency.Hz60
+Config.CosmeticUpdateInterval = 3
+```
+
+`PerFrame` ใช้ `PreSimulation` บน client และ `Heartbeat` บน server ส่วน `Fixed` ใช้ `RunService:BindToSimulation()` ตามความถี่ที่กำหนด `CosmeticUpdateInterval` กำหนดว่าจะอัปเดตการเคลื่อนที่ของ cosmetic bullet ทุกกี่ simulation frames โดยการตรวจจับการชนยังทำงานทุก simulation step
 
 ### การจัดการ Cast
 
@@ -346,5 +350,4 @@ FastCast2:TerminateCast(cast)
 - [@nerd0ne](https://github.com/nerd0ne) — ที่ชี้ให้เห็นปัญหา Wally setup
 
 # Dependency
-- [ObjectCache](https://devforum.roblox.com/t/objectcache-a-modern-blazing-fast-model-and-part-cache/3104112)
-- [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)
+- [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)(https://github.com/weenachuangkud/VMsDispatcher)

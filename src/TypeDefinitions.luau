@@ -14,6 +14,7 @@
 ]=]
 
 local Dispatcher = require(script.Parent:WaitForChild("FastCastVMs"))
+local Signal = require(script.Parent:WaitForChild("Signal"))
 
 --[=[
 	@type vaildcast ActiveCastData | ActiveBlockcastData | ActiveSpherecastData
@@ -45,6 +46,22 @@ export type FastCastEvents = {
 	LengthChanged: OnLengthChangedFunction,
 	CastTerminating: OnCastTerminatingFunction,
 	CastFire: OnCastFireFunction
+}
+
+--[=[
+	@type FastCastSignalEvents { CanPierce: CanPierceFunction, Hit: Signal.Signal<OnHitFunction>, Pierced: Signal.Signal<OnPiercedFunction>, LengthChanged: Signal.Signal<OnLengthChangedFunction>, CastTerminating: Signal.Signal<OnCastTerminatingFunction>, CastFire: Signal.Signal<OnCastFireFunction> }
+	@within TypeDefinitions
+
+	The Signal-based event table used internally by SerialSimulation. Each event
+	is a Signal so any number of listeners can connect to it.
+]=]
+export type FastCastSignalEvents = {
+	CanPierce: CanPierceFunction,
+	Hit: Signal.Signal<OnHitFunction>,
+	Pierced: Signal.Signal<OnPiercedFunction>,
+	LengthChanged: Signal.Signal<OnLengthChangedFunction>,
+	CastTerminating: Signal.Signal<OnCastTerminatingFunction>,
+	CastFire: Signal.Signal<OnCastFireFunction>
 }
 
 --[=[
@@ -157,11 +174,11 @@ export type VisualizeCastSettings = {
 ]=]
 export type CasterParallel = {
 	WorldRoot: WorldRoot,
-	LengthChanged: OnLengthChangedFunction,
-	Hit: OnHitFunction,
-	Pierced: OnPiercedFunction,
-	CastTerminating: OnCastTerminatingFunction,
-	CastFire: OnCastFireFunction,
+	LengthChanged: Signal.Signal<OnLengthChangedFunction> | OnLengthChangedFunction,
+	Hit: Signal.Signal<OnHitFunction> | OnHitFunction,
+	Pierced: Signal.Signal<OnPiercedFunction> | OnPiercedFunction,
+	CastTerminating: Signal.Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction,
+	CastFire: Signal.Signal<OnCastFireFunction> | OnCastFireFunction,
 	Dispatcher: Dispatcher.Dispatcher,
 
 	AlreadyInit: boolean,
@@ -172,11 +189,6 @@ export type CasterParallel = {
 	Init: (
 		self: CasterParallel,
 		numWorkers: number,
-		newParent: Folder,
-		newName: string,
-		ContainerParent: Folder,
-		VMContainerName: string,
-		VMname: string,
 		MovementMode: "BulkMoveTo" | "Motor6D",
 		FastCastEventsModule: ModuleScript,
 		useObjectCache: boolean,
@@ -211,16 +223,9 @@ export type CasterParallel = {
 	) -> (),
 
 	SetMovementModeEnabled: (
-		enabled: boolean,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
-	SetObjectCacheEnabled: (
 		self: CasterParallel,
 		enabled: boolean,
-		Template: BasePart | Model,
-		CacheSize: number,
-		CacheHolder: Instance
+		mode: "BulkMoveTo" | "Motor6D"
 	) -> (),
 
 	SetFastCastEventsModule: (self: CasterParallel, moduleScript: ModuleScript) -> (),
@@ -229,7 +234,7 @@ export type CasterParallel = {
 	SetVelocityCast: (CasterParallel, cast: vaildcast, velocity: Vector3) -> (),
 	GetVelocityCast: (CasterParallel, cast: vaildcast) -> Vector3,
 
-	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> Vector3,
+	AddAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),
 	SetAccelerationCast: (CasterParallel, cast: vaildcast, acceleration: Vector3) -> (),
 	GetAccelerationCast: (CasterParallel, cast: vaildcast) -> Vector3,
 
@@ -252,12 +257,12 @@ export type CasterParallel = {
 ]=]
 export type CasterSerial = {
 	WorldRoot: WorldRoot,
-	LengthChanged: OnLengthChangedFunction,
-	Hit: OnHitFunction,
+	LengthChanged: Signal.Signal<OnLengthChangedFunction> | OnLengthChangedFunction,
+	Hit: Signal.Signal<OnHitFunction> | OnHitFunction,
 	CanPierce: CanPierceFunction,
-	Pierced: OnPiercedFunction,
-	CastTerminating: OnCastTerminatingFunction,
-	CastFire: OnCastFireFunction,
+	Pierced: Signal.Signal<OnPiercedFunction> | OnPiercedFunction,
+	CastTerminating: Signal.Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction,
+	CastFire: Signal.Signal<OnCastFireFunction> | OnCastFireFunction,
 	Dispatcher: Dispatcher.Dispatcher,
 
 	AlreadyInit: boolean,
@@ -300,23 +305,16 @@ export type CasterSerial = {
 	) -> (),
 
 	SetMovementModeEnabled: (
-		enabled: boolean,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
-	SetObjectCacheEnabled: (
 		self: CasterSerial,
 		enabled: boolean,
-		Template: BasePart | Model,
-		CacheSize: number,
-		CacheHolder: Instance
+		mode: "BulkMoveTo" | "Motor6D"
 	) -> (),
 
 	AddVelocityCast: (CasterSerial, cast: vaildcast, velocity: Vector3) -> (),
 	SetVelocityCast: (CasterSerial, cast: vaildcast, velocity: Vector3) -> (),
 	GetVelocityCast: (CasterSerial, cast: vaildcast) -> Vector3,
 
-	AddAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> Vector3,
+	AddAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> (),
 	SetAccelerationCast: (CasterSerial, cast: vaildcast, acceleration: Vector3) -> (),
 	GetAccelerationCast: (CasterSerial, cast: vaildcast) -> Vector3,
 
@@ -359,7 +357,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -377,6 +375,8 @@ export type FastCastBehavior = {
 	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
 	VisualizeCasts: boolean, 
 	VisualizeCastSettings: VisualizeCastSettings,
+
+	CloneTemplate: boolean,
 
 	FastCastEventsConfig: FastCastEventsConfig,
 	UserData: any
@@ -464,14 +464,14 @@ export type SphereCastRayInfo = {
 }
 
 --[=[
-	@type BaseCastData { Output: BindableEvent, ActiveCastCleaner: BindableEvent, ObjectCache: BindableFunction?, CacheHolder: any?, SyncChange : BindableEvent }
+	@type BaseCastData { Output: BindableEvent, Actor: Actor, ObjectCache: BindableFunction?, CacheHolder: any?, SyncChange : BindableEvent }
 	@within TypeDefinitions
 
 	Data stored on the caster that ActiveCasts reference.
 ]=]
 export type BaseCastData = {
 	Output: BindableEvent,
-	ActiveCastCleaner: BindableEvent,
+	Actor: Actor,
 	CacheHolder: any?,
 	SyncChange : BindableEvent
 }
@@ -491,7 +491,8 @@ export type ActiveCastData = {
 	_Destroying: boolean,
 	Type : "Raycast",
 	CFrame: CFrame,
-	ID: number | string
+	ID: number,
+	Mode: "Serial" | "Parallel",
 }
 
 --[=[
@@ -509,7 +510,8 @@ export type ActiveBlockcastData = {
 	_Destroying: boolean,
 	Type : "Blockcast",
 	CFrame: CFrame,
-	ID: number | string
+	ID: number,
+	Mode: "Serial" | "Parallel",
 }
 
 --[=[
@@ -527,7 +529,8 @@ export type ActiveSpherecastData = {
 	_Destroying: boolean,
 	Type : "Spherecast",
 	CFrame: CFrame,
-	ID: number | string
+	ID: number,
+	Mode: "Serial" | "Parallel",
 }
 
 return {}

@@ -81,17 +81,21 @@ actor:BindToMessage("Spherecast", function(
 	BaseCast:Spherecast(origin, radius, direction, velocity, behavior)
 end)
 
-actor:BindToMessage("SetMovementModeEnabled", function(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
-	BaseCast:SetMovementModeEnabled(enabled, mode)
+actor:BindToMessage("FireBatch", function(requests: { any })
+	for _, request in requests do
+		local kind = request[1]
+		if kind == 1 then
+			BaseCast:Raycast(request[2], request[3], request[4], request[5])
+		elseif kind == 2 then
+			BaseCast:Blockcast(request[2], request[3], request[4], request[5], request[6])
+		elseif kind == 3 then
+			BaseCast:Spherecast(request[2], request[3], request[4], request[5], request[6])
+		end
+	end
 end)
 
-actor:BindToMessage("BindObjectCache", function(
-	enabled: boolean,
-	Template: BasePart?,
-	CacheSize: number?,
-	CacheHolder: Instance?
-)
-	BaseCast:BindObjectCache(enabled, Template, CacheSize, CacheHolder)
+actor:BindToMessage("SetMovementModeEnabled", function(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
+	BaseCast:SetMovementModeEnabled(enabled, mode)
 end)
 
 -- CleanUp

@@ -8,46 +8,46 @@ Serial Caster runs all cast simulations on the main thread. Simpler.
 
 ```lua
 local caster = FastCast2.new()
-caster:Init(movementMode, useObjectCache, template, cacheSize, cacheHolder)
+caster:Init(movementMode)
 ```
 
-#### 1.1.1 Parameters
+#### 1.1.1 Events
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `movementMode` | `"BulkMoveTo" \| "Motor6D"` | How cosmetic bullets are moved each frame |
-| `useObjectCache` | `boolean` | Enable part pooling via ObjectCache |
-| `Template` | `BasePart \| Model?` | Template for ObjectCache |
-| `CacheSize` | `number?` | Pre-allocated cache size (default 500) |
-| `CacheHolder` | `Instance?` | Parent for cached objects (default workspace) |
+Caster events are lightweight `Signal` objects (not `BindableEvent`s), so any
+number of listeners can connect and disconnect independently. Events can be
+connected **before or after Init**:
 
-#### 1.1.2 Events
+```lua
+local connection = caster.Hit:Connect(function(cast, result, velocity, cosmeticBullet) end)
+connection:Disconnect() -- stop listening
 
-Events are assigned directly on the caster **before or after Init**:
+caster.Pierced:Connect(function(cast, result, velocity, cosmeticBullet) end)
+caster.LengthChanged:Connect(function(cast, lastPoint, rayDir, rayDisplacement, velocity, cosmeticBullet) end)
+caster.CastFire:Connect(function(cast, origin, direction, velocity, behavior) end)
+caster.CastTerminating:Connect(function(cast) end)
+```
+
+`CanPierce` is a query that must return a boolean, so it stays a single function:
+
+```lua
+caster.CanPierce = function(cast, result, velocity, cosmeticBullet) -> boolean end
+```
+
+For backwards compatibility, assigning a function to a signal event is shorthand
+for `:Connect` and replaces any previous function assigned this way:
 
 ```lua
 caster.Hit = function(cast, result, velocity, cosmeticBullet) end
-caster.Pierced = function(cast, result, velocity, cosmeticBullet) end
-caster.LengthChanged = function(cast, lastPoint, rayDir, rayDisplacement) end
-caster.CastFire = function(cast, origin, direction, velocity, behavior) end
-caster.CastTerminating = function(cast) end
-caster.CanPierce = function(cast, result, velocity, cosmeticBullet) -> boolean end
 ```
+
+`Signal` supports `Connect`, `Once`, `Wait`, `Fire`, `DisconnectAll`, and `Destroy`.
 
 #### 1.1.3 Movement Modes
 
 - **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. (General/Default)
 - **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better for performance.
 
-Switch modes at runtime with `caster:SetMovementMode(mode)`.
-
-#### 1.1.4 ObjectCache
-
-ObjectCache reuses projectile parts:
-
-```lua
-caster:Init("BulkMoveTo", true, projectileTemplate, 500, workspace)
-```
+Switch modes at runtime with `caster:SetMovementModeEnabled(enabled, mode)`.
 
 ---
 
@@ -58,18 +58,9 @@ Parallel Caster runs cast simulations on separate Actor VMs.
 ```lua
 local caster = FastCast2.newParallel()
 caster:Init(
-    numWorkers,          -- number of worker VMs (must be > 1)
-    newParent,           -- Folder to place FastCastVMs
-    newName,             -- name for FastCastVMs folder
-    ContainerParent,     -- parent for worker containers
-    VMContainerName,     -- name for containers
-    VMname,              -- name for each worker VM
+    numWorkers,          -- number of worker VMs (must be at least 1)
     movementMode,        -- "BulkMoveTo" or "Motor6D"
-    fastCastEventsModule,-- optional ModuleScript
-    useObjectCache,      -- enable ObjectCache
-    template,            -- ObjectCache template
-    cacheSize,           -- ObjectCache size
-    CacheHolder          -- ObjectCache parent
+    fastCastEventsModule -- optional ModuleScript
 )
 ```
 > [!NOTE]
@@ -81,18 +72,9 @@ caster:Init(
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `numWorkers` | `number` | Number of Actor VMs. Must be > 1. |
-| `newParent` | `Folder` | Parent for the FastCastVMs Folder |
-| `newName` | `string` | Name for the FastCastVMs Folder |
-| `ContainerParent` | `Folder` | Parent for worker VM Containers |
-| `VMContainerName` | `string` | Name for VM Containers |
-| `VMname` | `string` | Name given to each worker VM |
-| `movementMode` | `"BulkMoveTo" \| "Motor6D"` | Movement method |
-| `fastCastEventsModule` | `ModuleScript?` | FastCastEvents module |
-| `useObjectCache` | `boolean` | Enable ObjectCache |
-| `template` | `BasePart \| Model?` | ObjectCache template |
-| `cacheSize` | `number?` | ObjectCache size |
-| `CacheHolder` | `Instance?` | ObjectCache parent |
+| `numWorkers` | `number` | Number of worker VMs. Must be at least 1. |
+| `movementMode` | `"BulkMoveTo" | "Motor6D"` | Movement method |
+| `fastCastEventsModule` | `ModuleScript?` | Optional FastCastEvents module |
 
 #### 1.2.2 How It Works
 
@@ -105,7 +87,7 @@ caster:Init(
 ```lua
 caster:SetFastCastEventsModule(moduleScript)  -- Parallel only
 caster:SetMovementModeEnabled(enabled, mode)
-caster:SetObjectCacheEnabled(enabled, template?, cacheSize?, cacheHolder?)
+
 ```
 
 ---
@@ -218,6 +200,7 @@ behavior.VisualizeCastSettings = {
 | `AutoIgnoreContainer` | `boolean` | `true` | Auto-adds container to filter list |
 | `VisualizeCasts` | `boolean` | `false` | Debug visualization toggle |
 | `VisualizeCastSettings` | `table` | (defaults) | Debug viz colors, sizes, lifetimes |
+| `CloneTemplate` | `boolean` | `true` | Clone CosmeticBulletTemplate or not  |
 | `UserData` | `any` | `nil` | Arbitrary data accessible on the cast |
 
 ### Event Configuration
