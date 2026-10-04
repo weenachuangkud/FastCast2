@@ -426,49 +426,56 @@ local function SnapshotBehavior(behavior: any): any
 	return copy
 end
 
-local function QueueFire(self: any, request: { any })
-	local queue = self._fireQueue
-	queue[#queue + 1] = request
+local FireQueue = {}
+local FireBatches = {}
+local FireUsed = {}
+local FireFlushConnection: RBXScriptConnection? = nil
+local ParallelDispatcher = nil
+
+local function QueueFire(request: { any })
+	FireQueue[#FireQueue + 1] = request
 end
 
-local function FlushFires(self: any)
-	local queue = self._fireQueue
-	local count = #queue
+local function FlushFires()
+	local count = #FireQueue
 	if count == 0 then
 		return
 	end
 
-	local dispatcher = self.Dispatcher
+	local dispatcher = ParallelDispatcher
 	local threads = dispatcher and dispatcher.Threads
 	local workerCount = if threads then #threads else 0
+
 	if workerCount == 0 then
-		table.clear(queue)
+		table.clear(FireQueue)
 		return
 	end
 
-	local batches = self._fireBatches
-	local used = self._fireUsed
 	local usedCount = 0
 
 	for i = 1, count do
 		local worker = (i - 1) % workerCount + 1
-		local batch = batches[worker]
+		local batch = FireBatches[worker]
+
 		if not batch then
 			batch = {}
-			batches[worker] = batch
+			FireBatches[worker] = batch
 			usedCount += 1
-			used[usedCount] = worker
+			FireUsed[usedCount] = worker
 		end
-		batch[#batch + 1] = queue[i]
+
+		batch[#batch + 1] = FireQueue[i]
 	end
-	table.clear(queue)
+
+	table.clear(FireQueue)
 
 	for i = 1, usedCount do
-		local worker = used[i]
-		local batch = batches[worker]
+		local worker = FireUsed[i]
+		local batch = FireBatches[worker]
+
 		threads[worker]:SendMessage("FireBatch", batch)
 		table.clear(batch)
-		used[i] = nil
+		FireUsed[i] = nil
 	end
 end
 
@@ -505,7 +512,7 @@ function FastCastParallel:Init(
 		movementMode = movementMode,
 		FastCastModule = script
 	}
-	self.Dispatcher = newDispatcher.new(numWorkers, data, function(eventName: string, ...)
+	ParallelDispatcher = newDispatcher.new(numWorkers, data, function(eventName: string, ...)
 		if eventName == "Batch" then
 			DispatchOutputBatch(self, ...)
 			return
@@ -518,12 +525,9 @@ function FastCastParallel:Init(
 	end)
 
 	-- Queue shots and flush them once per frame (see FlushFires).
-	self._fireQueue = {}
-	self._fireBatches = {}
-	self._fireUsed = {}
-	self._flushConnection = RunService.PreSimulation:Connect(function()
-		FlushFires(self)
-	end)
+	if not FireFlushConnection then
+		FireFlushConnection = RunService.PreSimulation:Connect(FlushFires)
+	end
 
 	self.AlreadyInit = true
 	self.MovementMode = movementMode
@@ -546,7 +550,7 @@ function FastCastParallel:SetFastCastEventsModule(moduleScript: ModuleScript)
 		error("Please Init caster")
 	end
 
-	self.Dispatcher:DispatchAll("SetFastCastEventsModule", moduleScript)
+	ParallelDispatcher:DispatchAll("SetFastCastEventsModule", moduleScript)
 	self.FastCastEventsModule = moduleScript
 end
 
@@ -573,7 +577,7 @@ function FastCastParallel:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	QueueFire(self, {
+	QueueFire({
 		1,
 		origin,
 		direction,
@@ -607,7 +611,7 @@ function FastCastParallel:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	QueueFire(self, {
+	QueueFire({
 		2,
 		origin,
 		Size,
@@ -642,7 +646,7 @@ function FastCastParallel:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	QueueFire(self, {
+	QueueFire({
 		3,
 		origin,
 		Radius,
@@ -666,7 +670,7 @@ function FastCastParallel:SetMovementModeEnabled(enabled: boolean, mode: "BulkMo
 		return
 	end
 
-	self.Dispatcher:DispatchAll("SetMovementModeEnabled", enabled, mode)
+	ParallelDispatcher:DispatchAll("SetMovementModeEnabled", enabled, mode)
 	self.MovementMode = mode
 end
 
@@ -810,14 +814,19 @@ function FastCastParallel:Destroy()
 		return
 	end
 
-	if self._flushConnection then
-		self._flushConnection:Disconnect()
-		self._flushConnection = nil
+	if FireFlushConnection then
+		FireFlushConnection:Disconnect()
+		FireFlushConnection = nil
 	end
 
-	if self.Dispatcher then
-		self.Dispatcher:Destroy()
+	if ParallelDispatcher then
+		ParallelDispatcher:Destroy()
+		ParallelDispatcher = nil
 	end
+
+	table.clear(FireQueue)
+	table.clear(FireBatches)
+	table.clear(FireUsed)
 
 	DestroyCasterSignals(self)
 	self.Destroy = function() end
