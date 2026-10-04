@@ -15,6 +15,7 @@ sourcemap.json
 /node_modules
 /package-lock.json
 
+
 # FastCast2 related stuff
 /src/*.legacy.luau
 .aider*

@@ -8,7 +8,7 @@ sidebar_position: 2
 
 ```lua
 local caster = FastCast2.new()
-caster:Init("BulkMoveTo", false)
+caster:Init("BulkMoveTo")
 
 caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit:", result.Instance)
@@ -25,11 +25,7 @@ caster:RaycastFire(origin, direction, 500, behavior)
 local Caster = FastCast2.new()  -- Construct a new Serial Caster
 
 Caster:Init(
-    movementMode: "BulkMoveTo" | "Motor6D",  -- Movement method for cosmetic bullets.
-    useObjectCache: boolean,                  -- Enable ObjectCache for this Caster.
-    Template: BasePart | Model?,              -- Template for ObjectCache (if enabled).
-    CacheSize: number?,                       -- Number of objects to pre-allocate.
-    CacheHolder: Instance?                    -- Parent for cached objects.
+    movementMode: "BulkMoveTo" | "Motor6D"  -- Movement method.
 )
 -- ⚠ Must be called before any Fire methods — nothing happens without Init!
 
@@ -58,7 +54,6 @@ Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 --// Configuration
 
 Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
-Caster:SetObjectCacheEnabled(enabled: boolean, Template?, CacheSize?, CacheHolder?) → ()
 
 
 --// Lifecycle
@@ -76,18 +71,9 @@ Caster:Destroy() → ()
 local Caster = FastCast2.newParallel()
 
 Caster:Init(
-    numWorkers: number,                 -- Number of Actor VMs. Must be > 1.
-    newParent: Folder,                  -- Parent for the FastCastVMs Folder.
-    newName: string,                    -- Name for the FastCastVMs Folder.
-    ContainerParent: Folder,            -- Parent for worker VM Containers.
-    VMContainerName: string,            -- Name for VM Containers.
-    VMname: string,                     -- Name given to each worker VM.
+    numWorkers: number,                 -- Number of Actor VMs. Must be at least 1.
     movementMode: "BulkMoveTo" | "Motor6D",  -- Movement method.
-    FastCastEventsModule: ModuleScript?,-- ModuleScript returning a FastCastEvents table.
-    useObjectCache: boolean,            -- Enable ObjectCache for this Caster.
-    Template: BasePart | Model?,        -- Template for ObjectCache (if enabled).
-    CacheSize: number?,                 -- Number of objects to pre-allocate.
-    CacheHolder: Instance?              -- Parent for cached objects.
+    FastCastEventsModule: ModuleScript? -- Optional event module.
 )
 -- ⚠ Must be called before any Fire methods — nothing happens without Init!
 
@@ -108,7 +94,6 @@ Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 
 Caster:SetFastCastEventsModule(moduleScript: ModuleScript) → ()
 Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
-Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → ()
 
 
 --// Cast Manipulation  (use FastCast static methods)

@@ -63,6 +63,8 @@ Defaults.FastCastBehavior = {
 		UseCastFire = true
 	},
 
+	CloneTemplate = true,
+
 	FastCastEventsConfig = {
 		UseLengthChanged = false,
 		UseHit = true,

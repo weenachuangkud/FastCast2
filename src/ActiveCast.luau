@@ -1,9 +1,6 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	
-
-	ActiveCastSerial - Serial mode with single RunService, SoA pattern, queue technique
 ]]
 
 local FastCastModule = script.Parent
@@ -49,7 +46,6 @@ function ActiveCast.createCastData(
 	behavior: TypeDef.FastCastBehavior,
 	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants,
-	ObjectCacheRef: any,
 	_parallel: boolean?
 ): any
 	local cast = {
@@ -90,10 +86,12 @@ function ActiveCast.createCastData(
 		},
 
 		_Destroying = false,
+		_TerminationQueued = false,
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
-		ID = activeCastID
+		ID = activeCastID,
+		Mode = if _parallel then "Parallel" else "Serial",
 	}
 
 	if _parallel then
@@ -117,22 +115,20 @@ function ActiveCast.createCastData(
 	end
 
 	local targetContainer: Instance?
-	if ObjectCacheRef then
-		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin))
-		targetContainer = cast.Caster.CacheHolder
-	else
-		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			local basePart = cast.RayInfo.CosmeticBulletObject
+	
+	if cast.RayInfo.CosmeticBulletObject ~= nil then
+		local basePart = cast.RayInfo.CosmeticBulletObject
+		if behavior.CloneTemplate == true then
 			basePart = basePart:Clone()
-			basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
-			basePart.Parent = behavior.CosmeticBulletContainer
-
-			cast.RayInfo.CosmeticBulletObject = basePart
 		end
+		basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
+		basePart.Parent = behavior.CosmeticBulletContainer
 
-		if behavior.CosmeticBulletContainer then
-			targetContainer = behavior.CosmeticBulletContainer
-		end
+		cast.RayInfo.CosmeticBulletObject = basePart
+	end
+
+	if behavior.CosmeticBulletContainer then
+		targetContainer = behavior.CosmeticBulletContainer
 	end
 
 	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then

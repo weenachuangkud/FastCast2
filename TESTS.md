@@ -1,13 +1,32 @@
+# Testing FastCast2
+
+The checklist below is covered by the automated suite. Run it with one command
+from the repository root:
+
+```sh
+npm test
+# or
+lune run tests/run.luau
+```
+
+The runner builds the test place, runs it in Roblox Studio via
+`run-in-roblox`, prints a functional-test summary and a benchmark table, and
+uploads the full report to [paste.shellworks.dev](https://paste.shellworks.dev).
+See [`tests/README.md`](tests/README.md) for prerequisites, flags, and the
+project layout.
+
+The same cases can still be verified by hand if Studio automation is not
+available.
+
 ### Caster
 1. Initialization
 2. Basic raycast/blockcast/spherecast firing
 3. All [events](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#112-events) should be able to works
-4. ObjectCache
-5. MovementMode
-6. Cast Manipulation
-7. Repeat the same tests above for parallel version
-8. SetFastCastEventsModule (Parallel)
-9. SyncChangesToCast (Parallel)
+4. MovementMode
+5. Cast Manipulation
+6. Repeat the same tests above for parallel version
+7. SetFastCastEventsModule (Parallel)
+8. SyncChangesToCast (Parallel)
 ### FastCastBehavior
 - https://weenachuangkud.github.io/FastCast2/docs/api-reference/#2-fastcastbehavior
 ### ActiveCastData
