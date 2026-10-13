@@ -54,7 +54,7 @@ function BaseCast.Raycast(
 	Behavior: TypeDef.FastCastBehavior
 )
 	NextProjectileID += 1
-	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, nil, {
+	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, {
 		CastType = EnumCastTypes.Raycast
 	} :: any)
 

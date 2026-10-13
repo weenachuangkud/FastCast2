@@ -24,30 +24,6 @@ local Signal = require(script.Parent:WaitForChild("Signal"))
 type vaildcast = ActiveCastData | ActiveBlockcastData | ActiveSpherecastData
 
 --[=[
-	@type FastCastEventsModule ModuleScript
-	@within TypeDefinitions
-
-	A moduleScript that will be required by ActiveCast
-]=]
-export type FastCastEventsModule = ModuleScript
-
---[=[
-	@type FastCastEvents { CanPierce: CanPierceFunction, Hit: OnHitFunction, Pierced: OnPiercedFunction, LengthChanged: OnLengthChangedFunction, CastTerminating: OnCastTerminatingFunction, CastFire: OnCastFireFunction }
-	@within TypeDefinitions
-
-	A table of callback functions (events/hooks) used by ActiveCast.
-	These functions are invoked by ActiveCast during a lifecycle (e.g., length updates, pierce checks).
-]=]
-export type FastCastEvents = {
-	CanPierce: CanPierceFunction,
-	Hit: OnHitFunction,
-	Pierced: OnPiercedFunction,
-	LengthChanged: OnLengthChangedFunction,
-	CastTerminating: OnCastTerminatingFunction,
-	CastFire: OnCastFireFunction
-}
-
---[=[
 	@type FastCastSignalEvents { CanPierce: CanPierceFunction, Hit: Signal.Signal<OnHitFunction>, Pierced: Signal.Signal<OnPiercedFunction>, LengthChanged: Signal.Signal<OnLengthChangedFunction>, CastTerminating: Signal.Signal<OnCastTerminatingFunction>, CastFire: Signal.Signal<OnCastFireFunction> }
 	@within TypeDefinitions
 
@@ -223,21 +199,6 @@ export type CasterSerial = {
 }
 
 --[=[
-	@type FastCastEventsModuleConfig { UseLengthChanged: boolean, UseHit: boolean, UsePierced: boolean, UseCastTerminating: boolean, UseCanPierce: boolean, UseCastFire: boolean }
-	@within TypeDefinitions
-
-	Represents a FastCastBehavior configuration.
-]=]
-export type FastCastEventsModuleConfig = {
-	UseLengthChanged: boolean,
-	UseHit: boolean,
-	UsePierced: boolean,
-	UseCastTerminating: boolean,
-	UseCanPierce: boolean,
-	UseCastFire: boolean
-}
-
---[=[
 	@type FastCastEventsConfig { UseLengthChanged: boolean, UseHit: boolean, UsePierced: boolean, UseCastTerminating: boolean, UseCastFire: boolean }
 	@within TypeDefinitions
 
@@ -253,7 +214,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",	FastCastEventsModuleConfig: FastCastEventsModuleConfig,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",		VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -268,8 +229,7 @@ export type FastCastBehavior = {
 	CosmeticBulletContainer: Instance?,
 	AutoIgnoreContainer: boolean,
 
-	FastCastEventsModuleConfig: FastCastEventsModuleConfig,
-	VisualizeCasts: boolean, 
+		VisualizeCasts: boolean, 
 	VisualizeCastSettings: VisualizeCastSettings,
 
 	CloneTemplate: boolean,
@@ -293,7 +253,7 @@ export type CastTrajectory = {
 }
 
 --[=[
-	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	TotalRuntime: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	FastCastEventsModuleConfig: FastCastEventsModuleConfig }
+	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	TotalRuntime: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	}
 	@within TypeDefinitions
 
 	Represents cast state tracking data.
@@ -312,11 +272,10 @@ export type CastStateInfo = {
 
 	FastCastEventsConfig: FastCastEventsConfig,
 
-	FastCastEventsModuleConfig: FastCastEventsModuleConfig
-}
+	}
 
 --[=[
-	@type CastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, FastCastEventsModule: FastCastEventsModule }
+	@type CastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, }
 	@within TypeDefinitions
 
 	Ray info for ray-cast variants.
@@ -326,8 +285,7 @@ export type CastRayInfo = {
 	WorldRoot: WorldRoot,
 	MaxDistance: number,
 	CosmeticBulletObject: Instance?,
-	FastCastEventsModule: FastCastEventsModule
-}
+	}
 
 --[=[
 	@type BlockCastRayInfo { Parameters: RaycastParams, WorldRoot: WorldRoot, MaxDistance: number, CosmeticBulletObject: Instance?, CanPierceModule: ModuleScript?, Size: Vector3 }

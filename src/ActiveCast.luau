@@ -44,7 +44,6 @@ function ActiveCast.createCastData(
 	direction: Vector3,
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
-	eventModule: TypeDef.FastCastEventsModule?,
 	variant: CastVariants
 ): any
 	local cast = {
@@ -81,7 +80,6 @@ function ActiveCast.createCastData(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			FastCastEventsModule = eventModule
 		},
 
 		_Destroying = false,

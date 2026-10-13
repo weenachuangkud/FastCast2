@@ -54,15 +54,6 @@ Defaults.FastCastBehavior = {
 		Debug_HitLifetime = 1
 	},
 
-	FastCastEventsModuleConfig = {
-		UseLengthChanged = false,
-		UseHit = true,
-		UsePierced = true,
-		UseCastTerminating = true,
-		UseCanPierce = true,
-		UseCastFire = true
-	},
-
 	CloneTemplate = true,
 
 	FastCastEventsConfig = {

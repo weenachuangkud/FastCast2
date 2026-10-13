@@ -71,8 +71,6 @@ local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
 local SerialSimulation = require(script:WaitForChild("SerialSimulation"))
 
 -- Type Exports
-export type FastCastEventsModule = TypeDef.FastCastEventsModule
-export type FastCastEvents = TypeDef.FastCastEvents
 export type FastCastSignalEvents = TypeDef.FastCastSignalEvents
 
 export type CanPierceFunction = TypeDef.CanPierceFunction
@@ -85,7 +83,6 @@ export type OnCastFireFunction = TypeDef.OnCastFireFunction
 export type VisualizeCastSettings = TypeDef.VisualizeCastSettings
 export type CasterSerial = TypeDef.CasterSerial
 
-export type FastCastEventsModuleConfig = TypeDef.FastCastEventsModuleConfig
 export type FastCastEventsConfig = TypeDef.FastCastEventsConfig
 export type FastCastBehavior = TypeDef.FastCastBehavior
 
