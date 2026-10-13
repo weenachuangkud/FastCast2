@@ -1560,11 +1560,9 @@ function SerialSimulation.Start()
 		end, Config.FixedSimulationFrequency)
 	else
 		if RS:IsClient() then
-			SerialSimulation.Connection =
-				RS.PreSimulation:Connect(UpdateCasts)
+			SerialSimulation.Connection = RS.PreSimulation:Connect(UpdateCasts)
 		else
-			SerialSimulation.Connection =
-				RS.Heartbeat:Connect(UpdateCasts)
+			SerialSimulation.Connection = RS.Heartbeat:Connect(UpdateCasts)
 		end
 	end
 end
