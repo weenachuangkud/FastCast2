@@ -489,6 +489,7 @@ export type ActiveCastData = {
 	UserData: { [any]: any },
 
 	_Destroying: boolean,
+	_TerminationQueued: boolean,
 	Type : "Raycast",
 	CFrame: CFrame,
 	ID: number,
