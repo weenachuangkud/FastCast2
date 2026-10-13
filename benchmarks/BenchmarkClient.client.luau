@@ -13,10 +13,7 @@
 		X       Cycle HighFidelityBehavior
 		>       Increase HighFidelitySegmentSize
 		<       Decrease HighFidelitySegmentSize
-		B       Toggle Serial / Parallel
 		R       Cycle cast type
-		[       Decrease workers
-		]       Increase workers
 		I       Show benchmark information
 		H       Show controls
 		N       Toggle Client / Server input mode
@@ -32,9 +29,6 @@ local RunService = game:GetService("RunService")
 --// Configuration
 
 local Config = {
-	Parallel = true,
-	NumWorkers = 4,
-
 	ProjectileAmount = 500,
 	Velocity = 6,
 	CastType = "Raycast",
@@ -57,8 +51,6 @@ local Config = {
 }
 
 --// Constants
-local NUM_WORKERS_CHANGE_COOLDOWN = 4.5
-local MODE_CHANGE_COOLDOWN = 2.5
 local BENCHMARK_COOLDOWN = 2.5
 local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 
@@ -125,7 +117,6 @@ local Caster
 local ActiveCasts = {}
 
 local IsBenchmarking = false
-local IsReconfiguring = false
 
 local InputMode = "Client"
 
@@ -141,10 +132,6 @@ RunService.Heartbeat:Connect(function(dt)
 end)
 
 --// Utility
-
-local function getMode()
-	return Config.Parallel and "PARALLEL" or "SERIAL"
-end
 
 local function getHighFidelityName()
 	local behavior = CastBehavior.HighFidelityBehavior
@@ -169,24 +156,10 @@ local function onCastFire(cast)
 end
 
 local function createCaster()
-	local newCaster
-
-	if Config.Parallel then
-		newCaster = FastCast.newParallel()
-
-		newCaster:Init(
-			Config.NumWorkers,
-			Config.MovementMode
-		)
-	else
-		newCaster = FastCast.new()
-
-		newCaster:Init(Config.MovementMode)
-	end
-
-	newCaster.CastFire = onCastFire
-
-	return newCaster
+	local caster = FastCast.new()
+	caster:Init(Config.MovementMode)
+	caster.CastFire = onCastFire
+	return caster
 end
 
 local function destroyCaster()
@@ -210,7 +183,7 @@ Caster = createCaster()
 --// Benchmark Information
 
 local function printBenchmarkInfo()
-	printSeparator(("%s MODE BENCHMARK"):format(getMode()))
+	printSeparator("SERIAL MODE BENCHMARK")
 
 	print(("Projectiles: %d"):format(Config.ProjectileAmount))
 	print(("Velocity: %.2f"):format(Config.Velocity))
@@ -235,12 +208,7 @@ local function printBenchmarkInfo()
 
 	print(("MovementMode: %s"):format(Config.MovementMode))
 
-	print(("Mode: %s"):format(getMode()))
 	print(("InputMode: %s"):format(InputMode))
-
-	if Config.Parallel then
-		print(("numWorkers: %d"):format(Config.NumWorkers))
-	end
 end
 
 --// Benchmark Output
@@ -345,7 +313,7 @@ end
 --// Benchmark
 
 local function benchmark()
-	if IsBenchmarking or IsReconfiguring then
+	if IsBenchmarking then
 		return
 	end
 
@@ -541,7 +509,7 @@ local function changeProjectileAmount(amount)
 	)
 end
 
---// Mode Switching
+--// Input Mode
 
 local function switchInputMode()
 	if IsBenchmarking or IsReconfiguring then
@@ -551,58 +519,6 @@ local function switchInputMode()
 	InputMode = if InputMode == "Client" then "Server" else "Client"
 
 	print(("InputMode: %s"):format(InputMode))
-end
-
-local function switchMode()
-	if IsBenchmarking or IsReconfiguring then
-		return
-	end
-
-	IsReconfiguring = true
-
-	Config.Parallel = not Config.Parallel
-
-	rebuildCaster()
-
-	print(("Switched to %s."):format(getMode()))
-
-	task.wait(MODE_CHANGE_COOLDOWN)
-
-	IsReconfiguring = false
-
-	print("Done!")
-end
-
-local function changeWorkerCount(amount)
-	if IsBenchmarking or IsReconfiguring then
-		return
-	end
-
-	if not Config.Parallel then
-		print("Worker count only applies to Parallel mode.")
-		return
-	end
-
-	local newCount = math.max(
-		Config.MinWorkers,
-		Config.NumWorkers + amount
-	)
-
-	if newCount == Config.NumWorkers then
-		return
-	end
-
-	IsReconfiguring = true
-
-	Config.NumWorkers = newCount
-
-	rebuildCaster()
-
-	print(("numWorkers: %d"):format(Config.NumWorkers))
-
-	task.wait(NUM_WORKERS_CHANGE_COOLDOWN)
-
-	IsReconfiguring = false
 end
 
 --// Controls
@@ -619,11 +535,8 @@ local function showControls()
 	print("X  - Cycle HighFidelityBehavior")
 	print(">  - Increase HighFidelitySegmentSize")
 	print("<  - Decrease HighFidelitySegmentSize")
-	print("B  - Toggle Serial / Parallel")
 	print("N  - Toggle Client / Server input mode")
 	print("R  - Cycle Raycast / Blockcast / Spherecast")
-	print("[  - Decrease numWorkers")
-	print("]  - Increase numWorkers")
 	print("I  - Show benchmark info")
 	print("H  - Show controls")
 end
@@ -652,7 +565,7 @@ local Keybinds = {
 	end,
 
 	[Enum.KeyCode.J] = function()
-		if not IsBenchmarking and not IsReconfiguring then
+		if not IsBenchmarking then
 			toggleMovementMode()
 		end
 	end,
@@ -669,21 +582,12 @@ local Keybinds = {
 		end
 	end,
 
-	[Enum.KeyCode.B] = switchMode,
 
 
 	[Enum.KeyCode.R] = function()
 		if not IsBenchmarking then
 			cycleCastType()
 		end
-	end,
-
-	[Enum.KeyCode.LeftBracket] = function()
-		changeWorkerCount(-1)
-	end,
-
-	[Enum.KeyCode.RightBracket] = function()
-		changeWorkerCount(1)
 	end,
 
 	[Enum.KeyCode.Period] = function()

@@ -85,7 +85,6 @@ end
 
 local function correctness()
 	queueTests(fresh("Optimized"))
-	queueTests(fresh("Parallel"))
 	local sim = fresh("Optimized")
 	local origin, velocity, acceleration = Vector3.new(10, 20, 30), Vector3.new(80, 90, -100), Vector3.new(0, -196.2, 0)
 	local observedOrigin, observedDirection, observedVelocity

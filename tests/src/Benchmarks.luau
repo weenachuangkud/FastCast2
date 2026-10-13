@@ -1,7 +1,7 @@
 --[[
 	FastCast2 automated benchmark matrix.
 
-	Runs a fixed set of (mode x cast type) cases on the server and returns one
+	Runs one case per cast type on the server and returns one
 	record per case. Creation and cleanup throughput are measured with
 	os.clock, while simulation cost is reported as Heartbeat frame-time
 	percentiles.
@@ -9,7 +9,6 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 local FastCast = require(ReplicatedStorage:WaitForChild("FastCast2"))
 
@@ -18,7 +17,6 @@ local Benchmarks = {}
 Benchmarks.DefaultConfig = {
 	projectileCount = 500,
 	sampleDuration = 4,
-	parallelWorkers = 4,
 	randomSeed = 2026,
 	velocity = 6,
 	castTypes = { "Raycast", "Blockcast", "Spherecast" },
@@ -26,7 +24,6 @@ Benchmarks.DefaultConfig = {
 
 local frameTimes = {}
 local isMeasuringFrames = false
-local parallelCounter = 0
 
 RunService.Heartbeat:Connect(function(deltaTime)
 	if isMeasuringFrames and deltaTime > 0 then
@@ -94,25 +91,12 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
-local function createCaster(mode: string, config: any, activeCasts: { any }): any
-	local caster
-
-	if mode == "Parallel" then
-		parallelCounter += 1
-		caster = FastCast.newParallel()
-		caster:Init(
-			config.parallelWorkers,
-			"BulkMoveTo"
-		)
-	else
-		caster = FastCast.new()
-		caster:Init("BulkMoveTo")
-	end
-
+local function createCaster(activeCasts: { any }): any
+	local caster = FastCast.new()
+	caster:Init("BulkMoveTo")
 	caster.CastFire = function(cast: any)
 		table.insert(activeCasts, cast)
 	end
-
 	return caster
 end
 
@@ -127,7 +111,7 @@ local function runCase(mode: string, castType: string, caster: any, activeCasts:
 
 	local creationSeconds = os.clock() - creationStarted
 
-	-- Let parallel workers and CastFire callbacks finish before sampling.
+	-- Let simulation updates and CastFire callbacks settle before sampling.
 	task.wait()
 	table.clear(frameTimes)
 	isMeasuringFrames = true
@@ -177,10 +161,10 @@ local function runCase(mode: string, castType: string, caster: any, activeCasts:
 end
 
 --[=[
-	Runs the full benchmark matrix.
+	Runs the serial benchmark matrix.
 
 	@param overrides any? -- Optional fields merged over DefaultConfig.
-	@return { any } -- One record per (mode, cast type) case.
+	@return { any } -- One record per cast type.
 ]=]
 function Benchmarks.run(overrides: any?): { any }
 	local config = table.clone(Benchmarks.DefaultConfig)
@@ -196,17 +180,15 @@ function Benchmarks.run(overrides: any?): { any }
 
 	local results = {}
 
-	for _, mode in { "Serial", "Parallel" } do
-		local activeCasts = {}
-		local caster = createCaster(mode, config, activeCasts)
+	local mode = "Serial"
+	local activeCasts = {}
+	local caster = createCaster(activeCasts)
 
-		for _, castType in config.castTypes do
-			table.insert(results, runCase(mode, castType, caster, activeCasts, config))
-		end
-
-		caster:Destroy()
-		task.wait(1)
+	for _, castType in config.castTypes do
+		table.insert(results, runCase(mode, castType, caster, activeCasts, config))
 	end
+
+	caster:Destroy()
 
 	return results
 end

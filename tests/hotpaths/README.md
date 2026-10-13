@@ -30,8 +30,7 @@ It includes real workspace raycast calls and public-state writeback, excludes
 creation and cosmetic movement, and compares LengthChanged off/on. Each
 variant gets 20 warmup steps, followed by nine alternating-order samples of
 60 steps at dt=1/60. Reported times are the median of those per-step averages,
-not frame intervals or per-frame tail latency. It does not measure parallel
-scheduler throughput, collision-heavy workloads, or SwiftCast.
+not frame intervals or per-frame tail latency. It does not measure alternate scheduler implementations, collision-heavy workloads, or SwiftCast.
 
 Local Studio run on 2026-09-17, against the workspace snapshot immediately
 before this optimization pass (including its existing performance edits):

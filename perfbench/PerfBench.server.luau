@@ -11,16 +11,13 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 local FastCast = require(ReplicatedStorage:WaitForChild("FastCast2"))
 local FastCastConfig = require(ReplicatedStorage.FastCast2:WaitForChild("Config"))
 
 local SENTINEL = "PERFBENCH_RESULT"
 local SAMPLE_SECONDS = 5
-local WORKERS = 4
 local COUNTS = { 6000 }
-local CAST_MODES = { "Parallel", "Serial" }
 local INSTANCED = { true }
 local MOVEMENT = { true, false }
 
@@ -74,25 +71,14 @@ behavior.Acceleration = Vector3.zero
 behavior.AutoIgnoreContainer = true
 behavior.HighFidelitySegmentSize = 1
 
-local caseIndex = 0
-
-local function runCase(castMode: string, projectileCount: number, instanced: boolean, movement: boolean)
-	caseIndex += 1
+local function runCase(projectileCount: number, instanced: boolean, movement: boolean)
+	local castMode = "Serial"
 
 	behavior.CosmeticBulletTemplate = if instanced then cosmeticTemplate else nil
 	behavior.CosmeticBulletContainer = if instanced then cosmeticContainer else nil
 
-	local caster
-	if castMode == "Parallel" then
-		caster = FastCast.newParallel()
-		caster:Init(
-			WORKERS,
-			"BulkMoveTo"
-		)
-	else
-		caster = FastCast.new()
-		caster:Init("BulkMoveTo")
-	end
+	local caster = FastCast.new()
+	caster:Init("BulkMoveTo")
 
 	caster:SetMovementModeEnabled(movement, "BulkMoveTo")
 
@@ -117,7 +103,7 @@ local function runCase(castMode: string, projectileCount: number, instanced: boo
 
 	local creationMs = (os.clock() - creationStarted) * 1000
 
-	-- Let parallel workers create their casts before sampling.
+	-- Let the serial simulation begin processing casts before sampling.
 	task.wait()
 	table.clear(frameTimes)
 	measuring = true
@@ -153,23 +139,20 @@ task.spawn(function()
 	task.wait(2)
 	print(string.format("[perfbench] mode=%s", FastCastConfig.SimulationMode))
 
-	for _, castMode in CAST_MODES do
-		for _, projectileCount in COUNTS do
-			for _, instanced in INSTANCED do
-				for _, movement in MOVEMENT do
-					local ok, err = pcall(runCase, castMode, projectileCount, instanced, movement)
-					if not ok then
-						print(string.format(
-							"%s %s|%s|%d|instanced=%s|movement=%s|ERROR|%s",
-							SENTINEL,
-							FastCastConfig.SimulationMode,
-							castMode,
-							projectileCount,
-							tostring(instanced),
-							tostring(movement),
-							tostring(err)
-						))
-					end
+	for _, projectileCount in COUNTS do
+		for _, instanced in INSTANCED do
+			for _, movement in MOVEMENT do
+				local ok, err = pcall(runCase, projectileCount, instanced, movement)
+				if not ok then
+					print(string.format(
+						"%s %s|Serial|%d|instanced=%s|movement=%s|ERROR|%s",
+						SENTINEL,
+						FastCastConfig.SimulationMode,
+						projectileCount,
+						tostring(instanced),
+						tostring(movement),
+						tostring(err)
+					))
 				end
 			end
 		end

@@ -2,18 +2,16 @@
 	FastCast2 functional tests.
 
 	These cover the checklist in TESTS.md: initialization, the three cast
-	variants, every public event, ObjectCache, movement modes, cast
-	manipulation, and the parallel-only extensions.
+	variants, every public event, movement modes, cast manipulation,
+	high-fidelity behavior, and trajectory updates.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 local FastCast = require(ReplicatedStorage:WaitForChild("FastCast2"))
 local FastCastEnums = require(ReplicatedStorage.FastCast2:WaitForChild("FastCastEnums"))
 
 local Framework = require(script.Parent.Framework)
-local TestEventsModule = script.Parent:WaitForChild("TestEventsModule")
 
 local CAST_TYPES = { "Raycast", "Blockcast", "Spherecast" }
 local HIT_TIMEOUT = 5
@@ -72,24 +70,6 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
-local parallelCounter = 0
-
-local function createParallelCaster(events: { [string]: any }?): any
-	parallelCounter += 1
-	local caster = FastCast.newParallel()
-
-	for name, fn in events or {} do
-		caster[name] = fn
-	end
-
-	caster:Init(
-		2,
-		"BulkMoveTo"
-	)
-
-	return caster
-end
-
 local function registerSerialCastTypes(test: (string, any) -> ())
 	for _, castType in CAST_TYPES do
 		test("Serial " .. castType .. " reaches a wall", function(expect)
@@ -124,48 +104,6 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 					return terminated
 				end, HIT_TIMEOUT),
 				castType .. " never terminated after the hit"
-			)
-
-			caster:Destroy()
-			arena:Destroy()
-		end)
-	end
-end
-
-local function registerParallelCastTypes(test: (string, any) -> ())
-	for _, castType in CAST_TYPES do
-		test("Parallel " .. castType .. " reaches a wall", function(expect)
-			local arena = createArena()
-			local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
-			local container = createContainer(arena)
-			local behavior = makeBehavior(container)
-
-			local hitInstance = nil
-			local terminated = false
-
-			local caster = createParallelCaster({
-				Hit = function(_, result)
-					hitInstance = result.Instance
-				end,
-				CastTerminating = function()
-					terminated = true
-				end,
-			})
-
-			fire(caster, castType, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
-
-			expect.truthy(
-				Framework.waitFor(function()
-					return hitInstance ~= nil
-				end, HIT_TIMEOUT),
-				"Parallel " .. castType .. " never registered a hit"
-			)
-			expect.equal(hitInstance, wall, "Parallel " .. castType .. " hit the wrong instance")
-			expect.truthy(
-				Framework.waitFor(function()
-					return terminated
-				end, HIT_TIMEOUT),
-				"Parallel " .. castType .. " never terminated after the hit"
 			)
 
 			caster:Destroy()
@@ -356,46 +294,6 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("ObjectCache reuses pooled projectile parts", function(expect)
-				local arena = createArena()
-				local holder = Instance.new("Folder")
-				holder.Name = "Cache"
-				holder.Parent = arena
-
-				local template = Instance.new("Part")
-				template.Name = "Projectile"
-				template.Anchored = true
-				template.CanCollide = false
-				template.CanQuery = false
-				template.Parent = arena
-
-				local behavior = FastCast.newBehavior()
-				behavior.MaxDistance = 1e6
-				behavior.Acceleration = Vector3.zero
-				behavior.RaycastParams = RaycastParams.new()
-
-				local firedCast = nil
-				local caster = FastCast.new()
-				caster.CastFire = function(cast)
-					firedCast = cast
-				end
-				caster:Init("BulkMoveTo", true, template, 8, holder)
-
-				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 1, 0), 60, behavior)
-
-				expect.truthy(firedCast, "CastFire did not run")
-				local projectile = firedCast.RayInfo.CosmeticBulletObject
-				expect.instance(projectile, "BasePart", "ObjectCache did not provide a projectile")
-				expect.truthy(
-					projectile:IsDescendantOf(holder),
-					"projectile was not parented under the cache holder"
-				)
-
-				FastCast:TerminateCast(firedCast)
-				caster:Destroy()
-				arena:Destroy()
-			end)
-
 			test("movement mode can be switched", function(expect)
 				local caster = FastCast.new()
 				caster:Init("Motor6D")
@@ -476,114 +374,5 @@ return function()
 			end)
 		end),
 
-		Framework.describe("FastCastParallel", function(test)
-			test("initializes and destroys", function(expect)
-				local caster = createParallelCaster()
-				expect.equal(caster.AlreadyInit, true, "parallel caster was not marked initialized")
-
-				caster:Destroy()
-			end)
-
-			registerParallelCastTypes(test)
-
-			test("SetFastCastEventsModule forwards module events", function(expect)
-				local arena = createArena()
-				createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
-				local container = createContainer(arena)
-				local behavior = makeBehavior(container)
-
-				local signal = ReplicatedStorage:WaitForChild("FastCast2TestSignal") :: BindableEvent
-				local received = {}
-
-				local connection = signal.Event:Connect(function(name)
-					received[name] = true
-				end)
-
-				local caster = createParallelCaster()
-				caster:SetFastCastEventsModule(TestEventsModule)
-
-				-- Let the worker VMs receive the new events module.
-				task.wait(0.25)
-
-				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
-
-				expect.truthy(
-					Framework.waitFor(function()
-						return received.Hit == true
-					end, HIT_TIMEOUT),
-					"events module Hit never fired"
-				)
-
-				connection:Disconnect()
-				caster:Destroy()
-				arena:Destroy()
-			end)
-
-			test("events are Signals that support multiple listeners", function(expect)
-				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
-				local container = createContainer(arena)
-				local behavior = makeBehavior(container)
-
-				local firstCount = 0
-				local secondCount = 0
-
-				local caster = createParallelCaster()
-				caster.Hit:Connect(function(_, result)
-					if result.Instance == wall then
-						firstCount += 1
-					end
-				end)
-				caster.Hit:Connect(function(_, result)
-					if result.Instance == wall then
-						secondCount += 1
-					end
-				end)
-
-				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
-
-				expect.truthy(
-					Framework.waitFor(function()
-						return firstCount > 0 and secondCount > 0
-					end, HIT_TIMEOUT),
-					"parallel Signal listeners never fired"
-				)
-
-				caster:Destroy()
-				arena:Destroy()
-			end)
-
-			test("SyncChangesToCast does not error", function(expect)
-				local arena = createArena()
-				local container = createContainer(arena)
-				local behavior = makeBehavior(container)
-
-				local firedCast = nil
-				local caster = createParallelCaster({
-					CastFire = function(cast)
-						firedCast = cast
-					end,
-				})
-
-				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 1, 0), 60, behavior)
-				expect.truthy(
-					Framework.waitFor(function()
-						return firedCast ~= nil
-					end, HIT_TIMEOUT),
-					"parallel CastFire never ran"
-				)
-
-				local cast = firedCast :: any
-				FastCast:SetPositionCast(cast, Vector3.new(10, 10, 10))
-				caster:SyncChangesToCast(cast)
-				task.wait(0.1)
-
-				expect.near(FastCast:GetPositionCast(cast), Vector3.new(10, 10, 10), 1e-3, "sync changed the local cast")
-
-				FastCast:TerminateCast(cast)
-				caster:Destroy()
-				arena:Destroy()
-			end)
-		end),
 	}
 end

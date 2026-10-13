@@ -17,8 +17,6 @@
 		x  - Cycle HighFidelityBehavior
 		>  - Increase HighFidelitySegmentSize
 		<  - Decrease HighFidelitySegmentSize
-		]  - Increase workers
-		[  - Decrease workers
 		i  - Show benchmark information
 		h  - Show help
 ]]
@@ -27,13 +25,11 @@
 
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
 
 --// Configuration
 
 local Config = {
-	NumWorkers = 4,
 
 	Instanced = false,
 	MovementMode = "BulkMoveTo",
@@ -50,15 +46,11 @@ local Config = {
 
 	ProjectileStep = 500,
 
-	WorkerStep = 1,
-	MinWorkers = 2,
-
 	SegmentSizeStep = 0.05,
 	MinSegmentSize = 0.05,
 }
 
 --// Constants
-local NUM_WORKERS_CHANGE_COOLDOWN = 4.5
 local BENCHMARK_COOLDOWN = 2.5
 
 --// Modules
@@ -77,7 +69,7 @@ local BenchmarkPackets = require(
 --// Projectile Objects
 
 local ProjectileContainer = Instance.new("Folder")
-ProjectileContainer.Name = "FastCast2PJ_Parallel"
+ProjectileContainer.Name = "FastCast2PJ_Serial"
 ProjectileContainer.Parent = workspace
 
 local ProjectileTemplate = Instance.new("Part")
@@ -126,7 +118,6 @@ local Caster
 local ActiveCasts = {}
 
 local IsBenchmarking = false
-local IsReconfiguring = false
 
 --// Frame Statistics
 
@@ -170,15 +161,9 @@ end
 --// Caster Creation
 
 local function createCaster()
-	local caster = FastCast.newParallel()
-
-	caster:Init(
-		Config.NumWorkers,
-		Config.MovementMode
-	)
-
+	local caster = FastCast.new()
+	caster:Init(Config.MovementMode)
 	caster.CastFire = onCastFire
-
 	return caster
 end
 
@@ -221,7 +206,7 @@ end
 --// Benchmark Information
 
 local function printBenchmarkInfo()
-	printSection("PARALLEL MODE BENCHMARK")
+	printSection("SERIAL MODE BENCHMARK")
 
 	print(("ProjectileAmount: %d"):format(
 		Config.ProjectileAmount
@@ -232,10 +217,6 @@ local function printBenchmarkInfo()
 		))
 
 	print(("CastType: %s"):format(Config.CastType))
-
-	print(("ObjectCache: %s"):format(
-		getObjectCacheState() and "Enabled" or "Disabled"
-		))
 
 	print(("VisualizeCasts: %s"):format(
 		CastBehavior.VisualizeCasts and "Enabled" or "Disabled"
@@ -253,13 +234,7 @@ local function printBenchmarkInfo()
 		Config.MovementMode
 		))
 
-	print(("Mode: %s"):format(
-		getModeName()
-		))
-
-	print(("numWorkers: %d"):format(
-		Config.NumWorkers
-		))
+	print(("Instancing: %s"):format(getModeName()))
 end
 
 --// Benchmark Output
@@ -349,7 +324,7 @@ end
 --// Benchmark
 
 local function runBenchmark()
-	if IsBenchmarking or IsReconfiguring then
+	if IsBenchmarking then
 		return
 	end
 
@@ -372,7 +347,7 @@ local function runBenchmark()
 
 		local creationElapsed = os.clock() - creationStarted
 
-		-- Let Parallel FastCast begin processing.
+		-- Allow the serial simulation to begin processing.
 		task.wait()
 
 		printSection("CREATION COMPLETE")
@@ -407,8 +382,7 @@ local function runBenchmark()
 			Config.ProjectileAmount
 		)
 
-		-- Give FastCast2's parallel workers time to finish
-		-- processing the terminated casts.
+		-- Give FastCast2 time to finish processing terminated casts.
 		task.wait(BENCHMARK_COOLDOWN)
 
 		--// IMPORTANT
@@ -554,37 +528,6 @@ local function changeProjectileAmount(amount)
 		))
 end
 
---// Worker Configuration
-
-local function changeWorkerCount(amount)
-	if IsBenchmarking or IsReconfiguring then
-		return
-	end
-
-	local newCount = math.max(
-		Config.MinWorkers,
-		Config.NumWorkers + amount
-	)
-
-	if newCount == Config.NumWorkers then
-		return
-	end
-
-	IsReconfiguring = true
-
-	Config.NumWorkers = newCount
-
-	rebuildCaster()
-
-	print(("numWorkers: %d"):format(
-		Config.NumWorkers
-		))
-
-	task.wait(NUM_WORKERS_CHANGE_COOLDOWN)
-
-	IsReconfiguring = false
-end
-
 --// Help
 
 local function showHelp()
@@ -602,8 +545,6 @@ local function showHelp()
 	print("x - Cycle HighFidelityBehavior")
 	print("> - Increase HighFidelitySegmentSize")
 	print("< - Decrease HighFidelitySegmentSize")
-	print("] - Increment numWorkers")
-	print("[ - Decrement numWorkers")
 	print("i - Show benchmark information")
 	print("h - Show this help")
 end
@@ -632,7 +573,7 @@ local Commands = {
 	end,
 
 	j = function()
-		if not IsBenchmarking and not IsReconfiguring then
+		if not IsBenchmarking then
 			toggleMovementMode()
 		end
 	end,
@@ -679,14 +620,6 @@ local Commands = {
 		end
 	end,
 
-	["["] = function()
-		changeWorkerCount(-Config.WorkerStep)
-	end,
-
-	["]"] = function()
-		changeWorkerCount(Config.WorkerStep)
-	end,
-
 	i = function()
 		if not IsBenchmarking then
 			printBenchmarkInfo()
@@ -706,7 +639,6 @@ local KeyNameToCommand = {
 	K = "k",
 	U = "u",
 	J = "j",
-	Y = "y",
 	V = "v",
 	X = "x",
 	R = "r",
@@ -715,8 +647,6 @@ local KeyNameToCommand = {
 
 	Period = ">",
 	Comma = "<",
-	LeftBracket = "[",
-	RightBracket = "]",
 }
 
 local function runCommand(command)
@@ -731,12 +661,6 @@ end
 
 BenchmarkPackets.Input.listen(function(keyName)
 	if typeof(keyName) ~= "string" then
-		return
-	end
-
-	-- The server benchmark is parallel-only, so B has no effect here.
-	if keyName == "B" then
-		print("Serial / Parallel toggle isn't available on the server (Parallel only).")
 		return
 	end
 

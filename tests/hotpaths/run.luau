@@ -33,7 +33,6 @@ local function instrument(name, path, simulation)
 	modules[name] = { ["$path"] = name .. ".luau" }
 end
 instrument("Optimized", "src/SerialSimulation.luau", "SerialSimulation")
-instrument("Parallel", "src/ParallelSimulation.luau", "ParallelSimulation")
 if process.args[1] then
 	instrument("Baseline", process.args[1] .. "/SerialSimulation.luau", "SerialSimulation")
 end

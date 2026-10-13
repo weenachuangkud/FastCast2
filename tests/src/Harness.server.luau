@@ -9,7 +9,6 @@
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local ServerScriptService = game:GetService("ServerScriptService")
 
 if not RunService:IsRunning() then
 	return
@@ -17,16 +16,6 @@ end
 
 local RESULT_ATTRIBUTE = "FastCast2TestResults"
 
-local function ensureTestSignal()
-	if ReplicatedStorage:FindFirstChild("FastCast2TestSignal") == nil then
-		local signal = Instance.new("BindableEvent")
-		signal.Name = "FastCast2TestSignal"
-		signal.Parent = ReplicatedStorage
-	end
-end
-
--- Safety net: a failing test may abort before its own teardown, so scrub any
--- test arenas and worker containers between cases to keep them isolated.
 local function cleanupLeftovers()
 	for _, child in workspace:GetChildren() do
 		if string.match(child.Name, "^FastCast2TestArena") then
@@ -34,22 +23,12 @@ local function cleanupLeftovers()
 		end
 	end
 
-	for _, child in ServerScriptService:GetChildren() do
-		if
-			string.match(child.Name, "^FastCast2TestContainers%d")
-			or string.match(child.Name, "^FastCast2TestVMs%d")
-		then
-			child:Destroy()
-		end
-	end
 end
 
 local function runSuite()
 	local Framework = require(script.Parent.Framework)
 	local FunctionalTests = require(script.Parent.FunctionalTests)
 	local Benchmarks = require(script.Parent.Benchmarks)
-
-	ensureTestSignal()
 
 	local tests = Framework.run(FunctionalTests(), cleanupLeftovers)
 
