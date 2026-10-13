@@ -46,7 +46,6 @@ local Config = {
 	HighFidelitySegmentSizeStep = 0.05,
 	MinHighFidelitySegmentSize = 0.05,
 
-	MinWorkers = 2,
 	ProjectileStep = 500,
 }
 
@@ -512,7 +511,7 @@ end
 --// Input Mode
 
 local function switchInputMode()
-	if IsBenchmarking or IsReconfiguring then
+	if IsBenchmarking then
 		return
 	end
 

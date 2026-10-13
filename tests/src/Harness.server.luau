@@ -22,7 +22,6 @@ local function cleanupLeftovers()
 			child:Destroy()
 		end
 	end
-
 end
 
 local function runSuite()
