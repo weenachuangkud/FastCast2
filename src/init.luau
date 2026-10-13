@@ -46,7 +46,7 @@
 	- Date : 2025
 
 	NOTE:
-	For anyone who's reading this is FastCast2, An improved version of FastCast with Parallel scripting, more extensions, and statically typed.
+	FastCast2's main repository contains the serial simulation implementation. Parallel simulation is maintained separately in FastCast2Parallel.
 A powerful modern projectile library
 
 	Because FastCast is no longer actively maintained by EtiTheSpirit, this repository continues the project with updates and adaptations.
@@ -625,7 +625,7 @@ end
 
 --[=[
 	Creates a new Serial Caster. A Serial Caster runs all cast simulations on the main thread
-	and is simpler to use but less performant than [FastCast.newParallel](FastCast#newParallel).
+	and runs cast simulations on the main thread.
 
 	@function new
 	@within FastCast

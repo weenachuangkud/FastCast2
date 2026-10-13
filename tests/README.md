@@ -7,9 +7,9 @@ Markdown table, and uploads the report to
 
 ## Prerequisites
 
-FastCast2 exercises real Roblox APIs (raycasts, `BulkMoveTo`, Actor-based
-parallel VMs), so the suite runs inside Studio rather than a standalone Luau
-runtime.
+FastCast2 exercises real Roblox APIs (raycasts, `BulkMoveTo`, and Roblox's
+simulation loop), so the suite runs inside Studio rather than a standalone
+Luau runtime.
 
 1. Install the toolchain (Rojo, Lune, `run-in-roblox`, Selene):
    ```sh
@@ -43,13 +43,12 @@ see [the hot-path runner](hotpaths/README.md) (`npm run test:hotpaths`).
 
 - **Functional tests** (`tests/src/FunctionalTests.luau`) follow the checklist
   in [`TESTS.md`](../TESTS.md): initialization, raycast/blockcast/spherecast
-  firing, every public event, movement modes, cast manipulation, high-fidelity behavior,
-  and the parallel-only extensions
-  (`SetFastCastEventsModule`, `SyncChangesToCast`).
-- **Benchmarks** (`tests/src/Benchmarks.luau`) run a fixed six-case matrix of
-  Serial/Parallel x Raycast/Blockcast/Spherecast, reporting creation and
-  cleanup cost plus simulation frame-time percentiles. Adjust projectile count,
-  sample duration, and worker count in `Benchmarks.DefaultConfig`.
+  firing, every public event, movement modes, cast manipulation, and high-fidelity
+  behavior.
+- **Benchmarks** (`tests/src/Benchmarks.luau`) run a fixed three-case matrix of
+  Serial x Raycast/Blockcast/Spherecast, reporting creation and cleanup cost
+  plus simulation frame-time percentiles. Adjust projectile count and sample
+  duration in `Benchmarks.DefaultConfig`.
 
 > **Note:** "Avg frame"/"P95"/"P99" are Heartbeat intervals, so they are
 > bounded by Studio's frame rate (about `16.7 ms` at the default 60 FPS cap).
@@ -70,7 +69,6 @@ tests/src/Harness.server  Server bootstrap; runs the suite and publishes JSON
 tests/src/Framework       Tiny assertion/runner library
 tests/src/FunctionalTests Functional test cases
 tests/src/Benchmarks      Benchmark matrix
-tests/src/TestEventsModule FastCastEventsModule used by the parallel event test
 ```
 
 `tests.project.json` mounts `src/` into `ReplicatedStorage` and `tests/src/`

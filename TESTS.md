@@ -24,17 +24,11 @@ available.
 3. All [events](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#112-events) should be able to works
 4. MovementMode
 5. Cast Manipulation
-6. Repeat the same tests above for parallel version
-7. SetFastCastEventsModule (Parallel)
-8. SyncChangesToCast (Parallel)
 ### FastCastBehavior
 - https://weenachuangkud.github.io/FastCast2/docs/api-reference/#2-fastcastbehavior
 ### ActiveCastData
 - https://weenachuangkud.github.io/FastCast2/docs/api-reference/#3-activecastdata
-### [FastCastEventsModule](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#4-fastcasteventsmodule) (Parallel)
-- All [events](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#112-events) should be able to works
-- [FastCastEventsModuleConfig](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#event-configuration)
-### [High-Fidelity Behavior](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#5-high-fidelity-behavior)
+### [High-Fidelity Behavior](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#4-high-fidelity-behavior)
 - Modes (Default, Automatic, Always)
 - HighFidelitySegmentSize
 

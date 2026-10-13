@@ -18,7 +18,7 @@ sidebar_position: 1
 
 Unofficial continuation of FastCast for Roblox
 
-**An improved version of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with **Parallel scripting**, **more extensions**, and **statically typed**. <br /> **A powerful modern projectile** library
+**An improved, statically typed continuation of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with more extensions, focused on serial simulation. <br /> **A powerful modern projectile** library
 
 </div>
 
@@ -38,13 +38,15 @@ Unofficial continuation of FastCast for Roblox
 **FastCast2** It's a **Roblox projectile library**, designed to simulate **thousands** of projectiles without relying on physics replication. <br />
 Because FastCast is no longer actively maintained by [EtiTheSpirit](https://github.com/EtiTheSpirit), this repository continues the project with updates and adaptations.
 
+This repository provides the serial implementation. Parallel simulation is maintained separately in [FastCast2Parallel](https://github.com/weenachuangkud/FastCast2Parallel).
+
 ---
 
 # Features
 
 - Highly customizable
 - Versatile projectile library
-- Parallel scripting support
+- Serial simulation on the main thread
 - Easy to use and integrate
 - Raycast and Blockcast, Spherecast support
 - BulkMoveTo/Motor6D support
@@ -166,104 +168,6 @@ FastCast2 no longer includes a built-in ObjectCache. Manage cosmetic bullet inst
 
 FastCast2 does not automatically destroy or return cosmetic bullet instances when a cast terminates. Your game controls their lifecycle.
 
-### Parallel mode
-
- 
-```lua
-local Caster = FastCast2.newParallel()
-Caster:Init(
-	4,                 -- numWorkers
-	"BulkMoveTo",      -- movementMode
-	nil,               -- FastCastEventsModule (optional)
-)
- 
--- Events work the same as serial
-Caster.Hit = function(cast, result, velocity, bullet)
-	print("Hit: " .. result.Instance.Name)
-end
- 
---[[
-	-- Except:
-	-- Caster.CanPierce
-	--> You will have to use FastCastEventsModule for that
-]]
- 
--- Fire the same as serial
-Caster:RaycastFire(origin, direction, SPEED, behavior)
-Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
-Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
-```
-
-
-<br />
-
-How to set up [FastCastEventsModule](https://weenachuangkud.github.io/FastCast2/api/TypeDefinitions/#FastCastEventsModule)
-
-```lua
--- Services
-local Rep = game:GetService("ReplicatedStorage")
-
--- Modules
-
-local FastCast2 = Rep:WaitForChild("FastCast2")
-
--- Requires
-local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-
--- Module
-
-local module: TypeDef.FastCastEvents = {}
-
-local debounce = false
-local debounce_time = 0.2
-
-module.LengthChanged = function(cast : TypeDef.ActiveCastData)
-	if not debounce then
-		debounce = true
-		print("OnLengthChanged Test")
-		task.delay(debounce_time, function()
-			debounce = false
-		end)
-	end
-end
-
-module.CastFire = function()
-	print("CastFire!")
-end
-
-module.CastTerminating = function()
-	print("CastTerminating!")
-end
-
-module.Hit = function()
-	print("Hit!")
-end
-
-module.CanPierce = function(cast : TypeDef.ActiveCastData, resultOfCast : RaycastResult, segmentVelocity, CosmeticBulletObject)
-	local CanPierce = false
-	if resultOfCast.Instance:GetAttribute("CanPierce") == true then
-		CanPierce = true
-	end
-	print(CanPierce)
-	return CanPierce
-end
-
-module.Pierced = function()
-	print("Pierced!")
-end
-
-
-return module
-```
-
-Register it on your parallel caster after `Init`:
-
-```lua
-Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
-```
-
-> **Note**: `SetFastCastEventsModule` is only available on parallel casters. In serial mode, set event handlers directly on the caster (e.g., `Caster.Hit = function(...)`).
-
 ### Motor6D movement mode
 
 Motor6D mode uses `Motor6D.Transform` for more performance instead of `BulkMoveTo`:
@@ -319,7 +223,6 @@ FastCast2:AddAccelerationCast(cast, Vector3.new(0, -50, 0))
 FastCast2:TerminateCast(cast)
 ```
 
-> **Tip**: In parallel mode, call `Caster:SyncChangesToCast(cast)` after modifying to push changes into the worker VM.
 
 ### -> Get started with the [FastCast2 documentation](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
 
@@ -338,7 +241,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide and [`CODE_OF_CONDUC
 
 ## Benchmarks
 
-FastCast2 includes repeatable client and server benchmarks for raycasts, blockcasts, and spherecasts. They compare serial and parallel execution using creation/cleanup throughput and simulation frame-time percentiles. See the [benchmark guide](benchmarks/README.md) for controls and the ready-to-sync Rojo project.
+FastCast2 includes repeatable client and server benchmarks for raycasts, blockcasts, and spherecasts, measuring creation/cleanup throughput and simulation frame-time percentiles for the serial implementation. See the [benchmark guide](benchmarks/README.md) for controls and the ready-to-sync Rojo project.
 
 ## Tests
 

@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * A lot of optimizations
 * Major code improvements
 * Improved documentation
+* Separated parallel simulation into [FastCast2Parallel](https://github.com/weenachuangkud/FastCast2Parallel); this repository now contains the serial implementation.
 
 ### Removed
 

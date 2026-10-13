@@ -42,7 +42,7 @@ caster.Hit = function(cast, result, velocity, cosmeticBullet) end
 
 `Signal` supports `Connect`, `Once`, `Wait`, `Fire`, `DisconnectAll`, and `Destroy`.
 
-#### 1.1.3 Movement Modes
+#### 1.1.2 Movement Modes
 
 - **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. (General/Default)
 - **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better for performance.
@@ -51,50 +51,9 @@ Switch modes at runtime with `caster:SetMovementModeEnabled(enabled, mode)`.
 
 ---
 
-### 1.2 Parallel Mode (`FastCast.newParallel()`)
+### 1.2 Fire Methods
 
-Parallel Caster runs cast simulations on separate Actor VMs.
-
-```lua
-local caster = FastCast2.newParallel()
-caster:Init(
-    numWorkers,          -- number of worker VMs (must be at least 1)
-    movementMode,        -- "BulkMoveTo" or "Motor6D"
-    fastCastEventsModule -- optional ModuleScript
-)
-```
-> [!NOTE]
-> FastCastParallel does not use Caster.CanPierce
-> 
-> Only available on FastCastEventsModule for performance reasons
-
-#### 1.2.1 Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `numWorkers` | `number` | Number of worker VMs. Must be at least 1. |
-| `movementMode` | `"BulkMoveTo" | "Motor6D"` | Movement method |
-| `fastCastEventsModule` | `ModuleScript?` | Optional FastCastEvents module |
-
-#### 1.2.2 How It Works
-
-- Creates Actor-based worker VMs using VMsDispatcher
-- Each worker handles multiple casts in parallel via `ConnectParallel`
-- Fire requests are round-robined to workers for load balancing
-
-#### 1.2.3 Configuration Methods
-
-```lua
-caster:SetFastCastEventsModule(moduleScript)  -- Parallel only
-caster:SetMovementModeEnabled(enabled, mode)
-
-```
-
----
-
-### 1.3 Fire Methods
-
-All three casters share the same fire interface:
+The serial caster supports all three fire methods:
 
 ```lua
 caster:RaycastFire(origin, direction, velocity, BehaviorData?)
@@ -118,7 +77,7 @@ caster:SpherecastFire(Vector3.new(0, 5, 0), 3, Vector3.new(0, 0, -1), 500, behav
 
 ---
 
-### 1.4 Cast Manipulation (static methods on `FastCast`)
+### 1.3 Cast Manipulation (static methods on `FastCast`)
 
 ```lua
 -- Getters
@@ -140,8 +99,6 @@ FastCast:AddAccelerationCast(cast, acceleration) → ()
 FastCast:TerminateCast(cast) → ()
 ```
 
-In **parallel mode**, call `caster:SyncChangesToCast(cast)` after any Set/Add to push state to the worker VM.
-
 ```lua
 -- Example: modify a cast mid-flight
 local function onHit(cast, result, velocity, bullet)
@@ -149,19 +106,15 @@ local function onHit(cast, result, velocity, bullet)
 	FastCast.SetVelocityCast(cast, Vector3.new(0, 100, 0))
 	FastCast.SetPositionCast(cast, result.Position + Vector3.new(0, 2, 0))
 
-	-- In parallel mode, push changes to the worker VM
-	if caster.SyncChangesToCast then
-		caster:SyncChangesToCast(cast)
-	end
 end
 ```
 
 ---
 
-### 1.5 Lifecycle
+### 1.4 Lifecycle
 
 ```lua
-caster:Destroy()  -- Cleans up all resources, actors, caches
+caster:Destroy()  -- Cleans up the caster's simulation state and event signals
 ```
 
 ---
@@ -215,14 +168,6 @@ behavior.FastCastEventsConfig = {
     UseCastFire = true
 }
 
-behavior.FastCastEventsModuleConfig = {  -- Parallel only
-    UseLengthChanged = false,
-    UseHit = true,
-    UsePierced = true,
-    UseCastTerminating = true,
-    UseCanPierce = true,
-    UseCastFire = true
-}
 ```
 
 ---
@@ -257,8 +202,6 @@ cast.StateInfo.CancelHighResCast: boolean
 cast.StateInfo.VisualizeCasts: boolean
 cast.StateInfo.VisualizeCastSettings: VisualizeCastSettings
 cast.StateInfo.FastCastEventsConfig: FastCastEventsConfig
-cast.StateInfo.FastCastEventsModuleConfig: FastCastEventsModuleConfig  -- Parallel only
-
 cast.StateInfo.Trajectory = {
     StartTime: number,
     EndTime: number,            -- -1 if still active
@@ -281,39 +224,7 @@ cast.RayInfo.Radius: number      -- Spherecast only
 
 ---
 
-## 4. FastCastEventsModule
-
-Parallel-mode only. A `ModuleScript` that returns a `FastCastEvents` table for direct (non-BindableEvent) callbacks, providing better performance for high-frequency events like `LengthChanged`.
-
-```lua
--- In a ModuleScript (e.g., ReplicatedStorage.FastCastEventsModule)
-local module = {}
-
-module.Hit = function(cast, result, velocity, bullet)
-    print("Hit:", result.Instance)
-end
-
-module.CanPierce = function(cast, result, velocity, bullet)
-    return result.Instance:GetAttribute("CanPierce") == true
-end
-
-module.LengthChanged = function(cast, lastPoint, rayDir, displacement)
-    -- Called every frame - more efficient than BindableEvent routing
-end
-
-return module
-```
-
-Register it:
-```lua
-caster:SetFastCastEventsModule(pathToModule)
-```
-
-> **Note**: Not available in Serial mode, it use direct event callbacks instead.
-
----
-
-## 5. High-Fidelity Behavior
+## 4. High-Fidelity Behavior
 
 | Mode | Value | Description |
 |------|-------|-------------|

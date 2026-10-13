@@ -33,7 +33,7 @@ All pull requests will go through **code review** before merging.
 Examples:
 - `fix: prevent nil reference in cast cleanup`
 - `feat: add BulkMoveTo support for parts.`
-- `docs: improve usage example for parallel mode.`
+- `docs: improve serial usage example.`
 - `chore: update Luau types in Caster.`
 
 (It's recommended to follow this Instruction guideline, but you can make lazy commits if you want, because even the main developer still does that)

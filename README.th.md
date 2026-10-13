@@ -14,7 +14,7 @@
 
 การพัฒนาต่อแบบไม่เป็นทางการของ FastCast Roblox
 
-**เวอร์ชันที่ปรับปรุงจาก [FastCast](https://etithespir.it/FastCastAPIDocs/)** ที่รองรับ **Parallel scripting**, **extension เพิ่มเติม** และ **statically typed** <br /> ไลบรารีสำหรับทำ **projectile สมัยใหม่ที่ทรงพลัง**
+**เวอร์ชันต่อยอดจาก [FastCast](https://etithespir.it/FastCastAPIDocs/)** ที่เพิ่ม extension และ static typing โดยเน้นการจำลองแบบ Serial <br /> ไลบรารีสำหรับทำ **projectile สมัยใหม่ที่ทรงพลัง**
 
 </div>
 
@@ -34,13 +34,15 @@
 **FastCast2** เป็น **ไลบรารี projectile สำหรับ Roblox** ที่ออกแบบมาเพื่อจำลอง projectile ได้เป็น **หลักพัน** โดยไม่ต้องพึ่งการ replicate physics <br />
 เนื่องจาก FastCast ไม่ได้รับการดูแลอย่างต่อเนื่องจาก [EtiTheSpirit](https://github.com/EtiTheSpirit) แล้ว repo นี้จึงสานต่อโปรเจกต์นี้ด้วยการอัปเดตและปรับปรุงต่างๆ
 
+repo นี้มีระบบจำลองแบบ Serial ส่วนระบบ Parallel แยกไปอยู่ที่ [FastCast2Parallel](https://github.com/weenachuangkud/FastCast2Parallel)
+
 ---
 
 # ข้อดีของการใช้ FastCast2
 
 - ปรับแต่งได้หลากหลาย
 - ไลบรารี projectile ที่ยืดหยุ่น
-- รองรับ Parallel scripting
+- จำลอง projectile แบบ Serial บน main thread
 - ใช้งานง่าย ผสานเข้ากับโปรเจกต์ได้สะดวก
 - รองรับ Raycast, Blockcast และ Spherecast
 - รองรับ BulkMoveTo/Motor6D
@@ -167,108 +169,6 @@ FastCast2 ไม่มี ObjectCache ในตัวแล้ว คุณส�
 
 FastCast2 จะไม่ลบหรือคืน cosmetic bullet ให้อัตโนมัติเมื่อ cast จบ ทำให้คุณควบคุม lifecycle ของ projectile visual ได้เอง
 
-### โหมด Parallel
- (ประสิทธิภาพสูงด้วยหลาย VM)
-
-```lua
-local Caster = FastCast2.newParallel()
-Caster:Init(
-	4,                 -- numWorkers
-	workspace,         -- VM folder parent
-	"FastCastVMs",     -- VM folder name
-	workspace,         -- container parent
-	"VMContainer",     -- container name
-	"VM",              -- VM name
-	"BulkMoveTo",      -- movementMode
-	nil,               -- FastCastEventsModule (ไม่บังคับ)
-)
-
--- Events ทำงานเหมือนกับโหมด Serial
-Caster.Hit = function(cast, result, velocity, bullet)
-	print("Hit: " .. result.Instance.Name)
-end
-
---[[
-	-- ยกเว้น:
-	-- Caster.CanPierce
-	--> ต้องใช้ FastCastEventsModule แทน
-]]
-
--- การ Fire ก็ใช้แบบเดียวกับ Serial
-Caster:RaycastFire(origin, direction, SPEED, behavior)
-Caster:BlockcastFire(origin, Vector3.new(2, 4, 2), direction, SPEED, behavior)
-Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
-```
-
-<br />
-
-วิธีตั้งค่า [FastCastEventsModule](https://weenachuangkud.github.io/FastCast2/api/TypeDefinitions/#FastCastEventsModule)
-
-```lua
--- Services
-local Rep = game:GetService("ReplicatedStorage")
-
--- Modules
-
-local FastCast2 = Rep:WaitForChild("FastCast2")
-
--- Requires
-local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
-
--- Module
-
-local module: TypeDef.FastCastEvents = {}
-
-local debounce = false
-local debounce_time = 0.2
-
-module.LengthChanged = function(cast : TypeDef.ActiveCastData)
-	if not debounce then
-		debounce = true
-		print("OnLengthChanged Test")
-		task.delay(debounce_time, function()
-			debounce = false
-		end)
-	end
-end
-
-module.CastFire = function()
-	print("CastFire!")
-end
-
-module.CastTerminating = function()
-	print("CastTerminating!")
-end
-
-module.Hit = function()
-	print("Hit!")
-end
-
-module.CanPierce = function(cast : TypeDef.ActiveCastData, resultOfCast : RaycastResult, segmentVelocity, CosmeticBulletObject)
-	local CanPierce = false
-	if resultOfCast.Instance:GetAttribute("CanPierce") == true then
-		CanPierce = true
-	end
-	print(CanPierce)
-	return CanPierce
-end
-
-module.Pierced = function()
-	print("Pierced!")
-end
-
-
-return module
-```
-
-ลงทะเบียนใช้งานกับ parallel caster ของคุณหลังจาก `Init`:
-
-```lua
-Caster:SetFastCastEventsModule(pathTo.FastCastEventsModule)
-```
-
-> **หมายเหตุ**: `SetFastCastEventsModule` ใช้ได้เฉพาะกับ parallel caster เท่านั้น ส่วนโหมด serial ให้ตั้งค่า event handler ได้โดยตรง (เช่น `Caster.Hit = function(...)`)
-
 ### โหมดการเคลื่อนที่แบบ Motor6D
 
 โหมด Motor6D ใช้ `Motor6D.Transform` เพื่อประสิทธิภาพที่ดีกว่าแทนการใช้ `BulkMoveTo`:
@@ -322,7 +222,6 @@ FastCast2:AddAccelerationCast(cast, Vector3.new(0, -50, 0))
 FastCast2:TerminateCast(cast)
 ```
 
-> **เคล็ดลับ**: ในโหมด parallel ให้เรียก `Caster:SyncChangesToCast(cast)` หลังจากแก้ไขค่า เพื่อส่งการเปลี่ยนแปลงเข้าไปยัง worker VM
 
 ### -> เริ่มต้นใช้งานได้ที่ [เอกสาร FastCast2](https://weenachuangkud.github.io/FastCast2/docs/api-reference)
 
