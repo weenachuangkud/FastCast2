@@ -6,6 +6,7 @@
 
 # Rojo stuff
 sourcemap.json
+aftman.toml
 
 # Roblox Studio lock files
 /*.rbxlx.lock
