@@ -330,7 +330,6 @@ local function ModifyTransformation(
 	trajectory.Acceleration = acceleration or trajectory.Acceleration
 	trajectory.StartTime = cast.StateInfo.TotalRuntime
 	cast.StateInfo.CancelHighResCast = true
-	SerialSimulation.CancelHighResCast(cast.ID)
 end
 
 local function deepCopyTable(tbl: {any}): {any}
