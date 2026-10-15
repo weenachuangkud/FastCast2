@@ -224,6 +224,7 @@ end
 ]=]
 
 local FastCast = {}
+local NextCasterId = 0
 FastCast.HighFidelityBehavior = {
 	Default = 1,
 	Automatic = 2,
@@ -347,6 +348,9 @@ function FastCastSerial:Init(
 		return
 	end
 
+	NextCasterId += 1
+	self.CasterId = NextCasterId
+
 	local data = {
 		movementMode = movementMode or "BulkMoveTo"
 	}
@@ -360,7 +364,7 @@ function FastCastSerial:Init(
 		CastTerminating = self.CastTerminating
 	}
 
-	BaseCastSerial.Init(events, data)
+	BaseCastSerial.Init(self.CasterId, events, data)
 	self.BaseCast = BaseCastSerial
 
 	self.MovementMode = movementMode or "BulkMoveTo"
@@ -454,6 +458,7 @@ function FastCastSerial:Destroy()
 	end
 
 	BaseCastSerial.Destroy(self)
+	self.CasterId = nil
 	DestroyCasterSignals(self)
 	setmetatable(self, nil)
 
