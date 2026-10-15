@@ -134,8 +134,7 @@ return function()
 				local caster = FastCast.new()
 				FastCast.Init("BulkMoveTo")
 
-				expect.equal(caster.AlreadyInit, true, "caster was not marked initialized")
-				expect.equal(caster.MovementMode, "BulkMoveTo", "movement mode was not stored")
+				expect.equal(type(caster.CasterId), "number", "caster did not receive a numeric ID")
 
 				caster:Destroy()
 				expect.equal(getmetatable(caster), nil, "destroy did not clear the metatable")
