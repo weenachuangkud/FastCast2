@@ -362,6 +362,13 @@ end
 	@param movementMode: "BulkMoveTo" | "Motor6D"? -- Projectile movement method. Defaults to "BulkMoveTo".
 ]=]
 function FastCast.Init(movementMode: "BulkMoveTo" | "Motor6D"?)
+	if RuntimeInitialized then
+		if movementMode then
+			BaseCastSerial.SetMovementModeEnabled(true, movementMode)
+		end
+		return
+	end
+
 	BaseCastSerial.Init(movementMode)
 	RuntimeInitialized = true
 end
