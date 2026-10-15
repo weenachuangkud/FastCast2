@@ -127,7 +127,7 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
  
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo") -- movementMode
+FastCast.Init("BulkMoveTo") -- movementMode
  
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
@@ -174,7 +174,7 @@ Motor6D mode uses `Motor6D.Transform` for more performance instead of `BulkMoveT
 
 ```lua
 local Caster = FastCast2.new()
-Caster:Init("Motor6D") -- movementMode = "Motor6D"
+FastCast.Init("Motor6D") -- movementMode = "Motor6D"
 ```
 
 All active casts automatically get a Motor6D connection on registration and disconnection on cleanup.
