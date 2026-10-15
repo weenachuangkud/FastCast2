@@ -128,7 +128,7 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
 
 -- Serial Caster (รันบน main thread ใช้งานง่ายกว่า)
 local Caster = FastCast2.new()
-Caster:Init("BulkMoveTo") -- movementMode
+FastCast.Init("BulkMoveTo") -- movementMode
 
 -- Events (ตั้งค่าได้ก่อน Init)
 Caster.Hit = function(cast, result, velocity, bullet)
@@ -175,7 +175,7 @@ FastCast2 จะไม่ลบหรือคืน cosmetic bullet ให้�
 
 ```lua
 local Caster = FastCast2.new()
-Caster:Init("Motor6D") -- movementMode = "Motor6D"
+FastCast.Init("Motor6D") -- movementMode = "Motor6D"
 ```
 
 ทุก cast ที่ active จะได้รับการเชื่อมต่อ Motor6D โดยอัตโนมัติเมื่อลงทะเบียน และตัดการเชื่อมต่อเมื่อ cleanup
