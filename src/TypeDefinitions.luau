@@ -141,7 +141,7 @@ export type VisualizeCastSettings = {
 }
 
 --[=[
-	@type CasterSerial { WorldRoot: WorldRoot, LengthChanged: Signal.Signal<OnLengthChangedFunction>, Hit: Signal.Signal<OnHitFunction>, CanPierce: CanPierceFunction?, Pierced: Signal.Signal<OnPiercedFunction>, CastTerminating: Signal.Signal<OnCastTerminatingFunction>, CastFire: Signal.Signal<OnCastFireFunction>, AlreadyInit: boolean?, MovementMode: "BulkMoveTo" | "Motor6D"?, Init: (self: CasterSerial, movementMode: "BulkMoveTo" | "Motor6D"?) -> (), RaycastFire: (self: CasterSerial, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), BlockcastFire: (self: CasterSerial, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), SpherecastFire: (self: CasterSerial, Origin: Vector3, Radius: number, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), SetMovementModeEnabled: (self: CasterSerial, enabled: boolean, mode: "BulkMoveTo" | "Motor6D") -> (), Destroy: (self: CasterSerial) -> () }
+	@type CasterSerial { WorldRoot: WorldRoot, LengthChanged: Signal.Signal<OnLengthChangedFunction>, Hit: Signal.Signal<OnHitFunction>, CanPierce: CanPierceFunction?, Pierced: Signal.Signal<OnPiercedFunction>, CastTerminating: Signal.Signal<OnCastTerminatingFunction>, CastFire: Signal.Signal<OnCastFireFunction>, MovementMode: "BulkMoveTo" | "Motor6D"?, RaycastFire: (self: CasterSerial, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), BlockcastFire: (self: CasterSerial, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), SpherecastFire: (self: CasterSerial, Origin: Vector3, Radius: number, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), SetMovementModeEnabled: (self: CasterSerial, enabled: boolean, mode: "BulkMoveTo" | "Motor6D") -> (), Destroy: (self: CasterSerial) -> () }
 	@within TypeDefinitions
 
 	Represents the serial caster exposed by FastCast.new().
@@ -155,13 +155,7 @@ export type CasterSerial = {
 	CastTerminating: Signal.Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction,
 	CastFire: Signal.Signal<OnCastFireFunction> | OnCastFireFunction,
 
-	AlreadyInit: boolean?,
 	MovementMode: ("BulkMoveTo" | "Motor6D")?,
-
-	Init: (
-		self: CasterSerial,
-		movementMode: ("BulkMoveTo" | "Motor6D")?
-	) -> (),
 
 	RaycastFire: (
 		self: CasterSerial,
