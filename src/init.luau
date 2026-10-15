@@ -630,7 +630,7 @@ function FastCast:TerminateCast(cast: any)
 	cast._TerminationQueued = true
 
 	-- QueueTerminate ignores casts that are already terminating.
-	SerialSimulation.QueueTerminate(cast.ID)
+	SerialSimulation.QueueTerminate(cast.ID, "CastTerminating")
 end
 
 -- Constructors
