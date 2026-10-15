@@ -82,6 +82,8 @@ function BaseCast.Blockcast(
 		Size = Size
 	} :: any)
 
+	cast._Caster = caster
+	cast._FastCastEvents = caster._events
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
 	FireCastFire(cast, Origin, Direction, Velocity, Behavior)
@@ -101,6 +103,8 @@ function BaseCast.Spherecast(
 		Radius = Radius
 	} :: any)
 
+	cast._Caster = caster
+	cast._FastCastEvents = caster._events
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
 	FireCastFire(cast, Origin, Direction, Velocity, Behavior)
