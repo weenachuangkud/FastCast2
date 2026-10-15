@@ -156,7 +156,7 @@ end
 
 local function createCaster()
 	local caster = FastCast.new()
-	caster:Init(Config.MovementMode)
+	FastCast.Init(Config.MovementMode)
 	caster.CastFire = onCastFire
 	return caster
 end
