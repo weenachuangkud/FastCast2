@@ -22,26 +22,26 @@ local Initialized = false
 local Motor6DCacheInstance = nil
 local CurrentMovementMode = "BulkMoveTo"
 
-function BaseCast.Init(events: any, Data: any)
-	if Initialized then
-		return
+function BaseCast.Init(casterId: number, events: any, Data: any)
+	if not Initialized then
+		Data = Data or {}
+		CurrentMovementMode = Data.movementMode or "BulkMoveTo"
+
+		if CurrentMovementMode == "Motor6D" then
+			Motor6DCacheInstance = Motor6DCache.new()
+		end
+
+		SerialSimulation.Init(BaseCast, Actives)
+		SerialSimulation.SetMovementModeEnabled(true, CurrentMovementMode)
+		SerialSimulation.Start()
+		Initialized = true
 	end
 
-	Data = Data or {}
-	CurrentMovementMode = Data.movementMode or "BulkMoveTo"
-
-	if CurrentMovementMode == "Motor6D" then
-		Motor6DCacheInstance = Motor6DCache.new()
-	end
-
-	SerialSimulation.Init(BaseCast, Actives, events)
-	SerialSimulation.SetMovementModeEnabled(true, CurrentMovementMode)
-	SerialSimulation.Start()
-	Initialized = true
+	SerialSimulation.RegisterCaster(casterId, events)
 end
 
-local function FireCastFire(cast, origin, direction, velocity, behavior)
-	local events = cast._FastCastEvents
+local function FireCastFire(caster: any, cast, origin, direction, velocity, behavior)
+	local events = caster._events
 	local CastFireEvent = events and events.CastFire
 
 	if behavior.FastCastEventsConfig.UseCastFire and CastFireEvent then
@@ -61,11 +61,10 @@ function BaseCast.Raycast(
 		CastType = EnumCastTypes.Raycast
 	} :: any)
 
-	cast._Caster = caster
-	cast._FastCastEvents = caster._events
+	cast.CasterId = caster.CasterId
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
-	FireCastFire(cast, Origin, Direction, Velocity, Behavior)
+	FireCastFire(caster, cast, Origin, Direction, Velocity, Behavior)
 end
 
 function BaseCast.Blockcast(
@@ -82,11 +81,10 @@ function BaseCast.Blockcast(
 		Size = Size
 	} :: any)
 
-	cast._Caster = caster
-	cast._FastCastEvents = caster._events
+	cast.CasterId = caster.CasterId
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
-	FireCastFire(cast, Origin, Direction, Velocity, Behavior)
+	FireCastFire(caster, cast, Origin, Direction, Velocity, Behavior)
 end
 
 function BaseCast.Spherecast(
@@ -103,11 +101,10 @@ function BaseCast.Spherecast(
 		Radius = Radius
 	} :: any)
 
-	cast._Caster = caster
-	cast._FastCastEvents = caster._events
+	cast.CasterId = caster.CasterId
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
-	FireCastFire(cast, Origin, Direction, Velocity, Behavior)
+	FireCastFire(caster, cast, Origin, Direction, Velocity, Behavior)
 end
 
 function BaseCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
@@ -128,9 +125,10 @@ function BaseCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | 
 end
 
 function BaseCast.Destroy(caster: any)
+	local casterId = caster.CasterId
 	local castIDs = {}
 	for castID, cast in Actives do
-		if cast._Caster == caster then
+		if cast.CasterId == casterId then
 			table.insert(castIDs, castID)
 		end
 	end
@@ -138,6 +136,8 @@ function BaseCast.Destroy(caster: any)
 	for _, castID in castIDs do
 		BaseCast._TerminateCast(castID)
 	end
+
+	SerialSimulation.UnregisterCaster(casterId)
 end
 
 function BaseCast._TerminateCast(castID: number)
