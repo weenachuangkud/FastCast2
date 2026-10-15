@@ -225,6 +225,7 @@ end
 
 local FastCast = {}
 local NextCasterId = 0
+local RuntimeInitialized = false
 FastCast.HighFidelityBehavior = {
 	Default = 1,
 	Automatic = 2,
@@ -334,41 +335,15 @@ end
 
 
 --[=[
-	Initialize the Serial Caster.
+	Initialize the shared serial simulation runtime.
 	@method Init
-	@within FastCastSerial
+	@within FastCast
 
-	@param movementMode: "BulkMoveTo" | "Motor6D" -- Whether to use BulkMoveTo or Motor6D Transform for projectile movement.
+	@param movementMode: "BulkMoveTo" | "Motor6D"? -- Projectile movement method. Defaults to "BulkMoveTo".
 ]=]
-function FastCastSerial:Init(
-	movementMode: "BulkMoveTo" | "Motor6D"
-)
-	if self.BaseCast then
-		warn("Serial Caster already initialized")
-		return
-	end
-
-	NextCasterId += 1
-	self.CasterId = NextCasterId
-
-	local data = {
-		movementMode = movementMode or "BulkMoveTo"
-	}
-
-	local events: TypeDef.FastCastSignalEvents = {
-		CastFire = self.CastFire,
-		Pierced = self.Pierced,
-		Hit = self.Hit,
-		LengthChanged = self.LengthChanged,
-		CanPierce = self.CanPierce,
-		CastTerminating = self.CastTerminating
-	}
-
-	BaseCastSerial.Init(self.CasterId, events, data)
-	self.BaseCast = BaseCastSerial
-
-	self.MovementMode = movementMode or "BulkMoveTo"
-	self.AlreadyInit = true
+function FastCast.Init(movementMode: "BulkMoveTo" | "Motor6D"?)
+	BaseCastSerial.Init(movementMode)
+	RuntimeInitialized = true
 end
 
 --[=[
@@ -381,8 +356,11 @@ function FastCastSerial:RaycastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior
 )
-	if not self.AlreadyInit then
-		error("Please Init caster first")
+	if not RuntimeInitialized then
+		error("Please call FastCast.Init() before firing casts")
+	end
+	if not self.CasterId then
+		error("This caster has been destroyed")
 	end
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
@@ -402,8 +380,11 @@ function FastCastSerial:BlockcastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior
 )
-	if not self.AlreadyInit then
-		error("Please Init caster first")
+	if not RuntimeInitialized then
+		error("Please call FastCast.Init() before firing casts")
+	end
+	if not self.CasterId then
+		error("This caster has been destroyed")
 	end
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
@@ -423,8 +404,11 @@ function FastCastSerial:SpherecastFire(
 	velocity: Vector3 | number,
 	BehaviorData: TypeDef.FastCastBehavior
 )
-	if not self.AlreadyInit then
-		error("Please Init caster first")
+	if not RuntimeInitialized then
+		error("Please call FastCast.Init() before firing casts")
+	end
+	if not self.CasterId then
+		error("This caster has been destroyed")
 	end
 	if BehaviorData == nil then
 		BehaviorData = FastCast.newBehavior()
@@ -442,7 +426,7 @@ end
 	Sets movement mode for the Serial Caster.
 ]]
 function FastCastSerial:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
-	if not self.BaseCast then return end
+	if not RuntimeInitialized then return end
 
 	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
 	self.MovementMode = mode
@@ -635,10 +619,24 @@ end
 	@return Caster
 ]=]
 function FastCast.new()
+	NextCasterId += 1
+
+	local events = NewCasterSignals()
 	local fs = {
-		_events = NewCasterSignals(),
+		CasterId = NextCasterId,
+		_events = events,
 		WorldRoot = workspace,
 	}
+
+	BaseCastSerial.RegisterCaster(fs.CasterId, {
+		CastFire = events.CastFire,
+		Pierced = events.Pierced,
+		Hit = events.Hit,
+		LengthChanged = events.LengthChanged,
+		CanPierce = nil,
+		CastTerminating = events.CastTerminating,
+	})
+
 	setmetatable(fs, FastCastSerial)
 	return fs
 end
