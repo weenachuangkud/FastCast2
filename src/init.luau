@@ -384,7 +384,7 @@ function FastCastSerial:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BaseCastSerial.Raycast(origin, direction, velocity, BehaviorData)
+	BaseCastSerial.Raycast(self, origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -405,7 +405,7 @@ function FastCastSerial:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BaseCastSerial.Blockcast(origin, Size, direction, velocity, BehaviorData)
+	BaseCastSerial.Blockcast(self, origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -426,7 +426,7 @@ function FastCastSerial:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BaseCastSerial.Spherecast(origin, Radius, direction, velocity, BehaviorData)
+	BaseCastSerial.Spherecast(self, origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[[
@@ -453,7 +453,7 @@ function FastCastSerial:Destroy()
 		return
 	end
 
-	BaseCastSerial.Destroy()
+	BaseCastSerial.Destroy(self)
 	DestroyCasterSignals(self)
 	setmetatable(self, nil)
 
