@@ -8,7 +8,7 @@ Serial Caster runs all cast simulations on the main thread. Simpler.
 
 ```lua
 local caster = FastCast2.new()
-caster:Init(movementMode)
+FastCast.Init(movementMode)
 ```
 
 #### 1.1.1 Events
