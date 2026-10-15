@@ -88,7 +88,7 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 			caster.CastTerminating = function()
 				terminated = true
 			end
-			caster:Init("BulkMoveTo")
+			FastCast.Init("BulkMoveTo")
 
 			fire(caster, castType, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
@@ -132,7 +132,7 @@ return function()
 		Framework.describe("FastCastSerial", function(test)
 			test("initializes and destroys", function(expect)
 				local caster = FastCast.new()
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				expect.equal(caster.AlreadyInit, true, "caster was not marked initialized")
 				expect.equal(caster.MovementMode, "BulkMoveTo", "movement mode was not stored")
@@ -151,7 +151,7 @@ return function()
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 60, behavior)
 
@@ -173,7 +173,7 @@ return function()
 				local behavior = makeBehavior(container)
 
 				local caster = FastCast.new()
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				local hitInstance = nil
 				caster.Hit = function(_, result)
@@ -214,7 +214,7 @@ return function()
 						secondCount += 1
 					end
 				end)
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				-- A disconnected listener must not receive the event.
 				firstConnection:Disconnect()
@@ -254,7 +254,7 @@ return function()
 				caster.CastTerminating = function()
 					terminated = true
 				end
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
@@ -281,7 +281,7 @@ return function()
 				caster.LengthChanged = function()
 					lengthChanges += 1
 				end
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 				Framework.waitFor(function()
@@ -296,7 +296,7 @@ return function()
 
 			test("movement mode can be switched", function(expect)
 				local caster = FastCast.new()
-				caster:Init("Motor6D")
+				FastCast.Init("Motor6D")
 				expect.equal(caster.MovementMode, "Motor6D", "initial movement mode was not applied")
 
 				caster:SetMovementModeEnabled(true, "BulkMoveTo")
@@ -315,7 +315,7 @@ return function()
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 1, 0), 60, behavior)
 				expect.truthy(firedCast, "CastFire did not run")
@@ -357,7 +357,7 @@ return function()
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 				end
-				caster:Init("BulkMoveTo")
+				FastCast.Init("BulkMoveTo")
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
