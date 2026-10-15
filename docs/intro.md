@@ -132,6 +132,8 @@ FastCast.Init("BulkMoveTo") -- movementMode
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit: " .. result.Instance.Name)
+    local obj = cast.RayInfo.CosmeticBulletObject
+    if obj then obj:Destroy() end
 end
  
 -- Fire
