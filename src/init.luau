@@ -330,6 +330,7 @@ local function ModifyTransformation(
 	trajectory.Acceleration = acceleration or trajectory.Acceleration
 	trajectory.StartTime = cast.StateInfo.TotalRuntime
 	cast.StateInfo.CancelHighResCast = true
+	SerialSimulation.CancelHighResCast(cast.ID)
 end
 
 local function deepCopyTable(tbl: {any}): {any}
@@ -628,10 +629,8 @@ function FastCast:TerminateCast(cast: any)
 	cast._Destroying = true
 	cast._TerminationQueued = true
 
-	SerialSimulation.QueueEvent(
-		cast.ID,
-		"CastTerminating"
-	)
+	-- QueueTerminate ignores casts that are already terminating.
+	SerialSimulation.QueueTerminate(cast.ID)
 end
 
 -- Constructors
