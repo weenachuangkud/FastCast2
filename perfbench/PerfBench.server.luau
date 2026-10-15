@@ -78,7 +78,7 @@ local function runCase(projectileCount: number, instanced: boolean, movement: bo
 	behavior.CosmeticBulletContainer = if instanced then cosmeticContainer else nil
 
 	local caster = FastCast.new()
-	caster:Init("BulkMoveTo")
+	FastCast.Init("BulkMoveTo")
 
 	caster:SetMovementModeEnabled(movement, "BulkMoveTo")
 
