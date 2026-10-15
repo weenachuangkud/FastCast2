@@ -145,6 +145,24 @@ local function DestroyCasterSignals(self)
 	rawset(self, "CanPierce", nil)
 end
 
+local function RegisterCasterEvents(self)
+	local casterId = rawget(self, "CasterId")
+	local events = rawget(self, "_events")
+
+	if not casterId or not events then
+		return
+	end
+
+	BaseCastSerial.RegisterCaster(casterId, {
+		CastFire = events.CastFire,
+		Pierced = events.Pierced,
+		Hit = events.Hit,
+		LengthChanged = events.LengthChanged,
+		CanPierce = rawget(self, "CanPierce"),
+		CastTerminating = events.CastTerminating,
+	})
+end
+
 local function IndexCaster(self, key)
 	local events = rawget(self, "_events")
 	if events then
@@ -201,12 +219,14 @@ local function NewIndexCaster(self, key, value)
 		else
 			warn("[FastCast2] Cannot set event '" .. tostring(key) .. "', expected a function or Signal")
 		end
+		RegisterCasterEvents(self)
 		return
 	end
 
 	if QUERY_EVENTS[key] then
 		if value == nil or type(value) == "function" then
 			rawset(self, key, value)
+			RegisterCasterEvents(self)
 		else
 			warn("[FastCast2] Cannot set CanPierce, expected a function")
 		end
@@ -628,16 +648,8 @@ function FastCast.new()
 		WorldRoot = workspace,
 	}
 
-	BaseCastSerial.RegisterCaster(fs.CasterId, {
-		CastFire = events.CastFire,
-		Pierced = events.Pierced,
-		Hit = events.Hit,
-		LengthChanged = events.LengthChanged,
-		CanPierce = nil,
-		CastTerminating = events.CastTerminating,
-	})
-
 	setmetatable(fs, FastCastSerial)
+	RegisterCasterEvents(fs)
 	return fs
 end
 
