@@ -96,6 +96,7 @@ local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
 
 local casts_FastCastEventsConfig =
 	{} :: { [number]: TypeDef.FastCastEventsConfig }
+local casts_Events = {} :: { [number]: any }
 
 local casts_VisualizeCasts = {} :: { [number]: boolean }
 local casts_VisualizeCastSettings =
@@ -573,7 +574,7 @@ local function FireQueuedEvents()
 
 		if eventType == EVT_LENGTH_CHANGED then
 			if eventConfig.UseLengthChanged then
-				local lengthChanged = FastCastEvents.LengthChanged
+				local lengthChanged = casts_Events[castID] and casts_Events[castID].LengthChanged
 				if lengthChanged then
 					lengthChanged:Fire(
 						cast,
@@ -588,7 +589,7 @@ local function FireQueuedEvents()
 
 		elseif eventType == EVT_HIT then
 			if eventConfig.UseHit then
-				local Hit = FastCastEvents.Hit
+				local Hit = casts_Events[castID] and casts_Events[castID].Hit
 				if Hit then
 					Hit:Fire(
 						cast,
@@ -601,7 +602,7 @@ local function FireQueuedEvents()
 
 		elseif eventType == EVT_PIERCED then
 			if eventConfig.UsePierced then
-				local Pierced = FastCastEvents.Pierced
+				local Pierced = casts_Events[castID] and casts_Events[castID].Pierced
 				if Pierced then
 					Pierced:Fire(
 						cast,
@@ -617,7 +618,7 @@ local function FireQueuedEvents()
 				cast._Destroying = true
 				cast._TerminationQueued = false
 
-				local castTerminating = FastCastEvents.CastTerminating
+				local castTerminating = casts_Events[castID] and casts_Events[castID].CastTerminating
 				if eventConfig.UseCastTerminating and castTerminating then
 					castTerminating:Fire(cast)
 				end
@@ -1005,7 +1006,7 @@ local function SimulateCast(
 		unitDirection
 	)
 
-	if casts_WantLengthChanged[id] and FastCastEvents.LengthChanged then
+	if casts_WantLengthChanged[id] and casts_Events[id] and casts_Events[id].LengthChanged then
 		QueueEvent(
 			id,
 			EVT_LENGTH_CHANGED,
@@ -1050,8 +1051,9 @@ local function SimulateCast(
 		return
 	end
 
-	local canPiercefn = FastCastEvents.CanPierce
-	local castTerminatingfn = FastCastEvents.CastTerminating
+	local castEvents = casts_Events[id]
+	local canPiercefn = castEvents and castEvents.CanPierce
+	local castTerminatingfn = castEvents and castEvents.CastTerminating
 
 	-- ------------------------------------------------------------------------
 	-- Pierce.
@@ -1284,6 +1286,7 @@ function SerialSimulation_Register(cast: any)
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
 
 	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
+	casts_Events[id] = cast._FastCastEvents
 
 	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts
 
@@ -1357,6 +1360,7 @@ function SerialSimulation_Unregister(castID: number)
 	casts_Trajectory[castID] = nil
 
 	casts_FastCastEventsConfig[castID] = nil
+	casts_Events[castID] = nil
 
 	casts_WantLengthChanged[castID] = nil
 	if casts_HasCosmetic[castID] then
@@ -1513,7 +1517,7 @@ local SerialSimulation = {}
 
 SerialSimulation.Connection = nil :: RBXScriptConnection?
 
-function SerialSimulation.Init(baseCastRef: any, Actives: any, events: TypeDef.FastCastSignalEvents)
+function SerialSimulation.Init(baseCastRef: any, Actives: any, events: TypeDef.FastCastSignalEvents?)
 	if ActivesRef ~= nil then
 		warn(
 			"[FastCast2] SerialSimulation already initialized. Skipping."
@@ -1525,7 +1529,7 @@ function SerialSimulation.Init(baseCastRef: any, Actives: any, events: TypeDef.F
 	BaseCastRef = baseCastRef
 	ActivesRef = Actives
 
-	FastCastEvents = events
+	FastCastEvents = events or {}
 end
 
 function SerialSimulation.Register(cast: any)
@@ -1572,7 +1576,6 @@ function SerialSimulation.Stop()
 		SerialSimulation.Connection:Disconnect()
 		SerialSimulation.Connection = nil
 	end
-	ActivesRef = nil
 end
 
 function SerialSimulation.GetEvent(name: string): any
