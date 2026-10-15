@@ -22,21 +22,25 @@ local Initialized = false
 local Motor6DCacheInstance = nil
 local CurrentMovementMode = "BulkMoveTo"
 
-function BaseCast.Init(casterId: number, events: any, Data: any)
-	if not Initialized then
-		Data = Data or {}
-		CurrentMovementMode = Data.movementMode or "BulkMoveTo"
-
-		if CurrentMovementMode == "Motor6D" then
-			Motor6DCacheInstance = Motor6DCache.new()
-		end
-
-		SerialSimulation.Init(BaseCast, Actives)
-		SerialSimulation.SetMovementModeEnabled(true, CurrentMovementMode)
-		SerialSimulation.Start()
-		Initialized = true
+function BaseCast.Init(movementMode: "BulkMoveTo" | "Motor6D"?)
+	if Initialized then
+		warn("[FastCast2] FastCast.Init() has already been called. Skipping.")
+		return
 	end
 
+	CurrentMovementMode = movementMode or "BulkMoveTo"
+
+	if CurrentMovementMode == "Motor6D" then
+		Motor6DCacheInstance = Motor6DCache.new()
+	end
+
+	SerialSimulation.Init(BaseCast, Actives)
+	SerialSimulation.SetMovementModeEnabled(true, CurrentMovementMode)
+	SerialSimulation.Start()
+	Initialized = true
+end
+
+function BaseCast.RegisterCaster(casterId: number, events: any)
 	SerialSimulation.RegisterCaster(casterId, events)
 end
 
