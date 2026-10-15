@@ -14,7 +14,7 @@
 
 Unofficial continuation of FastCast for Roblox
 
-**An improved, statically typed continuation of [FastCast](https://etithespir.it/FastCastAPIDocs/)** with more extensions, focused on serial simulation. <br /> **A powerful modern projectile** library
+**A Community-Maintained Continuation of FastCast [FastCast](https://etithespir.it/FastCastAPIDocs/)**
 
 </div>
 
