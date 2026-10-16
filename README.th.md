@@ -247,6 +247,3 @@ FastCast2:TerminateCast(cast)
 
 ### ขอบคุณเป็นพิเศษแก่ผู้คนต่อไปนี้จาก [The Revolutionary Computer Union](https://www.roblox.com/communities/336090209/TRCU-The-Revolutionary-Computer-Union#!/about):
 - [@nerd0ne](https://github.com/nerd0ne) — ที่ชี้ให้เห็นปัญหา Wally setup
-
-# Dependency
-- [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)(https://github.com/weenachuangkud/VMsDispatcher)
