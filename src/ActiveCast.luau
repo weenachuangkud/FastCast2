@@ -51,6 +51,7 @@ function ActiveCast.createCastData(
 		StateInfo = {
 			IsPaused = false,
 			TotalRuntime = 0,
+			MaxLifetime = behavior.MaxLifetime,
 			DistanceCovered = 0,
 			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,
 			HighFidelityBehavior = behavior.HighFidelityBehavior,
