@@ -22,8 +22,9 @@ available.
 1. Initialization
 2. Basic raycast/blockcast/spherecast firing
 3. All [events](https://weenachuangkud.github.io/FastCast2/docs/api-reference/#112-events) should be able to works
-4. MovementMode
-5. Cast Manipulation
+4. OnStep fires before movement when UseOnStep is enabled and can change the trajectory
+5. MovementMode
+6. Cast Manipulation
 ### FastCastBehavior
 - https://weenachuangkud.github.io/FastCast2/docs/api-reference/#2-fastcastbehavior
 ### ActiveCastData
