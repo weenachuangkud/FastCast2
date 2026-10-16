@@ -98,8 +98,7 @@ local CastBehavior = FastCast.newBehavior()
 CastBehavior.MaxDistance = 1e9
 CastBehavior.RaycastParams = CastParams
 
-CastBehavior.HighFidelityBehavior =
-	FastCastEnums.HighFidelityBehavior.Default
+CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 
 CastBehavior.HighFidelitySegmentSize = 1
 CastBehavior.Acceleration = Vector3.zero
@@ -116,7 +115,6 @@ CastBehavior.VisualizeCasts = Config.VisualizeCasts
 
 local Caster
 local ActiveCasts = {}
-local ActiveCastIndices = {}
 
 local IsBenchmarking = false
 
@@ -156,29 +154,20 @@ end
 --// Cast Tracking
 
 local function onCastFire(cast)
-	local index = #ActiveCasts + 1
-	ActiveCasts[index] = cast
-	ActiveCastIndices[cast] = index
+	ActiveCasts[#ActiveCasts + 1] = cast
 end
 
 local function onCastTerminating(cast)
 	local cosmetic = cast.RayInfo.CosmeticBulletObject
+
 	if cosmetic and cosmetic.Parent then
 		cosmetic:Destroy()
 	end
 
-	local index = ActiveCastIndices[cast]
+	local index = table.find(ActiveCasts, cast)
+
 	if index then
-		local lastIndex = #ActiveCasts
-		local lastCast = ActiveCasts[lastIndex]
-
-		ActiveCasts[index] = lastCast
-		ActiveCasts[lastIndex] = nil
-		ActiveCastIndices[cast] = nil
-
-		if lastCast and lastCast ~= cast then
-			ActiveCastIndices[lastCast] = index
-		end
+		table.remove(ActiveCasts, index)
 	end
 end
 
