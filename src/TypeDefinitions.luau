@@ -168,7 +168,7 @@ export type CasterSerial = {
 		Direction: Vector3,
 		Velocity: Vector3 | number,
 		Behavior: FastCastBehavior?
-	) -> (),
+	) -> ActiveCastData,
 
 	BlockcastFire: (
 		self: CasterSerial,
@@ -177,7 +177,7 @@ export type CasterSerial = {
 		Direction: Vector3,
 		Velocity: Vector3 | number,
 		Behavior: FastCastBehavior?
-	) -> (),
+	) -> ActiveBlockcastData,
 
 	SpherecastFire: (
 		self: CasterSerial,
@@ -186,7 +186,7 @@ export type CasterSerial = {
 		Direction: Vector3,
 		Velocity: Vector3 | number,
 		Behavior: FastCastBehavior?
-	) -> (),
+	) -> ActiveSpherecastData,
 
 	SetMovementModeEnabled: (
 		self: CasterSerial,
