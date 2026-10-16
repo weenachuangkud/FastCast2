@@ -286,6 +286,3 @@ More broadly, this community feedback has played a significant role in FastCast2
 
 - [nerd0ne](https://github.com/nerd0ne) — Pointing out a broken Wally setup
 - [90gq31](https://computerunion.miraheze.org/90gq31) — Giving me the opportunity to be part of the community
-
-# Dependency
-- [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)
