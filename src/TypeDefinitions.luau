@@ -214,7 +214,7 @@ export type FastCastEventsConfig = {
 }
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",		VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	MaxLifetime: number?,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",		VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -222,6 +222,7 @@ export type FastCastEventsConfig = {
 export type FastCastBehavior = {
 	RaycastParams: RaycastParams?,
 	MaxDistance: number,
+	MaxLifetime: number?,
 	Acceleration: Vector3,
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
@@ -263,6 +264,7 @@ export type CastStateInfo = {
 	HighFidelitySegmentSize: number,
 	IsPaused: boolean,
 	TotalRuntime: number,
+	MaxLifetime: number?,
 	DistanceCovered: number,
 	IsActivelySimulatingPierce: boolean,
 	IsActivelyResimulating: boolean,

@@ -230,6 +230,21 @@ end
 `OnStep` runs once per active cast per simulation update. Use it for homing, steering, or other custom trajectory logic. It is opt-in to avoid callback overhead for casts that do not need it. `LengthChanged` remains a movement notification intended for cosmetic updates and trails.
 
 
+
+### Cast lifetime
+
+Set `MaxLifetime` to automatically terminate a cast after a maximum amount of simulation time. It is optional; `nil` means the cast has no lifetime limit. A value of `0` terminates the cast at the first simulation update, after the normal cast-fire event.
+
+```lua
+local behavior = FastCast.newBehavior()
+behavior.MaxLifetime = 5 -- seconds of simulation time
+
+local cast = caster:RaycastFire(origin, direction, velocity, behavior)
+```
+
+Lifetime advances only while the cast is simulating, so it pauses with `PauseCast` and continues after `ResumeCast`. Expiration is checked at the simulation update boundary before `OnStep` and movement, including for High Fidelity casts. The normal termination event and cleanup path is used.
+
+
 ### Pause and resume casts
 
 Pause an active cast without changing its current position, velocity, acceleration, or simulation runtime. While paused, it does not raycast or fire `OnStep` / `LengthChanged`. Resume continues from the same simulation time, without catching up for the time spent paused.
