@@ -69,6 +69,7 @@ function BaseCast.Raycast(
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
 	FireCastFire(caster, cast, Origin, Direction, Velocity, Behavior)
+	return cast
 end
 
 function BaseCast.Blockcast(
@@ -89,6 +90,7 @@ function BaseCast.Blockcast(
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
 	FireCastFire(caster, cast, Origin, Direction, Velocity, Behavior)
+	return cast
 end
 
 function BaseCast.Spherecast(
@@ -109,6 +111,7 @@ function BaseCast.Spherecast(
 	SerialSimulation.Register(cast)
 	Actives[cast.ID] = cast
 	FireCastFire(caster, cast, Origin, Direction, Velocity, Behavior)
+	return cast
 end
 
 function BaseCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
