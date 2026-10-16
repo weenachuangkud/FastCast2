@@ -80,6 +80,20 @@ FastCast2 is an open-source project, and contributions from the community are we
 
 ---
 
+### Runtime trajectory control
+
+Fire methods return the active cast so you can adjust its trajectory while it is flying:
+
+```lua
+local cast = caster:RaycastFire(origin, direction, speed, behavior)
+
+-- Change its world-space velocity or acceleration during flight.
+FastCast:SetVelocity(cast, newVelocity)
+FastCast:SetAcceleration(cast, newAcceleration)
+```
+
+These setters preserve the cast's current position, simulation runtime, and distance already covered. Changes take effect on the next simulation update. They are useful for guided or homing projectiles.
+
 ## Quick start
  
 Shooting projectiles from your head (Serial mode, simpler, runs on the main thread):
