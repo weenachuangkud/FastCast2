@@ -23,6 +23,7 @@ Defaults.FastCastBehavior = {
 	RaycastParams = nil,
 	Acceleration = Vector3.new(),
 	MaxDistance = 1000,
+	MaxLifetime = nil,
 	HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default,
 	HighFidelitySegmentSize = 0.5,
 
@@ -54,14 +55,7 @@ Defaults.FastCastBehavior = {
 		Debug_HitLifetime = 1
 	},
 
-	FastCastEventsModuleConfig = {
-		UseLengthChanged = false,
-		UseHit = true,
-		UsePierced = true,
-		UseCastTerminating = true,
-		UseCanPierce = true,
-		UseCastFire = true
-	},
+	CloneTemplate = true,
 
 	FastCastEventsConfig = {
 		UseLengthChanged = false,
@@ -69,7 +63,8 @@ Defaults.FastCastBehavior = {
 		UsePierced = true,
 		UseCastTerminating = true,
 		UseCanPierce = true,
-		UseCastFire = true
+		UseCastFire = true,
+		UseOnStep = false
 	}
 } :: TypeDefinitions.FastCastBehavior
 
