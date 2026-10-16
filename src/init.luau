@@ -622,7 +622,7 @@ end
 	@param cast vaildcast -- The active cast to pause.
 	@within FastCast
 ]=]
-function FastCast:PauseCast(cast: vaildcast)
+function FastCast:PauseCast(cast: any)
 	if not cast or not cast.StateInfo or cast._Destroying or cast._TerminationQueued then
 		return
 	end
@@ -637,7 +637,7 @@ end
 	@param cast vaildcast -- The paused cast to resume.
 	@within FastCast
 ]=]
-function FastCast:ResumeCast(cast: vaildcast)
+function FastCast:ResumeCast(cast: any)
 	if not cast or not cast.StateInfo or cast._Destroying or cast._TerminationQueued then
 		return
 	end
