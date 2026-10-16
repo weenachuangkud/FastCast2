@@ -1588,6 +1588,12 @@ function SerialSimulation.Register(cast: any)
 	SerialSimulation_Register(cast)
 end
 
+function SerialSimulation.CancelHighResResimulation(castID: number)
+	if casts_IsActivelyResimulating[castID] then
+		casts_CancelHighResCast[castID] = true
+	end
+end
+
 function SerialSimulation.Unregister(castID: number)
 	SerialSimulation_Unregister(castID)
 end

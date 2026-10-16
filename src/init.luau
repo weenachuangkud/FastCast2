@@ -334,6 +334,7 @@ local function ModifyTransformation(
 	trajectory.Acceleration = acceleration or trajectory.Acceleration
 	trajectory.StartTime = cast.StateInfo.TotalRuntime
 	cast.StateInfo.CancelHighResCast = true
+	SerialSimulation.CancelHighResResimulation(cast.ID)
 end
 
 local function deepCopyTable(tbl: {any}): {any}
@@ -397,7 +398,7 @@ function FastCastSerial:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BaseCastSerial.Raycast(self, origin, direction, velocity, BehaviorData)
+	return BaseCastSerial.Raycast(self, origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -421,7 +422,7 @@ function FastCastSerial:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BaseCastSerial.Blockcast(self, origin, Size, direction, velocity, BehaviorData)
+	return BaseCastSerial.Blockcast(self, origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -445,7 +446,7 @@ function FastCastSerial:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	BaseCastSerial.Spherecast(self, origin, Radius, direction, velocity, BehaviorData)
+	return BaseCastSerial.Spherecast(self, origin, Radius, direction, velocity, BehaviorData)
 end
 
 --[[
@@ -559,6 +560,30 @@ Sets the acceleration of an ActiveCast to the specified Vector3.
 ]=]
 function FastCast:SetAccelerationCast(cast: vaildcast, acceleration: Vector3)
 	ModifyTransformation(cast, nil, acceleration, nil)
+end
+
+--[=[
+	Sets the velocity of an active cast to a world-space velocity vector.
+	The cast keeps its current position, runtime, and accumulated distance.
+	@method SetVelocity
+	@param cast vaildcast
+	@param velocity Vector3
+	@within FastCast
+]=]
+function FastCast:SetVelocity(cast: vaildcast, velocity: Vector3)
+	FastCast:SetVelocityCast(cast, velocity)
+end
+
+--[=[
+	Sets the acceleration of an active cast.
+	The cast keeps its current position, runtime, and accumulated distance.
+	@method SetAcceleration
+	@param cast vaildcast
+	@param acceleration Vector3
+	@within FastCast
+]=]
+function FastCast:SetAcceleration(cast: vaildcast, acceleration: Vector3)
+	FastCast:SetAccelerationCast(cast, acceleration)
 end
 
 --[=[
