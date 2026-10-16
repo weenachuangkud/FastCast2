@@ -124,7 +124,7 @@ Throughput: xx.xx projectiles/s
 
 The benchmark project mounts FastCast2 in `ReplicatedStorage`, the client benchmark in `ReplicatedFirst`, and the server benchmark in `ServerScriptService`. You can also insert either script manually in those locations if you do not use Rojo.
 
-For useful comparisons, change one setting at a time and run each configuration several times. In particular, compare all three cast types in serial and parallel modes with visualization disabled; Studio rendering, open windows, and plugins can otherwise add significant noise.
+For useful comparisons, change one setting at a time and run each configuration several times. In particular, compare all three cast types in this serial implementation with visualization disabled; Studio rendering, open windows, and plugins can otherwise add significant noise.
 
 ## Automated suite
 
