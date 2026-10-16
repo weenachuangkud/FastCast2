@@ -616,6 +616,36 @@ function FastCast:AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
 end
 
 --[=[
+	Pauses an active cast without advancing its simulation time or trajectory.
+	The cast can be resumed later with ResumeCast.
+	@method PauseCast
+	@param cast vaildcast -- The active cast to pause.
+	@within FastCast
+]=]
+function FastCast:PauseCast(cast: any)
+	if not cast or not cast.StateInfo or cast._Destroying or cast._TerminationQueued then
+		return
+	end
+
+	cast.StateInfo.IsPaused = true
+end
+
+--[=[
+	Resumes a cast paused with PauseCast.
+	Calling this on a terminated cast has no effect.
+	@method ResumeCast
+	@param cast vaildcast -- The paused cast to resume.
+	@within FastCast
+]=]
+function FastCast:ResumeCast(cast: any)
+	if not cast or not cast.StateInfo or cast._Destroying or cast._TerminationQueued then
+		return
+	end
+
+	cast.StateInfo.IsPaused = false
+end
+
+--[=[
 	Terminate function for casts
 	@method TerminateCast
 	@param cast vaildcast -- The active cast to terminate.

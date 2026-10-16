@@ -332,6 +332,70 @@ return function()
 				arena:Destroy()
 			end)
 
+			test("paused casts freeze runtime and resume without catching up", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.FastCastEventsConfig.UseOnStep = true
+				behavior.FastCastEventsConfig.UseLengthChanged = true
+
+				local firedCast = nil
+				local stepCount = 0
+				local lengthChangedCount = 0
+				local terminated = false
+
+				local caster = FastCast.new()
+				caster.CastFire = function(cast)
+					firedCast = cast
+				end
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.LengthChanged = function()
+					lengthChangedCount += 1
+				end
+				caster.CastTerminating = function()
+					terminated = true
+				end
+				FastCast.Init("BulkMoveTo")
+
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+				expect.truthy(firedCast, "CastFire did not provide the active cast")
+
+				local cast = firedCast :: any
+				FastCast:PauseCast(cast)
+				local pausedPosition = FastCast:GetPositionCast(cast)
+				local pausedRuntime = cast.StateInfo.TotalRuntime
+
+				task.wait(0.15)
+				expect.equal(cast.StateInfo.IsPaused, true, "cast did not enter paused state")
+				expect.equal(FastCast:GetPositionCast(cast), pausedPosition, "paused cast position changed")
+				expect.equal(cast.StateInfo.TotalRuntime, pausedRuntime, "paused cast runtime advanced")
+				expect.equal(stepCount, 0, "OnStep fired while cast was paused")
+				expect.equal(lengthChangedCount, 0, "LengthChanged fired while cast was paused")
+
+				FastCast:ResumeCast(cast)
+				expect.truthy(
+					Framework.waitFor(function()
+						return stepCount > 0 and FastCast:GetPositionCast(cast) ~= pausedPosition
+					end, HIT_TIMEOUT),
+					"cast did not resume moving"
+				)
+				expect.equal(cast.StateInfo.IsPaused, false, "cast remained paused after ResumeCast")
+
+				FastCast:PauseCast(cast)
+				FastCast:TerminateCast(cast)
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminated
+					end, HIT_TIMEOUT),
+					"terminating a paused cast did not fire CastTerminating"
+				)
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
 			test("movement mode can be switched", function(expect)
 				local caster = FastCast.new()
 				FastCast.Init("Motor6D")

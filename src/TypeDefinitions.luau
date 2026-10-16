@@ -253,7 +253,7 @@ export type CastTrajectory = {
 }
 
 --[=[
-	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	TotalRuntime: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	}
+	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	IsPaused: boolean,	TotalRuntime: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	}
 	@within TypeDefinitions
 
 	Represents cast state tracking data.
@@ -261,6 +261,7 @@ export type CastTrajectory = {
 export type CastStateInfo = {
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
+	IsPaused: boolean,
 	TotalRuntime: number,
 	DistanceCovered: number,
 	IsActivelySimulatingPierce: boolean,

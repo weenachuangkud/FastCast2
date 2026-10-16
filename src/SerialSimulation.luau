@@ -1482,6 +1482,11 @@ local function UpdateCasts(delta: number)
 			continue
 		end
 
+		-- Paused casts retain their trajectory and runtime without simulating.
+		if cast and cast.StateInfo.IsPaused then
+			continue
+		end
+
 		if casts_HighFidelitySegmentSize[id] <= 0 then
 			casts_HighFidelitySegmentSize[id] = 0.1
 		end
@@ -1498,7 +1503,7 @@ local function UpdateCasts(delta: number)
 		end
 
 		-- The callback may have terminated the cast.
-		if not ActivesRef[id] or cast._Destroying then
+		if not ActivesRef[id] or cast._Destroying or cast.StateInfo.IsPaused then
 			continue
 		end
 
