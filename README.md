@@ -190,7 +190,7 @@ Motor6D mode uses `Motor6D.Transform` for more performance instead of `BulkMoveT
 
 ```lua
 local Caster = FastCast2.new()
-FastCast.Init("Motor6D") -- movementMode = "Motor6D"
+FastCast2.Init("Motor6D") -- movementMode = "Motor6D"
 ```
 
 All active casts automatically get a Motor6D connection on registration and disconnection on cleanup.
@@ -259,7 +259,7 @@ FastCast2 includes repeatable client and server benchmarks for raycasts, blockca
 
 ## Tests
 
-The automated suite runs the functional tests and the six-case benchmark matrix inside Roblox Studio, prints a Markdown results table, and uploads the report to [paste.shellworks.dev](https://paste.shellworks.dev). Run it with `npm test` (or `lune run tests/run.luau`). See the [test guide](tests/README.md) for prerequisites and flags.
+The automated suite runs the functional tests and the three-case benchmark matrix inside Roblox Studio, prints a Markdown results table, and uploads the report to [paste.shellworks.dev](https://paste.shellworks.dev). Run it with `npm test` (or `lune run tests/run.luau`). See the [test guide](tests/README.md) for prerequisites and flags.
 
 
 ---
