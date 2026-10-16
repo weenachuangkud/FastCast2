@@ -88,6 +88,7 @@ Shooting projectiles from your head (Serial mode, simpler, runs on the main thre
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
  
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
@@ -95,6 +96,7 @@ local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCa
  
 -- CONSTANTS
 local SPEED = 500
+local FIRE_COOLDOWN = 0.05
  
 -- Variables
 local player = Players.LocalPlayer
@@ -104,6 +106,8 @@ local Mouse = player:GetMouse()
  
 local ProjectileContainer = workspace:WaitForChild("Projectiles")
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
+
+local IsCooldown = false
  
 -- CastParams
 local CastParams = RaycastParams.new()
@@ -121,15 +125,20 @@ behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
 behavior.CosmeticBulletTemplate = ProjectileTemplate
  
--- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-FastCast.Init("BulkMoveTo") -- movementMode
+FastCast2.Init("BulkMoveTo") -- movementMode
  
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
-	print("Hit: " .. result.Instance.Name)
-    local obj = cast.RayInfo.CosmeticBulletObject
-    if obj then obj:Destroy() end
+	print(("Hit [cast %d]: %s"):format(cast.ID, result.Instance.Name))
+end
+
+-- Clean up cosmetics whether the cast hits or reaches MaxDistance.
+Caster.CastTerminating = function(cast)
+	local obj = cast.RayInfo.CosmeticBulletObject
+	if obj and obj.Parent then
+		obj:Destroy()
+	end
 end
  
 -- Fire
@@ -138,12 +147,21 @@ local function fire()
 	local direction = (Mouse.Hit.Position - origin).Unit
 	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
- 
+
+Caster.CastFire = function(cast)
+	print("Cast created:", cast.ID)
+end
+
 -- Input
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		fire()
+		if IsCooldown then return end
+		IsCooldown = true
+		task.delay(FIRE_COOLDOWN, function()
+			fire()
+			IsCooldown = false
+		end)
 	end
 end)
 ```
