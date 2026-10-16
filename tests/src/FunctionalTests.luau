@@ -294,6 +294,48 @@ return function()
 				arena:Destroy()
 			end)
 
+			test("fire methods return their active cast", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				local caster = FastCast.new()
+				FastCast.Init("BulkMoveTo")
+
+				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 60, behavior)
+				expect.truthy(cast, "RaycastFire did not return a cast")
+				expect.equal(cast.Type, FastCastEnums.CastType.Raycast, "RaycastFire returned the wrong cast")
+
+				FastCast:TerminateCast(cast)
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("SetVelocity and SetAcceleration preserve cast position and runtime", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				local caster = FastCast.new()
+				FastCast.Init("BulkMoveTo")
+
+				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 60, behavior)
+				local runtime = cast.StateInfo.TotalRuntime
+				local position = FastCast:GetPositionCast(cast)
+
+				FastCast:SetVelocity(cast, Vector3.new(10, 0, 0))
+				expect.equal(FastCast:GetPositionCast(cast), position, "SetVelocity changed the current position")
+				expect.equal(cast.StateInfo.TotalRuntime, runtime, "SetVelocity changed runtime")
+				expect.equal(FastCast:GetVelocityCast(cast), Vector3.new(10, 0, 0), "SetVelocity did not set velocity")
+
+				FastCast:SetAcceleration(cast, Vector3.new(0, -workspace.Gravity, 0))
+				expect.equal(FastCast:GetPositionCast(cast), position, "SetAcceleration changed the current position")
+				expect.equal(cast.StateInfo.TotalRuntime, runtime, "SetAcceleration changed runtime")
+				expect.equal(FastCast:GetAccelerationCast(cast), Vector3.new(0, -workspace.Gravity, 0), "SetAcceleration did not set acceleration")
+
+				FastCast:TerminateCast(cast)
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
 			test("OnStep can redirect a cast before movement", function(expect)
 				local arena = createArena()
 				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
