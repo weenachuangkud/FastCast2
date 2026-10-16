@@ -92,6 +92,7 @@ local Players = game:GetService("Players")
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
 local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
+local FastCastConfig = require(Rep:WaitForChild("FastCast2"):WaitForChild("Config"))
  
 -- CONSTANTS
 local SPEED = 500
@@ -120,6 +121,10 @@ behavior.HighFidelitySegmentSize = 1
 behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
 behavior.CosmeticBulletTemplate = ProjectileTemplate
+
+-- Debug/testing: move fast cosmetic bullets every simulation frame.
+-- Higher values reduce movement cost but make fast bullets look less smooth.
+FastCastConfig.CosmeticUpdateInterval = 1
  
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
