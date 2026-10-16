@@ -400,6 +400,77 @@ return function()
 				arena:Destroy()
 			end)
 
+			test("MaxLifetime expires casts at simulation update boundaries", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.MaxLifetime = 0.1
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local firedCast = nil
+				local stepCount = 0
+				local terminated = false
+				local caster = FastCast.new()
+				caster.CastFire = function(cast)
+					firedCast = cast
+				end
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.CastTerminating = function()
+					terminated = true
+				end
+				FastCast.Init("BulkMoveTo")
+
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+				expect.truthy(firedCast, "CastFire did not provide the active cast")
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminated
+					end, HIT_TIMEOUT),
+					"cast did not terminate when MaxLifetime expired"
+				)
+				expect.truthy(firedCast.StateInfo.TotalRuntime >= behavior.MaxLifetime, "cast expired before reaching MaxLifetime")
+				expect.truthy(stepCount > 0, "cast never simulated before expiration")
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("MaxLifetime zero terminates without simulating", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.MaxLifetime = 0
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local firedCast = nil
+				local stepCount = 0
+				local terminated = false
+				local caster = FastCast.new()
+				caster.CastFire = function(cast)
+					firedCast = cast
+				end
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.CastTerminating = function()
+					terminated = true
+				end
+				FastCast.Init("BulkMoveTo")
+
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+				expect.truthy(firedCast, "CastFire did not provide the active cast")
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminated
+					end, HIT_TIMEOUT),
+					"zero-lifetime cast did not terminate"
+				)
+				expect.equal(stepCount, 0, "zero-lifetime cast fired OnStep")
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
 			test("movement mode can be switched", function(expect)
 				local caster = FastCast.new()
 				FastCast.Init("Motor6D")
