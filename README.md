@@ -93,10 +93,10 @@ local UserInputService = game:GetService("UserInputService")
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
 local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
-local FastCastConfig = require(Rep:WaitForChild("FastCast2"):WaitForChild("Config"))
  
 -- CONSTANTS
 local SPEED = 500
+local FIRE_COOLDOWN = 0.05
  
 -- Variables
 local player = Players.LocalPlayer
@@ -106,6 +106,8 @@ local Mouse = player:GetMouse()
  
 local ProjectileContainer = workspace:WaitForChild("Projectiles")
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
+
+local IsCooldown = false
  
 -- CastParams
 local CastParams = RaycastParams.new()
@@ -122,12 +124,7 @@ behavior.HighFidelitySegmentSize = 1
 behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
 behavior.CosmeticBulletTemplate = ProjectileTemplate
-
--- Debug/testing: move fast cosmetic bullets every simulation frame.
--- Higher values reduce movement cost but make fast bullets look less smooth.
-FastCastConfig.CosmeticUpdateInterval = 1
  
--- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
 FastCast2.Init("BulkMoveTo") -- movementMode
  
@@ -146,30 +143,26 @@ end
  
 -- Fire
 local function fire()
-	print("fire() called", os.clock())
-
 	local origin = Head.Position
 	local direction = (Mouse.Hit.Position - origin).Unit
 	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
 
--- Diagnostic: one line per cast created by this caster.
 Caster.CastFire = function(cast)
 	print("Cast created:", cast.ID)
 end
 
 -- Input
-local inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		fire()
+		if IsCooldown then return end
+		IsCooldown = true
+		task.delay(FIRE_COOLDOWN, function()
+			fire()
+			IsCooldown = false
+		end)
 	end
-end)
-
--- Important when this LocalScript is placed in StarterCharacterScripts.
--- Disconnect the global input listener when the character script is destroyed.
-script.Destroying:Connect(function()
-	inputConnection:Disconnect()
 end)
 ```
 
