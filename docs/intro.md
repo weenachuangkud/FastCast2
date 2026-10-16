@@ -1,7 +1,6 @@
 ---
 sidebar_position: 1
 ---
-
 <div style={{ textAlign: "center", marginBottom: 32 }}>
   <img
     src="https://github.com/user-attachments/assets/b4697a13-5701-491b-8e8e-7c12696baceb"
@@ -92,6 +91,7 @@ Shooting projectiles from your head (Serial mode, simpler, runs on the main thre
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
  
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
@@ -99,6 +99,7 @@ local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCa
  
 -- CONSTANTS
 local SPEED = 500
+local FIRE_COOLDOWN = 0.05
  
 -- Variables
 local player = Players.LocalPlayer
@@ -108,6 +109,8 @@ local Mouse = player:GetMouse()
  
 local ProjectileContainer = workspace:WaitForChild("Projectiles")
 local ProjectileTemplate = Rep:WaitForChild("Projectile")
+
+local IsCooldown = false
  
 -- CastParams
 local CastParams = RaycastParams.new()
@@ -125,15 +128,20 @@ behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
 behavior.CosmeticBulletTemplate = ProjectileTemplate
  
--- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-FastCast.Init("BulkMoveTo") -- movementMode
+FastCast2.Init("BulkMoveTo") -- movementMode
  
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
-	print("Hit: " .. result.Instance.Name)
-    local obj = cast.RayInfo.CosmeticBulletObject
-    if obj then obj:Destroy() end
+	print(("Hit [cast %d]: %s"):format(cast.ID, result.Instance.Name))
+end
+
+-- Clean up cosmetics whether the cast hits or reaches MaxDistance.
+Caster.CastTerminating = function(cast)
+	local obj = cast.RayInfo.CosmeticBulletObject
+	if obj and obj.Parent then
+		obj:Destroy()
+	end
 end
  
 -- Fire
@@ -142,12 +150,21 @@ local function fire()
 	local direction = (Mouse.Hit.Position - origin).Unit
 	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
- 
+
+Caster.CastFire = function(cast)
+	print("Cast created:", cast.ID)
+end
+
 -- Input
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		fire()
+		if IsCooldown then return end
+		IsCooldown = true
+		task.delay(FIRE_COOLDOWN, function()
+			fire()
+			IsCooldown = false
+		end)
 	end
 end)
 ```
@@ -166,9 +183,9 @@ Caster:SpherecastFire(origin, 3, direction, SPEED, behavior)
 
 ### Cosmetic bullets
 
-FastCast2 no longer includes a built-in ObjectCache. Manage cosmetic bullet instances yourself through `behavior.CosmeticBulletTemplate` and `behavior.CosmeticBulletContainer`.
+FastCast2 no longer includes a built-in ObjectCache. Manage cosmetic bullet instances yourself and provide them through `behavior.CosmeticBulletTemplate` and `behavior.CosmeticBulletContainer`.
 
-FastCast2 does not automatically destroy or return cosmetic bullet instances when a cast terminates. Your game controls their lifecycle.
+FastCast2 also does not automatically destroy or return cosmetic bullets when a cast terminates, so the caller controls their lifecycle.
 
 ### Motor6D movement mode
 
@@ -176,7 +193,7 @@ Motor6D mode uses `Motor6D.Transform` for more performance instead of `BulkMoveT
 
 ```lua
 local Caster = FastCast2.new()
-FastCast.Init("Motor6D") -- movementMode = "Motor6D"
+FastCast2.Init("Motor6D") -- movementMode = "Motor6D"
 ```
 
 All active casts automatically get a Motor6D connection on registration and disconnection on cleanup.
@@ -189,7 +206,7 @@ Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- switch back
 
 ### Simulation configuration
 
-Configure simulation in `src/Config.luau`:
+Simulation behavior can be configured in `src/Config.luau`:
 
 ```lua
 Config.SimulationMode = "PerFrame" -- or "Fixed"
@@ -197,9 +214,7 @@ Config.FixedSimulationFrequency = Enum.StepFrequency.Hz60
 Config.CosmeticUpdateInterval = 3
 ```
 
-- `PerFrame`: `PreSimulation` on the client and `Heartbeat` on the server.
-- `Fixed`: uses `RunService:BindToSimulation()` at the configured frequency.
-- `CosmeticUpdateInterval`: controls cosmetic movement frequency. Collision simulation still runs every simulation step.
+`PerFrame` uses `PreSimulation` on the client and `Heartbeat` on the server. `Fixed` uses `RunService:BindToSimulation()` at the configured step frequency. `CosmeticUpdateInterval` controls how often cosmetic bullet movement is applied; hit detection still runs every simulation step.
 
 ### Cast manipulation
 
@@ -247,7 +262,7 @@ FastCast2 includes repeatable client and server benchmarks for raycasts, blockca
 
 ## Tests
 
-The automated suite runs the functional tests and the six-case benchmark matrix inside Roblox Studio, prints a Markdown results table, and uploads the report to [paste.shellworks.dev](https://paste.shellworks.dev). Run it with `npm test` (or `lune run tests/run.luau`). See the [test guide](tests/README.md) for prerequisites and flags.
+The automated suite runs the functional tests and the three-case benchmark matrix inside Roblox Studio, prints a Markdown results table, and uploads the report to [paste.shellworks.dev](https://paste.shellworks.dev). Run it with `npm test` (or `lune run tests/run.luau`). See the [test guide](tests/README.md) for prerequisites and flags.
 
 
 ---
@@ -274,6 +289,3 @@ More broadly, this community feedback has played a significant role in FastCast2
 
 - [nerd0ne](https://github.com/nerd0ne) — Pointing out a broken Wally setup
 - [90gq31](https://computerunion.miraheze.org/90gq31) — Giving me the opportunity to be part of the community
-
-# Dependency
-- [VMsDispatcher](https://github.com/weenachuangkud/VMsDispatcher)(https://github.com/weenachuangkud/VMsDispatcher)
