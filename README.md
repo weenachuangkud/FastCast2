@@ -213,6 +213,22 @@ Config.CosmeticUpdateInterval = 3
 
 `PerFrame` uses `PreSimulation` on the client and `Heartbeat` on the server. `Fixed` uses `RunService:BindToSimulation()` at the configured step frequency. `CosmeticUpdateInterval` controls how often cosmetic bullet movement is applied; hit detection still runs every simulation step.
 
+### Per-step cast control
+
+Set `UseOnStep` on the behavior to enable a synchronous callback before each active cast's movement is simulated:
+
+```lua
+behavior.FastCastEventsConfig.UseOnStep = true
+
+caster.OnStep = function(cast, deltaTime)
+    -- Adjust the cast before the next movement step.
+    local velocity = FastCast2:GetVelocityCast(cast)
+    -- Use cast.UserData for per-projectile state, e.g. a homing target.
+end
+```
+
+`OnStep` runs once per active cast per simulation update. Use it for homing, steering, or other custom trajectory logic. It is opt-in to avoid callback overhead for casts that do not need it. `LengthChanged` remains a movement notification intended for cosmetic updates and trails.
+
 ### Cast manipulation
 
 Modify active casts at runtime using the static `FastCast` methods:
