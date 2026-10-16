@@ -410,6 +410,7 @@ return function()
 				local firedCast = nil
 				local stepCount = 0
 				local terminated = false
+				local terminatedRuntime = nil
 				local caster = FastCast.new()
 				caster.CastFire = function(cast)
 					firedCast = cast
@@ -417,7 +418,8 @@ return function()
 				caster.OnStep = function()
 					stepCount += 1
 				end
-				caster.CastTerminating = function()
+				caster.CastTerminating = function(cast)
+					terminatedRuntime = cast.StateInfo.TotalRuntime
 					terminated = true
 				end
 				FastCast.Init("BulkMoveTo")
@@ -430,7 +432,10 @@ return function()
 					end, HIT_TIMEOUT),
 					"cast did not terminate when MaxLifetime expired"
 				)
-				expect.truthy(firedCast.StateInfo.TotalRuntime >= behavior.MaxLifetime, "cast expired before reaching MaxLifetime")
+				expect.truthy(
+					terminatedRuntime ~= nil and terminatedRuntime >= behavior.MaxLifetime,
+					"cast expired before reaching MaxLifetime"
+				)
 				expect.truthy(stepCount > 0, "cast never simulated before expiration")
 				caster:Destroy()
 				arena:Destroy()
