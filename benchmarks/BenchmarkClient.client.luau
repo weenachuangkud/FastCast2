@@ -22,7 +22,6 @@
 --// Services
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
@@ -182,7 +181,6 @@ local function destroyCaster()
 	end
 
 	table.clear(ActiveCasts)
-	table.clear(ActiveCastIndices)
 end
 
 local function rebuildCaster()
@@ -206,10 +204,9 @@ local function printBenchmarkInfo()
 		Config.Instanced and "Enabled" or "Disabled"
 	))
 
-	print(
-		"VisualizeCasts: %s",
+	print(("VisualizeCasts: %s"):format(
 		CastBehavior.VisualizeCasts and "Enabled" or "Disabled"
-	)
+	))
 
 	print(("HighFidelityBehavior: %s"):format(getHighFidelityName()))
 
