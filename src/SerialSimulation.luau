@@ -1482,6 +1482,14 @@ local function UpdateCasts(delta: number)
 			continue
 		end
 
+		-- Lifetime uses simulation time, so paused casts do not age.
+		-- Expiration is checked at the update boundary, before OnStep or movement.
+		local maxLifetime = cast and cast.StateInfo.MaxLifetime
+		if maxLifetime ~= nil and casts_TotalRunTime[id] >= maxLifetime then
+			BaseCastRef.TerminateCast(BaseCastRef, cast)
+			continue
+		end
+
 		-- Paused casts retain their trajectory and runtime without simulating.
 		if cast and cast.StateInfo.IsPaused then
 			continue
