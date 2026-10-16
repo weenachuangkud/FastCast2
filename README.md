@@ -88,6 +88,7 @@ Shooting projectiles from your head (Serial mode, simpler, runs on the main thre
 -- Services
 local Rep = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
  
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
@@ -145,17 +146,30 @@ end
  
 -- Fire
 local function fire()
+	print("fire() called", os.clock())
+
 	local origin = Head.Position
 	local direction = (Mouse.Hit.Position - origin).Unit
 	Caster:RaycastFire(origin, direction, SPEED, behavior)
 end
- 
+
+-- Diagnostic: one line per cast created by this caster.
+Caster.CastFire = function(cast)
+	print("Cast created:", cast.ID)
+end
+
 -- Input
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+local inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		fire()
 	end
+end)
+
+-- Important when this LocalScript is placed in StarterCharacterScripts.
+-- Disconnect the global input listener when the character script is destroyed.
+script.Destroying:Connect(function()
+	inputConnection:Disconnect()
 end)
 ```
 
