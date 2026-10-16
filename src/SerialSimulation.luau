@@ -1486,6 +1486,22 @@ local function UpdateCasts(delta: number)
 			casts_HighFidelitySegmentSize[id] = 0.1
 		end
 
+		-- Run synchronously before calculating this step's trajectory.
+		-- This is opt-in per behavior to avoid callback overhead for ordinary casts.
+		if cast and cast.StateInfo.FastCastEventsConfig.UseOnStep then
+			local events = CasterEvents[casts_CasterId[id]]
+			local onStep = events and events.OnStep
+
+			if onStep then
+				onStep:Fire(cast, delta)
+			end
+		end
+
+		-- The callback may have terminated the cast.
+		if not ActivesRef[id] or cast._Destroying then
+			continue
+		end
+
 		local behavior = casts_HighFidelityBehavior[id]
 
 		if behavior == FastCastEnums.HighFidelityBehavior.Always then
