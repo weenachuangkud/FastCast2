@@ -158,12 +158,25 @@ local function onCastFire(cast)
 	ActiveCasts[#ActiveCasts + 1] = cast
 end
 
+local function onCastTerminating(cast)
+	local cosmetic = cast.RayInfo.CosmeticBulletObject
+	if cosmetic and cosmetic.Parent then
+		cosmetic:Destroy()
+	end
+
+	local index = table.find(ActiveCasts, cast)
+	if index then
+		table.remove(ActiveCasts, index)
+	end
+end
+
 --// Caster Creation
 
 local function createCaster()
 	local caster = FastCast.new()
 	FastCast.Init(Config.MovementMode)
 	caster.CastFire = onCastFire
+	caster.CastTerminating = onCastTerminating
 	return caster
 end
 
@@ -317,7 +330,7 @@ local function fireProjectiles()
 	local random = Random.new(Config.RandomSeed)
 
 	for _ = 1, Config.ProjectileAmount do
-		task.spawn(fireProjectile, random)
+		fireProjectile(random)
 	end
 end
 
@@ -371,6 +384,7 @@ local function runBenchmark()
 		--// Cleanup
 		printSection("CLEANUP")
 
+		local activeCount = #ActiveCasts
 		local cleanupStarted = os.clock()
 
 		terminateActiveCasts()
@@ -379,14 +393,14 @@ local function runBenchmark()
 
 		printOperationStats(
 			cleanupElapsed,
-			Config.ProjectileAmount
+			activeCount
 		)
 
 		-- Give FastCast2 time to finish processing terminated casts.
 		task.wait(BENCHMARK_COOLDOWN)
 
 		--// IMPORTANT
-		-- Destroy the old parallel caster and create a
+		-- Destroy the old caster and create a
 		-- completely fresh one for the next benchmark.
 		print("Rebuilding FastCast caster...")
 
