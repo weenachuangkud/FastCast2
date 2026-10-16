@@ -116,6 +116,7 @@ CastBehavior.VisualizeCasts = Config.VisualizeCasts
 
 local Caster
 local ActiveCasts = {}
+local ActiveCastIndices = {}
 
 local IsBenchmarking = false
 
@@ -155,7 +156,9 @@ end
 --// Cast Tracking
 
 local function onCastFire(cast)
-	ActiveCasts[#ActiveCasts + 1] = cast
+	local index = #ActiveCasts + 1
+	ActiveCasts[index] = cast
+	ActiveCastIndices[cast] = index
 end
 
 local function onCastTerminating(cast)
@@ -164,9 +167,18 @@ local function onCastTerminating(cast)
 		cosmetic:Destroy()
 	end
 
-	local index = table.find(ActiveCasts, cast)
+	local index = ActiveCastIndices[cast]
 	if index then
-		table.remove(ActiveCasts, index)
+		local lastIndex = #ActiveCasts
+		local lastCast = ActiveCasts[lastIndex]
+
+		ActiveCasts[index] = lastCast
+		ActiveCasts[lastIndex] = nil
+		ActiveCastIndices[cast] = nil
+
+		if lastCast and lastCast ~= cast then
+			ActiveCastIndices[lastCast] = index
+		end
 	end
 end
 
@@ -194,6 +206,7 @@ local function terminateActiveCasts()
 	end
 
 	table.clear(ActiveCasts)
+	table.clear(ActiveCastIndices)
 end
 
 
