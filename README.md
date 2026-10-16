@@ -222,7 +222,7 @@ behavior.FastCastEventsConfig.UseOnStep = true
 
 caster.OnStep = function(cast, deltaTime)
     -- Adjust the cast before the next movement step.
-    local velocity = FastCast2:GetVelocityCast(cast)
+    local velocity = FastCast:GetVelocityCast(cast)
     -- Use cast.UserData for per-projectile state, e.g. a homing target.
 end
 ```
