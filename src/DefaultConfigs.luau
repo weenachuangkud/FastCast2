@@ -62,7 +62,8 @@ Defaults.FastCastBehavior = {
 		UsePierced = true,
 		UseCastTerminating = true,
 		UseCanPierce = true,
-		UseCastFire = true
+		UseCastFire = true,
+		UseOnStep = false
 	}
 } :: TypeDefinitions.FastCastBehavior
 
