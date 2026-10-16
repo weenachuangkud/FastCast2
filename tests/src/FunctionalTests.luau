@@ -392,6 +392,10 @@ return function()
 					"terminating a paused cast did not fire CastTerminating"
 				)
 
+				-- The termination event clears the cast table. Reusing the stale
+				-- reference must not enqueue an event with a missing cast ID.
+				FastCast:TerminateCast(cast)
+
 				caster:Destroy()
 				arena:Destroy()
 			end)
@@ -399,7 +403,11 @@ return function()
 			test("movement mode can be switched", function(expect)
 				local caster = FastCast.new()
 				FastCast.Init("Motor6D")
-				expect.equal(caster.MovementMode, "Motor6D", "initial movement mode was not applied")
+
+				-- FastCast.Init configures the shared simulation. The caster property
+				-- is set by this caster's movement-mode method.
+				caster:SetMovementModeEnabled(true, "Motor6D")
+				expect.equal(caster.MovementMode, "Motor6D", "movement mode was not set to Motor6D")
 
 				caster:SetMovementModeEnabled(true, "BulkMoveTo")
 				expect.equal(caster.MovementMode, "BulkMoveTo", "movement mode was not switched")
