@@ -79,6 +79,7 @@ export type OnPiercedFunction = TypeDef.OnPiercedFunction
 export type OnLengthChangedFunction = TypeDef.OnLengthChangedFunction
 export type OnCastTerminatingFunction = TypeDef.OnCastTerminatingFunction
 export type OnCastFireFunction = TypeDef.OnCastFireFunction
+export type OnStepFunction = TypeDef.OnStepFunction
 
 export type VisualizeCastSettings = TypeDef.VisualizeCastSettings
 export type CasterSerial = TypeDef.CasterSerial
@@ -104,6 +105,7 @@ type vaildcast = TypeDef.ActiveCastData | TypeDef.ActiveBlockcastData | TypeDef.
 -- names is equivalent to connecting that function to the underlying Signal.
 local SIGNAL_EVENTS = {
 	["CastFire"] = true,
+	["OnStep"] = true,
 	["CastTerminating"] = true,
 	["Hit"] = true,
 	["Pierced"] = true,
@@ -118,6 +120,7 @@ local QUERY_EVENTS = {
 local function NewCasterSignals()
 	return {
 		CastFire = Signal.new(),
+		OnStep = Signal.new(),
 		CastTerminating = Signal.new(),
 		Hit = Signal.new(),
 		Pierced = Signal.new(),
@@ -155,6 +158,7 @@ local function RegisterCasterEvents(self)
 
 	BaseCastSerial.RegisterCaster(casterId, {
 		CastFire = events.CastFire,
+		OnStep = events.OnStep,
 		Pierced = events.Pierced,
 		Hit = events.Hit,
 		LengthChanged = events.LengthChanged,

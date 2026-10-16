@@ -126,6 +126,7 @@ return function()
 					"HighFidelityBehavior default changed"
 				)
 				expect.equal(behavior.AutoIgnoreContainer, true, "AutoIgnoreContainer default changed")
+				expect.equal(behavior.FastCastEventsConfig.UseOnStep, false, "UseOnStep should be opt-in")
 			end)
 		end),
 
@@ -288,6 +289,44 @@ return function()
 				end, HIT_TIMEOUT)
 
 				expect.greaterThan(lengthChanges, 0, "LengthChanged never fired")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("OnStep can redirect a cast before movement", function(expect)
+				local arena = createArena()
+				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local hitInstance = nil
+				local stepCount = 0
+				local caster = FastCast.new()
+				caster.OnStep = function(cast, deltaTime)
+					stepCount += 1
+					if stepCount == 1 then
+						expect.greaterThan(deltaTime, 0, "OnStep deltaTime must be positive")
+						FastCast:SetVelocityCast(cast, Vector3.new(0, 0, -120))
+					end
+				end
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+				end
+				FastCast.Init("BulkMoveTo")
+
+				-- Start along +Y; OnStep redirects the cast toward the wall on -Z.
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 1, 0), 120, behavior)
+
+				expect.truthy(
+					Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT),
+					"OnStep trajectory change did not affect movement"
+				)
+				expect.equal(hitInstance, wall, "OnStep-directed cast hit the wrong instance")
+				expect.greaterThan(stepCount, 0, "OnStep never fired")
 
 				caster:Destroy()
 				arena:Destroy()
