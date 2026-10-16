@@ -655,7 +655,9 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast:TerminateCast(cast: any)
-	if cast._Destroying or cast._TerminationQueued then
+	-- A cast reference can outlive its simulation entry after natural termination.
+	-- _TerminateCast clears the table, so reject stale references before queuing.
+	if not cast or type(cast.ID) ~= "number" or cast._Destroying or cast._TerminationQueued then
 		return
 	end
 
