@@ -1486,7 +1486,13 @@ local function UpdateCasts(delta: number)
 		-- Expiration is checked at the update boundary, before OnStep or movement.
 		local maxLifetime = cast and cast.StateInfo.MaxLifetime
 		if maxLifetime ~= nil and casts_TotalRunTime[id] >= maxLifetime then
-			BaseCastRef.TerminateCast(BaseCastRef, cast)
+			-- Queue termination through the simulation's existing lifecycle path.
+			-- BaseCastRef is BaseCastSerial, which does not expose TerminateCast.
+			if cast and not cast._Destroying and not cast._TerminationQueued then
+				cast._Destroying = true
+				cast._TerminationQueued = true
+				SerialSimulation.QueueEvent(id, "CastTerminating")
+			end
 			continue
 		end
 
