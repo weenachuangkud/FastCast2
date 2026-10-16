@@ -154,10 +154,23 @@ local function onCastFire(cast)
 	ActiveCasts[#ActiveCasts + 1] = cast
 end
 
+local function onCastTerminating(cast)
+	local cosmetic = cast.RayInfo.CosmeticBulletObject
+	if cosmetic and cosmetic.Parent then
+		cosmetic:Destroy()
+	end
+
+	local index = table.find(ActiveCasts, cast)
+	if index then
+		table.remove(ActiveCasts, index)
+	end
+end
+
 local function createCaster()
 	local caster = FastCast.new()
 	FastCast.Init(Config.MovementMode)
 	caster.CastFire = onCastFire
+	caster.CastTerminating = onCastTerminating
 	return caster
 end
 
@@ -187,10 +200,9 @@ local function printBenchmarkInfo()
 	print(("Projectiles: %d"):format(Config.ProjectileAmount))
 	print(("Velocity: %.2f"):format(Config.Velocity))
 	print(("CastType: %s"):format(Config.CastType))
-	print(
-		"Instanced: %s",
+	print(("Instanced: %s"):format(
 		Config.Instanced and "Enabled" or "Disabled"
-	)
+	))
 
 	print(
 		"VisualizeCasts: %s",
@@ -290,7 +302,7 @@ local function fireProjectiles()
 	local random = Random.new(Config.RandomSeed)
 
 	for _ = 1, Config.ProjectileAmount do
-		task.spawn(fireProjectile, random)
+		fireProjectile(random)
 	end
 end
 
@@ -355,6 +367,7 @@ local function benchmark()
 		-- Cleanup
 		printSeparator("CLEANUP")
 
+		local activeCount = #ActiveCasts
 		local cleanupStarted = os.clock()
 
 		cleanupCasts()
@@ -363,7 +376,7 @@ local function benchmark()
 
 		printOperationStats(
 			cleanupElapsed,
-			Config.ProjectileAmount
+			activeCount
 		)
 
 		-- Clear our references
