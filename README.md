@@ -123,13 +123,19 @@ behavior.CosmeticBulletTemplate = ProjectileTemplate
  
 -- Serial Caster (runs on main thread, simpler)
 local Caster = FastCast2.new()
-FastCast.Init("BulkMoveTo") -- movementMode
+FastCast2.Init("BulkMoveTo") -- movementMode
  
 -- Events (can be set before Init)
 Caster.Hit = function(cast, result, velocity, bullet)
-	print("Hit: " .. result.Instance.Name)
-    local obj = cast.RayInfo.CosmeticBulletObject
-    if obj then obj:Destroy() end
+	print(("Hit [cast %d]: %s"):format(cast.ID, result.Instance.Name))
+end
+
+-- Clean up cosmetics whether the cast hits or reaches MaxDistance.
+Caster.CastTerminating = function(cast)
+	local obj = cast.RayInfo.CosmeticBulletObject
+	if obj and obj.Parent then
+		obj:Destroy()
+	end
 end
  
 -- Fire
