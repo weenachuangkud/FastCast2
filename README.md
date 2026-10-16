@@ -229,6 +229,24 @@ end
 
 `OnStep` runs once per active cast per simulation update. Use it for homing, steering, or other custom trajectory logic. It is opt-in to avoid callback overhead for casts that do not need it. `LengthChanged` remains a movement notification intended for cosmetic updates and trails.
 
+
+### Pause and resume casts
+
+Pause an active cast without changing its current position, velocity, acceleration, or simulation runtime. While paused, it does not raycast or fire `OnStep` / `LengthChanged`. Resume continues from the same simulation time, without catching up for the time spent paused.
+
+```lua
+FastCast2:PauseCast(cast)
+
+-- Later:
+FastCast2:ResumeCast(cast)
+
+-- A paused cast can still be terminated.
+FastCast2:TerminateCast(cast)
+```
+
+Calling `PauseCast` or `ResumeCast` repeatedly is safe. Resuming a terminated cast has no effect. If a cast is paused inside `OnStep`, that simulation step is skipped as well.
+
+
 ### Cast manipulation
 
 Modify active casts at runtime using the static `FastCast` methods:
