@@ -195,9 +195,7 @@ local function terminateActiveCasts()
 	end
 
 	table.clear(ActiveCasts)
-	table.clear(ActiveCastIndices)
 end
-
 
 local function destroyCaster()
 	if not Caster then
