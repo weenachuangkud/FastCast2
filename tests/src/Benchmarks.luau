@@ -92,8 +92,8 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 end
 
 local function createCaster(activeCasts: { any }): any
+	FastCast.Init("BulkMoveTo")
 	local caster = FastCast.new()
-	caster:Init("BulkMoveTo")
 	caster.CastFire = function(cast: any)
 		table.insert(activeCasts, cast)
 	end
