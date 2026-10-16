@@ -36,7 +36,8 @@ export type FastCastSignalEvents = {
 	Pierced: Signal.Signal<OnPiercedFunction>,
 	LengthChanged: Signal.Signal<OnLengthChangedFunction>,
 	CastTerminating: Signal.Signal<OnCastTerminatingFunction>,
-	CastFire: Signal.Signal<OnCastFireFunction>
+	CastFire: Signal.Signal<OnCastFireFunction>,
+	OnStep: Signal.Signal<OnStepFunction>
 }
 
 --[=[
@@ -115,6 +116,9 @@ export type OnCastFireFunction = (
 	behavior: FastCastBehavior
 ) -> ()
 
+-- Runs synchronously before the cast's movement is simulated for this step.
+export type OnStepFunction = (cast: vaildcast, deltaTime: number) -> ()
+
 -- Debug
 
 --[=[
@@ -154,6 +158,7 @@ export type CasterSerial = {
 	Pierced: Signal.Signal<OnPiercedFunction> | OnPiercedFunction,
 	CastTerminating: Signal.Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction,
 	CastFire: Signal.Signal<OnCastFireFunction> | OnCastFireFunction,
+	OnStep: Signal.Signal<OnStepFunction> | OnStepFunction,
 
 	MovementMode: ("BulkMoveTo" | "Motor6D")?,
 
@@ -204,7 +209,8 @@ export type FastCastEventsConfig = {
 	UsePierced: boolean,
 	UseCastTerminating: boolean,
 	UseCastFire: boolean,
-	UseCanPierce: boolean
+	UseCanPierce: boolean,
+	UseOnStep: boolean
 }
 
 --[=[
