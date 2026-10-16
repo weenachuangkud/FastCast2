@@ -20,6 +20,8 @@ local EnumCastTypes = FastCastEnums.CastType
 local DEFAULT_MAX_DISTANCE = 1000
 local FC_VIS_OBJ_NAME = "FastCastVisualizationObjects"
 
+local SerialSimulation = {}
+
 -- ============================================================================
 -- Types
 -- ============================================================================
@@ -1557,8 +1559,6 @@ end
 -- ============================================================================
 -- Public API
 -- ============================================================================
-
-local SerialSimulation = {}
 
 SerialSimulation.Connection = nil :: RBXScriptConnection?
 
