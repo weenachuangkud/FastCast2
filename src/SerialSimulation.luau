@@ -640,7 +640,8 @@ end
 -- Pre-allocated arrays for BulkMoveTo (reused every frame)
 local bulkParts: { BasePart } = {}
 local bulkCframes: { CFrame } = {}
-add previousBulkCount
+local bulkCount: number = 0
+local previousBulkCount: number = 0
 local cosmeticFrame: number = 0
 
 -- Cosmetic parts can be pushed at a lower rate than the simulation. Moving
