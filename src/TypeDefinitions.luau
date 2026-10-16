@@ -261,6 +261,7 @@ export type CastTrajectory = {
 export type CastStateInfo = {
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
+	IsPaused: boolean,
 	TotalRuntime: number,
 	DistanceCovered: number,
 	IsActivelySimulatingPierce: boolean,
