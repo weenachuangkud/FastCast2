@@ -1200,8 +1200,7 @@ local function SimulateAlwaysHighFidelity(
 
 	local totalDisplacement = currentPoint - lastPoint
 
-	local direction = totalDisplacement.Unit * currentVelocity.Magnitude
-		* delta
+	local direction = totalDisplacement.Unit * currentVelocity.Magnitude * delta
 
 	local handler = castHandlers[variant.CastType]
 
@@ -1213,8 +1212,7 @@ local function SimulateAlwaysHighFidelity(
 		variant
 	)
 
-	local endpoint = resultOfCast and resultOfCast.Position
-		or currentPoint
+	local endpoint = (resultOfCast and resultOfCast.Position) or currentPoint
 
 	local distance = (endpoint - lastPoint).Magnitude
 
