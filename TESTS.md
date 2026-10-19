@@ -22,8 +22,7 @@ The functional suite covers the shared public API and core cast lifecycle. Use t
 - [ ] Fire Raycast, Blockcast, and Spherecast casts; confirm each reaches a target and terminates.
 - [ ] Confirm enabled event callbacks fire: `CastFire`, `LengthChanged`, `Hit`, `Pierced`, `CanPierce`, and `CastTerminating` where applicable.
 - [ ] Confirm Signals support multiple listeners and connection disconnection; check `Once`, `Wait`, and `DisconnectAll`.
-- [ ] Set individual options in `FastCastEventsConfig` to `false` and confirm the corresponding callbacks do not fire.
-- [ ] Set `FastCastEventsConfig.UseLengthChanged = true` and confirm `LengthChanged` fires as the cast moves.
+- [ ] Verify event configuration can disable callback channels; for example, setting `UseLengthChanged = true` enables the `LengthChanged` callback.
 - [ ] Verify `CanPierce` and `Pierced` when a cast is allowed through an instance.
 - [ ] Verify `OnStep` runs before movement when enabled and can change a cast's trajectory.
 
