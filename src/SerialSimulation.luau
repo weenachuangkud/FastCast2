@@ -1298,23 +1298,18 @@ function SerialSimulation_Register(cast: any)
 	casts_RayInfo[id] = cast.RayInfo
 	casts_UserData[id] = cast.UserData
 
-	casts_CastType[id] =
-		cast.CastVariant.CastType
+	casts_CastType[id] = cast.CastVariant.CastType
 
-	casts_CastVariant[id] =
-		cast.CastVariant
+	casts_CastVariant[id] = cast.CastVariant
 
-	casts_MaxDistance[id] =
-		cast.RayInfo.MaxDistance
-		or DEFAULT_MAX_DISTANCE
+	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
 
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
 
 	local eventConfig = casts_FastCastEventsConfig[id]
 
-	casts_WantLengthChanged[id] =
-		eventConfig ~= nil and eventConfig.UseLengthChanged == true
+	casts_WantLengthChanged[id] = eventConfig ~= nil and eventConfig.UseLengthChanged == true
 
 	local hasCosmetic = cast.RayInfo.CosmeticBulletObject ~= nil
 	casts_HasCosmetic[id] = hasCosmetic
@@ -1343,8 +1338,7 @@ function SerialSimulation_Register(cast: any)
 			and BaseCastRef
 			and BaseCastRef._GetMotor6D
 		then
-			casts_ActiveMotor6Ds[id] =
-				BaseCastRef._GetMotor6D(cosmetic)
+			casts_ActiveMotor6Ds[id] = BaseCastRef._GetMotor6D(cosmetic)
 		end
 	end
 end
@@ -1451,8 +1445,7 @@ local function SetMovementModeEnabled(
 				and BaseCastRef
 				and BaseCastRef._GetMotor6D
 			then
-				casts_ActiveMotor6Ds[id] =
-					BaseCastRef._GetMotor6D(cosmetic)
+				casts_ActiveMotor6Ds[id] = BaseCastRef._GetMotor6D(cosmetic)
 			end
 		end
 	end
