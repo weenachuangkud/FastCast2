@@ -14,7 +14,7 @@
 
 Unofficial continuation of FastCast for Roblox
 
-**A Community-Maintained Continuation of FastCast [FastCast](https://etithespir.it/FastCastAPIDocs/)**
+**A Community-Maintained Continuation of [FastCast](https://etithespir.it/FastCastAPIDocs/)**
 
 </div>
 
