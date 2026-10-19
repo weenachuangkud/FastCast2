@@ -284,8 +284,11 @@ local function GetPositionAtTime(
 	initialVelocity: Vector3,
 	acceleration: Vector3
 ): Vector3
-	local force =
-		Vector3.new((acceleration.X * time ^ 2) / 2, (acceleration.Y * time ^ 2) / 2, (acceleration.Z * time ^ 2) / 2)
+	local force = Vector3.new(
+		(acceleration.X * time ^ 2) / 2,
+		(acceleration.Y * time ^ 2) / 2,
+		(acceleration.Z * time ^ 2) / 2
+	)
 	return origin + (initialVelocity * time) + force
 end
 
