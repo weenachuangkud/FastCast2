@@ -779,12 +779,13 @@ local function ShouldPierce(
 	velocity: Vector3,
 	canPierce: TypeDef.CanPierceFunction?
 ): boolean
-	if not canPierce then
+	local cast = ActivesRef[id]
+	if not canPierce or not cast or not cast.StateInfo.FastCastEventsConfig.UseCanPierce then
 		return false
 	end
 
 	return canPierce(
-		ActivesRef[id],
+		cast,
 		result,
 		velocity,
 		casts_RayInfo[id].CosmeticBulletObject
