@@ -96,14 +96,12 @@ local casts_CancelHighResCast = {} :: { [number]: boolean }
 
 local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
 
-local casts_FastCastEventsConfig =
-	{} :: { [number]: TypeDef.FastCastEventsConfig }
+local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
 local casts_CasterId = {} :: { [number]: number }
 local CasterEvents = {} :: { [number]: any }
 
 local casts_VisualizeCasts = {} :: { [number]: boolean }
-local casts_VisualizeCastSettings =
-	{} :: { [number]: TypeDef.VisualizeCastSettings }
+local casts_VisualizeCastSettings = {} :: { [number]: TypeDef.VisualizeCastSettings }
 
 local casts_RayInfo = {} :: { [number]: TypeDef.CastRayInfo }
 local casts_UserData = {} :: { [number]: any }
@@ -843,8 +841,7 @@ local function ResimulateHit(
 			break
 		end
 
-		local subTime =
-			lastDelta + timeIncrement * segmentIndex
+		local subTime = lastDelta + timeIncrement * segmentIndex
 
 		local subPosition = GetPositionAtTime(
 			subTime,
@@ -1203,9 +1200,7 @@ local function SimulateAlwaysHighFidelity(
 
 	local totalDisplacement = currentPoint - lastPoint
 
-	local direction =
-		totalDisplacement.Unit
-		* currentVelocity.Magnitude
+	local direction = totalDisplacement.Unit * currentVelocity.Magnitude
 		* delta
 
 	local handler = castHandlers[variant.CastType]
@@ -1218,9 +1213,7 @@ local function SimulateAlwaysHighFidelity(
 		variant
 	)
 
-	local endpoint =
-		resultOfCast
-		and resultOfCast.Position
+	local endpoint = resultOfCast and resultOfCast.Position
 		or currentPoint
 
 	local distance = (endpoint - lastPoint).Magnitude
@@ -1454,8 +1447,7 @@ local function SetMovementModeEnabled(
 				continue
 			end
 
-			local cosmetic =
-				casts_RayInfo[id].CosmeticBulletObject
+			local cosmetic = casts_RayInfo[id].CosmeticBulletObject
 
 			if cosmetic
 				and BaseCastRef
