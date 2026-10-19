@@ -433,8 +433,7 @@ end
 local function toggleInstancing()
 	Config.Instanced = not Config.Instanced
 
-	CastBehavior.CosmeticBulletTemplate =
-		Config.Instanced and ProjectileTemplate or nil
+	CastBehavior.CosmeticBulletTemplate = Config.Instanced and ProjectileTemplate or nil
 
 	print(
 		("CosmeticBulletTemplate: %s"):format(
@@ -461,8 +460,7 @@ local function toggleMovementMode()
 end
 
 local function toggleVisualization()
-	CastBehavior.VisualizeCasts =
-		not CastBehavior.VisualizeCasts
+	CastBehavior.VisualizeCasts = not CastBehavior.VisualizeCasts
 
 	print(
 		("VisualizeCasts: %s"):format(
@@ -475,16 +473,13 @@ local function cycleHighFidelity()
 	local current = CastBehavior.HighFidelityBehavior
 
 	if current == FastCastEnums.HighFidelityBehavior.Default then
-		CastBehavior.HighFidelityBehavior =
-			FastCastEnums.HighFidelityBehavior.Automatic
+		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Automatic
 
 	elseif current == FastCastEnums.HighFidelityBehavior.Automatic then
-		CastBehavior.HighFidelityBehavior =
-			FastCastEnums.HighFidelityBehavior.Always
+		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
 
 	else
-		CastBehavior.HighFidelityBehavior =
-			FastCastEnums.HighFidelityBehavior.Default
+		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 	end
 
 	print(
