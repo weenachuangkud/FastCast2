@@ -106,8 +106,7 @@ CastBehavior.Acceleration = Vector3.zero
 CastBehavior.AutoIgnoreContainer = true
 
 CastBehavior.CosmeticBulletContainer = ProjectileContainer
-CastBehavior.CosmeticBulletTemplate =
-	Config.Instanced and ProjectileTemplate or nil
+CastBehavior.CosmeticBulletTemplate = Config.Instanced and ProjectileTemplate or nil
 
 CastBehavior.VisualizeCasts = Config.VisualizeCasts
 
@@ -450,8 +449,7 @@ end
 local function setInstanced(enabled)
 	Config.Instanced = enabled
 
-	CastBehavior.CosmeticBulletTemplate =
-		enabled and ProjectileTemplate or nil
+	CastBehavior.CosmeticBulletTemplate = enabled and ProjectileTemplate or nil
 end
 
 local function toggleInstancing()
@@ -482,11 +480,9 @@ local function toggleMovementMode()
 end
 
 local function toggleVisualization()
-	Config.VisualizeCasts =
-		not Config.VisualizeCasts
+	Config.VisualizeCasts = not Config.VisualizeCasts
 
-	CastBehavior.VisualizeCasts =
-		Config.VisualizeCasts
+	CastBehavior.VisualizeCasts = Config.VisualizeCasts
 
 	print(("VisualizeCasts: %s"):format(
 		Config.VisualizeCasts
@@ -500,18 +496,15 @@ local function cycleHighFidelity()
 
 	if current == FastCastEnums.HighFidelityBehavior.Default then
 
-		CastBehavior.HighFidelityBehavior =
-			FastCastEnums.HighFidelityBehavior.Automatic
+		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Automatic
 
 	elseif current == FastCastEnums.HighFidelityBehavior.Automatic then
 
-		CastBehavior.HighFidelityBehavior =
-			FastCastEnums.HighFidelityBehavior.Always
+		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
 
 	else
 
-		CastBehavior.HighFidelityBehavior =
-			FastCastEnums.HighFidelityBehavior.Default
+		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
 
 	end
 
