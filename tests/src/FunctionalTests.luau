@@ -80,8 +80,15 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 
 			local hitInstance = nil
 			local terminated = false
+			local castData = nil
+			behavior.MaxLifetime = 3
+			behavior.HighFidelitySegmentSize = 0.25
+			behavior.UserData = { TestTag = castType }
 
 			local caster = FastCast.new()
+			caster.CastFire = function(cast)
+				castData = cast
+			end
 			caster.Hit = function(_, result)
 				hitInstance = result.Instance
 			end
@@ -91,6 +98,30 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 			FastCast.Init("BulkMoveTo")
 
 			fire(caster, castType, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
+
+			expect.truthy(castData, castType .. " did not expose its cast through CastFire")
+			expect.equal(castData.Type, FastCast.CastType[castType], castType .. " cast type was wrong")
+			expect.equal(type(castData.ID), "number", castType .. " cast ID was not numeric")
+			expect.equal(castData.CasterId, caster.CasterId, castType .. " CasterId was wrong")
+			expect.equal(castData.CFrame.Position, Vector3.zero, castType .. " initial CFrame was wrong")
+			expect.equal(castData.StateInfo.Trajectory.Origin, Vector3.zero, castType .. " trajectory origin was wrong")
+			expect.equal(
+				castData.StateInfo.Trajectory.InitialVelocity,
+				Vector3.new(0, 0, -120),
+				castType .. " initial velocity was wrong"
+			)
+			expect.equal(castData.StateInfo.Trajectory.Acceleration, behavior.Acceleration, castType .. " acceleration was wrong")
+			expect.equal(castData.StateInfo.MaxLifetime, behavior.MaxLifetime, castType .. " MaxLifetime was not copied")
+			expect.equal(castData.StateInfo.HighFidelitySegmentSize, 0.25, castType .. " segment size was not copied")
+			expect.equal(castData.UserData.TestTag, castType, castType .. " UserData was not copied")
+			expect.equal(castData.RayInfo.WorldRoot, workspace, castType .. " WorldRoot was wrong")
+			expect.equal(castData.RayInfo.MaxDistance, behavior.MaxDistance, castType .. " MaxDistance was wrong")
+			expect.equal(typeof(castData.RayInfo.Parameters), "RaycastParams", castType .. " RaycastParams was missing")
+			if castType == "Blockcast" then
+				expect.equal(castData.RayInfo.Size, Vector3.one, "Blockcast size was not exposed")
+			elseif castType == "Spherecast" then
+				expect.equal(castData.RayInfo.Radius, 0.5, "Spherecast radius was not exposed")
+			end
 
 			expect.truthy(
 				Framework.waitFor(function()
@@ -117,16 +148,82 @@ return function()
 		Framework.describe("FastCastBehavior", function(test)
 			test("newBehavior returns the documented defaults", function(expect)
 				local behavior = FastCast.newBehavior()
+				local events = behavior.FastCastEventsConfig
 
 				expect.equal(behavior.MaxDistance, 1000, "MaxDistance default changed")
+				expect.equal(behavior.MaxLifetime, nil, "MaxLifetime should be unlimited by default")
 				expect.near(behavior.Acceleration, Vector3.zero, 1e-6, "Acceleration default changed")
 				expect.equal(
 					behavior.HighFidelityBehavior,
 					FastCastEnums.HighFidelityBehavior.Default,
 					"HighFidelityBehavior default changed"
 				)
+				expect.equal(behavior.HighFidelitySegmentSize, 0.5, "HighFidelitySegmentSize default changed")
+				expect.equal(behavior.CosmeticBulletTemplate, nil, "CosmeticBulletTemplate default changed")
+				expect.equal(behavior.CosmeticBulletContainer, nil, "CosmeticBulletContainer default changed")
 				expect.equal(behavior.AutoIgnoreContainer, true, "AutoIgnoreContainer default changed")
-				expect.equal(behavior.FastCastEventsConfig.UseOnStep, false, "UseOnStep should be opt-in")
+				expect.equal(behavior.CloneTemplate, true, "CloneTemplate should be enabled by default")
+				expect.equal(behavior.VisualizeCasts, false, "VisualizeCasts should be disabled by default")
+				expect.equal(type(behavior.VisualizeCastSettings), "table", "visualization settings are missing")
+				expect.equal(events.UseLengthChanged, false, "LengthChanged should be opt-in")
+				expect.equal(events.UseHit, true, "Hit should be enabled by default")
+				expect.equal(events.UsePierced, true, "Pierced should be enabled by default")
+				expect.equal(events.UseCastTerminating, true, "CastTerminating should be enabled by default")
+				expect.equal(events.UseCanPierce, true, "CanPierce should be enabled by default")
+				expect.equal(events.UseCastFire, true, "CastFire should be enabled by default")
+				expect.equal(events.UseOnStep, false, "OnStep should be opt-in")
+			end)
+
+			test("newBehavior returns independent nested configuration", function(expect)
+				local first = FastCast.newBehavior()
+				local second = FastCast.newBehavior()
+
+				first.FastCastEventsConfig.UseHit = false
+				first.VisualizeCastSettings.Debug_SegmentSize = 99
+
+				expect.equal(second.FastCastEventsConfig.UseHit, true, "event config was shared between behaviors")
+				expect.truthy(
+					second.VisualizeCastSettings.Debug_SegmentSize ~= 99,
+					"visualization settings were shared between behaviors"
+				)
+			end)
+		end),
+
+		Framework.describe("FastCastSignal", function(test)
+			test("Once, Wait, and DisconnectAll behave as expected", function(expect)
+				local caster = FastCast.new()
+				local signal = caster.Hit
+				local onceValue = nil
+				local waitValue = nil
+				local disconnectedCount = 0
+
+				signal:Once(function(value)
+					onceValue = value
+				end)
+				signal:Fire("first")
+				signal:Fire("second")
+				expect.equal(onceValue, "first", "Once listener fired more than once or missed the first value")
+
+				task.spawn(function()
+					waitValue = signal:Wait()
+				end)
+				task.wait()
+				signal:Fire("waited")
+				expect.truthy(
+					Framework.waitFor(function()
+						return waitValue ~= nil
+					end, HIT_TIMEOUT),
+					"Wait did not resume when the signal fired"
+				)
+				expect.equal(waitValue, "waited", "Wait returned the wrong value")
+
+				signal:Connect(function()
+					disconnectedCount += 1
+				end)
+				signal:DisconnectAll()
+				signal:Fire("after disconnect")
+				expect.equal(disconnectedCount, 0, "DisconnectAll left a listener connected")
+				caster:Destroy()
 			end)
 		end),
 
@@ -572,13 +669,17 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("HighFidelity Always still resolves a hit", function(expect)
+
+			test("RaycastParams filters the first wall and hits the next", function(expect)
 				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local excludedWall = createWall(arena, Vector3.new(0, 0, -20), Vector3.new(50, 50, 2))
+				local targetWall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
-				behavior.HighFidelitySegmentSize = 1
+				local params = RaycastParams.new()
+				params.FilterType = Enum.RaycastFilterType.Exclude
+				params.FilterDescendantsInstances = { container, excludedWall }
+				behavior.RaycastParams = params
 
 				local hitInstance = nil
 				local caster = FastCast.new()
@@ -586,16 +687,208 @@ return function()
 					hitInstance = result.Instance
 				end
 				FastCast.Init("BulkMoveTo")
-
-				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
 				expect.truthy(
 					Framework.waitFor(function()
 						return hitInstance ~= nil
 					end, HIT_TIMEOUT),
-					"high fidelity cast never hit the wall"
+					"filtered raycast never hit anything"
 				)
-				expect.equal(hitInstance, wall, "high fidelity cast hit the wrong instance")
+				expect.equal(hitInstance, targetWall, "RaycastParams did not exclude the configured wall")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("MaxDistance terminates a cast without reporting a hit", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.MaxDistance = 15
+
+				local hitCount = 0
+				local terminationCount = 0
+				local caster = FastCast.new()
+				caster.Hit = function()
+					hitCount += 1
+				end
+				caster.CastTerminating = function()
+					terminationCount += 1
+				end
+				FastCast.Init("BulkMoveTo")
+				fire(caster, "Raycast", Vector3.new(0, 100, 0), Vector3.yAxis, 120, behavior)
+
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminationCount > 0
+					end, HIT_TIMEOUT),
+					"MaxDistance did not terminate the cast"
+				)
+				expect.equal(hitCount, 0, "MaxDistance termination incorrectly reported a hit")
+				expect.equal(terminationCount, 1, "MaxDistance termination fired more than once")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("cosmetic template is cloned into its container and ignored by its own cast", function(expect)
+				local arena = createArena()
+				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local template = Instance.new("Part")
+				template.Name = "ProjectileTemplate"
+				template.Anchored = true
+				template.CanCollide = false
+				template.CanQuery = true
+				template.Size = Vector3.one
+				template.Position = Vector3.new(1000, 1000, 1000)
+				template.Parent = arena
+
+				local behavior = makeBehavior(container)
+				behavior.CosmeticBulletTemplate = template
+				behavior.CosmeticBulletContainer = container
+				behavior.RaycastParams = RaycastParams.new()
+				behavior.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+				behavior.RaycastParams.FilterDescendantsInstances = {}
+				behavior.AutoIgnoreContainer = true
+				behavior.CloneTemplate = true
+
+				local castData = nil
+				local cosmetic = nil
+				local hitInstance = nil
+				local caster = FastCast.new()
+				caster.CastFire = function(cast)
+					castData = cast
+					cosmetic = cast.RayInfo.CosmeticBulletObject
+				end
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+				end
+				FastCast.Init("BulkMoveTo")
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+
+				expect.truthy(cosmetic, "cast did not create a cosmetic projectile")
+				expect.truthy(cosmetic ~= template, "CloneTemplate did not clone the template")
+				expect.equal(cosmetic.Parent, container, "cloned cosmetic was parented to the wrong container")
+				expect.equal(template.Parent, arena, "cloning changed the original template's parent")
+				expect.truthy(
+					table.find(castData.RayInfo.Parameters.FilterDescendantsInstances, container) ~= nil,
+					"AutoIgnoreContainer did not add the cosmetic container to the raycast filter"
+				)
+				expect.truthy(
+					Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT),
+					"cast hit its own cosmetic instead of reaching the wall"
+				)
+				expect.equal(hitInstance, wall, "cast hit the wrong instance")
+				expect.truthy(cosmetic.Parent ~= nil, "FastCast unexpectedly cleaned up the cosmetic")
+				cosmetic:Destroy()
+				template:Destroy()
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("CloneTemplate false uses the supplied cosmetic instance", function(expect)
+				local arena = createArena()
+				local container = createContainer(arena)
+				local template = Instance.new("Part")
+				template.Anchored = true
+				template.CanCollide = false
+				template.Parent = arena
+
+				local behavior = makeBehavior(container)
+				behavior.CosmeticBulletTemplate = template
+				behavior.CosmeticBulletContainer = container
+				behavior.CloneTemplate = false
+
+				local castData = nil
+				local caster = FastCast.new()
+				caster.CastFire = function(cast)
+					castData = cast
+				end
+				FastCast.Init("BulkMoveTo")
+				fire(caster, "Raycast", Vector3.zero, Vector3.yAxis, 60, behavior)
+
+				expect.truthy(castData, "CastFire did not expose the active cast")
+				expect.equal(castData.RayInfo.CosmeticBulletObject, template, "CloneTemplate=false did not use the original instance")
+				expect.equal(template.Parent, container, "original cosmetic was not parented to the configured container")
+
+				FastCast:TerminateCast(castData)
+				template:Destroy()
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("event configuration can disable all callback channels", function(expect)
+				local arena = createArena()
+				createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.FastCastEventsConfig = {
+					UseLengthChanged = false,
+					UseHit = false,
+					UsePierced = false,
+					UseCastTerminating = false,
+					UseCanPierce = false,
+					UseCastFire = false,
+					UseOnStep = false,
+				}
+
+				local callbackCount = 0
+				local caster = FastCast.new()
+				caster.CastFire = function() callbackCount += 1 end
+				caster.LengthChanged = function() callbackCount += 1 end
+				caster.Hit = function() callbackCount += 1 end
+				caster.Pierced = function() callbackCount += 1 end
+				caster.CastTerminating = function() callbackCount += 1 end
+				caster.OnStep = function() callbackCount += 1 end
+				caster.CanPierce = function()
+					callbackCount += 1
+					return true
+				end
+
+				FastCast.Init("BulkMoveTo")
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+				task.wait(0.5)
+				expect.equal(callbackCount, 0, "a disabled event callback still ran")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("HighFidelity modes all resolve hits", function(expect)
+				local arena = createArena()
+				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				local modes = {
+					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
+					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
+					{ Name = "Always", Value = FastCastEnums.HighFidelityBehavior.Always, SegmentSize = 1 },
+				}
+
+				local hitCount = 0
+				local caster = FastCast.new()
+				caster.Hit = function(_, result)
+					if result.Instance == wall then
+						hitCount += 1
+					end
+				end
+				FastCast.Init("BulkMoveTo")
+
+				for _, mode in modes do
+					behavior.HighFidelityBehavior = mode.Value
+					behavior.HighFidelitySegmentSize = mode.SegmentSize
+					fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+					expect.truthy(
+						Framework.waitFor(function()
+							return hitCount == _
+						end, HIT_TIMEOUT),
+						mode.Name .. " high-fidelity mode did not hit the wall"
+					)
+				end
 
 				caster:Destroy()
 				arena:Destroy()
