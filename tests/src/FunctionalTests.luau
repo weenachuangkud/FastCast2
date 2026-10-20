@@ -638,17 +638,15 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("movement mode can be switched", function(expect)
+			test("movement mode is configured on the shared FastCast runtime", function(expect)
 				local caster = newCaster(expect)
 				initializeRuntime()
 
-				-- FastCast.Init configures the shared simulation. The caster property
-				-- is set by this caster's movement-mode method.
-				caster:SetMovementModeEnabled(true, "Motor6D")
-				expect.equal(caster.MovementMode, "Motor6D", "movement mode was not set to Motor6D")
+				FastCast.SetMovementModeEnabled(true, "Motor6D")
+				expect.equal(caster.MovementMode, nil, "movement mode should not be stored per caster")
 
-				caster:SetMovementModeEnabled(true, "BulkMoveTo")
-				expect.equal(caster.MovementMode, "BulkMoveTo", "movement mode was not switched")
+				FastCast.SetMovementModeEnabled(true, "BulkMoveTo")
+				expect.equal(caster.MovementMode, nil, "switching the shared movement mode should not add per-caster state")
 
 				caster:Destroy()
 			end)
