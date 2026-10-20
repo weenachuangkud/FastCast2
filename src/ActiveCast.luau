@@ -120,10 +120,25 @@ function ActiveCast.createCastData(
 		targetContainer = behavior.CosmeticBulletContainer
 	end
 
-	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
+	if behavior.AutoIgnoreContainer == true then
 		local ignoreList = cast.RayInfo.Parameters.FilterDescendantsInstances
-		if not table.find(ignoreList, targetContainer) then
+		local changed = false
+
+		-- Exclude the container so every descendant cosmetic is ignored, and
+		-- explicitly exclude this cosmetic as well. The direct entry protects
+		-- the cast if the cosmetic is reparented out of the configured container.
+		if targetContainer ~= nil and not table.find(ignoreList, targetContainer) then
 			table.insert(ignoreList, targetContainer)
+			changed = true
+		end
+
+		local cosmetic = cast.RayInfo.CosmeticBulletObject
+		if cosmetic ~= nil and not table.find(ignoreList, cosmetic) then
+			table.insert(ignoreList, cosmetic)
+			changed = true
+		end
+
+		if changed then
 			cast.RayInfo.Parameters.FilterDescendantsInstances = ignoreList
 		end
 	end
