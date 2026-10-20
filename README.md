@@ -211,8 +211,8 @@ All active casts automatically get a Motor6D connection on registration and disc
 You can switch modes at runtime:
 
 ```lua
-Caster:SetMovementModeEnabled(true, "Motor6D")   -- enable Motor6D
-Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- switch back
+FastCast2.SetMovementModeEnabled(true, "Motor6D")   -- enable Motor6D for the shared runtime
+FastCast2.SetMovementModeEnabled(true, "BulkMoveTo") -- switch back
 ```
 
 ### Simulation configuration
