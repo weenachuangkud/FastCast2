@@ -17,12 +17,27 @@ local CAST_TYPES = { "Raycast", "Blockcast", "Spherecast" }
 local HIT_TIMEOUT = 5
 
 local arenaCounter = 0
+local runtimeInitialized = false
 
-local function createArena(): Folder
+local function initializeRuntime()
+	if runtimeInitialized then
+		return
+	end
+
+	FastCast.Init("BulkMoveTo")
+	runtimeInitialized = true
+end
+
+local function createArena(expect: any): Folder
 	arenaCounter += 1
 	local arena = Instance.new("Folder")
 	arena.Name = "FastCast2TestArena" .. arenaCounter
 	arena.Parent = workspace
+	expect.cleanup(function()
+		if arena.Parent then
+			arena:Destroy()
+		end
+	end)
 	return arena
 end
 
@@ -36,6 +51,14 @@ local function createWall(parent: Instance, position: Vector3, size: Vector3): P
 	wall.Position = position
 	wall.Parent = parent
 	return wall
+end
+
+local function newCaster(expect: any): any
+	local caster = FastCast.new()
+	expect.cleanup(function()
+		caster:Destroy()
+	end)
+	return caster
 end
 
 local function createContainer(parent: Instance): Folder
@@ -73,8 +96,8 @@ end
 local function registerSerialCastTypes(test: (string, any) -> ())
 	for _, castType in CAST_TYPES do
 		test("Serial " .. castType .. " reaches a wall", function(expect)
-			local arena = createArena()
-			local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+			local arena = createArena(expect)
+			local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 			local container = createContainer(arena)
 			local behavior = makeBehavior(container)
 
@@ -85,7 +108,7 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 			behavior.HighFidelitySegmentSize = 0.25
 			behavior.UserData = { TestTag = castType }
 
-			local caster = FastCast.new()
+			local caster = newCaster(expect)
 			caster.CastFire = function(cast)
 				castData = cast
 			end
@@ -95,7 +118,7 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 			caster.CastTerminating = function()
 				terminated = true
 			end
-			FastCast.Init("BulkMoveTo")
+			initializeRuntime()
 
 			fire(caster, castType, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
@@ -191,7 +214,7 @@ return function()
 
 		Framework.describe("FastCastSignal", function(test)
 			test("Once, Wait, and DisconnectAll behave as expected", function(expect)
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				local signal = caster.Hit
 				local onceValue = nil
 				local waitValue = nil
@@ -229,8 +252,8 @@ return function()
 
 		Framework.describe("FastCastSerial", function(test)
 			test("initializes and destroys", function(expect)
-				local caster = FastCast.new()
-				FastCast.Init("BulkMoveTo")
+				local caster = newCaster(expect)
+				initializeRuntime()
 
 				expect.equal(type(caster.CasterId), "number", "caster did not receive a numeric ID")
 
@@ -239,16 +262,16 @@ return function()
 			end)
 
 			test("RaycastFire fires CastFire synchronously", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 
 				local firedCast = nil
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 60, behavior)
 
@@ -264,13 +287,13 @@ return function()
 			registerSerialCastTypes(test)
 
 			test("event callbacks assigned after Init still fire", function(expect)
-				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 
-				local caster = FastCast.new()
-				FastCast.Init("BulkMoveTo")
+				local caster = newCaster(expect)
+				initializeRuntime()
 
 				local hitInstance = nil
 				caster.Hit = function(_, result)
@@ -292,15 +315,15 @@ return function()
 			end)
 
 			test("events are Signals that support multiple listeners and Disconnect", function(expect)
-				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 
 				local firstCount = 0
 				local secondCount = 0
 
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				local firstConnection = caster.Hit:Connect(function(_, result)
 					if result.Instance == wall then
 						firstCount += 1
@@ -311,7 +334,7 @@ return function()
 						secondCount += 1
 					end
 				end)
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				-- A disconnected listener must not receive the event.
 				firstConnection:Disconnect()
@@ -331,7 +354,7 @@ return function()
 			end)
 
 			test("Pierced and CanPierce run when a cast is allowed through", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxDistance = 80
@@ -341,7 +364,7 @@ return function()
 				local piercedCount = 0
 				local terminated = false
 
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CanPierce = function()
 					return true
 				end
@@ -351,7 +374,7 @@ return function()
 				caster.CastTerminating = function()
 					terminated = true
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
@@ -368,17 +391,17 @@ return function()
 			end)
 
 			test("LengthChanged runs when enabled", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local lengthChanges = 0
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.LengthChanged = function()
 					lengthChanges += 1
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 				Framework.waitFor(function()
@@ -392,11 +415,11 @@ return function()
 			end)
 
 			test("fire methods return their active cast", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				local caster = FastCast.new()
-				FastCast.Init("BulkMoveTo")
+				local caster = newCaster(expect)
+				initializeRuntime()
 
 				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 60, behavior)
 				expect.truthy(cast, "RaycastFire did not return a cast")
@@ -408,11 +431,11 @@ return function()
 			end)
 
 			test("SetVelocity and SetAcceleration preserve cast position and runtime", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				local caster = FastCast.new()
-				FastCast.Init("BulkMoveTo")
+				local caster = newCaster(expect)
+				initializeRuntime()
 
 				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 60, behavior)
 				local runtime = cast.StateInfo.TotalRuntime
@@ -434,15 +457,15 @@ return function()
 			end)
 
 			test("OnStep can redirect a cast before movement", function(expect)
-				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local hitInstance = nil
 				local stepCount = 0
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.OnStep = function(cast, deltaTime)
 					stepCount += 1
 					if stepCount == 1 then
@@ -453,7 +476,7 @@ return function()
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				-- Start along +Y; OnStep redirects the cast toward the wall on -Z.
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 1, 0), 120, behavior)
@@ -472,7 +495,7 @@ return function()
 			end)
 
 			test("paused casts freeze runtime and resume without catching up", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig.UseOnStep = true
@@ -483,7 +506,7 @@ return function()
 				local lengthChangedCount = 0
 				local terminated = false
 
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
@@ -496,7 +519,7 @@ return function()
 				caster.CastTerminating = function()
 					terminated = true
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 				expect.truthy(firedCast, "CastFire did not provide the active cast")
@@ -540,7 +563,7 @@ return function()
 			end)
 
 			test("MaxLifetime expires casts at simulation update boundaries", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxLifetime = 0.1
@@ -550,7 +573,7 @@ return function()
 				local stepCount = 0
 				local terminated = false
 				local terminatedRuntime = nil
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
@@ -561,7 +584,7 @@ return function()
 					terminatedRuntime = cast.StateInfo.TotalRuntime
 					terminated = true
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 				expect.truthy(firedCast, "CastFire did not provide the active cast")
@@ -581,7 +604,7 @@ return function()
 			end)
 
 			test("MaxLifetime zero terminates without simulating", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxLifetime = 0
@@ -590,7 +613,7 @@ return function()
 				local firedCast = nil
 				local stepCount = 0
 				local terminated = false
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
@@ -600,7 +623,7 @@ return function()
 				caster.CastTerminating = function()
 					terminated = true
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 				expect.truthy(firedCast, "CastFire did not provide the active cast")
@@ -616,8 +639,8 @@ return function()
 			end)
 
 			test("movement mode can be switched", function(expect)
-				local caster = FastCast.new()
-				FastCast.Init("Motor6D")
+				local caster = newCaster(expect)
+				initializeRuntime()
 
 				-- FastCast.Init configures the shared simulation. The caster property
 				-- is set by this caster's movement-mode method.
@@ -631,16 +654,16 @@ return function()
 			end)
 
 			test("cast velocity, acceleration and position can be manipulated", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 
 				local firedCast = nil
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					firedCast = cast
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 1, 0), 60, behavior)
 				expect.truthy(firedCast, "CastFire did not run")
@@ -671,9 +694,9 @@ return function()
 
 
 			test("RaycastParams filters the first wall and hits the next", function(expect)
-				local arena = createArena()
-				local excludedWall = createWall(arena, Vector3.new(0, 0, -20), Vector3.new(50, 50, 2))
-				local targetWall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				local excludedWall = createWall(arena, Vector3.new(0, 0, -5), Vector3.new(50, 50, 2))
+				local targetWall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				local params = RaycastParams.new()
@@ -682,11 +705,11 @@ return function()
 				behavior.RaycastParams = params
 
 				local hitInstance = nil
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
 				expect.truthy(
@@ -702,21 +725,21 @@ return function()
 			end)
 
 			test("MaxDistance terminates a cast without reporting a hit", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxDistance = 15
 
 				local hitCount = 0
 				local terminationCount = 0
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.Hit = function()
 					hitCount += 1
 				end
 				caster.CastTerminating = function()
 					terminationCount += 1
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 				fire(caster, "Raycast", Vector3.new(0, 100, 0), Vector3.yAxis, 120, behavior)
 
 				expect.truthy(
@@ -733,8 +756,8 @@ return function()
 			end)
 
 			test("cosmetic template is cloned into its container and ignored by its own cast", function(expect)
-				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local template = Instance.new("Part")
 				template.Name = "ProjectileTemplate"
@@ -757,7 +780,7 @@ return function()
 				local castData = nil
 				local cosmetic = nil
 				local hitInstance = nil
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					castData = cast
 					cosmetic = cast.RayInfo.CosmeticBulletObject
@@ -765,7 +788,7 @@ return function()
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
 				expect.truthy(cosmetic, "cast did not create a cosmetic projectile")
@@ -791,7 +814,7 @@ return function()
 			end)
 
 			test("CloneTemplate false uses the supplied cosmetic instance", function(expect)
-				local arena = createArena()
+				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local template = Instance.new("Part")
 				template.Anchored = true
@@ -804,11 +827,11 @@ return function()
 				behavior.CloneTemplate = false
 
 				local castData = nil
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					castData = cast
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 				fire(caster, "Raycast", Vector3.zero, Vector3.yAxis, 60, behavior)
 
 				expect.truthy(castData, "CastFire did not expose the active cast")
@@ -822,8 +845,8 @@ return function()
 			end)
 
 			test("event configuration can disable all callback channels", function(expect)
-				local arena = createArena()
-				createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig = {
@@ -837,7 +860,7 @@ return function()
 				}
 
 				local callbackCount = 0
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.CastFire = function() callbackCount += 1 end
 				caster.LengthChanged = function() callbackCount += 1 end
 				caster.Hit = function() callbackCount += 1 end
@@ -849,7 +872,7 @@ return function()
 					return true
 				end
 
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 				task.wait(0.5)
 				expect.equal(callbackCount, 0, "a disabled event callback still ran")
@@ -859,8 +882,8 @@ return function()
 			end)
 
 			test("HighFidelity modes all resolve hits", function(expect)
-				local arena = createArena()
-				local wall = createWall(arena, Vector3.new(0, 0, -40), Vector3.new(50, 50, 2))
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				local modes = {
@@ -870,13 +893,13 @@ return function()
 				}
 
 				local hitCount = 0
-				local caster = FastCast.new()
+				local caster = newCaster(expect)
 				caster.Hit = function(_, result)
 					if result.Instance == wall then
 						hitCount += 1
 					end
 				end
-				FastCast.Init("BulkMoveTo")
+				initializeRuntime()
 
 				for _, mode in modes do
 					behavior.HighFidelityBehavior = mode.Value
