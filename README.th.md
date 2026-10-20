@@ -182,8 +182,8 @@ FastCast.Init("Motor6D") -- movementMode = "Motor6D"
 สามารถสลับโหมดได้ระหว่าง runtime:
 
 ```lua
-Caster:SetMovementModeEnabled(true, "Motor6D")   -- เปิดใช้งาน Motor6D
-Caster:SetMovementModeEnabled(true, "BulkMoveTo") -- สลับกลับไปใช้ BulkMoveTo
+FastCast2.SetMovementModeEnabled(true, "Motor6D")   -- เปิดใช้งาน Motor6D สำหรับ runtime ที่ใช้ร่วมกัน
+FastCast2.SetMovementModeEnabled(true, "BulkMoveTo") -- สลับกลับไปใช้ BulkMoveTo
 ```
 
 ### การตั้งค่าการจำลอง
