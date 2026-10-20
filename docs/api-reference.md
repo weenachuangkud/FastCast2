@@ -1,5 +1,23 @@
 # FastCast2 Documentation
 
+### 1.0 Runtime Lifecycle
+
+The Serial implementation uses a shared singleton runtime. Call `FastCast.Init()` to initialize the runtime on the first call and ensure simulation is running. Calling it again while running is safe; after `FastCast.Stop()`, calling `FastCast.Init()` resumes simulation without reinitializing the runtime.
+
+```lua
+FastCast.Init() -- Initialize once, or resume if stopped
+
+-- Later, when simulation should pause:
+FastCast.Stop()
+
+-- Resume the existing runtime and active casts:
+FastCast.Init()
+```
+
+`Stop()` disconnects simulation updates; it does not destroy active casts or reset the runtime. Active casts resume when simulation starts again. If `Config.SimulationMode` is changed while stopped, the next `Init()` uses the updated mode. Use `FastCast.SetMovementModeEnabled(enabled, mode)` to change movement mode; do not reinitialize for that.
+
+---
+
 ## 1. Caster
 
 ### 1.1 Serial Mode (`FastCast.new()`)
