@@ -4,6 +4,18 @@ sidebar_position: 2
 
 # FastCast2 CheatSheet
 
+## Runtime Lifecycle
+
+```lua
+FastCast.Init() -- Initialize once, or resume after Stop()
+FastCast.Stop() -- Stop simulation updates; active casts are retained
+FastCast.Init() -- Resume the existing runtime
+```
+
+`Init()` is safe to call repeatedly. `Stop()` does not reset the singleton or destroy active casts. Changing `Config.SimulationMode` while stopped takes effect on the next `Init()`. Change movement mode with `FastCast.SetMovementModeEnabled(enabled, mode)`.
+
+---
+
 ## Quick Example
 
 ```lua
