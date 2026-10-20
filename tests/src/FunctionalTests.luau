@@ -261,6 +261,38 @@ return function()
 				expect.equal(getmetatable(caster), nil, "destroy did not clear the metatable")
 			end)
 
+			test("Stop pauses simulation and Init resumes it", function(expect)
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				local hitInstance = nil
+
+				local caster = newCaster(expect)
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+				end
+				initializeRuntime()
+
+				FastCast.Stop()
+				task.wait(0.1)
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+				task.wait(0.1)
+				expect.equal(hitInstance, nil, "cast advanced while simulation was stopped")
+
+				FastCast.Init()
+				expect.truthy(
+					Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT),
+					"cast did not resume after Init"
+				)
+				expect.equal(hitInstance, wall, "resumed cast hit the wrong instance")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
 			test("RaycastFire fires CastFire synchronously", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)

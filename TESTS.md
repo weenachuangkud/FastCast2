@@ -19,6 +19,7 @@ The functional suite covers the shared public API and core cast lifecycle. Use t
 ### Caster lifecycle and events
 
 - [ ] Initialize, create, and destroy a caster.
+- [ ] Stop simulation updates with an active cast, then call `FastCast.Init()` and confirm the cast resumes.
 - [ ] Fire Raycast, Blockcast, and Spherecast casts; confirm each reaches a target and terminates.
 - [ ] Confirm enabled event callbacks fire: `CastFire`, `LengthChanged`, `Hit`, `Pierced`, `CanPierce`, and `CastTerminating` where applicable.
 - [ ] Confirm Signals support multiple listeners and connection disconnection; check `Once`, `Wait`, and `DisconnectAll`.

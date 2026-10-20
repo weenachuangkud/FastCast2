@@ -386,11 +386,28 @@ function FastCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | 
 	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
 end
 
+--[=[
+	Stop simulation updates while preserving active casts and the shared runtime.
+	Call FastCast.Init() again to resume the existing runtime.
+
+	@method Stop
+	@within FastCast
+]=]
+function FastCast.Stop()
+	if not RuntimeInitialized then
+		return
+	end
+
+	SerialSimulation.Stop()
+end
+
 function FastCast.Init(movementMode: "BulkMoveTo" | "Motor6D"?)
 	if RuntimeInitialized then
 		if movementMode then
 			FastCast.SetMovementModeEnabled(true, movementMode)
 		end
+
+		SerialSimulation.Start()
 		return
 	end
 
