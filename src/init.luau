@@ -369,10 +369,27 @@ end
 
 	@param movementMode: "BulkMoveTo" | "Motor6D"? -- Projectile movement method. Defaults to "BulkMoveTo".
 ]=]
+--[=[
+	Sets movement mode for the shared serial runtime.
+
+	@method SetMovementModeEnabled
+	@within FastCast
+
+	@param enabled boolean -- Whether cosmetic projectile movement is enabled.
+	@param mode "BulkMoveTo" | "Motor6D" -- The movement mode used by all Serial casters.
+]=]
+function FastCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
+	if not RuntimeInitialized then
+		return
+	end
+
+	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
+end
+
 function FastCast.Init(movementMode: "BulkMoveTo" | "Motor6D"?)
 	if RuntimeInitialized then
 		if movementMode then
-			BaseCastSerial.SetMovementModeEnabled(true, movementMode)
+			FastCast.SetMovementModeEnabled(true, movementMode)
 		end
 		return
 	end
@@ -452,20 +469,7 @@ function FastCastSerial:SpherecastFire(
 	return BaseCastSerial.Spherecast(self, origin, Radius, direction, velocity, BehaviorData)
 end
 
---[[
-	@method SetMovementModeEnabled
-	@param enabled boolean -- Is enabled
-	@param mode "BulkMoveTo" | "Motor6D" -- MovementMode
 
-	@within FastCastSerial
-	Sets movement mode for the Serial Caster.
-]]
-function FastCastSerial:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D")
-	if not RuntimeInitialized then return end
-
-	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
-	self.MovementMode = mode
-end
 
 --[=[
 	@method Destroy
