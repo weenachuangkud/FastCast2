@@ -47,7 +47,7 @@ caster.Hit = function(cast, result, velocity, cosmeticBullet) end
 - **`"BulkMoveTo"`** — Uses `workspace:BulkMoveTo()` each frame. (General/Default)
 - **`"Motor6D"`** — Uses Motor6D instances (Transform property). Better for performance.
 
-Switch modes at runtime with `caster:SetMovementModeEnabled(enabled, mode)`.
+Switch the shared Serial runtime's mode at runtime with `FastCast2.SetMovementModeEnabled(enabled, mode)`. This setting applies to all Serial casters because they share one simulation runtime.
 
 ---
 
