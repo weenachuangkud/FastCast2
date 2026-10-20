@@ -167,7 +167,7 @@ end
 ]=]
 function Framework.waitFor(predicate: () -> boolean, timeout: number?, interval: number?): boolean
 	timeout = timeout or 5
-	interval = interval or 0.05
+	interval = interval or 0.01
 	local deadline = os.clock() + timeout
 
 	while true do
