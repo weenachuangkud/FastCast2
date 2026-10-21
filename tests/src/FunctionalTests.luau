@@ -93,21 +93,20 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
--- Retry an asynchronous assertion a bounded number of times. The callback
--- should return true when the attempt succeeds; each attempt is isolated by
--- the caller as needed.
-local function retry(expect: any, description: string, attempts: number, attemptTimeout: number, runAttempt: (number) -> boolean): boolean
+-- Retry a boolean-returning attempt a bounded number of times. The callback
+-- owns any per-attempt timeout and cleanup, so this helper can be reused by
+-- tests with different asynchronous conditions.
+local function retry(attempts: number, delayBetweenAttempts: number, runAttempt: (number) -> boolean): boolean
 	for attempt = 1, attempts do
 		if runAttempt(attempt) then
 			return true
 		end
 
 		if attempt < attempts then
-			task.wait(0.1)
+			task.wait(delayBetweenAttempts)
 		end
 	end
 
-	expect.truthy(false, description .. " after " .. attempts .. " attempts")
 	return false
 end
 
@@ -956,10 +955,8 @@ return function()
 					local successfulWall = nil
 					local hitInstance = nil
 					local didHit = retry(
-						expect,
-						mode.Name .. " high-fidelity mode did not hit the wall",
 						MAX_ATTEMPTS,
-						ATTEMPT_TIMEOUT,
+						0.1,
 						function()
 							-- Fresh geometry and caster keep retries independent.
 							local arena = createArena(expect)
@@ -991,6 +988,10 @@ return function()
 						end
 					)
 
+					expect.truthy(
+						didHit,
+						mode.Name .. " high-fidelity mode did not hit the wall after " .. MAX_ATTEMPTS .. " attempts"
+					)
 					if didHit then
 						expect.equal(hitInstance, successfulWall, mode.Name .. " high-fidelity mode hit the wrong instance")
 					end
