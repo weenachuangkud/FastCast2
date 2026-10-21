@@ -734,6 +734,18 @@ return function()
 				params.FilterDescendantsInstances = { container, excludedWall }
 				behavior.RaycastParams = params
 
+				-- Prove the test geometry and filter are valid before exercising
+				-- FastCast. This separates an engine/setup failure from simulation.
+				local directResult = workspace:Raycast(
+					Vector3.zero,
+					Vector3.new(0, 0, -20),
+					params
+				)
+				expect.truthy(directResult, "test setup raycast did not hit the target wall")
+				if directResult then
+					expect.equal(directResult.Instance, targetWall, "test setup filter did not select the target wall")
+				end
+
 				local hitInstance = nil
 				local caster = newCaster(expect)
 				caster.Hit = function(_, result)
@@ -912,39 +924,42 @@ return function()
 			end)
 
 			test("HighFidelity modes all resolve hits", function(expect)
-				local arena = createArena(expect)
-				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
-				local container = createContainer(arena)
-				local behavior = makeBehavior(container)
 				local modes = {
 					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
 					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
 					{ Name = "Always", Value = FastCastEnums.HighFidelityBehavior.Always, SegmentSize = 1 },
 				}
 
-				local hitCount = 0
-				local caster = newCaster(expect)
-				caster.Hit = function(_, result)
-					if result.Instance == wall then
-						hitCount += 1
-					end
-				end
 				initializeRuntime()
 
 				for _, mode in modes do
+					local arena = createArena(expect)
+					local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+					local container = createContainer(arena)
+					local behavior = makeBehavior(container)
 					behavior.HighFidelityBehavior = mode.Value
 					behavior.HighFidelitySegmentSize = mode.SegmentSize
-					fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
-					expect.truthy(
-						Framework.waitFor(function()
-							return hitCount == _
-						end, HIT_TIMEOUT),
-						mode.Name .. " high-fidelity mode did not hit the wall"
-					)
-				end
+					behavior.MaxLifetime = 3
 
-				caster:Destroy()
-				arena:Destroy()
+					local hitInstance = nil
+					local caster = newCaster(expect)
+					caster.Hit = function(_, result)
+						hitInstance = result.Instance
+					end
+
+					fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+					local didHit = Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT)
+
+					expect.truthy(didHit, mode.Name .. " high-fidelity mode did not hit the wall")
+					if didHit then
+						expect.equal(hitInstance, wall, mode.Name .. " high-fidelity mode hit the wrong instance")
+					end
+
+					caster:Destroy()
+					arena:Destroy()
+				end
 			end)
 		end),
 
