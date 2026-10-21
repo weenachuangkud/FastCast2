@@ -93,6 +93,24 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
+-- Retry an asynchronous assertion a bounded number of times. The callback
+-- should return true when the attempt succeeds; each attempt is isolated by
+-- the caller as needed.
+local function retry(expect: any, description: string, attempts: number, attemptTimeout: number, runAttempt: (number) -> boolean): boolean
+	for attempt = 1, attempts do
+		if runAttempt(attempt) then
+			return true
+		end
+
+		if attempt < attempts then
+			task.wait(0.1)
+		end
+	end
+
+	expect.truthy(false, description .. " after " .. attempts .. " attempts")
+	return false
+end
+
 local function registerSerialCastTypes(test: (string, any) -> ())
 	for _, castType in CAST_TYPES do
 		test("Serial " .. castType .. " reaches a wall", function(expect)
@@ -923,7 +941,7 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("HighFidelity modes all resolve hits (retry up to 3 attempts)", function(expect)
+			test("HighFidelity modes all resolve hits", function(expect)
 				local modes = {
 					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
 					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
@@ -935,49 +953,44 @@ return function()
 				initializeRuntime()
 
 				for _, mode in modes do
-					local hitInstance = nil
 					local successfulWall = nil
-					local didHit = false
+					local hitInstance = nil
+					local didHit = retry(
+						expect,
+						mode.Name .. " high-fidelity mode did not hit the wall",
+						MAX_ATTEMPTS,
+						ATTEMPT_TIMEOUT,
+						function()
+							-- Fresh geometry and caster keep retries independent.
+							local arena = createArena(expect)
+							local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+							local container = createContainer(arena)
+							local behavior = makeBehavior(container)
+							behavior.HighFidelityBehavior = mode.Value
+							behavior.HighFidelitySegmentSize = mode.SegmentSize
+							behavior.MaxLifetime = 3
 
-					for attempt = 1, MAX_ATTEMPTS do
-						-- Use fresh geometry and a fresh caster per attempt so cleanup or
-						-- stale cast state from a previous attempt cannot affect this one.
-						local arena = createArena(expect)
-						local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
-						local container = createContainer(arena)
-						local behavior = makeBehavior(container)
-						behavior.HighFidelityBehavior = mode.Value
-						behavior.HighFidelitySegmentSize = mode.SegmentSize
-						behavior.MaxLifetime = 3
+							hitInstance = nil
+							local caster = newCaster(expect)
+							caster.Hit = function(_, result)
+								hitInstance = result.Instance
+							end
 
-						hitInstance = nil
-						local caster = newCaster(expect)
-						caster.Hit = function(_, result)
-							hitInstance = result.Instance
+							fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+							local didHit = Framework.waitFor(function()
+								return hitInstance ~= nil
+							end, ATTEMPT_TIMEOUT)
+
+							caster:Destroy()
+							arena:Destroy()
+
+							if didHit then
+								successfulWall = wall
+							end
+							return didHit
 						end
-
-						fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
-						didHit = Framework.waitFor(function()
-							return hitInstance ~= nil
-						end, ATTEMPT_TIMEOUT)
-
-						caster:Destroy()
-						arena:Destroy()
-
-						if didHit then
-							successfulWall = wall
-							break
-						end
-
-						if attempt < MAX_ATTEMPTS then
-							task.wait(0.1)
-						end
-					end
-
-					expect.truthy(
-						didHit,
-						mode.Name .. " high-fidelity mode did not hit the wall after " .. MAX_ATTEMPTS .. " attempts"
 					)
+
 					if didHit then
 						expect.equal(hitInstance, successfulWall, mode.Name .. " high-fidelity mode hit the wrong instance")
 					end
