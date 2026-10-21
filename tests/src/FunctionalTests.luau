@@ -936,6 +936,7 @@ return function()
 
 				for _, mode in modes do
 					local hitInstance = nil
+					local successfulWall = nil
 					local didHit = false
 
 					for attempt = 1, MAX_ATTEMPTS do
@@ -964,6 +965,7 @@ return function()
 						arena:Destroy()
 
 						if didHit then
+							successfulWall = wall
 							break
 						end
 
@@ -977,9 +979,7 @@ return function()
 						mode.Name .. " high-fidelity mode did not hit the wall after " .. MAX_ATTEMPTS .. " attempts"
 					)
 					if didHit then
-						-- Compare the hit to the wall used by the successful attempt
-						-- through the result captured in the callback.
-						expect.equal(hitInstance.Name, "Wall", mode.Name .. " high-fidelity mode hit the wrong instance")
+						expect.equal(hitInstance, successfulWall, mode.Name .. " high-fidelity mode hit the wrong instance")
 					end
 				end
 			end)
