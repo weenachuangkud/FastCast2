@@ -1,1 +1,2 @@
 std = "roblox"
+exclude = ["tests/run.luau", "tests/hotpaths/run.luau"]

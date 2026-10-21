@@ -1,9 +1,6 @@
 --[[
 	- Author : Mawin CK
 	- Date : 2025
-	
-
-	ActiveCastSerial - Serial mode with single RunService, SoA pattern, queue technique
 ]]
 
 local FastCastModule = script.Parent
@@ -47,15 +44,14 @@ function ActiveCast.createCastData(
 	direction: Vector3,
 	velocity: Vector3 | number,
 	behavior: TypeDef.FastCastBehavior,
-	eventModule: TypeDef.FastCastEventsModule?,
-	variant: CastVariants,
-	ObjectCacheRef: any,
-	_parallel: boolean?
+	variant: CastVariants
 ): any
 	local cast = {
 		Caster = BaseCast,
 		StateInfo = {
+			IsPaused = false,
 			TotalRuntime = 0,
+			MaxLifetime = behavior.MaxLifetime,
 			DistanceCovered = 0,
 			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,
 			HighFidelityBehavior = behavior.HighFidelityBehavior,
@@ -74,7 +70,8 @@ function ActiveCast.createCastData(
 				UseHit = behavior.FastCastEventsConfig.UseHit,
 				UsePierced = behavior.FastCastEventsConfig.UsePierced,
 				UseCastTerminating = behavior.FastCastEventsConfig.UseCastTerminating,
-				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce
+				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce,
+				UseOnStep = behavior.FastCastEventsConfig.UseOnStep == true
 			},
 
 			VisualizeCasts = behavior.VisualizeCasts,
@@ -86,25 +83,15 @@ function ActiveCast.createCastData(
 			WorldRoot = workspace,
 			MaxDistance = behavior.MaxDistance or DEFAULT_MAX_DISTANCE,
 			CosmeticBulletObject = behavior.CosmeticBulletTemplate,
-			FastCastEventsModule = eventModule
 		},
 
 		_Destroying = false,
+		_TerminationQueued = false,
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
 		ID = activeCastID
 	}
-
-	if _parallel then
-		cast.StateInfo.FastCastEventsModuleConfig = {
-			UseLengthChanged = behavior.FastCastEventsModuleConfig.UseLengthChanged,
-			UseHit = behavior.FastCastEventsModuleConfig.UseHit,
-			UsePierced = behavior.FastCastEventsModuleConfig.UsePierced,
-			UseCastTerminating = behavior.FastCastEventsModuleConfig.UseCastTerminating,
-			UseCanPierce = behavior.FastCastEventsModuleConfig.UseCanPierce,
-		}
-	end
 
 	if variant.CastType == EnumCastTypes.Blockcast then
 		cast.RayInfo.Size = (variant :: BlockcastVariant).Size
@@ -117,28 +104,41 @@ function ActiveCast.createCastData(
 	end
 
 	local targetContainer: Instance?
-	if ObjectCacheRef then
-		cast.RayInfo.CosmeticBulletObject = ObjectCacheRef:GetPart(if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin))
-		targetContainer = cast.Caster.CacheHolder
-	else
-		if cast.RayInfo.CosmeticBulletObject ~= nil then
-			local basePart = cast.RayInfo.CosmeticBulletObject
+	
+	if cast.RayInfo.CosmeticBulletObject ~= nil then
+		local basePart = cast.RayInfo.CosmeticBulletObject
+		if behavior.CloneTemplate == true then
 			basePart = basePart:Clone()
-			basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
-			basePart.Parent = behavior.CosmeticBulletContainer
-
-			cast.RayInfo.CosmeticBulletObject = basePart
 		end
+		basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
+		basePart.Parent = behavior.CosmeticBulletContainer
 
-		if behavior.CosmeticBulletContainer then
-			targetContainer = behavior.CosmeticBulletContainer
-		end
+		cast.RayInfo.CosmeticBulletObject = basePart
 	end
 
-	if behavior.AutoIgnoreContainer == true and targetContainer ~= nil then
+	if behavior.CosmeticBulletContainer then
+		targetContainer = behavior.CosmeticBulletContainer
+	end
+
+	if behavior.AutoIgnoreContainer == true then
 		local ignoreList = cast.RayInfo.Parameters.FilterDescendantsInstances
-		if not table.find(ignoreList, targetContainer) then
+		local changed = false
+
+		-- Exclude the container so every descendant cosmetic is ignored, and
+		-- explicitly exclude this cosmetic as well. The direct entry protects
+		-- the cast if the cosmetic is reparented out of the configured container.
+		if targetContainer ~= nil and not table.find(ignoreList, targetContainer) then
 			table.insert(ignoreList, targetContainer)
+			changed = true
+		end
+
+		local cosmetic = cast.RayInfo.CosmeticBulletObject
+		if cosmetic ~= nil and not table.find(ignoreList, cosmetic) then
+			table.insert(ignoreList, cosmetic)
+			changed = true
+		end
+
+		if changed then
 			cast.RayInfo.Parameters.FilterDescendantsInstances = ignoreList
 		end
 	end
