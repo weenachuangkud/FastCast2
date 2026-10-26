@@ -1072,7 +1072,7 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
+						test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
@@ -1096,18 +1096,18 @@ return function()
 				expect.truthy(cosmetic, "cosmetic bullet was not created")
 				expect.equal(cosmetic.CFrame, castData.CFrame, "initial cosmetic CFrame did not include Offset")
 
-				local runtimeOffset = CFrame.new(1, 0, 0)
-				castData.Offset = runtimeOffset
-				expect.equal(castData.Offset, runtimeOffset, "cast.Offset could not be changed at runtime")
+				local previousCosmeticPosition = cosmetic.Position
+				castData.Offset = CFrame.new(100, 0, 0)
 				expect.truthy(
 					Framework.waitFor(function()
-						return cosmetic.CFrame == castData.CFrame
+						return (cosmetic.Position - previousCosmeticPosition).Magnitude > 50
 					end, HIT_TIMEOUT),
 					"runtime Offset was not applied to the cosmetic bullet"
 				)
+				expect.equal(cosmetic.CFrame, castData.CFrame, "cast.CFrame did not reflect the cosmetic offset")
 			end)
 
-			test("HighFidelity modes all resolve hits", function(expect)
+test("HighFidelity modes all resolve hits", function(expect)
 				local modes = {
 					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
 					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
