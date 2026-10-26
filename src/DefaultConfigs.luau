@@ -22,6 +22,7 @@ Defaults.VisualizationFolderName = "FastCastVisualizationObjects"
 Defaults.FastCastBehavior = {
 	RaycastParams = nil,
 	Acceleration = Vector3.new(),
+	InitialOffset = CFrame.identity,
 	MaxDistance = 1000,
 	MaxLifetime = nil,
 	MaxPiercesPerStep = 1,

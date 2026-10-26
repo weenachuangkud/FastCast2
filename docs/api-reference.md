@@ -145,6 +145,7 @@ Created via `FastCast2.newBehavior()`. Configuration for cast behavior:
 local behavior = FastCast2.newBehavior()
 behavior.MaxDistance = 500
 behavior.MaxPiercesPerStep = 3 -- Check up to 3 collisions per movement segment when piercing
+behavior.InitialOffset = CFrame.new(0, 0, -2) -- Initial local-space cosmetic offset
 behavior.RaycastParams = RaycastParams.new()
 behavior.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 behavior.RaycastParams.FilterDescendantsInstances = {character}
@@ -165,6 +166,7 @@ behavior.VisualizeCastSettings = {
 | `RaycastParams` | `RaycastParams?` | `nil` | Filter rules for raycasting |
 | `MaxDistance` | `number` | `1000` | Max range before auto-termination |
 | `MaxPiercesPerStep` | `number` | `1` | Maximum collision-query attempts in one movement segment, including the first hit; further queries continue after a pierce |
+| `InitialOffset` | `CFrame` | `CFrame.identity` | Initial local-space offset applied to each cast's cosmetic projectile; does not affect simulation or hit detection |
 | `Acceleration` | `Vector3` | `(0,0,0)` | Constant acceleration applied each frame |
 | `HighFidelityBehavior` | `number` | `1` | Default(1) / Automatic(2) / Always(3) |
 | `HighFidelitySegmentSize` | `number` | `0.5` | Segment size for sub-stepping |
@@ -204,6 +206,7 @@ ActiveCast represents a projectile in flight. It's a pure data structure (AoS) e
 cast.ID: number              -- Unique identifier
 cast.PreviousPosition: Vector3 -- Position at the start of the most recent simulation step
 cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
+cast.Offset: CFrame          -- Local-space cosmetic offset; can be changed while the cast is active
 cast.UserData: any           -- From behavior.UserData
 cast.CastVariant: {          -- Cast type info
     CastType: number,        -- 1=Raycast, 2=Blockcast, 3=Spherecast
@@ -211,6 +214,8 @@ cast.CastVariant: {          -- Cast type info
     Radius: number?          -- Spherecast only
 }
 ```
+
+Set `behavior.InitialOffset` to initialize `cast.Offset` for each cast. You can then change `cast.Offset` while that cast is active. The offset is composed in local space on top of the calculated cosmetic CFrame and affects only cosmetic placement/orientation; raycasts, trajectory, and hit detection are unchanged. `CFrame.identity` preserves the existing appearance.
 
 ### 3.3 StateInfo
 

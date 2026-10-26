@@ -60,6 +60,7 @@ local EVT_LENGTH_CHANGED = 1
 local EVT_HIT = 2
 local EVT_PIERCED = 3
 local EVT_CAST_TERMINATING = 4
+local EVT_ON_STEP = 5
 
 --[[
 	Shoutout to DrSinek for some code
@@ -616,6 +617,14 @@ local function FireQueuedEvents()
 				end
 			end
 
+		elseif eventType == EVT_ON_STEP then
+			if eventConfig.UseOnStep then
+				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
+				if onStep then
+					onStep:Fire(cast, args[1])
+				end
+			end
+
 		elseif eventType == EVT_CAST_TERMINATING then
 			if not cast._Destroying or cast._TerminationQueued then
 				cast._Destroying = true
@@ -660,6 +669,18 @@ local function ShouldUpdateCosmetics(): boolean
 	return cosmeticFrame % interval == 0
 end
 
+local function GetCosmeticCFrame(id: number): CFrame
+	local baseCFrame = casts_CFrame[id]
+	local cast = ActivesRef and ActivesRef[id]
+	local offset = cast and cast.Offset
+
+	if typeof(offset) == "CFrame" then
+		return baseCFrame * offset
+	end
+
+	return baseCFrame
+end
+
 local function BulkMoveTo()
 	if CurrentMovementMode ~= "BulkMoveTo"
 		or not MovementEnabled
@@ -682,7 +703,7 @@ local function BulkMoveTo()
 		if cosmetic and cosmetic.Parent then
 			bulkCount += 1
 			bulkParts[bulkCount] = cosmetic
-			bulkCframes[bulkCount] = casts_CFrame[id]
+			bulkCframes[bulkCount] = GetCosmeticCFrame(id)
 		end
 	end
 
@@ -716,7 +737,7 @@ local function UpdateMotor6Ds()
 
 	for id, motor6d in casts_ActiveMotor6Ds do
 		if motor6d and motor6d.Parent then
-			motor6d.Transform = casts_CFrame[id]
+			motor6d.Transform = GetCosmeticCFrame(id)
 		end
 	end
 end
@@ -1372,7 +1393,7 @@ function SerialSimulation_Register(cast: any)
 	)
 
 	casts_CFrame[id] = CFrame.new(position)
-	cast.CFrame = casts_CFrame[id]
+	cast.CFrame = casts_CFrame[id] * cast.Offset
 
 	if CurrentMovementMode == "Motor6D"
 		and MovementEnabled
@@ -1516,7 +1537,7 @@ local function UpdateCasts(delta: number)
 		end
 
 		-- Lifetime uses simulation time, so paused casts do not age.
-		-- Expiration is checked at the update boundary, before OnStep or movement.
+		-- Expiration is checked at the update boundary, before simulation or event dispatch.
 		local maxLifetime = cast and cast.StateInfo.MaxLifetime
 		if maxLifetime ~= nil and casts_TotalRunTime[id] >= maxLifetime then
 			-- Queue termination through the simulation's existing lifecycle path.
@@ -1538,8 +1559,8 @@ local function UpdateCasts(delta: number)
 			casts_HighFidelitySegmentSize[id] = 0.1
 		end
 
-		-- Preserve the position at the start of this simulation update, before
-		-- OnStep can alter the trajectory and before high-fidelity substeps run.
+		-- Preserve the position at the start of this simulation update before
+		-- high-fidelity substeps run. OnStep dispatches after movement.
 		if cast then
 			local trajectory = casts_Trajectory[id]
 			cast.PreviousPosition = GetPositionAtTime(
@@ -1550,18 +1571,15 @@ local function UpdateCasts(delta: number)
 			)
 		end
 
-		-- Run synchronously before calculating this step's trajectory.
-		-- This is opt-in per behavior to avoid callback overhead for ordinary casts.
+		-- Queue OnStep so it dispatches with the other events after simulation
+		-- and cosmetic movement. Changes made by the callback apply to later steps.
 		if cast and cast.StateInfo.FastCastEventsConfig.UseOnStep then
 			local events = CasterEvents[casts_CasterId[id]]
-			local onStep = events and events.OnStep
-
-			if onStep then
-				onStep:Fire(cast, delta)
+			if events and events.OnStep then
+				QueueEvent(id, EVT_ON_STEP, delta)
 			end
 		end
 
-		-- The callback may have terminated the cast.
 		if not ActivesRef[id] or cast._Destroying or cast.StateInfo.IsPaused then
 			continue
 		end
@@ -1584,7 +1602,7 @@ local function UpdateCasts(delta: number)
 		if cast then
 			cast.StateInfo.TotalRuntime = casts_TotalRunTime[id]
 			cast.StateInfo.DistanceCovered = casts_DistanceCovered[id]
-			cast.CFrame = casts_CFrame[id]
+			cast.CFrame = GetCosmeticCFrame(id)
 		end
 	end
 

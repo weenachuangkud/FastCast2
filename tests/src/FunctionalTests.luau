@@ -625,7 +625,7 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("OnStep can redirect a cast before movement", function(expect)
+			test("OnStep changes trajectory for subsequent movement", function(expect)
 				local arena = createArena(expect)
 				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
@@ -639,6 +639,11 @@ return function()
 					stepCount += 1
 					if stepCount == 1 then
 						expect.greaterThan(deltaTime, 0, "OnStep deltaTime must be positive")
+						expect.greaterThan(
+							FastCast:GetPositionCast(cast).Magnitude,
+						0,
+						"OnStep should run after the current movement"
+						)
 						FastCast:SetVelocityCast(cast, Vector3.new(0, 0, -120))
 					end
 				end
@@ -1070,6 +1075,41 @@ return function()
 
 				caster:Destroy()
 				arena:Destroy()
+			end)
+
+			test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				local initialOffset = CFrame.new(0, 0, -2) * CFrame.Angles(0, math.rad(90), 0)
+				behavior.InitialOffset = initialOffset
+				behavior.CosmeticBulletTemplate = Instance.new("Part")
+				behavior.CosmeticBulletTemplate.Anchored = true
+				behavior.CosmeticBulletTemplate.Parent = arena
+
+				local castData = nil
+				local caster = newCaster(expect)
+				caster.CastFire = function(cast)
+					castData = cast
+				end
+				initializeRuntime()
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+
+				expect.truthy(castData, "CastFire did not expose the cast")
+				expect.equal(castData.Offset, initialOffset, "InitialOffset was not copied to cast.Offset")
+				local cosmetic = castData.RayInfo.CosmeticBulletObject
+				expect.truthy(cosmetic, "cosmetic bullet was not created")
+				expect.equal(cosmetic.CFrame, castData.CFrame, "initial cosmetic CFrame did not include Offset")
+
+				local previousCosmeticPosition = cosmetic.Position
+				castData.Offset = CFrame.new(100, 0, 0)
+				expect.truthy(
+					Framework.waitFor(function()
+						return (cosmetic.Position - previousCosmeticPosition).Magnitude > 50
+					end, HIT_TIMEOUT),
+					"runtime Offset was not applied to the cosmetic bullet"
+				)
+				expect.equal(cosmetic.CFrame, castData.CFrame, "cast.CFrame did not reflect the cosmetic offset")
 			end)
 
 			test("HighFidelity modes all resolve hits", function(expect)
