@@ -215,7 +215,7 @@ cast.CastVariant: {          -- Cast type info
 }
 ```
 
-Set `behavior.InitialOffset` to initialize `cast.Offset` for each cast. You can then change `cast.Offset` while that cast is active. The offset is composed in local space (`cast.CFrame * cast.Offset`) and affects only cosmetic placement/orientation; raycasts, trajectory, and hit detection are unchanged. `CFrame.identity` preserves the existing appearance.
+Set `behavior.InitialOffset` to initialize `cast.Offset` for each cast. You can then change `cast.Offset` while that cast is active. The offset is composed in local space on top of the calculated cosmetic CFrame and affects only cosmetic placement/orientation; raycasts, trajectory, and hit detection are unchanged. `CFrame.identity` preserves the existing appearance.
 
 ### 3.3 StateInfo
 
