@@ -852,8 +852,7 @@ local function CastSegment(
 	return lastResult, false, #pierceResults
 end
 
-local function QueueSegmentPierces(id: number, velocity: Vector3, sub: boolean): number
-	local pierceResults = casts_StepPierceResults[id]
+local function QueueSegmentPierces(id: number, pierceResults: { RaycastResult }, velocity: Vector3, sub: boolean): number
 	local pierceCount = #pierceResults
 	for index = 1, pierceCount do
 		QueuePierce(id, pierceResults[index], velocity, sub)
@@ -957,7 +956,7 @@ local function ResimulateHit(
 			)
 		end
 
-		QueueSegmentPierces(id, subVelocity, true)
+		QueueSegmentPierces(id, casts_ResimPierceResults[id], subVelocity, true)
 		lastPierced = subPierceCount > 0
 
 		if not subResult or not subDidHit then
@@ -1101,7 +1100,7 @@ local function SimulateCast(
 
 	-- Queue LengthChanged before this segment's Pierced/Hit events.
 	if not result then
-		QueueSegmentPierces(id, velocity, false)
+		QueueSegmentPierces(id, casts_StepPierceResults[id], velocity, false)
 		if casts_DistanceCovered[id] >= casts_MaxDistance[id] then
 			QueueEvent(
 				id,
