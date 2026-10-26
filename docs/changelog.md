@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 * Automated testing by @Naymmmm
+* `ActiveCast.PreviousPosition` tracks the position at the start of the most recent simulation update
+* `FastCastBehavior.MaxPiercesPerStep` configures collision-query attempts per segment (default `1`)
 * Better performance benchmarks by @Naymmmm
 * `"Config.SimulationMode"` (PerFrame/Fixed) and `"CosmeticUpdateInterval"` by @Naymmmm
 * `"RAY_SEARCH_OFFSET"` for pierce prevention

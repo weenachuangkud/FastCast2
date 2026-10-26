@@ -48,9 +48,11 @@ function ActiveCast.createCastData(
 ): any
 	local cast = {
 		Caster = BaseCast,
+		PreviousPosition = origin,
 		StateInfo = {
 			IsPaused = false,
 			TotalRuntime = 0,
+			MaxPiercesPerStep = behavior.MaxPiercesPerStep or 1,
 			MaxLifetime = behavior.MaxLifetime,
 			DistanceCovered = 0,
 			HighFidelitySegmentSize = behavior.HighFidelitySegmentSize,

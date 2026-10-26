@@ -192,6 +192,7 @@ return function()
 
 				expect.equal(behavior.MaxDistance, 1000, "MaxDistance default changed")
 				expect.equal(behavior.MaxLifetime, nil, "MaxLifetime should be unlimited by default")
+				expect.equal(behavior.MaxPiercesPerStep, 1, "MaxPiercesPerStep default changed")
 				expect.near(behavior.Acceleration, Vector3.zero, 1e-6, "Acceleration default changed")
 				expect.equal(
 					behavior.HighFidelityBehavior,
@@ -397,6 +398,125 @@ return function()
 					"connected Signal listener never fired"
 				)
 				expect.equal(firstCount, 0, "disconnected Signal listener still fired")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("Active casts expose and update PreviousPosition", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				local origin = Vector3.new(0, 1000, 0)
+
+				local caster = newCaster(expect)
+				initializeRuntime()
+
+				local cast = caster:RaycastFire(origin, Vector3.xAxis, 60, behavior)
+				expect.equal(cast.PreviousPosition, origin, "PreviousPosition should start at the cast origin")
+
+				expect.truthy(
+					Framework.waitFor(function()
+						return cast.PreviousPosition.X > origin.X
+					end, HIT_TIMEOUT),
+					"PreviousPosition did not advance with the simulated cast"
+				)
+
+				FastCast:TerminateCast(cast)
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("MaxPiercesPerStep checks multiple hits in one movement segment", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local firstWall = createWall(arena, Vector3.new(0, 0, -5), Vector3.new(50, 50, 1))
+				local secondWall = createWall(arena, Vector3.new(0, 0, -10), Vector3.new(50, 50, 1))
+				local finalWall = createWall(arena, Vector3.new(0, 0, -15), Vector3.new(50, 50, 1))
+				local behavior = makeBehavior(container)
+				behavior.MaxPiercesPerStep = 3
+				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local stepCount = 0
+				local piercedSteps = {}
+				local hitInstance = nil
+				local hitStep = nil
+				local caster = newCaster(expect)
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.CanPierce = function(_, result)
+					return result.Instance == firstWall or result.Instance == secondWall
+				end
+				caster.Pierced = function()
+					table.insert(piercedSteps, stepCount)
+				end
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+					hitStep = stepCount
+				end
+				initializeRuntime()
+
+				caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 6000, behavior)
+
+				expect.truthy(
+					Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT),
+					"MaxPiercesPerStep did not continue to the final wall"
+				)
+				expect.equal(#piercedSteps, 2, "expected exactly two pierce events")
+				expect.equal(hitInstance, finalWall, "cast stopped at the wrong wall")
+				expect.equal(piercedSteps[1], piercedSteps[2], "pierces occurred in different simulation steps")
+				expect.equal(hitStep, piercedSteps[1], "final hit occurred in a different simulation step")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("CanPierce passes through a thick wall and hits the next wall", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local thickWall = createWall(arena, Vector3.new(0, 0, -10), Vector3.new(50, 50, 20))
+				local finalWall = createWall(arena, Vector3.new(0, 0, -25), Vector3.new(50, 50, 1))
+				local behavior = makeBehavior(container)
+				behavior.MaxPiercesPerStep = 2
+				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local stepCount = 0
+				local piercedStep = nil
+				local hitStep = nil
+				local hitInstance = nil
+				local caster = newCaster(expect)
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.CanPierce = function(_, result)
+					return result.Instance == thickWall
+				end
+				caster.Pierced = function(_, result)
+					if result.Instance == thickWall then
+						piercedStep = stepCount
+					end
+				end
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+					hitStep = stepCount
+				end
+				initializeRuntime()
+
+				caster:RaycastFire(Vector3.new(0, 0, 10), Vector3.new(0, 0, -1), 6000, behavior)
+
+				expect.truthy(
+					Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT),
+					"cast did not hit the wall behind the thick pierceable wall"
+				)
+				expect.equal(piercedStep, hitStep, "thick wall pierce and next-wall hit should occur in the same simulation step")
+				expect.equal(hitInstance, finalWall, "cast should hit the wall behind the thick pierceable wall")
 
 				caster:Destroy()
 				arena:Destroy()
