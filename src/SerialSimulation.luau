@@ -660,6 +660,18 @@ local function ShouldUpdateCosmetics(): boolean
 	return cosmeticFrame % interval == 0
 end
 
+local function GetCosmeticCFrame(id: number): CFrame
+	local baseCFrame = casts_CFrame[id]
+	local cast = ActivesRef and ActivesRef[id]
+	local offset = cast and cast.Offset
+
+	if typeof(offset) == "CFrame" then
+		return baseCFrame * offset
+	end
+
+	return baseCFrame
+end
+
 local function BulkMoveTo()
 	if CurrentMovementMode ~= "BulkMoveTo"
 		or not MovementEnabled
@@ -682,7 +694,7 @@ local function BulkMoveTo()
 		if cosmetic and cosmetic.Parent then
 			bulkCount += 1
 			bulkParts[bulkCount] = cosmetic
-			bulkCframes[bulkCount] = casts_CFrame[id]
+			bulkCframes[bulkCount] = GetCosmeticCFrame(id)
 		end
 	end
 
@@ -716,7 +728,7 @@ local function UpdateMotor6Ds()
 
 	for id, motor6d in casts_ActiveMotor6Ds do
 		if motor6d and motor6d.Parent then
-			motor6d.Transform = casts_CFrame[id]
+			motor6d.Transform = GetCosmeticCFrame(id)
 		end
 	end
 end
@@ -1372,7 +1384,7 @@ function SerialSimulation_Register(cast: any)
 	)
 
 	casts_CFrame[id] = CFrame.new(position)
-	cast.CFrame = casts_CFrame[id]
+	cast.CFrame = GetCosmeticCFrame(id)
 
 	if CurrentMovementMode == "Motor6D"
 		and MovementEnabled
@@ -1584,7 +1596,7 @@ local function UpdateCasts(delta: number)
 		if cast then
 			cast.StateInfo.TotalRuntime = casts_TotalRunTime[id]
 			cast.StateInfo.DistanceCovered = casts_DistanceCovered[id]
-			cast.CFrame = casts_CFrame[id]
+			cast.CFrame = GetCosmeticCFrame(id)
 		end
 	end
 
