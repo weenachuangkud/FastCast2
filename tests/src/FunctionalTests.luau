@@ -625,7 +625,7 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("OnStep can redirect a cast before movement", function(expect)
+			test("OnStep changes trajectory for subsequent movement", function(expect)
 				local arena = createArena(expect)
 				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
