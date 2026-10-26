@@ -24,6 +24,7 @@ Defaults.FastCastBehavior = {
 	Acceleration = Vector3.new(),
 	MaxDistance = 1000,
 	MaxLifetime = nil,
+	MaxPiercesPerStep = 1,
 	HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default,
 	HighFidelitySegmentSize = 0.5,
 
