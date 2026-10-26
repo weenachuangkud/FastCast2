@@ -1537,7 +1537,7 @@ local function UpdateCasts(delta: number)
 		end
 
 		-- Lifetime uses simulation time, so paused casts do not age.
-		-- Expiration is checked at the update boundary, before OnStep or movement.
+		-- Expiration is checked at the update boundary, before simulation or event dispatch.
 		local maxLifetime = cast and cast.StateInfo.MaxLifetime
 		if maxLifetime ~= nil and casts_TotalRunTime[id] >= maxLifetime then
 			-- Queue termination through the simulation's existing lifecycle path.
@@ -1559,8 +1559,8 @@ local function UpdateCasts(delta: number)
 			casts_HighFidelitySegmentSize[id] = 0.1
 		end
 
-		-- Preserve the position at the start of this simulation update, before
-		-- OnStep can alter the trajectory and before high-fidelity substeps run.
+		-- Preserve the position at the start of this simulation update before
+		-- high-fidelity substeps run. OnStep dispatches after movement.
 		if cast then
 			local trajectory = casts_Trajectory[id]
 			cast.PreviousPosition = GetPositionAtTime(
