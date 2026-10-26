@@ -1058,6 +1058,20 @@ local function SimulateCast(
 		* (currentTime - previousTime)
 	local displacementMagnitude = displacement.Magnitude
 
+	-- Do not simulate beyond MaxDistance. Clamping the displacement before
+	-- raycasting prevents a long frame from hitting something past the cast's
+	-- allowed range.
+	local remainingDistance = casts_MaxDistance[id] - casts_DistanceCovered[id]
+	if remainingDistance <= 0 then
+		QueueEvent(id, EVT_CAST_TERMINATING)
+		return true
+	end
+
+	if displacementMagnitude > remainingDistance then
+		displacement = displacement.Unit * remainingDistance
+		displacementMagnitude = remainingDistance
+	end
+
 	-- Skip raycast when displacement is negligible (matches SwiftCast EPSILON)
 	if displacementMagnitude <= EPSILON then
 		casts_DistanceCovered[id] += displacementMagnitude
