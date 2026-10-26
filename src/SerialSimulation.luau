@@ -112,6 +112,8 @@ local casts_CastType = {} :: { [number]: number }
 local casts_CastVariant = {} :: { [number]: CastVariants }
 
 local casts_MaxDistance = {} :: { [number]: number }
+local casts_MaxPiercesPerStep = {} :: { [number]: number }
+local casts_StepPierceResults = {} :: { [number]: { RaycastResult } }
 local casts_RayDisplacement = {} :: { [number]: number }
 
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
@@ -792,6 +794,72 @@ local function ShouldPierce(
 	)
 end
 
+-- Cast one movement segment, continuing after pierces up to the configured
+-- number of raycast attempts. Results are buffered so LengthChanged can be
+-- queued before Pierced events, preserving the normal event order.
+local function CastSegment(
+	id: number,
+	origin: Vector3,
+	displacement: Vector3,
+	velocity: Vector3,
+	worldRoot: WorldRoot,
+	castHandler: any,
+	canPierce: TypeDef.CanPierceFunction?
+): (RaycastResult?, boolean, number)
+	local pierceResults = casts_StepPierceResults[id]
+	table.clear(pierceResults)
+
+	local endpoint = origin + displacement
+	local direction = if displacement.Magnitude > EPSILON then displacement.Unit else Vector3.zero
+	local rayOrigin = origin
+	local lastResult: RaycastResult? = nil
+	local rayInfo = casts_RayInfo[id]
+	local variant = casts_CastVariant[id]
+
+	for _ = 1, casts_MaxPiercesPerStep[id] do
+		local remainingDisplacement = endpoint - rayOrigin
+		if remainingDisplacement.Magnitude <= EPSILON then
+			break
+		end
+
+		local result = castHandler(
+			worldRoot,
+			rayOrigin,
+			remainingDisplacement,
+			rayInfo.Parameters,
+			variant
+		)
+
+		if not result then
+			return nil, false, #pierceResults
+		end
+
+		lastResult = result
+
+		if result.Instance == rayInfo.CosmeticBulletObject then
+			return result, false, #pierceResults
+		end
+
+		if not ShouldPierce(id, result, velocity, canPierce) then
+			return result, true, #pierceResults
+		end
+
+		table.insert(pierceResults, result)
+		rayOrigin = result.Position + direction * RAY_SEARCH_OFFSET
+	end
+
+	return lastResult, false, #pierceResults
+end
+
+local function QueueSegmentPierces(id: number, velocity: Vector3, sub: boolean): number
+	local pierceResults = casts_StepPierceResults[id]
+	local pierceCount = #pierceResults
+	for index = 1, pierceCount do
+		QueuePierce(id, pierceResults[index], velocity, sub)
+	end
+	return pierceCount
+end
+
 -- ============================================================================
 -- Automatic high-fidelity resimulation
 -- ============================================================================
@@ -866,12 +934,14 @@ local function ResimulateHit(
 
 		lastPierced = false
 
-		local subResult = castHandler(
-			targetWorldRoot,
+		local subResult, subDidHit, subPierceCount = CastSegment(
+			id,
 			subOrigin,
 			subDirection,
-			casts_RayInfo[id].Parameters,
-			casts_CastVariant[id]
+			subVelocity,
+			targetWorldRoot,
+			castHandler,
+			canPierce
 		)
 
 		if casts_VisualizeCasts[id] then
@@ -885,24 +955,10 @@ local function ResimulateHit(
 			)
 		end
 
-		if not subResult then
-			continue
-		end
+		QueueSegmentPierces(id, subVelocity, true)
+		lastPierced = subPierceCount > 0
 
-		if ShouldPierce(
-			id,
-			subResult,
-			subVelocity,
-			canPierce
-			) then
-			QueuePierce(
-				id,
-				subResult,
-				subVelocity,
-				true
-			)
-
-			lastPierced = true
+		if not subResult or not subDidHit then
 			continue
 		end
 
@@ -963,6 +1019,11 @@ local function SimulateCast(
 		acceleration
 	)
 
+	local cast = ActivesRef[id]
+	if cast then
+		cast.PreviousPosition = lastPoint
+	end
+
 	casts_TotalRunTime[id] += delta
 
 	local currentTime = casts_TotalRunTime[id] - trajectory.StartTime
@@ -989,12 +1050,18 @@ local function SimulateCast(
 	local worldRoot = rayInfo.WorldRoot
 	local handler = castHandlers[variant.CastType]
 
-	local result = handler(
-		worldRoot,
+	local castEvents = CasterEvents[casts_CasterId[id]]
+	local canPiercefn = castEvents and castEvents.CanPierce
+	local castTerminatingfn = castEvents and castEvents.CastTerminating
+
+	local result, didHit = CastSegment(
+		id,
 		lastPoint,
 		displacement,
-		rayInfo.Parameters,
-		variant
+		velocity,
+		worldRoot,
+		handler,
+		canPiercefn
 	)
 
 	local rayDisplacement = if result
@@ -1034,11 +1101,9 @@ local function SimulateCast(
 		)
 	end
 
-	-- ------------------------------------------------------------------------
-	-- No hit.
-	-- ------------------------------------------------------------------------
-
+	-- Queue LengthChanged before this segment's Pierced/Hit events.
 	if not result then
+		QueueSegmentPierces(id, velocity, false)
 		if casts_DistanceCovered[id] >= casts_MaxDistance[id] then
 			QueueEvent(
 				id,
@@ -1046,39 +1111,16 @@ local function SimulateCast(
 			)
 			return true
 		end
-
 		return false
 	end
-
-	-- ------------------------------------------------------------------------
-	-- Cosmetic bullet collision.
-	-- ------------------------------------------------------------------------
 
 	if result.Instance == rayInfo.CosmeticBulletObject then
+		QueueSegmentPierces(id, velocity, false)
 		return false
 	end
 
-	local castEvents = CasterEvents[casts_CasterId[id]]
-	local canPiercefn = castEvents and castEvents.CanPierce
-	local castTerminatingfn = castEvents and castEvents.CastTerminating
-
-	-- ------------------------------------------------------------------------
-	-- Pierce.
-	-- ------------------------------------------------------------------------
-
-	if ShouldPierce(
-		id,
-		result,
-		velocity,
-		canPiercefn
-		) then
-		QueuePierce(
-			id,
-			result,
-			velocity,
-			false
-		)
-
+	if not didHit then
+		QueueSegmentPierces(id, velocity, false)
 		return false
 	end
 
@@ -1091,6 +1133,7 @@ local function SimulateCast(
 		and casts_HighFidelitySegmentSize[id] > 0
 	then
 		if casts_IsActivelyResimulating[id] then
+			QueueSegmentPierces(id, velocity, false)
 			QueueEvent(
 				id,
 				EVT_CAST_TERMINATING,
@@ -1127,6 +1170,7 @@ local function SimulateCast(
 		return true
 	end
 
+	QueueSegmentPierces(id, velocity, false)
 	QueueHit(
 		id,
 		result,
@@ -1304,6 +1348,8 @@ function SerialSimulation_Register(cast: any)
 	casts_CastVariant[id] = cast.CastVariant
 
 	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
+	casts_MaxPiercesPerStep[id] = cast.StateInfo.MaxPiercesPerStep or 1
+	casts_StepPierceResults[id] = {}
 
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
@@ -1377,6 +1423,8 @@ function SerialSimulation_Unregister(castID: number)
 	casts_CastVariant[castID] = nil
 
 	casts_MaxDistance[castID] = nil
+	casts_MaxPiercesPerStep[castID] = nil
+	casts_StepPierceResults[castID] = nil
 	casts_RayDisplacement[castID] = nil
 
 	if casts_ActiveMotor6Ds[castID] then
