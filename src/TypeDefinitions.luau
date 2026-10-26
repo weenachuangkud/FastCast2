@@ -225,6 +225,7 @@ export type FastCastBehavior = {
 	MaxLifetime: number?,
 	MaxPiercesPerStep: number,
 	Acceleration: Vector3,
+	InitialOffset: CFrame,
 	HighFidelityBehavior: number,
 	HighFidelitySegmentSize: number,
 	CosmeticBulletTemplate: Instance?,
@@ -342,6 +343,7 @@ export type ActiveCastData = {
 	RayInfo: CastRayInfo,
 	UserData: { [any]: any },
 	PreviousPosition: Vector3,
+	Offset: CFrame,
 
 	_Destroying: boolean,
 	_TerminationQueued: boolean,
@@ -362,6 +364,7 @@ export type ActiveBlockcastData = {
 	RayInfo: BlockCastRayInfo,
 	UserData: { [any]: any },
 	PreviousPosition: Vector3,
+	Offset: CFrame,
 
 	_Destroying: boolean,
 	Type : "Blockcast",
@@ -381,6 +384,7 @@ export type ActiveSpherecastData = {
 	RayInfo: SphereCastRayInfo,
 	UserData: { [any]: any },
 	PreviousPosition: Vector3,
+	Offset: CFrame,
 
 	_Destroying: boolean,
 	Type : "Spherecast",
