@@ -60,6 +60,7 @@ local EVT_LENGTH_CHANGED = 1
 local EVT_HIT = 2
 local EVT_PIERCED = 3
 local EVT_CAST_TERMINATING = 4
+local EVT_ON_STEP = 5
 
 --[[
 	Shoutout to DrSinek for some code
@@ -613,6 +614,14 @@ local function FireQueuedEvents()
 						args[2],
 						args[3]
 					)
+				end
+			end
+
+		elseif eventType == EVT_ON_STEP then
+			if eventConfig.UseOnStep then
+				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
+				if onStep then
+					onStep:Fire(cast, args[1])
 				end
 			end
 
@@ -1562,18 +1571,15 @@ local function UpdateCasts(delta: number)
 			)
 		end
 
-		-- Run synchronously before calculating this step's trajectory.
-		-- This is opt-in per behavior to avoid callback overhead for ordinary casts.
+		-- Queue OnStep so it dispatches with the other events after simulation
+		-- and cosmetic movement. Changes made by the callback apply to later steps.
 		if cast and cast.StateInfo.FastCastEventsConfig.UseOnStep then
 			local events = CasterEvents[casts_CasterId[id]]
-			local onStep = events and events.OnStep
-
-			if onStep then
-				onStep:Fire(cast, delta)
+			if events and events.OnStep then
+				QueueEvent(id, EVT_ON_STEP, delta)
 			end
 		end
 
-		-- The callback may have terminated the cast.
 		if not ActivesRef[id] or cast._Destroying or cast.StateInfo.IsPaused then
 			continue
 		end
