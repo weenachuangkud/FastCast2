@@ -1072,7 +1072,33 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("HighFidelity modes all resolve hits", function(expect)
+			test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
+			local arena = createArena(expect)
+			local container = createContainer(arena)
+			local behavior = makeBehavior(container)
+			local initialOffset = CFrame.new(0, 0, -2) * CFrame.Angles(0, math.rad(90), 0)
+			behavior.InitialOffset = initialOffset
+			behavior.CosmeticBulletTemplate = Instance.new("Part")
+			behavior.CosmeticBulletTemplate.Anchored = true
+			behavior.CosmeticBulletTemplate.Parent = arena
+
+			local castData = nil
+			local caster = newCaster(expect)
+			caster.CastFire = function(cast)
+				castData = cast
+			end
+			initializeRuntime()
+			fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+
+			expect.truthy(castData, "CastFire did not expose the cast")
+			expect.equal(castData.Offset, initialOffset, "InitialOffset was not copied to cast.Offset")
+
+			local runtimeOffset = CFrame.new(1, 0, 0)
+			castData.Offset = runtimeOffset
+			expect.equal(castData.Offset, runtimeOffset, "cast.Offset could not be changed at runtime")
+		end)
+
+		test("HighFidelity modes all resolve hits", function(expect)
 				local modes = {
 					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
 					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
