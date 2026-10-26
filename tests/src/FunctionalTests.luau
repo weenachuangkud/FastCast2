@@ -639,6 +639,11 @@ return function()
 					stepCount += 1
 					if stepCount == 1 then
 						expect.greaterThan(deltaTime, 0, "OnStep deltaTime must be positive")
+						expect.greaterThan(
+							FastCast:GetPositionCast(cast).Magnitude,
+						0,
+						"OnStep should run after the current movement"
+						)
 						FastCast:SetVelocityCast(cast, Vector3.new(0, 0, -120))
 					end
 				end
