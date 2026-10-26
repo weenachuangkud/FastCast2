@@ -114,6 +114,7 @@ local casts_CastVariant = {} :: { [number]: CastVariants }
 local casts_MaxDistance = {} :: { [number]: number }
 local casts_MaxPiercesPerStep = {} :: { [number]: number }
 local casts_StepPierceResults = {} :: { [number]: { RaycastResult } }
+local casts_ResimPierceResults = {} :: { [number]: { RaycastResult } }
 local casts_RayDisplacement = {} :: { [number]: number }
 
 local casts_ActiveMotor6Ds = {} :: { [number]: Motor6D }
@@ -799,6 +800,7 @@ end
 -- queued before Pierced events, preserving the normal event order.
 local function CastSegment(
 	id: number,
+	pierceResults: { RaycastResult },
 	origin: Vector3,
 	displacement: Vector3,
 	velocity: Vector3,
@@ -806,7 +808,6 @@ local function CastSegment(
 	castHandler: any,
 	canPierce: TypeDef.CanPierceFunction?
 ): (RaycastResult?, boolean, number)
-	local pierceResults = casts_StepPierceResults[id]
 	table.clear(pierceResults)
 
 	local endpoint = origin + displacement
@@ -936,6 +937,7 @@ local function ResimulateHit(
 
 		local subResult, subDidHit, subPierceCount = CastSegment(
 			id,
+			casts_ResimPierceResults[id],
 			subOrigin,
 			subDirection,
 			subVelocity,
@@ -1019,11 +1021,6 @@ local function SimulateCast(
 		acceleration
 	)
 
-	local cast = ActivesRef[id]
-	if cast then
-		cast.PreviousPosition = lastPoint
-	end
-
 	casts_TotalRunTime[id] += delta
 
 	local currentTime = casts_TotalRunTime[id] - trajectory.StartTime
@@ -1056,6 +1053,7 @@ local function SimulateCast(
 
 	local result, didHit = CastSegment(
 		id,
+		casts_StepPierceResults[id],
 		lastPoint,
 		displacement,
 		velocity,
@@ -1350,6 +1348,7 @@ function SerialSimulation_Register(cast: any)
 	casts_MaxDistance[id] = cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE
 	casts_MaxPiercesPerStep[id] = cast.StateInfo.MaxPiercesPerStep or 1
 	casts_StepPierceResults[id] = {}
+	casts_ResimPierceResults[id] = {}
 
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
@@ -1425,6 +1424,7 @@ function SerialSimulation_Unregister(castID: number)
 	casts_MaxDistance[castID] = nil
 	casts_MaxPiercesPerStep[castID] = nil
 	casts_StepPierceResults[castID] = nil
+	casts_ResimPierceResults[castID] = nil
 	casts_RayDisplacement[castID] = nil
 
 	if casts_ActiveMotor6Ds[castID] then
@@ -1537,6 +1537,18 @@ local function UpdateCasts(delta: number)
 
 		if casts_HighFidelitySegmentSize[id] <= 0 then
 			casts_HighFidelitySegmentSize[id] = 0.1
+		end
+
+		-- Preserve the position at the start of this simulation update, before
+		-- OnStep can alter the trajectory and before high-fidelity substeps run.
+		if cast then
+			local trajectory = casts_Trajectory[id]
+			cast.PreviousPosition = GetPositionAtTime(
+				casts_TotalRunTime[id] - trajectory.StartTime,
+				trajectory.Origin,
+				trajectory.InitialVelocity,
+				trajectory.Acceleration
+			)
 		end
 
 		-- Run synchronously before calculating this step's trajectory.
