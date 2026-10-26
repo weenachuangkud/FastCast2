@@ -1112,12 +1112,12 @@ local function SimulateCast(
 	end
 
 	if result.Instance == rayInfo.CosmeticBulletObject then
-		QueueSegmentPierces(id, velocity, false)
+		QueueSegmentPierces(id, casts_StepPierceResults[id], velocity, false)
 		return false
 	end
 
 	if not didHit then
-		QueueSegmentPierces(id, velocity, false)
+		QueueSegmentPierces(id, casts_StepPierceResults[id], velocity, false)
 		return false
 	end
 
@@ -1130,7 +1130,7 @@ local function SimulateCast(
 		and casts_HighFidelitySegmentSize[id] > 0
 	then
 		if casts_IsActivelyResimulating[id] then
-			QueueSegmentPierces(id, velocity, false)
+			QueueSegmentPierces(id, casts_StepPierceResults[id], velocity, false)
 			QueueEvent(
 				id,
 				EVT_CAST_TERMINATING,
@@ -1167,7 +1167,7 @@ local function SimulateCast(
 		return true
 	end
 
-	QueueSegmentPierces(id, velocity, false)
+	QueueSegmentPierces(id, casts_StepPierceResults[id], velocity, false)
 	QueueHit(
 		id,
 		result,
