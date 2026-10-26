@@ -475,6 +475,53 @@ return function()
 				arena:Destroy()
 			end)
 
+			test("CanPierce passes through a thick wall and hits the next wall", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local thickWall = createWall(arena, Vector3.new(0, 0, -10), Vector3.new(50, 50, 20))
+				local finalWall = createWall(arena, Vector3.new(0, 0, -25), Vector3.new(50, 50, 1))
+				local behavior = makeBehavior(container)
+				behavior.MaxPiercesPerStep = 2
+				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local stepCount = 0
+				local piercedStep = nil
+				local hitStep = nil
+				local hitInstance = nil
+				local caster = newCaster(expect)
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.CanPierce = function(_, result)
+					return result.Instance == thickWall
+				end
+				caster.Pierced = function(_, result)
+					if result.Instance == thickWall then
+						piercedStep = stepCount
+					end
+				end
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+					hitStep = stepCount
+				end
+				initializeRuntime()
+
+				caster:RaycastFire(Vector3.new(0, 0, 10), Vector3.new(0, 0, -1), 6000, behavior)
+
+				expect.truthy(
+					Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT),
+					"cast did not hit the wall behind the thick pierceable wall"
+				)
+				expect.equal(piercedStep, hitStep, "thick wall pierce and next-wall hit should occur in the same simulation step")
+				expect.equal(hitInstance, finalWall, "cast should hit the wall behind the thick pierceable wall")
+
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
 			test("Pierced and CanPierce run when a cast is allowed through", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
