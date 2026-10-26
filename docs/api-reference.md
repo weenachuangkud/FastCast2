@@ -144,6 +144,7 @@ Created via `FastCast2.newBehavior()`. Configuration for cast behavior:
 ```lua
 local behavior = FastCast2.newBehavior()
 behavior.MaxDistance = 500
+behavior.MaxPiercesPerStep = 3 -- Check up to 3 collisions per movement segment when piercing
 behavior.RaycastParams = RaycastParams.new()
 behavior.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 behavior.RaycastParams.FilterDescendantsInstances = {character}
@@ -163,6 +164,7 @@ behavior.VisualizeCastSettings = {
 |-------|------|---------|-------------|
 | `RaycastParams` | `RaycastParams?` | `nil` | Filter rules for raycasting |
 | `MaxDistance` | `number` | `1000` | Max range before auto-termination |
+| `MaxPiercesPerStep` | `number` | `1` | Maximum collision-query attempts in one movement segment, including the first hit; further queries continue after a pierce |
 | `Acceleration` | `Vector3` | `(0,0,0)` | Constant acceleration applied each frame |
 | `HighFidelityBehavior` | `number` | `1` | Default(1) / Automatic(2) / Always(3) |
 | `HighFidelitySegmentSize` | `number` | `0.5` | Segment size for sub-stepping |
@@ -200,6 +202,7 @@ ActiveCast represents a projectile in flight. It's a pure data structure (AoS) e
 
 ```lua
 cast.ID: number              -- Unique identifier
+cast.PreviousPosition: Vector3 -- Position at the start of the most recent simulation step
 cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
 cast.UserData: any           -- From behavior.UserData
 cast.CastVariant: {          -- Cast type info
@@ -213,6 +216,7 @@ cast.CastVariant: {          -- Cast type info
 
 ```lua
 cast.StateInfo.TotalRuntime: number
+cast.StateInfo.MaxPiercesPerStep: number
 cast.StateInfo.HighFidelityBehavior: number
 cast.StateInfo.HighFidelitySegmentSize: number
 cast.StateInfo.IsActivelyResimulating: boolean
