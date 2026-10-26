@@ -92,6 +92,7 @@ function ActiveCast.createCastData(
 		Type = variant.CastType,
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
+		Offset = behavior.InitialOffset or CFrame.identity,
 		ID = activeCastID
 	}
 
@@ -112,7 +113,9 @@ function ActiveCast.createCastData(
 		if behavior.CloneTemplate == true then
 			basePart = basePart:Clone()
 		end
-		basePart.CFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
+		local initialCFrame = if direction ~= Vector3.new() then CFrame.new(origin, origin + direction) else CFrame.new(origin)
+		basePart.CFrame = initialCFrame * cast.Offset
+		cast.CFrame = initialCFrame * cast.Offset
 		basePart.Parent = behavior.CosmeticBulletContainer
 
 		cast.RayInfo.CosmeticBulletObject = basePart
