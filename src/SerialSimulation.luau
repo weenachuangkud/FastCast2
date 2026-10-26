@@ -1384,7 +1384,7 @@ function SerialSimulation_Register(cast: any)
 	)
 
 	casts_CFrame[id] = CFrame.new(position)
-	cast.CFrame = GetCosmeticCFrame(id)
+	cast.CFrame = casts_CFrame[id] * cast.Offset
 
 	if CurrentMovementMode == "Motor6D"
 		and MovementEnabled
