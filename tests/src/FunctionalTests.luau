@@ -1072,7 +1072,7 @@ return function()
 				arena:Destroy()
 			end)
 
-						test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
+			test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
@@ -1107,7 +1107,7 @@ return function()
 				expect.equal(cosmetic.CFrame, castData.CFrame, "cast.CFrame did not reflect the cosmetic offset")
 			end)
 
-test("HighFidelity modes all resolve hits", function(expect)
+			test("HighFidelity modes all resolve hits", function(expect)
 				local modes = {
 					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
 					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
