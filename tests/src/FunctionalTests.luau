@@ -896,6 +896,7 @@ return function()
 				params.FilterType = Enum.RaycastFilterType.Exclude
 				params.FilterDescendantsInstances = { container, excludedWall }
 				behavior.RaycastParams = params
+				behavior.FastCastEventsConfig.UseOnStep = true
 
 				initializeRuntime()
 				-- The direct query is synchronous; yield one frame so newly created
@@ -914,17 +915,46 @@ return function()
 				)
 
 				local hitInstance = nil
+				local stepCount = 0
+				local terminated = false
+				local castData = nil
 				local caster = newCaster(expect)
+				caster.CastFire = function(cast)
+					castData = cast
+				end
+				caster.OnStep = function()
+					stepCount += 1
+				end
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 				end
+				caster.CastTerminating = function()
+					terminated = true
+				end
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
+				local castParamsResult = castData and castData.RayInfo
+					and workspace:Raycast(Vector3.zero, Vector3.new(0, 0, -20), castData.RayInfo.Parameters)
+				expect.equal(
+					castParamsResult and castParamsResult.Instance,
+					wall,
+					"FastCast's cloned RaycastParams did not exclude the first wall and hit the next"
+				)
+
+				local hitObserved = Framework.waitFor(function()
+					return hitInstance ~= nil
+				end, HIT_TIMEOUT)
+				local stateInfo = castData and castData.StateInfo
 				expect.truthy(
-					Framework.waitFor(function()
-						return hitInstance ~= nil
-					end, HIT_TIMEOUT),
-					"FastCast filtered raycast never registered a hit"
+					hitObserved,
+					string.format(
+						"FastCast filtered raycast never registered a hit (OnStep callbacks: %d, terminated: %s, runtime: %s, distance: %s, cast active: %s)",
+						stepCount,
+					 tostring(terminated),
+						if stateInfo then tostring(stateInfo.TotalRuntime) else "unavailable",
+						if stateInfo then tostring(stateInfo.DistanceCovered) else "unavailable",
+						tostring(stateInfo ~= nil and castData ~= nil and not castData._Destroying)
+					)
 				)
 				expect.equal(hitInstance, wall, "FastCast filtered raycast hit the wrong instance")
 
