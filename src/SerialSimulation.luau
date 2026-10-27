@@ -573,7 +573,7 @@ local function FireQueuedEvents()
 		local eventConfig = casts_FastCastEventsConfig[castID]
 
 		if not eventConfig then
-			return
+			continue
 		end
 
 		if eventType == EVT_LENGTH_CHANGED then
@@ -1289,6 +1289,12 @@ local function SimulateAlwaysHighFidelity(
 		variant
 	)
 
+	local castEvents = CasterEvents[casts_CasterId[id]]
+	local eventConfig = casts_FastCastEventsConfig[id]
+	local canPiercefn = castEvents and castEvents.CanPierce
+	local canPierceEnabled = canPiercefn ~= nil and eventConfig ~= nil and eventConfig.UseCanPierce
+	local castTerminatingfn = castEvents and castEvents.CastTerminating
+
 	local endpoint = (resultOfCast and resultOfCast.Position) or currentPoint
 
 	local distance = (endpoint - lastPoint).Magnitude
@@ -1314,6 +1320,7 @@ local function SimulateAlwaysHighFidelity(
 		)
 	end
 
+	local substepStopped = false
 	for segmentIndex = 1, segmentCount do
 		if casts_CancelHighResCast[id] then
 			casts_CancelHighResCast[id] = false
@@ -1337,11 +1344,19 @@ local function SimulateAlwaysHighFidelity(
 		-- Stop advancing the cast in this frame as soon as a substep hits
 		-- something or reaches MaxDistance.
 		if SimulateCast(id, timeIncrement) then
+			substepStopped = true
 			break
 		end
 	end
 
 	casts_IsActivelyResimulating[id] = false
+
+	-- The coarse cast already saw a non-pierceable obstacle. Normally a
+	-- refined substep reports it, but preserve that hit if rounding leaves
+	-- every refined substep short of the surface.
+	if resultOfCast and not substepStopped and not canPierceEnabled then
+		QueueHit(id, resultOfCast, currentVelocity, false, castTerminatingfn)
+	end
 end
 
 -- ============================================================================
