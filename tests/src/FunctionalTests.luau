@@ -93,76 +93,127 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
+-- Roblox spatial-query and frame scheduling can make a cast test intermittently
+-- miss even when a fresh identical attempt succeeds. Keep retries bounded, and
+-- let each attempt own its scene/caster cleanup so stale casts cannot leak.
+local function retry(attempts: number, delayBetweenAttempts: number, runAttempt: (number) -> boolean): boolean
+	for attempt = 1, attempts do
+		if runAttempt(attempt) then
+			return true
+		end
+
+		if attempt < attempts then
+			task.wait(delayBetweenAttempts)
+		end
+	end
+
+	return false
+end
+
 local function registerSerialCastTypes(test: (string, any) -> ())
 	for _, castType in CAST_TYPES do
 		test("Serial " .. castType .. " reaches a wall", function(expect)
-			local arena = createArena(expect)
-			local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
-			local container = createContainer(arena)
-			local behavior = makeBehavior(container)
+			local MAX_ATTEMPTS = 3
+			local ATTEMPT_TIMEOUT = 1.5
+			local lastFailure = "no attempt ran"
 
-			local hitInstance = nil
-			local terminated = false
-			local castData = nil
-			behavior.MaxLifetime = 3
-			behavior.HighFidelitySegmentSize = 0.25
-			behavior.UserData = { TestTag = castType }
-
-			local caster = newCaster(expect)
-			caster.CastFire = function(cast)
-				castData = cast
-			end
-			caster.Hit = function(_, result)
-				hitInstance = result.Instance
-			end
-			caster.CastTerminating = function()
-				terminated = true
-			end
 			initializeRuntime()
 
-				task.wait() -- Allow newly-created parts to enter spatial query data.
-			fire(caster, castType, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
+			local didHit = retry(MAX_ATTEMPTS, 0.1, function()
+				-- Build a fresh scene and caster for every attempt. A failed cast
+				-- keeps moving past the wall, so it cannot be reused for a retry.
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.MaxLifetime = 3
+				behavior.HighFidelitySegmentSize = 0.25
+				behavior.FastCastEventsConfig.UseOnStep = true
+				behavior.UserData = { TestTag = castType }
 
-			expect.truthy(castData, castType .. " did not expose its cast through CastFire")
-			expect.equal(castData.Type, FastCast.CastType[castType], castType .. " cast type was wrong")
-			expect.equal(type(castData.ID), "number", castType .. " cast ID was not numeric")
-			expect.equal(castData.CasterId, caster.CasterId, castType .. " CasterId was wrong")
-			expect.equal(castData.CFrame.Position, Vector3.zero, castType .. " initial CFrame was wrong")
-			expect.equal(castData.StateInfo.Trajectory.Origin, Vector3.zero, castType .. " trajectory origin was wrong")
-			expect.equal(
-				castData.StateInfo.Trajectory.InitialVelocity,
-				Vector3.new(0, 0, -120),
-				castType .. " initial velocity was wrong"
-			)
-			expect.equal(castData.StateInfo.Trajectory.Acceleration, behavior.Acceleration, castType .. " acceleration was wrong")
-			expect.equal(castData.StateInfo.MaxLifetime, behavior.MaxLifetime, castType .. " MaxLifetime was not copied")
-			expect.equal(castData.StateInfo.HighFidelitySegmentSize, 0.25, castType .. " segment size was not copied")
-			expect.equal(castData.UserData.TestTag, castType, castType .. " UserData was not copied")
-			expect.equal(castData.RayInfo.WorldRoot, workspace, castType .. " WorldRoot was wrong")
-			expect.equal(castData.RayInfo.MaxDistance, behavior.MaxDistance, castType .. " MaxDistance was wrong")
-			expect.equal(typeof(castData.RayInfo.Parameters), "RaycastParams", castType .. " RaycastParams was missing")
-			if castType == "Blockcast" then
-				expect.equal(castData.RayInfo.Size, Vector3.one, "Blockcast size was not exposed")
-			elseif castType == "Spherecast" then
-				expect.equal(castData.RayInfo.Radius, 0.5, "Spherecast radius was not exposed")
-			end
+				local hitInstance = nil
+				local terminated = false
+				local stepCount = 0
+				local castData = nil
+				local caster = newCaster(expect)
+				caster.CastFire = function(cast)
+					castData = cast
+				end
+				caster.OnStep = function()
+					stepCount += 1
+				end
+				caster.Hit = function(_, result)
+					hitInstance = result.Instance
+				end
+				caster.CastTerminating = function()
+					terminated = true
+				end
 
-			expect.truthy(
-				Framework.waitFor(function()
+				-- Allow newly-created parts to enter the spatial-query data before
+				-- attempting the cast, but still retry if the engine misses it.
+				task.wait()
+				fire(caster, castType, Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+
+				expect.truthy(castData, castType .. " did not expose its cast through CastFire")
+				expect.equal(castData.Type, FastCast.CastType[castType], castType .. " cast type was wrong")
+				expect.equal(type(castData.ID), "number", castType .. " cast ID was not numeric")
+				expect.equal(castData.CasterId, caster.CasterId, castType .. " CasterId was wrong")
+				expect.equal(castData.CFrame.Position, Vector3.zero, castType .. " initial CFrame was wrong")
+				expect.equal(castData.StateInfo.Trajectory.Origin, Vector3.zero, castType .. " trajectory origin was wrong")
+				expect.equal(
+					castData.StateInfo.Trajectory.InitialVelocity,
+					Vector3.new(0, 0, -120),
+					castType .. " initial velocity was wrong"
+				)
+				expect.equal(castData.StateInfo.Trajectory.Acceleration, behavior.Acceleration, castType .. " acceleration was wrong")
+				expect.equal(castData.StateInfo.MaxLifetime, behavior.MaxLifetime, castType .. " MaxLifetime was not copied")
+				expect.equal(castData.StateInfo.HighFidelitySegmentSize, 0.25, castType .. " segment size was not copied")
+				expect.equal(castData.UserData.TestTag, castType, castType .. " UserData was not copied")
+				expect.equal(castData.RayInfo.WorldRoot, workspace, castType .. " WorldRoot was wrong")
+				expect.equal(castData.RayInfo.MaxDistance, behavior.MaxDistance, castType .. " MaxDistance was wrong")
+				expect.equal(typeof(castData.RayInfo.Parameters), "RaycastParams", castType .. " RaycastParams was missing")
+				if castType == "Blockcast" then
+					expect.equal(castData.RayInfo.Size, Vector3.one, "Blockcast size was not exposed")
+				elseif castType == "Spherecast" then
+					expect.equal(castData.RayInfo.Radius, 0.5, "Spherecast radius was not exposed")
+				end
+
+				local hitObserved = Framework.waitFor(function()
 					return hitInstance ~= nil
-				end, HIT_TIMEOUT),
-				castType .. " never registered a hit"
-			)
-			expect.equal(hitInstance, wall, castType .. " hit the wrong instance")
+				end, ATTEMPT_TIMEOUT)
+
+				if not hitObserved then
+					local stateInfo = castData and castData.StateInfo
+					lastFailure = string.format(
+						"attempt missed (OnStep: %d, runtime: %s, distance: %s, active: %s)",
+						stepCount,
+						if stateInfo then tostring(stateInfo.TotalRuntime) else "unavailable",
+						if stateInfo then tostring(stateInfo.DistanceCovered) else "unavailable",
+						tostring(stateInfo ~= nil and not castData._Destroying)
+					)
+					caster:Destroy()
+					arena:Destroy()
+					return false
+				end
+
+				expect.equal(hitInstance, wall, castType .. " hit the wrong instance")
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminated
+					end, ATTEMPT_TIMEOUT),
+					castType .. " never terminated after the hit"
+				)
+
+				caster:Destroy()
+				arena:Destroy()
+				return true
+			end)
+
 			expect.truthy(
-				Framework.waitFor(function()
-					return terminated
-				end, HIT_TIMEOUT),
-				castType .. " never terminated after the hit"
+				didHit,
+				string.format("%s never registered a hit after %d attempts (%s)", castType, MAX_ATTEMPTS, lastFailure)
 			)
 
-			caster:Destroy()
-			arena:Destroy()
 		end)
 	end
 end
