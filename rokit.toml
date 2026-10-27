@@ -6,7 +6,7 @@
 [tools]
 rojo = "rojo-rbx/rojo@7.7.1"
 wally = "UpliftGames/wally@0.3.2"
-luau-lsp = "JohnnyMorganz/luau-lsp@1.68.0"
-selene = "Kampfkarren/selene@0.31.0"
-lune = "lune-org/lune@0.10.1"
+luau-lsp = "JohnnyMorganz/luau-lsp@1.70.1"
+selene = "Kampfkarren/selene@0.32.0"
+lune = "lune-org/lune@0.11.1"
 run-in-roblox = "rojo-rbx/run-in-roblox@0.3.0"
