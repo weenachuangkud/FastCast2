@@ -93,9 +93,13 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
--- Roblox spatial-query and frame scheduling can make a cast test intermittently
--- miss even when a fresh identical attempt succeeds. Keep retries bounded, and
--- let each attempt own its scene/caster cleanup so stale casts cannot leak.
+-- IMPORTANT: Keep this helper for tests known to be unreliable/intermittent.
+-- Its purpose is to reduce false failures caused by timing, frame scheduling, or
+-- Roblox spatial-query behavior; do not remove retries or replace them with a
+-- single attempt just to make the test look deterministic. Keep attempts bounded,
+-- and make each attempt create and clean up its own scene/caster so retries don't
+-- reuse stale state or leak active casts. A failure after all attempts should
+-- still fail the test and include useful diagnostics.
 local function retry(attempts: number, delayBetweenAttempts: number, runAttempt: (number) -> boolean): boolean
 	for attempt = 1, attempts do
 		if runAttempt(attempt) then
