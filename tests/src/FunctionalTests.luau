@@ -1141,9 +1141,18 @@ return function()
 					behavior.HighFidelityBehavior = mode.Value
 					behavior.HighFidelitySegmentSize = mode.SegmentSize
 					behavior.MaxLifetime = 3
+					behavior.FastCastEventsConfig.UseOnStep = true
 
 					local hitInstance = nil
+					local stepCount = 0
+					local castData = nil
 					local caster = newCaster(expect)
+					caster.CastFire = function(cast)
+						castData = cast
+					end
+					caster.OnStep = function()
+						stepCount += 1
+					end
 					caster.Hit = function(_, result)
 						hitInstance = result.Instance
 					end
@@ -1152,12 +1161,21 @@ return function()
 					task.wait()
 					fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
+					local hitObserved = Framework.waitFor(function()
+						return hitInstance ~= nil
+					end, HIT_TIMEOUT)
 					expect.truthy(
-						Framework.waitFor(function()
-							return hitInstance ~= nil
-						end, HIT_TIMEOUT),
-					mode.Name .. " high-fidelity mode did not hit the wall"
+						hitObserved,
+						string.format(
+							"%s high-fidelity mode did not hit the wall (OnStep callbacks: %d, runtime: %s, distance: %s, cast active: %s)",
+							mode.Name,
+							stepCount,
+							if castData then tostring(castData.StateInfo.TotalRuntime) else "no CastFire",
+							if castData then tostring(castData.StateInfo.DistanceCovered) else "n/a",
+							tostring(castData ~= nil and not castData._Destroying)
+						)
 					)
+					
 					expect.equal(hitInstance, wall, mode.Name .. " high-fidelity mode hit the wrong instance")
 
 					caster:Destroy()
