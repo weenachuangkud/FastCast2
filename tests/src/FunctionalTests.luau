@@ -376,22 +376,36 @@ return function()
 
 				local firstCount = 0
 				local secondCount = 0
+				local anyHitCount = 0
+				local anyHitInstance = nil
 				local stepCount = 0
 				local terminated = false
+				local castData = nil
+				local latestPosition = nil
+				local latestRuntime = nil
+				local latestDistance = nil
 
 				local caster = newCaster(expect)
+				caster.CastFire = function(cast)
+					castData = cast
+				end
 				local firstConnection = caster.Hit:Connect(function(_, result)
 					if result.Instance == wall then
 						firstCount += 1
 					end
 				end)
 				caster.Hit:Connect(function(_, result)
+					anyHitCount += 1
+					anyHitInstance = result.Instance
 					if result.Instance == wall then
 						secondCount += 1
 					end
 				end)
-				caster.OnStep = function()
+				caster.OnStep = function(cast)
 					stepCount += 1
+					latestPosition = FastCast:GetPositionCast(cast)
+					latestRuntime = cast.StateInfo.TotalRuntime
+					latestDistance = cast.StateInfo.DistanceCovered
 				end
 				caster.CastTerminating = function()
 					terminated = true
@@ -402,23 +416,50 @@ return function()
 				firstConnection:Disconnect()
 
 				task.wait() -- Allow newly-created parts to enter spatial query data.
+				local directResult = workspace:Raycast(
+					Vector3.zero,
+					Vector3.new(0, 0, -20),
+					behavior.RaycastParams
+				)
+				expect.equal(
+					directResult and directResult.Instance,
+					wall,
+					"direct raycast in the Signal test did not hit its wall"
+				)
+
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
+				local clonedParamsResult = workspace:Raycast(
+					Vector3.zero,
+					Vector3.new(0, 0, -20),
+					castData.RayInfo.Parameters
+				)
+				expect.equal(
+					clonedParamsResult and clonedParamsResult.Instance,
+					wall,
+					"FastCast cast's cloned RaycastParams did not hit the Signal test wall"
+				)
 
 				local hitOrTerminationObserved = Framework.waitFor(function()
-					return secondCount > 0 or terminated
+					return anyHitCount > 0 or terminated
 				end, HIT_TIMEOUT)
 				expect.truthy(
 					hitOrTerminationObserved,
 					string.format(
-						"cast neither delivered Hit nor terminated (OnStep callbacks: %d)",
-						stepCount
+						"cast neither delivered Hit nor terminated (OnStep callbacks: %d, latest position: %s, runtime: %s, distance: %s, any hit: %s, active: %s)",
+						stepCount,
+						tostring(latestPosition),
+						tostring(latestRuntime),
+						tostring(latestDistance),
+						tostring(anyHitInstance),
+						tostring(castData ~= nil and castData.StateInfo ~= nil and not castData._Destroying)
 					)
 				)
 				expect.truthy(
 					secondCount > 0,
 					string.format(
-						"cast terminated without firing connected Signal listener (OnStep callbacks: %d)",
-						stepCount
+						"cast terminated or hit without reaching the connected wall listener (OnStep callbacks: %d, hit instance: %s)",
+						stepCount,
+						tostring(anyHitInstance)
 					)
 				)
 				expect.equal(firstCount, 0, "disconnected Signal listener still fired")
