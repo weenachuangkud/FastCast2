@@ -1170,8 +1170,8 @@ return function()
 							"%s high-fidelity mode did not hit the wall (OnStep callbacks: %d, runtime: %s, distance: %s, cast active: %s)",
 							mode.Name,
 							stepCount,
-							if castData then tostring(castData.StateInfo.TotalRuntime) else "no CastFire",
-							if castData then tostring(castData.StateInfo.DistanceCovered) else "n/a",
+							if castData and castData.StateInfo then tostring(castData.StateInfo.TotalRuntime) else if castData then "cast state unavailable" else "no CastFire",
+							if castData and castData.StateInfo then tostring(castData.StateInfo.DistanceCovered) else "n/a",
 							tostring(castData ~= nil and not castData._Destroying)
 						)
 					)
