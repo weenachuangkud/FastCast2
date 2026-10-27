@@ -658,7 +658,15 @@ return function()
 				local firstStepPosition = nil
 				local velocityAfterRedirect = nil
 				local latestPosition = nil
+				local stateInfo = nil
+				local castTerminated = false
 				local caster = newCaster(expect)
+				caster.CastFire = function(cast)
+					stateInfo = cast.StateInfo
+				end
+				caster.CastTerminating = function()
+					castTerminated = true
+				end
 				caster.OnStep = function(cast, deltaTime)
 					stepCount += 1
 					latestPosition = FastCast:GetPositionCast(cast)
