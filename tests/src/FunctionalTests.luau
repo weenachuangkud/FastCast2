@@ -424,7 +424,10 @@ return function()
 
 			test("events are Signals that support multiple listeners and Disconnect", function(expect)
 				local arena = createArena(expect)
-				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+				-- This test exercises Signal listener behavior, not thin-wall raycast
+				-- precision. Keep the wall thicker than a typical frame's displacement
+				-- so a fast cast cannot skip it at a segment boundary.
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 10))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig.UseOnStep = true
