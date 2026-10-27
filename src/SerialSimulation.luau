@@ -1111,6 +1111,14 @@ local function SimulateCast(
 		unitDirection
 	)
 
+	-- Keep the public cast transform in sync with the transform used to move
+	-- its cosmetic object. Offset is writable at runtime, so update this every
+	-- simulation step rather than only when the cast is registered.
+	local cast = ActivesRef[id]
+	if cast then
+		cast.CFrame = casts_CFrame[id] * cast.Offset
+	end
+
 	if casts_WantLengthChanged[id] and CasterEvents[casts_CasterId[id]] and CasterEvents[casts_CasterId[id]].LengthChanged then
 		QueueEvent(
 			id,
