@@ -120,6 +120,7 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 			end
 			initializeRuntime()
 
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 			fire(caster, castType, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
 			expect.truthy(castData, castType .. " did not expose its cast through CastFire")
@@ -351,6 +352,7 @@ return function()
 					hitInstance = result.Instance
 				end
 
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
 				expect.truthy(
@@ -399,6 +401,7 @@ return function()
 				-- A disconnected listener must not receive the event.
 				firstConnection:Disconnect()
 
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
 				local hitOrTerminationObserved = Framework.waitFor(function()
@@ -479,6 +482,7 @@ return function()
 				end
 				initializeRuntime()
 
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 100000, behavior)
 
 				expect.truthy(
@@ -528,6 +532,7 @@ return function()
 				end
 				initializeRuntime()
 
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				caster:RaycastFire(Vector3.new(0, 0, 10), Vector3.new(0, 0, -1), 100000, behavior)
 
 				expect.truthy(
@@ -566,6 +571,7 @@ return function()
 				end
 				initializeRuntime()
 
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
 
 				expect.truthy(
@@ -1050,6 +1056,7 @@ return function()
 					hitInstance = result.Instance
 				end
 				initializeRuntime()
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
 				expect.truthy(cosmetic, "cast did not create a cosmetic projectile")
@@ -1134,6 +1141,7 @@ return function()
 				end
 
 				initializeRuntime()
+				task.wait() -- Allow newly-created parts to enter spatial query data.
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 				task.wait(0.5)
 				expect.equal(callbackCount, 0, "a disabled event callback still ran")
