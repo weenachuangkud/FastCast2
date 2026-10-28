@@ -431,6 +431,11 @@ return function()
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig.UseOnStep = true
+				-- This test verifies Signal listener semantics, not ordinary-step
+				-- collision timing. Always mode substeps the cast and prevents a
+				-- fast cast from skipping the wall between simulation frames.
+				behavior.HighFidelityBehavior = FastCast.Enums.HighFidelityBehavior.Always
+				behavior.HighFidelitySegmentSize = 1
 
 				local firstCount = 0
 				local secondCount = 0
