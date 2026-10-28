@@ -1067,7 +1067,6 @@ local function SimulateCast(
 		displacementMagnitude = remainingDistance
 	end
 
-	-- Skip raycast when displacement is negligible (matches SwiftCast EPSILON)
 	if displacementMagnitude <= EPSILON then
 		casts_DistanceCovered[id] += displacementMagnitude
 		return false
