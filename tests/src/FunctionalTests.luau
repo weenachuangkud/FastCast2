@@ -398,6 +398,8 @@ return function()
 				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
+				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
+				behavior.HighFidelitySegmentSize = 1
 
 				local caster = newCaster(expect)
 				initializeRuntime()
@@ -434,7 +436,7 @@ return function()
 				-- This test verifies Signal listener semantics, not ordinary-step
 				-- collision timing. Always mode substeps the cast and prevents a
 				-- fast cast from skipping the wall between simulation frames.
-				behavior.HighFidelityBehavior = FastCast.Enums.HighFidelityBehavior.Always
+				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
 				behavior.HighFidelitySegmentSize = 1
 
 				local firstCount = 0
