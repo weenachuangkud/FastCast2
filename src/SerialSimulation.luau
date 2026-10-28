@@ -1309,9 +1309,11 @@ local function SimulateAlwaysHighFidelity(
 
 	casts_TotalRunTime[id] -= delta
 
+	-- Ceiling guarantees each substep is no longer than the configured
+	-- segment size; floor can leave long segments and undermine Always mode.
 	local segmentCount = math.max(
 		1,
-		math.floor(
+		math.ceil(
 			distance
 				/ casts_HighFidelitySegmentSize[id]
 		)
