@@ -1326,8 +1326,17 @@ return function()
 						hitInstance = result.Instance
 					end
 
-					-- Avoid starting a cast against geometry created in this same scheduler turn.
-					task.wait()
+					-- Wait until the new wall is present in the spatial query data.
+					-- A single scheduler yield is not sufficient on every Studio run.
+					local wallQueryable = Framework.waitFor(function()
+						local result = workspace:Raycast(
+							Vector3.zero,
+							Vector3.new(0, 0, -20),
+							behavior.RaycastParams
+						)
+						return result ~= nil and result.Instance == wall
+					end, HIT_TIMEOUT)
+					expect.truthy(wallQueryable, mode.Name .. " high-fidelity test wall was not queryable before firing")
 					fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
 					local hitObserved = Framework.waitFor(function()
