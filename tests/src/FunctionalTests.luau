@@ -15,6 +15,7 @@ local Framework = require(script.Parent.Framework)
 
 local CAST_TYPES = { "Raycast", "Blockcast", "Spherecast" }
 local HIT_TIMEOUT = 5
+local VISUALIZE_CASTS = true
 
 local arenaCounter = 0
 local runtimeInitialized = false
@@ -72,6 +73,7 @@ local function makeBehavior(container: Instance): any
 	local behavior = FastCast.newBehavior()
 	behavior.MaxDistance = 1e6
 	behavior.Acceleration = Vector3.zero
+	behavior.VisualizeCasts = VISUALIZE_CASTS
 	behavior.CosmeticBulletContainer = container
 
 	local params = RaycastParams.new()
