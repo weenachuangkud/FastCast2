@@ -124,7 +124,6 @@ local casts_ID = {} :: { number }
 local casts_ID_Index = {} :: { [number]: number }
 
 -- Cached per-cast "does anyone care about this event?" flags.
-local casts_WantLengthChanged = {} :: { [number]: boolean }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
@@ -1119,7 +1118,8 @@ local function SimulateCast(
 		cast.CFrame = casts_CFrame[id] * cast.Offset
 	end
 
-	if casts_WantLengthChanged[id] and CasterEvents[casts_CasterId[id]] and CasterEvents[casts_CasterId[id]].LengthChanged then
+	local eventConfig = casts_FastCastEventsConfig[id]
+	if eventConfig and eventConfig.UseLengthChanged then
 		QueueEvent(
 			id,
 			EVT_LENGTH_CHANGED,
@@ -1410,10 +1410,6 @@ function SerialSimulation_Register(cast: any)
 	table.insert(casts_ID, id)
 	casts_ID_Index[id] = #casts_ID
 
-	local eventConfig = casts_FastCastEventsConfig[id]
-
-	casts_WantLengthChanged[id] = eventConfig ~= nil and eventConfig.UseLengthChanged == true
-
 	local hasCosmetic = cast.RayInfo.CosmeticBulletObject ~= nil
 	casts_HasCosmetic[id] = hasCosmetic
 	if hasCosmetic then
@@ -1462,7 +1458,6 @@ function SerialSimulation_Unregister(castID: number)
 	casts_FastCastEventsConfig[castID] = nil
 	casts_CasterId[castID] = nil
 
-	casts_WantLengthChanged[castID] = nil
 	if casts_HasCosmetic[castID] then
 		castsWithCosmetics -= 1
 	end
