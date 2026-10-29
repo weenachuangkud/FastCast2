@@ -102,30 +102,30 @@ caster:SpherecastFire(Vector3.new(0, 5, 0), 3, Vector3.new(0, 0, -1), 500, behav
 
 ```lua
 -- Getters
-FastCast2:GetPositionCast(cast) → Vector3
-FastCast2:GetVelocityCast(cast) → Vector3
-FastCast2:GetAccelerationCast(cast) → Vector3
+FastCast2.GetPositionCast(cast) → Vector3
+FastCast2.GetVelocityCast(cast) → Vector3
+FastCast2.GetAccelerationCast(cast) → Vector3
 
 -- Setters (modifies trajectory, triggers CancelHighResCast)
-FastCast2:SetVelocityCast(cast, velocity) → ()
-FastCast2:SetAccelerationCast(cast, acceleration) → ()
-FastCast2:SetPositionCast(cast, position) → ()
+FastCast2.SetVelocityCast(cast, velocity) → ()
+FastCast2.SetAccelerationCast(cast, acceleration) → ()
+FastCast2.SetPositionCast(cast, position) → ()
 
 -- Adders (relative modification)
-FastCast2:AddPositionCast(cast, position) → ()
-FastCast2:AddVelocityCast(cast, velocity) → ()
-FastCast2:AddAccelerationCast(cast, acceleration) → ()
+FastCast2.AddPositionCast(cast, position) → ()
+FastCast2.AddVelocityCast(cast, velocity) → ()
+FastCast2.AddAccelerationCast(cast, acceleration) → ()
 
 -- Termination
-FastCast2:TerminateCast(cast) → ()
+FastCast2.TerminateCast(cast) → ()
 ```
 
 ```lua
 -- Example: modify a cast mid-flight
 local function onHit(cast, result, velocity, bullet)
 	-- Deflect the projectile upward on hit
-	FastCast2:SetVelocityCast(cast, Vector3.new(0, 100, 0))
-	FastCast2:SetPositionCast(cast, result.Position + Vector3.new(0, 2, 0))
+	FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+	FastCast2.SetPositionCast(cast, result.Position + Vector3.new(0, 2, 0))
 
 end
 ```
