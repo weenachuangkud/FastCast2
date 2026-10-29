@@ -88,8 +88,8 @@ Fire methods return the active cast so you can adjust its trajectory while it is
 local cast = caster:RaycastFire(origin, direction, speed, behavior)
 
 -- Change its world-space velocity or acceleration during flight.
-FastCast2:SetVelocity(cast, newVelocity)
-FastCast2:SetAcceleration(cast, newAcceleration)
+FastCast2.SetVelocity(cast, newVelocity)
+FastCast2.SetAcceleration(cast, newAcceleration)
 ```
 
 These setters preserve the cast's current position, simulation runtime, and distance already covered. Changes take effect on the next simulation update. They are useful for guided or homing projectiles.
@@ -254,7 +254,7 @@ behavior.FastCastEventsConfig.UseOnStep = true
 
 caster.OnStep = function(cast, deltaTime)
     -- Adjust the cast before the next movement step.
-    local velocity = FastCast2:GetVelocityCast(cast)
+    local velocity = FastCast2.GetVelocityCast(cast)
     -- Use cast.UserData for per-projectile state, e.g. a homing target.
 end
 ```
@@ -282,13 +282,13 @@ Lifetime advances only while the cast is simulating, so it pauses with `PauseCas
 Pause an active cast without changing its current position, velocity, acceleration, or simulation runtime. While paused, it does not raycast or fire `OnStep` / `LengthChanged`. Resume continues from the same simulation time, without catching up for the time spent paused.
 
 ```lua
-FastCast2:PauseCast(cast)
+FastCast2.PauseCast(cast)
 
 -- Later:
-FastCast2:ResumeCast(cast)
+FastCast2.ResumeCast(cast)
 
 -- A paused cast can still be terminated.
-FastCast2:TerminateCast(cast)
+FastCast2.TerminateCast(cast)
 ```
 
 Calling `PauseCast` or `ResumeCast` repeatedly is safe. Resuming a terminated cast has no effect. If a cast is paused inside `OnStep`, that simulation step is skipped as well.
@@ -296,26 +296,26 @@ Calling `PauseCast` or `ResumeCast` repeatedly is safe. Resuming a terminated ca
 
 ### Cast manipulation
 
-Modify active casts at runtime using the static `FastCast` methods:
+Modify active casts at runtime using the module-level `FastCast2` helpers:
 
 ```lua
 -- Read state
-local pos = FastCast2:GetPositionCast(cast)
-local vel = FastCast2:GetVelocityCast(cast)
-local accel = FastCast2:GetAccelerationCast(cast)
+local pos = FastCast2.GetPositionCast(cast)
+local vel = FastCast2.GetVelocityCast(cast)
+local accel = FastCast2.GetAccelerationCast(cast)
 
 -- Modify state (automatically rebases trajectory)
-FastCast2:SetPositionCast(cast, Vector3.new(0, 50, 0))
-FastCast2:SetVelocityCast(cast, Vector3.new(0, 100, 0))
-FastCast2:SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
 
 -- Relative changes
-FastCast2:AddPositionCast(cast, Vector3.new(0, 10, 0))
-FastCast2:AddVelocityCast(cast, Vector3.new(0, 20, 0))
-FastCast2:AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
 
 -- Terminate a cast early (fires CastTerminating and cleans up)
-FastCast2:TerminateCast(cast)
+FastCast2.TerminateCast(cast)
 ```
 
 
