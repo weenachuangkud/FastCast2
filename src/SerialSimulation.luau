@@ -858,8 +858,10 @@ local function CastSegment(
 ): (RaycastResult?, boolean, number)
 	table.clear(pierceResults)
 
-	local endpoint = origin + displacement
 	local direction = if displacement.Magnitude > EPSILON then displacement.Unit else Vector3.zero
+	-- Extend the query by a tiny amount so a surface exactly at a segment
+	-- boundary is not missed due to raycast endpoint precision.
+	local endpoint = origin + displacement + direction * RAY_SEARCH_OFFSET
 	local rayOrigin = origin
 	local lastResult: RaycastResult? = nil
 	local rayInfo = casts_RayInfo[id]
