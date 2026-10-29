@@ -718,6 +718,108 @@ return function()
 				arena:Destroy()
 			end)
 
+			test("terminating from OnStep preserves the queued termination event", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local stepCount = 0
+				local terminationCount = 0
+				local caster = newCaster(expect)
+				caster.OnStep = function(cast)
+					stepCount += 1
+					FastCast:TerminateCast(cast)
+				end
+				caster.CastTerminating = function()
+					terminationCount += 1
+				end
+				initializeRuntime()
+
+				local cast = caster:RaycastFire(Vector3.new(0, 1000, 0), Vector3.xAxis, 60, behavior)
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminationCount > 0
+					end, HIT_TIMEOUT),
+					"termination queued by OnStep was lost"
+				)
+				expect.equal(stepCount, 1, "OnStep fired again after requesting termination")
+				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
+				expect.equal(cast.ID, nil, "terminated cast was not cleared")
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("terminating from LengthChanged preserves the queued termination event", function(expect)
+				local arena = createArena(expect)
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.FastCastEventsConfig.UseLengthChanged = true
+
+				local lengthChangedCount = 0
+				local terminationCount = 0
+				local caster = newCaster(expect)
+				caster.LengthChanged = function(cast)
+					lengthChangedCount += 1
+					FastCast:TerminateCast(cast)
+				end
+				caster.CastTerminating = function()
+					terminationCount += 1
+				end
+				initializeRuntime()
+
+				local cast = caster:RaycastFire(Vector3.new(0, 1000, 0), Vector3.xAxis, 60, behavior)
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminationCount > 0
+					end, HIT_TIMEOUT),
+					"termination queued by LengthChanged was lost"
+				)
+				expect.equal(lengthChangedCount, 1, "LengthChanged fired again after requesting termination")
+				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
+				expect.equal(cast.ID, nil, "terminated cast was not cleared")
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
+			test("terminating from Pierced preserves the queued termination event", function(expect)
+				local arena = createArena(expect)
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+				local container = createContainer(arena)
+				local behavior = makeBehavior(container)
+				behavior.MaxDistance = 100
+				behavior.FastCastEventsConfig.UseOnStep = true
+
+				local piercedCount = 0
+				local terminationCount = 0
+				local caster = newCaster(expect)
+				caster.CanPierce = function(_, result)
+					return result.Instance == wall
+				end
+				caster.Pierced = function(cast)
+					piercedCount += 1
+					FastCast:TerminateCast(cast)
+				end
+				caster.CastTerminating = function()
+					terminationCount += 1
+				end
+				initializeRuntime()
+
+				task.wait() -- Allow newly-created parts to enter spatial query data.
+				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+				expect.truthy(
+					Framework.waitFor(function()
+						return terminationCount > 0
+					end, HIT_TIMEOUT),
+					"termination queued by Pierced was lost"
+				)
+				expect.greaterThan(piercedCount, 0, "Pierced never fired for the wall")
+				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
+				expect.equal(cast.ID, nil, "terminated cast was not cleared")
+				caster:Destroy()
+				arena:Destroy()
+			end)
+
 			test("fire methods return their active cast", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
