@@ -1313,7 +1313,6 @@ local function SimulateAlwaysHighFidelity(
 	)
 
 	local castEvents = CasterEvents[casts_CasterId[id]]
-	local eventConfig = casts_FastCastEventsConfig[id]
 	local canPiercefn = castEvents and castEvents.CanPierce
 	local canPierceEnabled = canPiercefn ~= nil
 	local castTerminatingfn = castEvents and castEvents.CastTerminating
