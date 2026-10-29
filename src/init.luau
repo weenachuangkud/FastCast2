@@ -633,7 +633,7 @@ Add position to an ActiveCast with the specified Vector3.
 
 ]=]
 function FastCast.AddPositionCast(cast: vaildcast, position: Vector3)
-	FastCast:SetPositionCast(cast, FastCast.GetPositionCast(cast) + position)
+	FastCast.SetPositionCast(cast, FastCast.GetPositionCast(cast) + position)
 end
 
 --[=[
@@ -647,7 +647,7 @@ Add velocity to an ActiveCast with the specified Vector3.
 
 ]=]
 function FastCast.AddVelocityCast(cast: vaildcast, velocity: Vector3)
-	FastCast:SetVelocityCast(cast, FastCast.GetVelocityCast(cast) + velocity)
+	FastCast.SetVelocityCast(cast, FastCast.GetVelocityCast(cast) + velocity)
 end
 
 --[=[
@@ -661,7 +661,7 @@ Add acceleration to an ActiveCast with the specified Vector3.
 
 ]=]
 function FastCast.AddAccelerationCast(cast: vaildcast, acceleration: Vector3)
-	FastCast:SetAccelerationCast(cast, FastCast.GetAccelerationCast(cast) + acceleration)
+	FastCast.SetAccelerationCast(cast, FastCast.GetAccelerationCast(cast) + acceleration)
 end
 
 --[=[
