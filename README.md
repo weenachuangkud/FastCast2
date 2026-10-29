@@ -88,25 +88,29 @@ Fire methods return the active cast so you can adjust its trajectory while it is
 local cast = caster:RaycastFire(origin, direction, speed, behavior)
 
 -- Change its world-space velocity or acceleration during flight.
-FastCast:SetVelocity(cast, newVelocity)
-FastCast:SetAcceleration(cast, newAcceleration)
+FastCast2:SetVelocity(cast, newVelocity)
+FastCast2:SetAcceleration(cast, newAcceleration)
 ```
 
 These setters preserve the cast's current position, simulation runtime, and distance already covered. Changes take effect on the next simulation update. They are useful for guided or homing projectiles.
 
 ## Runtime lifecycle
 
-`Init()` initializes the shared runtime on the first call and ensures simulation is running. Calling it again while running is safe; after `Stop()`, calling `Init()` resumes simulation without reinitializing the runtime.
+`FastCast2.Init(movementMode?)` initializes the shared runtime on the first call and starts simulation. The optional `movementMode` is `"BulkMoveTo"` or `"Motor6D"`; if omitted, the default movement mode is used. **Call `Init` with dot syntax**, not colon syntax, because it is a module-level function.
+
+Calling `Init()` again while running is safe. After `Stop()`, calling `Init()` resumes simulation without recreating the shared runtime. Passing a movement mode to `Init(movementMode)` on an already initialized runtime enables that mode.
 
 ```lua
-FastCast2.Init(...) -- Initialize once, or resume if stopped
-FastCast2.Stop()    -- Stop simulation updates
-FastCast2.Init(...) -- Resume the existing runtime
+FastCast2.Init("BulkMoveTo") -- Initialize with a movement mode
+FastCast2.Stop()             -- Stop simulation updates
+FastCast2.Init()             -- Resume the existing runtime
+-- Or switch modes on an initialized runtime:
+FastCast2.Init("Motor6D")
 ```
 
-`Stop()` disconnects the simulation update loop. It does not destroy active casts or reset the shared runtime; existing casts resume when simulation starts again. In Parallel, the worker runtime is retained as well.
+`Stop()` disconnects the simulation update loop. It does not destroy active casts or reset the shared runtime; existing casts resume when simulation starts again. In FastCast2Parallel, the worker runtime is retained as well.
 
-If you change `Config.SimulationMode` while stopped, the next `Init()` starts the simulation using the updated mode. Configure simulation settings before resuming, and do not call `Init()` to change movement mode; use `FastCast2.SetMovementModeEnabled(true, mode)` for that instead.
+If you change `Config.SimulationMode` while stopped, the next `Init()` starts the simulation using the updated mode. Configure simulation settings before resuming. You can also change the movement mode directly on an initialized runtime with `FastCast2.SetMovementModeEnabled(true, mode)`. This setter uses dot syntax and expects both `enabled` and `mode`.
 
 ## Quick start
  
@@ -250,7 +254,7 @@ behavior.FastCastEventsConfig.UseOnStep = true
 
 caster.OnStep = function(cast, deltaTime)
     -- Adjust the cast before the next movement step.
-    local velocity = FastCast:GetVelocityCast(cast)
+    local velocity = FastCast2:GetVelocityCast(cast)
     -- Use cast.UserData for per-projectile state, e.g. a homing target.
 end
 ```
@@ -264,7 +268,7 @@ end
 Set `MaxLifetime` to automatically terminate a cast after a maximum amount of simulation time. It is optional; `nil` means the cast has no lifetime limit. A value of `0` terminates the cast at the first simulation update, after the normal cast-fire event.
 
 ```lua
-local behavior = FastCast.newBehavior()
+local behavior = FastCast2.newBehavior()
 behavior.MaxLifetime = 5 -- seconds of simulation time
 
 local cast = caster:RaycastFire(origin, direction, velocity, behavior)
