@@ -1591,7 +1591,10 @@ local function UpdateCasts(delta: number)
 	-- all callbacks inside the queued-event system.
 	for _, id in casts_ID do
 		local cast = ActivesRef[id]
-		if cast and not cast._Destroying and not cast.StateInfo.IsPaused
+		local maxLifetime = cast and cast.StateInfo.MaxLifetime
+		local expired = maxLifetime ~= nil and casts_TotalRunTime[id] >= maxLifetime
+
+		if cast and not cast._Destroying and not cast.StateInfo.IsPaused and not expired
 			and casts_Trajectory[id]
 			and casts_FastCastEventsConfig[id]
 			and casts_FastCastEventsConfig[id].UseOnStep
