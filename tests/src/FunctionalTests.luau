@@ -1423,13 +1423,38 @@ return function()
 
 					local hitInstance = nil
 					local stepCount = 0
+					local lengthChangedCount = 0
+					local lastSegment = "not observed"
+					local crossingSegment = "not observed"
 					local castData = nil
+					behavior.FastCastEventsConfig.UseLengthChanged = true
+
 					local caster = newCaster(expect)
 					caster.CastFire = function(cast)
 						castData = cast
 					end
 					caster.OnStep = function()
 						stepCount += 1
+					end
+					caster.LengthChanged = function(_, origin, direction, length)
+						lengthChangedCount += 1
+						local params = castData and castData.RayInfo and castData.RayInfo.Parameters
+							or behavior.RaycastParams
+						local directResult = workspace:Raycast(origin, direction * length, params)
+						local resultName = directResult and directResult.Instance:GetFullName() or "nil"
+						lastSegment = string.format(
+							"origin=%s direction=%s length=%.3f direct=%s",
+							tostring(origin),
+							tostring(direction),
+							length,
+							resultName
+						)
+
+						local wallFrontZ = wall.Position.Z + wall.Size.Z * 0.5
+						local endpoint = origin + direction * length
+						if origin.Z >= wallFrontZ and endpoint.Z <= wallFrontZ then
+							crossingSegment = lastSegment
+						end
 					end
 					caster.Hit = function(_, result)
 						hitInstance = result.Instance
@@ -1454,12 +1479,15 @@ return function()
 					expect.truthy(
 						hitObserved,
 						string.format(
-							"%s high-fidelity mode did not hit the wall (OnStep callbacks: %d, runtime: %s, distance: %s, cast active: %s)",
+							"%s high-fidelity mode did not hit the wall (OnStep: %d, LengthChanged: %d, runtime: %s, distance: %s, cast active: %s, last segment: %s, crossing segment: %s)",
 							mode.Name,
 							stepCount,
+							lengthChangedCount,
 							if castData and castData.StateInfo then tostring(castData.StateInfo.TotalRuntime) else if castData then "cast state unavailable" else "no CastFire",
 							if castData and castData.StateInfo then tostring(castData.StateInfo.DistanceCovered) else "n/a",
-							tostring(castData ~= nil and not castData._Destroying)
+							tostring(castData ~= nil and not castData._Destroying),
+							lastSegment,
+							crossingSegment
 						)
 					)
 					
