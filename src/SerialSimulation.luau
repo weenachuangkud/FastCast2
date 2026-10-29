@@ -127,13 +127,46 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Packed metadata: f64 cast ID + u8 event type. Keep IDs lossless (no u32
--- wraparound); Roblox values stay in the reusable argument tables below.
--- Capacity doubles only at a new high-water mark, never during steady state.
-local EVENT_STRIDE = 9
-local eventCapacity = 256
-local eventMetadata = buffer.create(eventCapacity * EVENT_STRIDE)
-local queuedEventsCount: number = 0
+-- Each event type has independent write/drain buffers so callbacks can queue
+-- more events without overwriting the events currently being dispatched.
+type QueuedEventBuffer = {
+	metadata: buffer,
+	capacity: number,
+	count: number,
+	argsPool: { { any } }
+}
+
+type QueuedEventQueue = {
+	write: QueuedEventBuffer,
+	drain: QueuedEventBuffer
+}
+
+local EVENT_STRIDE = 8
+local EVENT_CAPACITY = 256
+
+local function CreateQueuedEventBuffer(): QueuedEventBuffer
+	return {
+		metadata = buffer.create(EVENT_CAPACITY * EVENT_STRIDE),
+		capacity = EVENT_CAPACITY,
+		count = 0,
+		argsPool = {}
+	}
+end
+
+local function CreateQueuedEventQueue(): QueuedEventQueue
+	return {
+		write = CreateQueuedEventBuffer(),
+		drain = CreateQueuedEventBuffer()
+	}
+end
+
+local queuedEvents: { [number]: QueuedEventQueue } = {
+	[EVT_LENGTH_CHANGED] = CreateQueuedEventQueue(),
+	[EVT_HIT] = CreateQueuedEventQueue(),
+	[EVT_PIERCED] = CreateQueuedEventQueue(),
+	[EVT_CAST_TERMINATING] = CreateQueuedEventQueue(),
+	[EVT_ON_STEP] = CreateQueuedEventQueue()
+}
 
 -- Flat visualization queue: { castID, data }
 -- Reused every frame via table.clear
@@ -334,17 +367,6 @@ local Visualizers = {
 -- Pre-allocated pools (reused every frame, never freed)
 -- ============================================================================
 
-local argsPool: { { any } } = {}
-local argsPoolCount: number = 0
-
-local function GetArgs(): { any }
-	argsPoolCount += 1
-	if argsPoolCount > #argsPool then
-		argsPool[argsPoolCount] = {}
-	end
-	return argsPool[argsPoolCount]
-end
-
 local visPool: { QueuedVis } = {}
 local visPoolCount: number = 0
 
@@ -385,8 +407,7 @@ local function GetSegVisData(): { any }
 	return segVisPool[segVisPoolCount]
 end
 
-local function ResetPools()
-	argsPoolCount = 0
+local function ResetVisualPools()
 	visPoolCount = 0
 	hitVisPoolCount = 0
 	segVisPoolCount = 0
@@ -534,31 +555,56 @@ local function QueueEvent(
 	arg4: any,
 	arg5: any
 )
-	local args = GetArgs()
+	local eventQueue = queuedEvents[eventType]
+	if not eventQueue then
+		return
+	end
+
+	local queue = eventQueue.write
+	queue.count += 1
+	local index = queue.count
+
+	if index > queue.capacity then
+		queue.capacity *= 2
+		local expanded = buffer.create(queue.capacity * EVENT_STRIDE)
+		buffer.copy(expanded, 0, queue.metadata)
+		queue.metadata = expanded
+	end
+
+	local args = queue.argsPool[index]
+	if not args then
+		args = {}
+		queue.argsPool[index] = args
+	end
+
 	args[1] = arg1
 	args[2] = arg2
 	args[3] = arg3
 	args[4] = arg4
 	args[5] = arg5
 
-	queuedEventsCount += 1
-	if queuedEventsCount > eventCapacity then
-		eventCapacity *= 2
-		local expanded = buffer.create(eventCapacity * EVENT_STRIDE)
-		buffer.copy(expanded, 0, eventMetadata)
-		eventMetadata = expanded
-	end
-	local offset = (queuedEventsCount - 1) * EVENT_STRIDE
-	buffer.writef64(eventMetadata, offset, castID)
-	buffer.writeu8(eventMetadata, offset + 8, eventType)
+	local offset = (index - 1) * EVENT_STRIDE
+	buffer.writef64(queue.metadata, offset, castID)
 end
 
-local function FireQueuedEvents()
-	for i = 1, queuedEventsCount do
+local function FireQueuedEvents(eventType: number)
+	local eventQueue = queuedEvents[eventType]
+	if not eventQueue then
+		return
+	end
+
+	-- Swap before dispatch. Anything queued by a listener goes into the new
+	-- write buffer and is left for a later drain.
+	local eventsToProcess = eventQueue.write
+	eventQueue.write = eventQueue.drain
+	eventQueue.drain = eventsToProcess
+	eventQueue.write.count = 0
+
+	local eventCount = eventsToProcess.count
+	for i = 1, eventCount do
 		local offset = (i - 1) * EVENT_STRIDE
-		local castID = buffer.readf64(eventMetadata, offset)
-		local eventType = buffer.readu8(eventMetadata, offset + 8)
-		local args = argsPool[i]
+		local castID = buffer.readf64(eventsToProcess.metadata, offset)
+		local args = eventsToProcess.argsPool[i]
 
 		local cast = ActivesRef[castID]
 		if not cast then
@@ -635,9 +681,7 @@ local function FireQueuedEvents()
 		end
 	end
 
-	ResetPools()
-	queuedEventsCount = 0
-	queuedVisCount = 0
+	eventsToProcess.count = 0
 end
 
 -- ============================================================================
@@ -1639,11 +1683,19 @@ local function UpdateCasts(delta: number)
 	-- Main-thread-only work.
 	-- =========================================================================
 
+	FireQueuedEvents(EVT_ON_STEP)
+
 	UpdateMotor6Ds()
 	BulkMoveTo()
 
 	FireQueuedVisualizes()
-	FireQueuedEvents()
+	FireQueuedEvents(EVT_LENGTH_CHANGED)
+	FireQueuedEvents(EVT_HIT)
+	FireQueuedEvents(EVT_PIERCED)
+	FireQueuedEvents(EVT_CAST_TERMINATING)
+
+	ResetVisualPools()
+	queuedVisCount = 0
 end
 
 -- ============================================================================
