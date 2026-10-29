@@ -326,15 +326,34 @@ return function()
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.FastCastEventsConfig.UseOnStep = true
+				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local hitInstance = nil
 				local stepCount = 0
+				local lengthChangedCount = 0
+				local terminating = false
+				local stepRuntime = nil
+				local stepDistance = nil
+				local castData = nil
 				local caster = newCaster(expect)
+				caster.CastFire = function(cast)
+					castData = cast
+				end
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 				end
-				caster.OnStep = function()
+				caster.OnStep = function(cast)
 					stepCount += 1
+					if cast and cast.StateInfo then
+						stepRuntime = cast.StateInfo.TotalRuntime
+						stepDistance = cast.StateInfo.DistanceCovered
+					end
+				end
+				caster.LengthChanged = function()
+					lengthChangedCount += 1
+				end
+				caster.CastTerminating = function()
+					terminating = true
 				end
 				initializeRuntime()
 
@@ -352,24 +371,43 @@ return function()
 				expect.equal(hitInstance, nil, "cast hit while simulation was stopped")
 
 				FastCast.Init()
-				expect.truthy(
-					Framework.waitFor(function()
-						return stepCount > 0
-					end, HIT_TIMEOUT),
-					"simulation did not resume after Init (no OnStep callback)"
+				local resumed = Framework.waitFor(function()
+					return stepCount > 0
+				end, HIT_TIMEOUT)
+				expect.truthy(resumed, "simulation did not resume after Init (no OnStep callback)")
+
+				local hitObserved = Framework.waitFor(function()
+					return hitInstance ~= nil
+				end, HIT_TIMEOUT)
+				local probeResult = workspace:Raycast(
+					Vector3.zero,
+					Vector3.new(0, 0, -30),
+					behavior.RaycastParams
 				)
+				local activeCast = castData and castData.ID and FastCast.GetActiveCast and FastCast.GetActiveCast(castData.ID)
+				local stateInfo = activeCast and activeCast.StateInfo
 				expect.truthy(
-					Framework.waitFor(function()
-						return hitInstance ~= nil
-					end, HIT_TIMEOUT),
-					"simulation resumed but cast did not register a hit"
+					hitObserved,
+					string.format(
+						"simulation resumed but cast did not register a hit (steps: %d; last step runtime: %s; last step distance: %s; LengthChanged: %d; terminating: %s; active cast: %s; active runtime: %s; active distance: %s; direct raycast: %s)",
+						stepCount,
+						tostring(stepRuntime),
+						tostring(stepDistance),
+						lengthChangedCount,
+						tostring(terminating),
+						tostring(activeCast ~= nil),
+						tostring(stateInfo and stateInfo.TotalRuntime),
+						tostring(stateInfo and stateInfo.DistanceCovered),
+						if probeResult then probeResult.Instance:GetFullName() else "<no hit>"
+					)
 				)
-				expect.equal(hitInstance, wall, "resumed cast hit the wrong instance")
+				if hitObserved then
+					expect.equal(hitInstance, wall, "resumed cast hit the wrong instance")
+				end
 
 				caster:Destroy()
 				arena:Destroy()
 			end)
-
 			test("RaycastFire fires CastFire synchronously", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
