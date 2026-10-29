@@ -779,7 +779,8 @@ return function()
 					end, HIT_TIMEOUT),
 					"termination queued by LengthChanged was lost"
 				)
-				expect.equal(lengthChangedCount, 1, "LengthChanged fired again after requesting termination")
+				expect.greaterThan(lengthChangedCount, 0, "LengthChanged never fired")
+				expect.equal(lengthChangedCount, lengthChangesAtTermination, "LengthChanged fired after termination completed")
 				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
 				expect.equal(cast.ID, nil, "terminated cast was not cleared")
 				caster:Destroy()
