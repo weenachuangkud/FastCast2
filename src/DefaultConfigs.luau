@@ -59,15 +59,6 @@ Defaults.FastCastBehavior = {
 
 	CloneTemplate = true,
 
-	FastCastEventsConfig = {
-		UseLengthChanged = false,
-		UseHit = true,
-		UsePierced = true,
-		UseCastTerminating = true,
-		UseCanPierce = true,
-		UseCastFire = true,
-		UseOnStep = false
-	}
 } :: TypeDefinitions.FastCastBehavior
 
 return Defaults
