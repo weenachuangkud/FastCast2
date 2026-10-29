@@ -127,8 +127,9 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Each event type has independent pending/dispatching buffers so callbacks can queue
--- more events without overwriting the events currently being dispatched.
+-- Double-buffer the event queue so callbacks can enqueue events without
+-- overwriting the batch currently being dispatched. Keeping one queue preserves
+-- the original insertion order across event types.
 type QueuedEventBuffer = {
 	metadata: buffer,
 	capacity: number,
@@ -141,7 +142,7 @@ type QueuedEventQueue = {
 	dispatching: QueuedEventBuffer
 }
 
-local EVENT_STRIDE = 8
+local EVENT_STRIDE = 9
 local EVENT_CAPACITY = 256
 
 local function CreateQueuedEventBuffer(): QueuedEventBuffer
@@ -153,19 +154,9 @@ local function CreateQueuedEventBuffer(): QueuedEventBuffer
 	}
 end
 
-local function CreateQueuedEventQueue(): QueuedEventQueue
-	return {
-		pending = CreateQueuedEventBuffer(),
-		dispatching = CreateQueuedEventBuffer()
-	}
-end
-
-local queuedEvents: { [number]: QueuedEventQueue } = {
-	[EVT_LENGTH_CHANGED] = CreateQueuedEventQueue(),
-	[EVT_HIT] = CreateQueuedEventQueue(),
-	[EVT_PIERCED] = CreateQueuedEventQueue(),
-	[EVT_CAST_TERMINATING] = CreateQueuedEventQueue(),
-	[EVT_ON_STEP] = CreateQueuedEventQueue()
+local queuedEvents: QueuedEventQueue = {
+	pending = CreateQueuedEventBuffer(),
+	dispatching = CreateQueuedEventBuffer()
 }
 
 -- Flat visualization queue: { castID, data }
@@ -555,12 +546,7 @@ local function QueueEvent(
 	arg4: any,
 	arg5: any
 )
-	local eventQueue = queuedEvents[eventType]
-	if not eventQueue then
-		return
-	end
-
-	local queue = eventQueue.pending
+	local queue = queuedEvents.pending
 	queue.count += 1
 	local index = queue.count
 
@@ -585,25 +571,22 @@ local function QueueEvent(
 
 	local offset = (index - 1) * EVENT_STRIDE
 	buffer.writef64(queue.metadata, offset, castID)
+	buffer.writeu8(queue.metadata, offset + 8, eventType)
 end
 
-local function FireQueuedEvents(eventType: number)
-	local eventQueue = queuedEvents[eventType]
-	if not eventQueue then
-		return
-	end
-
-	-- Swap before dispatch. Anything queued by a listener goes into the new
-	-- pending buffer and is left for a later drain.
-	local eventsToProcess = eventQueue.pending
-	eventQueue.pending = eventQueue.dispatching
-	eventQueue.dispatching = eventsToProcess
-	eventQueue.pending.count = 0
+local function FireQueuedEvents()
+	-- Swap before dispatch. Events queued by callbacks go into the new pending
+	-- buffer and are dispatched on the next simulation update.
+	local eventsToProcess = queuedEvents.pending
+	queuedEvents.pending = queuedEvents.dispatching
+	queuedEvents.dispatching = eventsToProcess
+	queuedEvents.pending.count = 0
 
 	local eventCount = eventsToProcess.count
 	for i = 1, eventCount do
 		local offset = (i - 1) * EVENT_STRIDE
 		local castID = buffer.readf64(eventsToProcess.metadata, offset)
+		local eventType = buffer.readu8(eventsToProcess.metadata, offset + 8)
 		local args = eventsToProcess.argsPool[i]
 
 		local cast = ActivesRef[castID]
@@ -612,7 +595,6 @@ local function FireQueuedEvents(eventType: number)
 		end
 
 		local eventConfig = casts_FastCastEventsConfig[castID]
-
 		if not eventConfig then
 			continue
 		end
@@ -1683,16 +1665,11 @@ local function UpdateCasts(delta: number)
 	-- Main-thread-only work.
 	-- =========================================================================
 
-	FireQueuedEvents(EVT_ON_STEP)
-
 	UpdateMotor6Ds()
 	BulkMoveTo()
 
 	FireQueuedVisualizes()
-	FireQueuedEvents(EVT_LENGTH_CHANGED)
-	FireQueuedEvents(EVT_HIT)
-	FireQueuedEvents(EVT_PIERCED)
-	FireQueuedEvents(EVT_CAST_TERMINATING)
+	FireQueuedEvents()
 
 	ResetVisualPools()
 	queuedVisCount = 0
