@@ -388,7 +388,7 @@ return function()
 				expect.equal(firedCast.Type, FastCastEnums.CastType.Raycast, "wrong cast type")
 				expect.equal(firedCast.CFrame.Position, Vector3.new(0, 0, 0), "cast origin is wrong")
 
-				FastCast:TerminateCast(firedCast)
+				FastCast.TerminateCast(firedCast)
 				caster:Destroy()
 				arena:Destroy()
 			end)
@@ -407,9 +407,9 @@ return function()
 				initializeRuntime()
 
 				local hitInstance = nil
-				caster.Hit = function(_, result)
+				caster.Hit:Connect(function(_, result)
 					hitInstance = result.Instance
-				end
+				end)
 
 				task.wait() -- Allow newly-created parts to enter spatial query data.
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
@@ -418,7 +418,7 @@ return function()
 					Framework.waitFor(function()
 						return hitInstance ~= nil
 					end, HIT_TIMEOUT),
-					"Hit callback assigned after Init never fired"
+					"Hit Signal connected after Init never fired"
 				)
 				expect.equal(hitInstance, wall, "Hit callback fired for the wrong instance")
 
@@ -470,7 +470,7 @@ return function()
 				end)
 				caster.OnStep = function(cast)
 					stepCount += 1
-					latestPosition = FastCast:GetPositionCast(cast)
+					latestPosition = FastCast.GetPositionCast(cast)
 					latestRuntime = cast.StateInfo.TotalRuntime
 					latestDistance = cast.StateInfo.DistanceCovered
 				end
@@ -554,7 +554,7 @@ return function()
 					"PreviousPosition did not advance with the simulated cast"
 				)
 
-				FastCast:TerminateCast(cast)
+				FastCast.TerminateCast(cast)
 				caster:Destroy()
 				arena:Destroy()
 			end)
@@ -731,13 +731,13 @@ return function()
 				local stepCount = 0
 				local terminationCount = 0
 				local caster = newCaster(expect)
-				caster.OnStep = function(cast)
+				caster.OnStep:Connect(function(cast)
 					stepCount += 1
-					FastCast:TerminateCast(cast)
-				end
-				caster.CastTerminating = function()
+					FastCast.TerminateCast(cast)
+				end)
+				caster.CastTerminating:Connect(function()
 					terminationCount += 1
-				end
+				end)
 				initializeRuntime()
 
 				local cast = caster:RaycastFire(Vector3.new(0, 1000, 0), Vector3.xAxis, 60, behavior)
@@ -761,15 +761,17 @@ return function()
 				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local lengthChangedCount = 0
+				local lengthChangesAtTermination = 0
 				local terminationCount = 0
 				local caster = newCaster(expect)
-				caster.LengthChanged = function(cast)
+				caster.LengthChanged:Connect(function(cast)
 					lengthChangedCount += 1
-					FastCast:TerminateCast(cast)
-				end
-				caster.CastTerminating = function()
+					FastCast.TerminateCast(cast)
+				end)
+				caster.CastTerminating:Connect(function()
 					terminationCount += 1
-				end
+					lengthChangesAtTermination = lengthChangedCount
+				end)
 				initializeRuntime()
 
 				local cast = caster:RaycastFire(Vector3.new(0, 1000, 0), Vector3.xAxis, 60, behavior)
@@ -801,13 +803,13 @@ return function()
 				caster.CanPierce = function(_, result)
 					return result.Instance == wall
 				end
-				caster.Pierced = function(cast)
+				caster.Pierced:Connect(function(cast)
 					piercedCount += 1
-					FastCast:TerminateCast(cast)
-				end
-				caster.CastTerminating = function()
+					FastCast.TerminateCast(cast)
+				end)
+				caster.CastTerminating:Connect(function()
 					terminationCount += 1
-				end
+				end)
 				initializeRuntime()
 
 				task.wait() -- Allow newly-created parts to enter spatial query data.
@@ -836,7 +838,7 @@ return function()
 				expect.truthy(cast, "RaycastFire did not return a cast")
 				expect.equal(cast.Type, FastCastEnums.CastType.Raycast, "RaycastFire returned the wrong cast")
 
-				FastCast:TerminateCast(cast)
+				FastCast.TerminateCast(cast)
 				caster:Destroy()
 				arena:Destroy()
 			end)
@@ -850,19 +852,19 @@ return function()
 
 				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 60, behavior)
 				local runtime = cast.StateInfo.TotalRuntime
-				local position = FastCast:GetPositionCast(cast)
+				local position = FastCast.GetPositionCast(cast)
 
-				FastCast:SetVelocity(cast, Vector3.new(10, 0, 0))
-				expect.equal(FastCast:GetPositionCast(cast), position, "SetVelocity changed the current position")
+				FastCast.SetVelocity(cast, Vector3.new(10, 0, 0))
+				expect.equal(FastCast.GetPositionCast(cast), position, "SetVelocity changed the current position")
 				expect.equal(cast.StateInfo.TotalRuntime, runtime, "SetVelocity changed runtime")
-				expect.equal(FastCast:GetVelocityCast(cast), Vector3.new(10, 0, 0), "SetVelocity did not set velocity")
+				expect.equal(FastCast.GetVelocityCast(cast), Vector3.new(10, 0, 0), "SetVelocity did not set velocity")
 
-				FastCast:SetAcceleration(cast, Vector3.new(0, -workspace.Gravity, 0))
-				expect.equal(FastCast:GetPositionCast(cast), position, "SetAcceleration changed the current position")
+				FastCast.SetAcceleration(cast, Vector3.new(0, -workspace.Gravity, 0))
+				expect.equal(FastCast.GetPositionCast(cast), position, "SetAcceleration changed the current position")
 				expect.equal(cast.StateInfo.TotalRuntime, runtime, "SetAcceleration changed runtime")
-				expect.equal(FastCast:GetAccelerationCast(cast), Vector3.new(0, -workspace.Gravity, 0), "SetAcceleration did not set acceleration")
+				expect.equal(FastCast.GetAccelerationCast(cast), Vector3.new(0, -workspace.Gravity, 0), "SetAcceleration did not set acceleration")
 
-				FastCast:TerminateCast(cast)
+				FastCast.TerminateCast(cast)
 				caster:Destroy()
 				arena:Destroy()
 			end)
@@ -890,12 +892,12 @@ return function()
 				end
 				caster.OnStep = function(cast, deltaTime)
 					stepCount += 1
-					latestPosition = FastCast:GetPositionCast(cast)
+					latestPosition = FastCast.GetPositionCast(cast)
 					if stepCount == 1 then
 						firstStepPosition = latestPosition
 						if deltaTime > 0 then
-							FastCast:SetVelocityCast(cast, Vector3.new(0, 0, -120))
-							velocityAfterRedirect = FastCast:GetVelocityCast(cast)
+							FastCast.SetVelocityCast(cast, Vector3.new(0, 0, -120))
+							velocityAfterRedirect = FastCast.GetVelocityCast(cast)
 						end
 					end
 				end
@@ -964,28 +966,28 @@ return function()
 				expect.truthy(firedCast, "CastFire did not provide the active cast")
 
 				local cast = firedCast :: any
-				FastCast:PauseCast(cast)
-				local pausedPosition = FastCast:GetPositionCast(cast)
+				FastCast.PauseCast(cast)
+				local pausedPosition = FastCast.GetPositionCast(cast)
 				local pausedRuntime = cast.StateInfo.TotalRuntime
 
 				task.wait(0.15)
 				expect.equal(cast.StateInfo.IsPaused, true, "cast did not enter paused state")
-				expect.equal(FastCast:GetPositionCast(cast), pausedPosition, "paused cast position changed")
+				expect.equal(FastCast.GetPositionCast(cast), pausedPosition, "paused cast position changed")
 				expect.equal(cast.StateInfo.TotalRuntime, pausedRuntime, "paused cast runtime advanced")
 				expect.equal(stepCount, 0, "OnStep fired while cast was paused")
 				expect.equal(lengthChangedCount, 0, "LengthChanged fired while cast was paused")
 
-				FastCast:ResumeCast(cast)
+				FastCast.ResumeCast(cast)
 				expect.truthy(
 					Framework.waitFor(function()
-						return stepCount > 0 and FastCast:GetPositionCast(cast) ~= pausedPosition
+						return stepCount > 0 and FastCast.GetPositionCast(cast) ~= pausedPosition
 					end, HIT_TIMEOUT),
 					"cast did not resume moving"
 				)
 				expect.equal(cast.StateInfo.IsPaused, false, "cast remained paused after ResumeCast")
 
-				FastCast:PauseCast(cast)
-				FastCast:TerminateCast(cast)
+				FastCast.PauseCast(cast)
+				FastCast.TerminateCast(cast)
 				expect.truthy(
 					Framework.waitFor(function()
 						return terminated
@@ -995,7 +997,7 @@ return function()
 
 				-- The termination event clears the cast table. Reusing the stale
 				-- reference must not enqueue an event with a missing cast ID.
-				FastCast:TerminateCast(cast)
+				FastCast.TerminateCast(cast)
 
 				caster:Destroy()
 				arena:Destroy()
@@ -1106,25 +1108,25 @@ return function()
 				expect.truthy(firedCast, "CastFire did not run")
 
 				local cast = firedCast :: any
-				FastCast:SetVelocityCast(cast, Vector3.new(0, 0, -100))
-				expect.near(FastCast:GetVelocityCast(cast), Vector3.new(0, 0, -100), 1e-3, "velocity was not set")
+				FastCast.SetVelocityCast(cast, Vector3.new(0, 0, -100))
+				expect.near(FastCast.GetVelocityCast(cast), Vector3.new(0, 0, -100), 1e-3, "velocity was not set")
 
-				FastCast:AddVelocityCast(cast, Vector3.new(10, 0, 0))
-				expect.near(FastCast:GetVelocityCast(cast), Vector3.new(10, 0, -100), 1e-3, "velocity was not added")
+				FastCast.AddVelocityCast(cast, Vector3.new(10, 0, 0))
+				expect.near(FastCast.GetVelocityCast(cast), Vector3.new(10, 0, -100), 1e-3, "velocity was not added")
 
-				FastCast:SetAccelerationCast(cast, Vector3.new(0, -10, 0))
-				expect.near(FastCast:GetAccelerationCast(cast), Vector3.new(0, -10, 0), 1e-3, "acceleration was not set")
+				FastCast.SetAccelerationCast(cast, Vector3.new(0, -10, 0))
+				expect.near(FastCast.GetAccelerationCast(cast), Vector3.new(0, -10, 0), 1e-3, "acceleration was not set")
 
-				FastCast:AddAccelerationCast(cast, Vector3.new(0, -5, 0))
-				expect.near(FastCast:GetAccelerationCast(cast), Vector3.new(0, -15, 0), 1e-3, "acceleration was not added")
+				FastCast.AddAccelerationCast(cast, Vector3.new(0, -5, 0))
+				expect.near(FastCast.GetAccelerationCast(cast), Vector3.new(0, -15, 0), 1e-3, "acceleration was not added")
 
-				FastCast:SetPositionCast(cast, Vector3.new(5, 5, 5))
-				expect.near(FastCast:GetPositionCast(cast), Vector3.new(5, 5, 5), 1e-3, "position was not set")
+				FastCast.SetPositionCast(cast, Vector3.new(5, 5, 5))
+				expect.near(FastCast.GetPositionCast(cast), Vector3.new(5, 5, 5), 1e-3, "position was not set")
 
-				FastCast:AddPositionCast(cast, Vector3.new(1, 0, 0))
-				expect.near(FastCast:GetPositionCast(cast), Vector3.new(6, 5, 5), 1e-3, "position was not added")
+				FastCast.AddPositionCast(cast, Vector3.new(1, 0, 0))
+				expect.near(FastCast.GetPositionCast(cast), Vector3.new(6, 5, 5), 1e-3, "position was not added")
 
-				FastCast:TerminateCast(cast)
+				FastCast.TerminateCast(cast)
 				caster:Destroy()
 				arena:Destroy()
 			end)
@@ -1321,7 +1323,7 @@ return function()
 				expect.equal(castData.RayInfo.CosmeticBulletObject, template, "CloneTemplate=false did not use the original instance")
 				expect.equal(template.Parent, container, "original cosmetic was not parented to the configured container")
 
-				FastCast:TerminateCast(castData)
+				FastCast.TerminateCast(castData)
 				template:Destroy()
 				caster:Destroy()
 				arena:Destroy()
