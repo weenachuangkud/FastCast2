@@ -127,13 +127,35 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Packed metadata: f64 cast ID + u8 event type. Keep IDs lossless (no u32
--- wraparound); Roblox values stay in the reusable argument tables below.
--- Capacity doubles only at a new high-water mark, never during steady state.
-local EVENT_STRIDE = 9
-local eventCapacity = 256
-local eventMetadata = buffer.create(eventCapacity * EVENT_STRIDE)
-local queuedEventsCount: number = 0
+-- Each event category has an independent queue, so dispatch only visits events
+-- of the requested type. Cast IDs use packed buffers; payloads use reusable
+-- tables in a parallel array indexed by queue slot.
+local EVENT_STRIDE = 8
+local INITIAL_EVENT_CAPACITY = 256
+
+type EventQueue = {
+	metadata: buffer,
+	capacity: number,
+	count: number,
+	args: { { any } },
+}
+
+local function CreateEventQueue(): EventQueue
+	return {
+		metadata = buffer.create(INITIAL_EVENT_CAPACITY * EVENT_STRIDE),
+		capacity = INITIAL_EVENT_CAPACITY,
+		count = 0,
+		args = {},
+	}
+end
+
+local queuedEventsByType: { [number]: EventQueue } = {
+	[EVT_LENGTH_CHANGED] = CreateEventQueue(),
+	[EVT_HIT] = CreateEventQueue(),
+	[EVT_PIERCED] = CreateEventQueue(),
+	[EVT_CAST_TERMINATING] = CreateEventQueue(),
+	[EVT_ON_STEP] = CreateEventQueue(),
+}
 
 -- Flat visualization queue: { castID, data }
 -- Reused every frame via table.clear
@@ -334,16 +356,6 @@ local Visualizers = {
 -- Pre-allocated pools (reused every frame, never freed)
 -- ============================================================================
 
-local argsPool: { { any } } = {}
-local argsPoolCount: number = 0
-
-local function GetArgs(): { any }
-	argsPoolCount += 1
-	if argsPoolCount > #argsPool then
-		argsPool[argsPoolCount] = {}
-	end
-	return argsPool[argsPoolCount]
-end
 
 local visPool: { QueuedVis } = {}
 local visPoolCount: number = 0
@@ -533,141 +545,99 @@ local function QueueEvent(
 	arg4: any,
 	arg5: any
 )
-	local args = GetArgs()
+	local queue = queuedEventsByType[eventType]
+	if not queue then return end
+
+	local nextIndex = queue.count + 1
+	if nextIndex > queue.capacity then
+		local newCapacity = queue.capacity * 2
+		local expanded = buffer.create(newCapacity * EVENT_STRIDE)
+		buffer.copy(expanded, 0, queue.metadata)
+		queue.metadata = expanded
+		queue.capacity = newCapacity
+	end
+
+	local args = queue.args[nextIndex]
+	if not args then
+		args = {}
+		queue.args[nextIndex] = args
+	end
 	args[1] = arg1
 	args[2] = arg2
 	args[3] = arg3
 	args[4] = arg4
 	args[5] = arg5
 
-	queuedEventsCount += 1
-	if queuedEventsCount > eventCapacity then
-		eventCapacity *= 2
-		local expanded = buffer.create(eventCapacity * EVENT_STRIDE)
-		buffer.copy(expanded, 0, eventMetadata)
-		eventMetadata = expanded
-	end
-	local offset = (queuedEventsCount - 1) * EVENT_STRIDE
-	buffer.writef64(eventMetadata, offset, castID)
-	buffer.writeu8(eventMetadata, offset + 8, eventType)
+	local offset = (nextIndex - 1) * EVENT_STRIDE
+	buffer.writef64(queue.metadata, offset, castID)
+	queue.count = nextIndex
 end
 
 local function FireQueuedEvents(eventTypeToFire: number)
-	for i = 1, queuedEventsCount do
+	local queue = queuedEventsByType[eventTypeToFire]
+	if not queue then return end
+
+	-- Snapshot the count so same-type events queued by callbacks wait until the
+	-- next frame instead of extending this flush.
+	local countAtStart = queue.count
+	for i = 1, countAtStart do
 		local offset = (i - 1) * EVENT_STRIDE
-		local eventType = buffer.readu8(eventMetadata, offset + 8)
-		if eventType ~= eventTypeToFire then
-			continue
-		end
-
-		-- Mark the event as consumed before invoking callbacks. Any events queued
-		-- by callbacks remain in the same queue and are handled by their own stage.
-		buffer.writeu8(eventMetadata, offset + 8, 0)
-
-		local castID = buffer.readf64(eventMetadata, offset)
-		local args = argsPool[i]
-
+		local castID = buffer.readf64(queue.metadata, offset)
+		local args = queue.args[i]
 		local cast = ActivesRef[castID]
-		if not cast then
-			continue
-		end
+		if not cast then continue end
 
 		local eventConfig = casts_FastCastEventsConfig[castID]
+		if not eventConfig then continue end
 
-		if not eventConfig then
-			continue
-		end
-
-		if eventType == EVT_LENGTH_CHANGED then
+		if eventTypeToFire == EVT_LENGTH_CHANGED then
 			if eventConfig.UseLengthChanged then
-				local lengthChanged = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].LengthChanged
-				if lengthChanged then
-					lengthChanged:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3],
-						args[4],
-						args[5]
-					)
-				end
+				local events = CasterEvents[casts_CasterId[castID]]
+				local signal = events and events.LengthChanged
+				if signal then signal:Fire(cast, args[1], args[2], args[3], args[4], args[5]) end
 			end
-
-		elseif eventType == EVT_HIT then
+		elseif eventTypeToFire == EVT_HIT then
 			if eventConfig.UseHit then
-				local Hit = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Hit
-				if Hit then
-					Hit:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3]
-					)
-				end
+				local events = CasterEvents[casts_CasterId[castID]]
+				local signal = events and events.Hit
+				if signal then signal:Fire(cast, args[1], args[2], args[3]) end
 			end
-
-		elseif eventType == EVT_PIERCED then
+		elseif eventTypeToFire == EVT_PIERCED then
 			if eventConfig.UsePierced then
-				local Pierced = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Pierced
-				if Pierced then
-					Pierced:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3]
-					)
-				end
+				local events = CasterEvents[casts_CasterId[castID]]
+				local signal = events and events.Pierced
+				if signal then signal:Fire(cast, args[1], args[2], args[3]) end
 			end
-
-		elseif eventType == EVT_ON_STEP then
+		elseif eventTypeToFire == EVT_ON_STEP then
 			if eventConfig.UseOnStep then
-				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
-				if onStep then
-					onStep:Fire(cast, args[1])
-				end
+				local events = CasterEvents[casts_CasterId[castID]]
+				local signal = events and events.OnStep
+				if signal then signal:Fire(cast, args[1]) end
 			end
-
-		elseif eventType == EVT_CAST_TERMINATING then
+		elseif eventTypeToFire == EVT_CAST_TERMINATING then
 			if not cast._Destroying or cast._TerminationQueued then
 				cast._Destroying = true
 				cast._TerminationQueued = false
-
-				local castTerminating = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].CastTerminating
-				if eventConfig.UseCastTerminating and castTerminating then
-					castTerminating:Fire(cast)
-				end
+				local events = CasterEvents[casts_CasterId[castID]]
+				local signal = events and events.CastTerminating
+				if eventConfig.UseCastTerminating and signal then signal:Fire(cast) end
 			end
-
 			BaseCastRef._TerminateCast(castID)
 		end
 	end
 
-end
-
--- Remove events that were dispatched this frame while retaining any events
--- queued by callbacks for a stage that has already passed.
-local function FinishQueuedEvents()
-	local writeIndex = 0
-
-	for readIndex = 1, queuedEventsCount do
-		local readOffset = (readIndex - 1) * EVENT_STRIDE
-		local eventType = buffer.readu8(eventMetadata, readOffset + 8)
-
-		if eventType == 0 then
-			continue
-		end
-
-		writeIndex += 1
-		if writeIndex ~= readIndex then
-			local writeOffset = (writeIndex - 1) * EVENT_STRIDE
-			buffer.writef64(eventMetadata, writeOffset, buffer.readf64(eventMetadata, readOffset))
-			buffer.writeu8(eventMetadata, writeOffset + 8, eventType)
-			argsPool[writeIndex] = argsPool[readIndex]
+	-- Retain callback-enqueued events for the next frame, preserving insertion order.
+	local remaining = queue.count - countAtStart
+	if remaining > 0 then
+		for i = 1, remaining do
+			local sourceIndex = countAtStart + i
+			local sourceOffset = (sourceIndex - 1) * EVENT_STRIDE
+			local targetOffset = (i - 1) * EVENT_STRIDE
+			buffer.copy(queue.metadata, targetOffset, queue.metadata, sourceOffset, EVENT_STRIDE)
+			queue.args[i] = queue.args[sourceIndex]
 		end
 	end
-
-	queuedEventsCount = writeIndex
-	argsPoolCount = writeIndex
+	queue.count = remaining
 end
 
 -- ============================================================================
@@ -1682,9 +1652,7 @@ local function UpdateCasts(delta: number)
 	FireQueuedEvents(EVT_PIERCED)
 	FireQueuedEvents(EVT_CAST_TERMINATING)
 
-	FinishQueuedEvents()
 	ResetPools()
-	argsPoolCount = queuedEventsCount
 	queuedVisCount = 0
 end
 
