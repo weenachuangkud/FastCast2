@@ -127,25 +127,31 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Each event category has an independent queue, so dispatch only visits events
--- of the requested type. Cast IDs use packed buffers; payloads use reusable
--- tables in a parallel array indexed by queue slot.
-local EVENT_STRIDE = 8
+-- Each event category owns column arrays (SoA), so dispatch reads only the
+-- columns it needs without allocating a payload table per event.
 local INITIAL_EVENT_CAPACITY = 256
 
 type EventQueue = {
-	metadata: buffer,
-	capacity: number,
+	CastIDs: { number },
+	Arg1: { any },
+	Arg2: { any },
+	Arg3: { any },
+	Arg4: { any },
+	Arg5: { any },
 	count: number,
-	args: { { any } },
+	capacity: number,
 }
 
 local function CreateEventQueue(): EventQueue
 	return {
-		metadata = buffer.create(INITIAL_EVENT_CAPACITY * EVENT_STRIDE),
-		capacity = INITIAL_EVENT_CAPACITY,
+		CastIDs = table.create(INITIAL_EVENT_CAPACITY),
+		Arg1 = table.create(INITIAL_EVENT_CAPACITY),
+		Arg2 = table.create(INITIAL_EVENT_CAPACITY),
+		Arg3 = table.create(INITIAL_EVENT_CAPACITY),
+		Arg4 = table.create(INITIAL_EVENT_CAPACITY),
+		Arg5 = table.create(INITIAL_EVENT_CAPACITY),
 		count = 0,
-		args = {},
+		capacity = INITIAL_EVENT_CAPACITY,
 	}
 end
 
@@ -550,26 +556,15 @@ local function QueueEvent(
 
 	local nextIndex = queue.count + 1
 	if nextIndex > queue.capacity then
-		local newCapacity = queue.capacity * 2
-		local expanded = buffer.create(newCapacity * EVENT_STRIDE)
-		buffer.copy(expanded, 0, queue.metadata)
-		queue.metadata = expanded
-		queue.capacity = newCapacity
+		queue.capacity *= 2
 	end
 
-	local args = queue.args[nextIndex]
-	if not args then
-		args = {}
-		queue.args[nextIndex] = args
-	end
-	args[1] = arg1
-	args[2] = arg2
-	args[3] = arg3
-	args[4] = arg4
-	args[5] = arg5
-
-	local offset = (nextIndex - 1) * EVENT_STRIDE
-	buffer.writef64(queue.metadata, offset, castID)
+	queue.CastIDs[nextIndex] = castID
+	queue.Arg1[nextIndex] = arg1
+	queue.Arg2[nextIndex] = arg2
+	queue.Arg3[nextIndex] = arg3
+	queue.Arg4[nextIndex] = arg4
+	queue.Arg5[nextIndex] = arg5
 	queue.count = nextIndex
 end
 
@@ -581,9 +576,12 @@ local function FireQueuedEvents(eventTypeToFire: number)
 	-- next frame instead of extending this flush.
 	local countAtStart = queue.count
 	for i = 1, countAtStart do
-		local offset = (i - 1) * EVENT_STRIDE
-		local castID = buffer.readf64(queue.metadata, offset)
-		local args = queue.args[i]
+		local castID = queue.CastIDs[i]
+		local arg1 = queue.Arg1[i]
+		local arg2 = queue.Arg2[i]
+		local arg3 = queue.Arg3[i]
+		local arg4 = queue.Arg4[i]
+		local arg5 = queue.Arg5[i]
 		local cast = ActivesRef[castID]
 		if not cast then continue end
 
@@ -594,25 +592,25 @@ local function FireQueuedEvents(eventTypeToFire: number)
 			if eventConfig.UseLengthChanged then
 				local events = CasterEvents[casts_CasterId[castID]]
 				local signal = events and events.LengthChanged
-				if signal then signal:Fire(cast, args[1], args[2], args[3], args[4], args[5]) end
+				if signal then signal:Fire(cast, arg1, arg2, arg3, arg4, arg5) end
 			end
 		elseif eventTypeToFire == EVT_HIT then
 			if eventConfig.UseHit then
 				local events = CasterEvents[casts_CasterId[castID]]
 				local signal = events and events.Hit
-				if signal then signal:Fire(cast, args[1], args[2], args[3]) end
+				if signal then signal:Fire(cast, arg1, arg2, arg3) end
 			end
 		elseif eventTypeToFire == EVT_PIERCED then
 			if eventConfig.UsePierced then
 				local events = CasterEvents[casts_CasterId[castID]]
 				local signal = events and events.Pierced
-				if signal then signal:Fire(cast, args[1], args[2], args[3]) end
+				if signal then signal:Fire(cast, arg1, arg2, arg3) end
 			end
 		elseif eventTypeToFire == EVT_ON_STEP then
 			if eventConfig.UseOnStep then
 				local events = CasterEvents[casts_CasterId[castID]]
 				local signal = events and events.OnStep
-				if signal then signal:Fire(cast, args[1]) end
+				if signal then signal:Fire(cast, arg1) end
 			end
 		elseif eventTypeToFire == EVT_CAST_TERMINATING then
 			if not cast._Destroying or cast._TerminationQueued then
@@ -631,10 +629,12 @@ local function FireQueuedEvents(eventTypeToFire: number)
 	if remaining > 0 then
 		for i = 1, remaining do
 			local sourceIndex = countAtStart + i
-			local sourceOffset = (sourceIndex - 1) * EVENT_STRIDE
-			local targetOffset = (i - 1) * EVENT_STRIDE
-			buffer.copy(queue.metadata, targetOffset, queue.metadata, sourceOffset, EVENT_STRIDE)
-			queue.args[i] = queue.args[sourceIndex]
+			queue.CastIDs[i] = queue.CastIDs[sourceIndex]
+			queue.Arg1[i] = queue.Arg1[sourceIndex]
+			queue.Arg2[i] = queue.Arg2[sourceIndex]
+			queue.Arg3[i] = queue.Arg3[sourceIndex]
+			queue.Arg4[i] = queue.Arg4[sourceIndex]
+			queue.Arg5[i] = queue.Arg5[sourceIndex]
 		end
 	end
 	queue.count = remaining
