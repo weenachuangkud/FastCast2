@@ -386,7 +386,6 @@ local function GetSegVisData(): { any }
 end
 
 local function ResetPools()
-	argsPoolCount = 0
 	visPoolCount = 0
 	hitVisPoolCount = 0
 	segVisPoolCount = 0
