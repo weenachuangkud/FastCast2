@@ -1134,17 +1134,15 @@ local function SimulateCast(
 		cast.CFrame = casts_CFrame[id] * cast.Offset
 	end
 
-	do
-		QueueEvent(
-			id,
-			EVT_LENGTH_CHANGED,
-			lastPoint,
-			unitDirection,
-			rayDisplacement,
-			velocity,
-			rayInfo.CosmeticBulletObject
-		)
-	end
+	QueueEvent(
+		id,
+		EVT_LENGTH_CHANGED,
+		lastPoint,
+		unitDirection,
+		rayDisplacement,
+		velocity,
+		rayInfo.CosmeticBulletObject
+	)
 
 	casts_DistanceCovered[id] += rayDisplacement
 
@@ -1582,10 +1580,7 @@ local function UpdateCasts(delta: number)
 		if cast and not cast._Destroying and not cast.StateInfo.IsPaused and not expired
 			and casts_Trajectory[id]
 		then
-			local events = CasterEvents[casts_CasterId[id]]
-			if events and events.OnStep then
-				QueueEvent(id, EVT_ON_STEP, delta)
-			end
+			QueueEvent(id, EVT_ON_STEP, delta)
 		end
 	end
 
