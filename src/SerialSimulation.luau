@@ -553,11 +553,19 @@ local function QueueEvent(
 	buffer.writeu8(eventMetadata, offset + 8, eventType)
 end
 
-local function FireQueuedEvents()
+local function FireQueuedEvents(eventTypeToFire: number)
 	for i = 1, queuedEventsCount do
 		local offset = (i - 1) * EVENT_STRIDE
-		local castID = buffer.readf64(eventMetadata, offset)
 		local eventType = buffer.readu8(eventMetadata, offset + 8)
+		if eventType ~= eventTypeToFire then
+			continue
+		end
+
+		-- Mark the event as consumed before invoking callbacks. Any events queued
+		-- by callbacks remain in the same queue and are handled by their own stage.
+		buffer.writeu8(eventMetadata, offset + 8, 0)
+
+		local castID = buffer.readf64(eventMetadata, offset)
 		local args = argsPool[i]
 
 		local cast = ActivesRef[castID]
@@ -635,9 +643,32 @@ local function FireQueuedEvents()
 		end
 	end
 
-	ResetPools()
-	queuedEventsCount = 0
-	queuedVisCount = 0
+end
+
+-- Remove events that were dispatched this frame while retaining any events
+-- queued by callbacks for a stage that has already passed.
+local function FinishQueuedEvents()
+	local writeIndex = 0
+
+	for readIndex = 1, queuedEventsCount do
+		local readOffset = (readIndex - 1) * EVENT_STRIDE
+		local eventType = buffer.readu8(eventMetadata, readOffset + 8)
+
+		if eventType == 0 then
+			continue
+		end
+
+		writeIndex += 1
+		if writeIndex ~= readIndex then
+			local writeOffset = (writeIndex - 1) * EVENT_STRIDE
+			buffer.writef64(eventMetadata, writeOffset, buffer.readf64(eventMetadata, readOffset))
+			buffer.writeu8(eventMetadata, writeOffset + 8, eventType)
+			argsPool[writeIndex] = argsPool[readIndex]
+		end
+	end
+
+	queuedEventsCount = writeIndex
+	argsPoolCount = writeIndex
 end
 
 -- ============================================================================
@@ -1639,11 +1670,23 @@ local function UpdateCasts(delta: number)
 	-- Main-thread-only work.
 	-- =========================================================================
 
+	-- Dispatch each event category at its defined point in the frame so public
+	-- callbacks observe a consistent order around cosmetic movement.
+	FireQueuedEvents(EVT_ON_STEP)
+
 	UpdateMotor6Ds()
 	BulkMoveTo()
-
 	FireQueuedVisualizes()
-	FireQueuedEvents()
+
+	FireQueuedEvents(EVT_LENGTH_CHANGED)
+	FireQueuedEvents(EVT_HIT)
+	FireQueuedEvents(EVT_PIERCED)
+	FireQueuedEvents(EVT_CAST_TERMINATING)
+
+	FinishQueuedEvents()
+	ResetPools()
+	argsPoolCount = queuedEventsCount
+	queuedVisCount = 0
 end
 
 -- ============================================================================
