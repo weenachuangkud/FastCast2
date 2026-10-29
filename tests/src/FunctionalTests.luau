@@ -1472,6 +1472,14 @@ return function()
 					end, HIT_TIMEOUT)
 					expect.truthy(wallQueryable, mode.Name .. " high-fidelity test wall was not queryable before firing")
 					fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+					local clonedParamsResult = castData
+						and workspace:Raycast(
+							Vector3.zero,
+							Vector3.new(0, 0, -20),
+							castData.RayInfo.Parameters
+						)
+					local clonedParamsHitTarget = clonedParamsResult ~= nil
+						and clonedParamsResult.Instance == wall
 
 					local hitObserved = Framework.waitFor(function()
 						return hitInstance ~= nil
@@ -1479,10 +1487,11 @@ return function()
 					expect.truthy(
 						hitObserved,
 						string.format(
-							"%s high-fidelity mode did not hit the wall (OnStep: %d, LengthChanged: %d, runtime: %s, distance: %s, cast active: %s, last segment: %s, crossing segment: %s)",
+							"%s high-fidelity mode did not hit the wall (OnStep: %d, LengthChanged: %d, cloned params hit target: %s, runtime: %s, distance: %s, cast active: %s, last segment: %s, crossing segment: %s)",
 							mode.Name,
 							stepCount,
 							lengthChangedCount,
+							tostring(clonedParamsHitTarget),
 							if castData and castData.StateInfo then tostring(castData.StateInfo.TotalRuntime) else if castData then "cast state unavailable" else "no CastFire",
 							if castData and castData.StateInfo then tostring(castData.StateInfo.DistanceCovered) else "n/a",
 							tostring(castData ~= nil and not castData._Destroying),
