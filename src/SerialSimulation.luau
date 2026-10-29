@@ -1782,21 +1782,21 @@ end
 function SerialSimulation.QueueEvent(castID: number, eventType: string, ...: any)
 	-- Public wrapper for external callers (e.g. init.luau TerminateCast)
 	-- Map string event type to numeric constant
-	local numericType: number
+	local eventTypeID: number
 	if eventType == "CastTerminating" then
-		numericType = EVT_CAST_TERMINATING
+		eventTypeID = EVT_CAST_TERMINATING
 	elseif eventType == "Hit" then
-		numericType = EVT_HIT
+		eventTypeID = EVT_HIT
 	elseif eventType == "Pierced" then
-		numericType = EVT_PIERCED
+		eventTypeID = EVT_PIERCED
 	elseif eventType == "LengthChanged" then
-		numericType = EVT_LENGTH_CHANGED
+		eventTypeID = EVT_LENGTH_CHANGED
 	elseif eventType == "OnStep" then
-		numericType = EVT_ON_STEP
+		eventTypeID = EVT_ON_STEP
 	else
 		return
 	end
-	QueueEvent(castID, numericType, ...)
+	QueueEvent(castID, eventTypeID, ...)
 end
 
 return SerialSimulation
