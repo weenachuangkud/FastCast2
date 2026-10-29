@@ -1301,11 +1301,17 @@ return function()
 
 				local castData = nil
 				local cosmetic = nil
+				local castParams = nil
+				local filterInstances = {}
 				local hitInstance = nil
 				local caster = newCaster(expect)
 				caster.CastFire = function(cast)
 					castData = cast
 					cosmetic = cast.RayInfo.CosmeticBulletObject
+					-- Active cast data is cleared on termination; capture its
+					-- query parameters while CastFire still has the live cast.
+					castParams = cast.RayInfo.Parameters
+					filterInstances = table.clone(castParams.FilterDescendantsInstances)
 				end
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
@@ -1319,11 +1325,12 @@ return function()
 				expect.truthy(cosmetic ~= template, "CloneTemplate did not clone the template")
 				expect.equal(cosmetic.Parent, container, "cloned cosmetic was parented to the wrong container")
 				expect.equal(template.Parent, arena, "cloning changed the original template's parent")
+				expect.truthy(castParams, "CastFire did not capture the cast RaycastParams")
 
 				local filteredResult = workspace:Raycast(
 					Vector3.new(0, 0, 2),
 					Vector3.new(0, 0, -30),
-					castData.RayInfo.Parameters
+					castParams
 				)
 				local unfilteredResult = workspace:Raycast(
 					Vector3.new(0, 0, 2),
@@ -1331,12 +1338,12 @@ return function()
 					behavior.RaycastParams
 				)
 				local filterNames = {}
-				for _, instance in castData.RayInfo.Parameters.FilterDescendantsInstances do
+				for _, instance in filterInstances do
 					table.insert(filterNames, instance:GetFullName())
 				end
 
 				expect.truthy(
-					table.find(castData.RayInfo.Parameters.FilterDescendantsInstances, container) ~= nil,
+					table.find(filterInstances, container) ~= nil,
 					"AutoIgnoreContainer did not add the cosmetic container to the raycast filter"
 				)
 				local hitObserved = Framework.waitFor(function()
@@ -1348,7 +1355,7 @@ return function()
 						"cast did not report a hit (filtered probe: %s; unfiltered probe: %s; filter type: %s; filter instances: [%s]; container: %s; cosmetic parent: %s; cosmetic CanQuery: %s; cosmetic position: %s; wall: %s)",
 						if filteredResult then filteredResult.Instance:GetFullName() else "<no hit>",
 						if unfilteredResult then unfilteredResult.Instance:GetFullName() else "<no hit>",
-						tostring(castData.RayInfo.Parameters.FilterType),
+						tostring(castParams.FilterType),
 						table.concat(filterNames, ", "),
 						container:GetFullName(),
 						if cosmetic.Parent then cosmetic.Parent:GetFullName() else "<no parent>",
@@ -1363,7 +1370,9 @@ return function()
 				template:Destroy()
 				caster:Destroy()
 				arena:Destroy()
-			end)			test("CloneTemplate false uses the supplied cosmetic instance", function(expect)
+			end)
+
+			test("CloneTemplate false uses the supplied cosmetic instance", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local template = Instance.new("Part")
