@@ -27,6 +27,7 @@ export type Signal<T...> = {
 	Once: (self: Signal<T...>, callback: (T...) -> ()) -> Connection,
 	Wait: (self: Signal<T...>) -> T...,
 	Fire: (self: Signal<T...>, T...) -> (),
+	HasListeners: (self: Signal<T...>) -> boolean,
 	DisconnectAll: (self: Signal<T...>) -> (),
 	Destroy: (self: Signal<T...>) -> (),
 }
@@ -140,6 +141,15 @@ function Signal:Wait()
 		task.spawn(thread, ...)
 	end)
 	return coroutine.yield()
+end
+
+--[[
+I want to check something bro
+
+- Mawin_CK 2026
+]]
+function Signal:HasListeners(): boolean
+	return self._head ~= nil
 end
 
 function Signal:Fire(...)
