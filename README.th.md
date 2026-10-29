@@ -204,22 +204,22 @@ Config.CosmeticUpdateInterval = 3
 
 ```lua
 -- อ่านค่าสถานะ
-local pos = FastCast2:GetPositionCast(cast)
-local vel = FastCast2:GetVelocityCast(cast)
-local accel = FastCast2:GetAccelerationCast(cast)
+local pos = FastCast2.GetPositionCast(cast)
+local vel = FastCast2.GetVelocityCast(cast)
+local accel = FastCast2.GetAccelerationCast(cast)
 
 -- แก้ไขสถานะ (จะปรับ trajectory ให้อัตโนมัติ)
-FastCast2:SetPositionCast(cast, Vector3.new(0, 50, 0))
-FastCast2:SetVelocityCast(cast, Vector3.new(0, 100, 0))
-FastCast2:SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
+FastCast2.SetPositionCast(cast, Vector3.new(0, 50, 0))
+FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+FastCast2.SetAccelerationCast(cast, Vector3.new(0, -workspace.Gravity, 0))
 
 -- การเปลี่ยนแปลงแบบสัมพัทธ์
-FastCast2:AddPositionCast(cast, Vector3.new(0, 10, 0))
-FastCast2:AddVelocityCast(cast, Vector3.new(0, 20, 0))
-FastCast2:AddAccelerationCast(cast, Vector3.new(0, -50, 0))
+FastCast2.AddPositionCast(cast, Vector3.new(0, 10, 0))
+FastCast2.AddVelocityCast(cast, Vector3.new(0, 20, 0))
+FastCast2.AddAccelerationCast(cast, Vector3.new(0, -50, 0))
 
 -- ยกเลิก cast ก่อนเวลา (จะยิง event CastTerminating และ cleanup ให้)
-FastCast2:TerminateCast(cast)
+FastCast2.TerminateCast(cast)
 ```
 
 
