@@ -1620,7 +1620,7 @@ local function UpdateCasts(delta: number)
 		end
 
 		-- Preserve the position at the start of this simulation update before
-		-- high-fidelity substeps run. OnStep dispatches after movement.
+		-- high-fidelity substeps run. OnStep dispatches after simulation.
 		if cast then
 			local trajectory = casts_Trajectory[id]
 			cast.PreviousPosition = GetPositionAtTime(
@@ -1631,8 +1631,8 @@ local function UpdateCasts(delta: number)
 			)
 		end
 
-		-- Queue OnStep so it dispatches with the other events after simulation
-		-- and cosmetic movement. Changes made by the callback apply to later steps.
+		-- Queue OnStep for dispatch after simulation but before cosmetic movement.
+		-- Changes made by the callback apply to later steps.
 		if cast and cast.StateInfo.FastCastEventsConfig.UseOnStep then
 			local events = CasterEvents[casts_CasterId[id]]
 			if events and events.OnStep then
