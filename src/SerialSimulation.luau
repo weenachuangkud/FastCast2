@@ -127,13 +127,7 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Packed metadata: f64 cast ID + u8 event type. Keep IDs lossless (no u32
--- wraparound); Roblox values stay in the reusable argument tables below.
--- Capacity doubles only at a new high-water mark, never during steady state.
-local EVENT_STRIDE = 9
-local eventCapacity = 256
-local eventMetadata = buffer.create(eventCapacity * EVENT_STRIDE)
-local queuedEventsCount: number = 0
+-- Event queues use the same column-based layout as casts_* state.\nlocal queuedLengthChanged_ID = {} :: { number }\nlocal queuedLengthChanged_Arg1 = {} :: { any }\nlocal queuedLengthChanged_Arg2 = {} :: { any }\nlocal queuedLengthChanged_Arg3 = {} :: { any }\nlocal queuedLengthChanged_Arg4 = {} :: { any }\nlocal queuedLengthChanged_Arg5 = {} :: { any }\nlocal queuedLengthChanged_Count: number = 0\nlocal queuedHit_ID = {} :: { number }\nlocal queuedHit_Arg1 = {} :: { any }\nlocal queuedHit_Arg2 = {} :: { any }\nlocal queuedHit_Arg3 = {} :: { any }\nlocal queuedHit_Arg4 = {} :: { any }\nlocal queuedHit_Arg5 = {} :: { any }\nlocal queuedHit_Count: number = 0\nlocal queuedPierced_ID = {} :: { number }\nlocal queuedPierced_Arg1 = {} :: { any }\nlocal queuedPierced_Arg2 = {} :: { any }\nlocal queuedPierced_Arg3 = {} :: { any }\nlocal queuedPierced_Arg4 = {} :: { any }\nlocal queuedPierced_Arg5 = {} :: { any }\nlocal queuedPierced_Count: number = 0\nlocal queuedCastTerminating_ID = {} :: { number }\nlocal queuedCastTerminating_Arg1 = {} :: { any }\nlocal queuedCastTerminating_Arg2 = {} :: { any }\nlocal queuedCastTerminating_Arg3 = {} :: { any }\nlocal queuedCastTerminating_Arg4 = {} :: { any }\nlocal queuedCastTerminating_Arg5 = {} :: { any }\nlocal queuedCastTerminating_Count: number = 0\nlocal queuedOnStep_ID = {} :: { number }\nlocal queuedOnStep_Arg1 = {} :: { any }\nlocal queuedOnStep_Arg2 = {} :: { any }\nlocal queuedOnStep_Arg3 = {} :: { any }\nlocal queuedOnStep_Arg4 = {} :: { any }\nlocal queuedOnStep_Arg5 = {} :: { any }\nlocal queuedOnStep_Count: number = 0\n
 
 -- Flat visualization queue: { castID, data }
 -- Reused every frame via table.clear
@@ -334,17 +328,6 @@ local Visualizers = {
 -- Pre-allocated pools (reused every frame, never freed)
 -- ============================================================================
 
-local argsPool: { { any } } = {}
-local argsPoolCount: number = 0
-
-local function GetArgs(): { any }
-	argsPoolCount += 1
-	if argsPoolCount > #argsPool then
-		argsPool[argsPoolCount] = {}
-	end
-	return argsPool[argsPoolCount]
-end
-
 local visPool: { QueuedVis } = {}
 local visPoolCount: number = 0
 
@@ -386,7 +369,6 @@ local function GetSegVisData(): { any }
 end
 
 local function ResetPools()
-	argsPoolCount = 0
 	visPoolCount = 0
 	hitVisPoolCount = 0
 	segVisPoolCount = 0
@@ -519,12 +501,9 @@ local function FireQueuedVisualizes()
 end
 
 -- ============================================================================
--- Queued events (flat, allocation-free)
+-- Queued events (column arrays, allocation-free)
 -- ============================================================================
 
--- Event signatures have at most five payload values. Assign all slots so
--- nil holes cannot leave stale references behind (the # operator is undefined
--- for sparse arrays), and avoid select/vararg loops in the hot path.
 local function QueueEvent(
 	castID: number,
 	eventType: number,
@@ -534,110 +513,188 @@ local function QueueEvent(
 	arg4: any,
 	arg5: any
 )
-	local args = GetArgs()
-	args[1] = arg1
-	args[2] = arg2
-	args[3] = arg3
-	args[4] = arg4
-	args[5] = arg5
+	local ids
+	local arg1s
+	local arg2s
+	local arg3s
+	local arg4s
+	local arg5s
+	local count
 
-	queuedEventsCount += 1
-	if queuedEventsCount > eventCapacity then
-		eventCapacity *= 2
-		local expanded = buffer.create(eventCapacity * EVENT_STRIDE)
-		buffer.copy(expanded, 0, eventMetadata)
-		eventMetadata = expanded
+	if eventType == EVT_LENGTH_CHANGED then
+		queuedLengthChanged_Count += 1
+		count = queuedLengthChanged_Count
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedLengthChanged_ID, queuedLengthChanged_Arg1, queuedLengthChanged_Arg2,
+			queuedLengthChanged_Arg3, queuedLengthChanged_Arg4, queuedLengthChanged_Arg5
+	elseif eventType == EVT_HIT then
+		queuedHit_Count += 1
+		count = queuedHit_Count
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedHit_ID, queuedHit_Arg1, queuedHit_Arg2, queuedHit_Arg3, queuedHit_Arg4, queuedHit_Arg5
+	elseif eventType == EVT_PIERCED then
+		queuedPierced_Count += 1
+		count = queuedPierced_Count
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedPierced_ID, queuedPierced_Arg1, queuedPierced_Arg2, queuedPierced_Arg3, queuedPierced_Arg4, queuedPierced_Arg5
+	elseif eventType == EVT_CAST_TERMINATING then
+		queuedCastTerminating_Count += 1
+		count = queuedCastTerminating_Count
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedCastTerminating_ID, queuedCastTerminating_Arg1, queuedCastTerminating_Arg2,
+			queuedCastTerminating_Arg3, queuedCastTerminating_Arg4, queuedCastTerminating_Arg5
+	elseif eventType == EVT_ON_STEP then
+		queuedOnStep_Count += 1
+		count = queuedOnStep_Count
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedOnStep_ID, queuedOnStep_Arg1, queuedOnStep_Arg2, queuedOnStep_Arg3, queuedOnStep_Arg4, queuedOnStep_Arg5
+	else
+		return
 	end
-	local offset = (queuedEventsCount - 1) * EVENT_STRIDE
-	buffer.writef64(eventMetadata, offset, castID)
-	buffer.writeu8(eventMetadata, offset + 8, eventType)
+
+	ids[count] = castID
+	arg1s[count] = arg1
+	arg2s[count] = arg2
+	arg3s[count] = arg3
+	arg4s[count] = arg4
+	arg5s[count] = arg5
 end
 
-local function FireQueuedEvents()
-	for i = 1, queuedEventsCount do
-		local offset = (i - 1) * EVENT_STRIDE
-		local castID = buffer.readf64(eventMetadata, offset)
-		local eventType = buffer.readu8(eventMetadata, offset + 8)
-		local args = argsPool[i]
+local function FireQueuedEvents(eventType: number)
+	local ids
+	local arg1s
+	local arg2s
+	local arg3s
+	local arg4s
+	local arg5s
+	local countAtStart
 
-		local cast = ActivesRef[castID]
-		if not cast then
-			continue
-		end
-
-		local eventConfig = casts_FastCastEventsConfig[castID]
-
-		if not eventConfig then
-			continue
-		end
-
-		if eventType == EVT_LENGTH_CHANGED then
-			if eventConfig.UseLengthChanged then
-				local lengthChanged = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].LengthChanged
-				if lengthChanged then
-					lengthChanged:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3],
-						args[4],
-						args[5]
-					)
-				end
-			end
-
-		elseif eventType == EVT_HIT then
-			if eventConfig.UseHit then
-				local Hit = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Hit
-				if Hit then
-					Hit:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3]
-					)
-				end
-			end
-
-		elseif eventType == EVT_PIERCED then
-			if eventConfig.UsePierced then
-				local Pierced = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Pierced
-				if Pierced then
-					Pierced:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3]
-					)
-				end
-			end
-
-		elseif eventType == EVT_ON_STEP then
-			if eventConfig.UseOnStep then
-				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
-				if onStep then
-					onStep:Fire(cast, args[1])
-				end
-			end
-
-		elseif eventType == EVT_CAST_TERMINATING then
-			if not cast._Destroying or cast._TerminationQueued then
-				cast._Destroying = true
-				cast._TerminationQueued = false
-
-				local castTerminating = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].CastTerminating
-				if eventConfig.UseCastTerminating and castTerminating then
-					castTerminating:Fire(cast)
-				end
-			end
-
-			BaseCastRef._TerminateCast(castID)
-		end
+	if eventType == EVT_LENGTH_CHANGED then
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedLengthChanged_ID, queuedLengthChanged_Arg1, queuedLengthChanged_Arg2,
+			queuedLengthChanged_Arg3, queuedLengthChanged_Arg4, queuedLengthChanged_Arg5
+		countAtStart = queuedLengthChanged_Count
+	elseif eventType == EVT_HIT then
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedHit_ID, queuedHit_Arg1, queuedHit_Arg2, queuedHit_Arg3, queuedHit_Arg4, queuedHit_Arg5
+		countAtStart = queuedHit_Count
+	elseif eventType == EVT_PIERCED then
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedPierced_ID, queuedPierced_Arg1, queuedPierced_Arg2, queuedPierced_Arg3, queuedPierced_Arg4, queuedPierced_Arg5
+		countAtStart = queuedPierced_Count
+	elseif eventType == EVT_CAST_TERMINATING then
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedCastTerminating_ID, queuedCastTerminating_Arg1, queuedCastTerminating_Arg2,
+			queuedCastTerminating_Arg3, queuedCastTerminating_Arg4, queuedCastTerminating_Arg5
+		countAtStart = queuedCastTerminating_Count
+	elseif eventType == EVT_ON_STEP then
+		ids, arg1s, arg2s, arg3s, arg4s, arg5s =
+			queuedOnStep_ID, queuedOnStep_Arg1, queuedOnStep_Arg2, queuedOnStep_Arg3, queuedOnStep_Arg4, queuedOnStep_Arg5
+		countAtStart = queuedOnStep_Count
+	else
+		return
 	end
 
-	ResetPools()
-	queuedEventsCount = 0
-	queuedVisCount = 0
+	for i = 1, countAtStart do
+		local castID = ids[i]
+		local arg1 = arg1s[i]
+		local arg2 = arg2s[i]
+		local arg3 = arg3s[i]
+		local arg4 = arg4s[i]
+		local arg5 = arg5s[i]
+		local cast = ActivesRef[castID]
+
+		if cast then
+			local eventConfig = casts_FastCastEventsConfig[castID]
+			if eventConfig then
+				local events = CasterEvents[casts_CasterId[castID]]
+
+				if eventType == EVT_LENGTH_CHANGED then
+					local signal = events and events.LengthChanged
+					if eventConfig.UseLengthChanged and signal then
+						signal:Fire(cast, arg1, arg2, arg3, arg4, arg5)
+					end
+				elseif eventType == EVT_HIT then
+					local signal = events and events.Hit
+					if eventConfig.UseHit and signal then
+						signal:Fire(cast, arg1, arg2, arg3)
+					end
+				elseif eventType == EVT_PIERCED then
+					local signal = events and events.Pierced
+					if eventConfig.UsePierced and signal then
+						signal:Fire(cast, arg1, arg2, arg3)
+					end
+				elseif eventType == EVT_ON_STEP then
+					local signal = events and events.OnStep
+					if eventConfig.UseOnStep and signal then
+						signal:Fire(cast, arg1)
+					end
+				elseif eventType == EVT_CAST_TERMINATING then
+					if not cast._Destroying or cast._TerminationQueued then
+						cast._Destroying = true
+						cast._TerminationQueued = false
+
+						local signal = events and events.CastTerminating
+						if eventConfig.UseCastTerminating and signal then
+							signal:Fire(cast)
+						end
+					end
+
+					BaseCastRef._TerminateCast(castID)
+				end
+			end
+		end
+
+		ids[i] = nil
+		arg1s[i] = nil
+		arg2s[i] = nil
+		arg3s[i] = nil
+		arg4s[i] = nil
+		arg5s[i] = nil
+	end
+
+	-- Same-type events queued by callbacks wait until the next frame.
+	local queueCount
+	if eventType == EVT_LENGTH_CHANGED then
+		queueCount = queuedLengthChanged_Count
+	elseif eventType == EVT_HIT then
+		queueCount = queuedHit_Count
+	elseif eventType == EVT_PIERCED then
+		queueCount = queuedPierced_Count
+	elseif eventType == EVT_CAST_TERMINATING then
+		queueCount = queuedCastTerminating_Count
+	else
+		queueCount = queuedOnStep_Count
+	end
+
+	local remaining = queueCount - countAtStart
+	for i = 1, remaining do
+		local sourceIndex = countAtStart + i
+		ids[i] = ids[sourceIndex]
+		arg1s[i] = arg1s[sourceIndex]
+		arg2s[i] = arg2s[sourceIndex]
+		arg3s[i] = arg3s[sourceIndex]
+		arg4s[i] = arg4s[sourceIndex]
+		arg5s[i] = arg5s[sourceIndex]
+		ids[sourceIndex] = nil
+		arg1s[sourceIndex] = nil
+		arg2s[sourceIndex] = nil
+		arg3s[sourceIndex] = nil
+		arg4s[sourceIndex] = nil
+		arg5s[sourceIndex] = nil
+	end
+
+	if eventType == EVT_LENGTH_CHANGED then
+		queuedLengthChanged_Count = remaining
+	elseif eventType == EVT_HIT then
+		queuedHit_Count = remaining
+	elseif eventType == EVT_PIERCED then
+		queuedPierced_Count = remaining
+	elseif eventType == EVT_CAST_TERMINATING then
+		queuedCastTerminating_Count = remaining
+	else
+		queuedOnStep_Count = remaining
+	end
 end
 
 -- ============================================================================
@@ -1639,11 +1696,20 @@ local function UpdateCasts(delta: number)
 	-- Main-thread-only work.
 	-- =========================================================================
 
+	-- OnStep runs before cosmetic movement; other callbacks follow it.
+	FireQueuedEvents(EVT_ON_STEP)
+
 	UpdateMotor6Ds()
 	BulkMoveTo()
-
 	FireQueuedVisualizes()
-	FireQueuedEvents()
+
+	FireQueuedEvents(EVT_LENGTH_CHANGED)
+	FireQueuedEvents(EVT_HIT)
+	FireQueuedEvents(EVT_PIERCED)
+	FireQueuedEvents(EVT_CAST_TERMINATING)
+
+	ResetPools()
+	queuedVisCount = 0
 end
 
 -- ============================================================================
