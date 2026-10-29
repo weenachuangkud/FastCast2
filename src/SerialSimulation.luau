@@ -127,7 +127,7 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Each event type has independent write/drain buffers so callbacks can queue
+-- Each event type has independent pending/dispatching buffers so callbacks can queue
 -- more events without overwriting the events currently being dispatched.
 type QueuedEventBuffer = {
 	metadata: buffer,
@@ -137,8 +137,8 @@ type QueuedEventBuffer = {
 }
 
 type QueuedEventQueue = {
-	write: QueuedEventBuffer,
-	drain: QueuedEventBuffer
+	pending: QueuedEventBuffer,
+	dispatching: QueuedEventBuffer
 }
 
 local EVENT_STRIDE = 8
@@ -155,8 +155,8 @@ end
 
 local function CreateQueuedEventQueue(): QueuedEventQueue
 	return {
-		write = CreateQueuedEventBuffer(),
-		drain = CreateQueuedEventBuffer()
+		pending = CreateQueuedEventBuffer(),
+		dispatching = CreateQueuedEventBuffer()
 	}
 end
 
@@ -560,7 +560,7 @@ local function QueueEvent(
 		return
 	end
 
-	local queue = eventQueue.write
+	local queue = eventQueue.pending
 	queue.count += 1
 	local index = queue.count
 
@@ -594,11 +594,11 @@ local function FireQueuedEvents(eventType: number)
 	end
 
 	-- Swap before dispatch. Anything queued by a listener goes into the new
-	-- write buffer and is left for a later drain.
-	local eventsToProcess = eventQueue.write
-	eventQueue.write = eventQueue.drain
-	eventQueue.drain = eventsToProcess
-	eventQueue.write.count = 0
+	-- pending buffer and is left for a later drain.
+	local eventsToProcess = eventQueue.pending
+	eventQueue.pending = eventQueue.dispatching
+	eventQueue.dispatching = eventsToProcess
+	eventQueue.pending.count = 0
 
 	local eventCount = eventsToProcess.count
 	for i = 1, eventCount do
