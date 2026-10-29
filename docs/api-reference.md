@@ -2,19 +2,22 @@
 
 ### 1.0 Runtime Lifecycle
 
-The Serial implementation uses a shared singleton runtime. Call `FastCast.Init()` to initialize the runtime on the first call and ensure simulation is running. Calling it again while running is safe; after `FastCast.Stop()`, calling `FastCast.Init()` resumes simulation without reinitializing the runtime.
+The Serial implementation uses a shared singleton runtime. Call `FastCast2.Init(movementMode?)` to initialize it and start simulation. `Init` is a module-level function and must use dot syntax. Calling it again while running is safe; after `FastCast2.Stop()`, calling `FastCast2.Init()` resumes simulation without reinitializing the runtime. Passing a movement mode to `Init` on an initialized runtime switches to that mode.
 
 ```lua
-FastCast.Init() -- Initialize once, or resume if stopped
+FastCast2.Init("BulkMoveTo") -- Initialize with a movement mode
 
 -- Later, when simulation should pause:
-FastCast.Stop()
+FastCast2.Stop()
 
 -- Resume the existing runtime and active casts:
-FastCast.Init()
+FastCast2.Init()
+
+-- Switch movement mode on the initialized runtime:
+FastCast2.Init("Motor6D")
 ```
 
-`Stop()` disconnects simulation updates; it does not destroy active casts or reset the runtime. Active casts resume when simulation starts again. If `Config.SimulationMode` is changed while stopped, the next `Init()` uses the updated mode. Use `FastCast.SetMovementModeEnabled(enabled, mode)` to change movement mode; do not reinitialize for that.
+`Stop()` disconnects simulation updates; it does not destroy active casts or reset the runtime. Active casts resume when simulation starts again. If `Config.SimulationMode` is changed while stopped, the next `Init()` uses the updated mode. You can change movement mode by passing it to `FastCast2.Init(movementMode)`, or call `FastCast2.SetMovementModeEnabled(enabled, mode)` on an initialized runtime.
 
 ---
 
@@ -99,30 +102,30 @@ caster:SpherecastFire(Vector3.new(0, 5, 0), 3, Vector3.new(0, 0, -1), 500, behav
 
 ```lua
 -- Getters
-FastCast:GetPositionCast(cast) → Vector3
-FastCast:GetVelocityCast(cast) → Vector3
-FastCast:GetAccelerationCast(cast) → Vector3
+FastCast2.GetPositionCast(cast) → Vector3
+FastCast2.GetVelocityCast(cast) → Vector3
+FastCast2.GetAccelerationCast(cast) → Vector3
 
 -- Setters (modifies trajectory, triggers CancelHighResCast)
-FastCast:SetVelocityCast(cast, velocity) → ()
-FastCast:SetAccelerationCast(cast, acceleration) → ()
-FastCast:SetPositionCast(cast, position) → ()
+FastCast2.SetVelocityCast(cast, velocity) → ()
+FastCast2.SetAccelerationCast(cast, acceleration) → ()
+FastCast2.SetPositionCast(cast, position) → ()
 
 -- Adders (relative modification)
-FastCast:AddPositionCast(cast, position) → ()
-FastCast:AddVelocityCast(cast, velocity) → ()
-FastCast:AddAccelerationCast(cast, acceleration) → ()
+FastCast2.AddPositionCast(cast, position) → ()
+FastCast2.AddVelocityCast(cast, velocity) → ()
+FastCast2.AddAccelerationCast(cast, acceleration) → ()
 
 -- Termination
-FastCast:TerminateCast(cast) → ()
+FastCast2.TerminateCast(cast) → ()
 ```
 
 ```lua
 -- Example: modify a cast mid-flight
 local function onHit(cast, result, velocity, bullet)
 	-- Deflect the projectile upward on hit
-	FastCast.SetVelocityCast(cast, Vector3.new(0, 100, 0))
-	FastCast.SetPositionCast(cast, result.Position + Vector3.new(0, 2, 0))
+	FastCast2.SetVelocityCast(cast, Vector3.new(0, 100, 0))
+	FastCast2.SetPositionCast(cast, result.Position + Vector3.new(0, 2, 0))
 
 end
 ```
@@ -187,7 +190,8 @@ behavior.FastCastEventsConfig = {
     UsePierced = true,
     UseCastTerminating = true,
     UseCanPierce = true,
-    UseCastFire = true
+    UseCastFire = true,
+    UseOnStep = false
 }
 
 ```
