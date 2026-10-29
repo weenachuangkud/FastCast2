@@ -43,6 +43,11 @@ Configs.FixedSimulationFrequency = Enum.StepFrequency.Hz60
 	FPS) is the default; use 1 for very fast projectiles that need every-frame
 	smoothness. Hit detection is unaffected: it still runs every frame.
 ]]
-Configs.CosmeticUpdateInterval = 3
+Configs.CosmeticUpdateInterval = 1
+
+--[[
+  I like one, I'm not reading allat
+  - Mawin_CK 2026
+]]
 
 return Configs
