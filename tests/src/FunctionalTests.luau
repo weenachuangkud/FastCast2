@@ -572,6 +572,7 @@ return function()
 
 				local stepCount = 0
 				local piercedSteps = {}
+				local eventOrder = {}
 				local hitInstance = nil
 				local hitStep = nil
 				local caster = newCaster(expect)
@@ -583,10 +584,12 @@ return function()
 				end
 				caster.Pierced = function()
 					table.insert(piercedSteps, stepCount)
+					table.insert(eventOrder, "Pierced")
 				end
 				caster.Hit = function(_, result)
 					hitInstance = result.Instance
 					hitStep = stepCount
+					table.insert(eventOrder, "Hit")
 				end
 				initializeRuntime()
 
@@ -603,6 +606,7 @@ return function()
 				expect.equal(hitInstance, finalWall, "cast stopped at the wrong wall")
 				expect.equal(piercedSteps[1], piercedSteps[2], "pierces occurred in different simulation steps")
 				expect.equal(hitStep, piercedSteps[1], "final hit occurred in a different simulation step")
+				expect.equal(table.concat(eventOrder, ","), "Pierced,Pierced,Hit", "callbacks did not preserve event insertion order")
 
 				caster:Destroy()
 				arena:Destroy()
