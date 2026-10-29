@@ -337,6 +337,10 @@ local function ModifyTransformation(
 	trajectory.Acceleration = acceleration or trajectory.Acceleration
 	trajectory.StartTime = cast.StateInfo.TotalRuntime
 	cast.StateInfo.CancelHighResCast = true
+
+	-- Keep the simulation's cached trajectory reference synchronized with
+	-- the public cast state after a runtime trajectory change.
+	SerialSimulation.UpdateTrajectory(cast.ID, trajectory)
 	SerialSimulation.CancelHighResResimulation(cast.ID)
 end
 
