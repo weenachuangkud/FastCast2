@@ -60,7 +60,6 @@ local EVT_LENGTH_CHANGED = 1
 local EVT_HIT = 2
 local EVT_PIERCED = 3
 local EVT_CAST_TERMINATING = 4
-local EVT_ON_STEP = 5
 
 --[[
 	Shoutout to DrSinek for some code
@@ -637,14 +636,6 @@ local function FireQueuedEvents()
 						args[2],
 						args[3]
 					)
-				end
-			end
-
-		elseif eventType == EVT_ON_STEP then
-			if eventConfig.UseOnStep then
-				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
-				if onStep then
-					onStep:Fire(cast, args[1])
 				end
 			end
 
@@ -1626,12 +1617,13 @@ local function UpdateCasts(delta: number)
 			)
 		end
 
-		-- Queue OnStep so it dispatches with the other events after simulation
-		-- and cosmetic movement. Changes made by the callback apply to later steps.
+		-- OnStep must run before movement so trajectory changes made by the
+		-- callback affect this simulation step, matching the established API.
+		-- Termination requested by the callback is queued and dispatched later.
 		if cast and cast.StateInfo.FastCastEventsConfig.UseOnStep then
 			local events = CasterEvents[casts_CasterId[id]]
 			if events and events.OnStep then
-				QueueEvent(id, EVT_ON_STEP, delta)
+				events.OnStep:Fire(cast, delta)
 			end
 		end
 
@@ -1705,12 +1697,6 @@ end
 
 function SerialSimulation.Register(cast: any)
 	SerialSimulation_Register(cast)
-end
-
-function SerialSimulation.UpdateTrajectory(castID: number, trajectory: TypeDef.CastTrajectory)
-	if casts_Trajectory[castID] ~= nil then
-		casts_Trajectory[castID] = trajectory
-	end
 end
 
 function SerialSimulation.CancelHighResResimulation(castID: number)
