@@ -97,7 +97,6 @@ local casts_CancelHighResCast = {} :: { [number]: boolean }
 
 local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
 
-local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
 local casts_CasterId = {} :: { [number]: number }
 local CasterEvents = {} :: { [number]: any }
 
@@ -617,41 +616,29 @@ local function FireQueuedEvents(eventType: number)
 			continue
 		end
 
-		local eventConfig = casts_FastCastEventsConfig[castID]
-		if not eventConfig then
-			continue
-		end
 
 		if eventType == EVT_ON_STEP then
-			if eventConfig.UseOnStep then
-				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
-				if onStep then
-					onStep:Fire(cast, args[1])
-				end
+			local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
+			if onStep and onStep:HasListeners() then
+				onStep:Fire(cast, args[1])
 			end
 
 		elseif eventType == EVT_LENGTH_CHANGED then
-			if eventConfig.UseLengthChanged then
-				local lengthChanged = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].LengthChanged
-				if lengthChanged then
-					lengthChanged:Fire(cast, args[1], args[2], args[3], args[4], args[5])
-				end
+			local lengthChanged = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].LengthChanged
+			if lengthChanged and lengthChanged:HasListeners() then
+				lengthChanged:Fire(cast, args[1], args[2], args[3], args[4], args[5])
 			end
 
 		elseif eventType == EVT_HIT then
-			if eventConfig.UseHit then
-				local hit = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Hit
-				if hit then
-					hit:Fire(cast, args[1], args[2], args[3])
-				end
+			local hit = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Hit
+			if hit and hit:HasListeners() then
+				hit:Fire(cast, args[1], args[2], args[3])
 			end
 
 		elseif eventType == EVT_PIERCED then
-			if eventConfig.UsePierced then
-				local pierced = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Pierced
-				if pierced then
-					pierced:Fire(cast, args[1], args[2], args[3])
-				end
+			local pierced = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Pierced
+			if pierced and pierced:HasListeners() then
+				pierced:Fire(cast, args[1], args[2], args[3])
 			end
 
 		elseif eventType == EVT_CAST_TERMINATING then
@@ -660,7 +647,7 @@ local function FireQueuedEvents(eventType: number)
 				cast._TerminationQueued = false
 
 				local castTerminating = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].CastTerminating
-				if eventConfig.UseCastTerminating and castTerminating then
+				if castTerminating and castTerminating:HasListeners() then
 					castTerminating:Fire(cast)
 				end
 			end
@@ -831,7 +818,7 @@ local function ShouldPierce(
 	canPierce: TypeDef.CanPierceFunction?
 ): boolean
 	local cast = ActivesRef[id]
-	if not canPierce or not cast or not cast.StateInfo.FastCastEventsConfig.UseCanPierce then
+	if not canPierce or not cast then
 		return false
 	end
 
@@ -1147,8 +1134,7 @@ local function SimulateCast(
 		cast.CFrame = casts_CFrame[id] * cast.Offset
 	end
 
-	local eventConfig = casts_FastCastEventsConfig[id]
-	if eventConfig and eventConfig.UseLengthChanged then
+	do
 		QueueEvent(
 			id,
 			EVT_LENGTH_CHANGED,
@@ -1329,7 +1315,7 @@ local function SimulateAlwaysHighFidelity(
 	local castEvents = CasterEvents[casts_CasterId[id]]
 	local eventConfig = casts_FastCastEventsConfig[id]
 	local canPiercefn = castEvents and castEvents.CanPierce
-	local canPierceEnabled = canPiercefn ~= nil and eventConfig ~= nil and eventConfig.UseCanPierce
+	local canPierceEnabled = canPiercefn ~= nil
 	local castTerminatingfn = castEvents and castEvents.CastTerminating
 
 	local endpoint = (resultOfCast and resultOfCast.Position) or currentPoint
@@ -1419,7 +1405,6 @@ function SerialSimulation_Register(cast: any)
 
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
 
-	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_CasterId[id] = cast.CasterId
 
 	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts
@@ -1486,7 +1471,6 @@ function SerialSimulation_Unregister(castID: number)
 
 	casts_Trajectory[castID] = nil
 
-	casts_FastCastEventsConfig[castID] = nil
 	casts_CasterId[castID] = nil
 
 	if casts_HasCosmetic[castID] then
@@ -1598,8 +1582,6 @@ local function UpdateCasts(delta: number)
 
 		if cast and not cast._Destroying and not cast.StateInfo.IsPaused and not expired
 			and casts_Trajectory[id]
-			and casts_FastCastEventsConfig[id]
-			and casts_FastCastEventsConfig[id].UseOnStep
 		then
 			local events = CasterEvents[casts_CasterId[id]]
 			if events and events.OnStep then
