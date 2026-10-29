@@ -606,7 +606,7 @@ return function()
 				expect.equal(hitInstance, finalWall, "cast stopped at the wrong wall")
 				expect.equal(piercedSteps[1], piercedSteps[2], "pierces occurred in different simulation steps")
 				expect.equal(hitStep, piercedSteps[1], "final hit occurred in a different simulation step")
-				expect.equal(table.concat(eventOrder, ","), "Pierced,Pierced,Hit", "callbacks did not preserve event insertion order")
+				expect.equal(table.concat(eventOrder, ","), "Hit,Pierced,Pierced", "callbacks did not follow the configured Hit-before-Pierced dispatch order")
 
 				caster:Destroy()
 				arena:Destroy()
