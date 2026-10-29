@@ -668,15 +668,29 @@ return function()
 
 				createWall(arena, Vector3.new(0, 0, -20), Vector3.new(50, 50, 2))
 
+				local canPierceCount = 0
+				local canPierceInstances = {}
 				local piercedCount = 0
+				local piercedInstances = {}
+				local hitInstances = {}
 				local terminated = false
+				local castData = nil
 
 				local caster = newCaster(expect)
-				caster.CanPierce = function()
+				caster.CastFire = function(cast)
+					castData = cast
+				end
+				caster.CanPierce = function(_, result)
+					canPierceCount += 1
+					table.insert(canPierceInstances, result.Instance:GetFullName())
 					return true
 				end
-				caster.Pierced = function()
+				caster.Pierced = function(_, result)
 					piercedCount += 1
+					table.insert(piercedInstances, result.Instance:GetFullName())
+				end
+				caster.Hit = function(_, result)
+					table.insert(hitInstances, result.Instance:GetFullName())
 				end
 				caster.CastTerminating = function()
 					terminated = true
@@ -684,21 +698,45 @@ return function()
 				initializeRuntime()
 
 				task.wait() -- Allow newly-created parts to enter spatial query data.
-				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 120, behavior)
-
-				expect.truthy(
-					Framework.waitFor(function()
-						return terminated
-					end, HIT_TIMEOUT),
-					"cast never terminated"
+				local probeResult = workspace:Raycast(
+					Vector3.zero,
+					Vector3.new(0, 0, -80),
+					behavior.RaycastParams
 				)
-				expect.greaterThan(piercedCount, 0, "the cast never pierced the wall")
+				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
+
+				local terminatedObserved = Framework.waitFor(function()
+					return terminated
+				end, HIT_TIMEOUT)
+				expect.truthy(
+					terminatedObserved,
+					string.format(
+						"cast never terminated (CanPierce calls: %d; Pierced events: %d; Hit events: %d; direct raycast: %s)",
+						canPierceCount,
+						piercedCount,
+						#hitInstances,
+						if probeResult then probeResult.Instance:GetFullName() else "<no hit>"
+					)
+				)
+				expect.truthy(
+					piercedCount > 0,
+					string.format(
+						"cast terminated without a Pierced event (CanPierce calls: %d; instances passed to CanPierce: [%s]; Pierced events: %d [%s]; Hit events: [%s]; direct raycast: %s; UseCanPierce: %s; UsePierced: %s; MaxPiercesPerStep: %s)",
+						canPierceCount,
+						table.concat(canPierceInstances, ", "),
+						piercedCount,
+						table.concat(piercedInstances, ", "),
+						table.concat(hitInstances, ", "),
+						if probeResult then probeResult.Instance:GetFullName() else "<no hit>",
+						tostring(behavior.FastCastEventsConfig.UseCanPierce),
+						tostring(behavior.FastCastEventsConfig.UsePierced),
+						tostring(behavior.MaxPiercesPerStep or 1)
+					)
+				)
 
 				caster:Destroy()
 				arena:Destroy()
-			end)
-
-			test("LengthChanged runs when enabled", function(expect)
+			end)			test("LengthChanged runs when enabled", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
@@ -1273,22 +1311,51 @@ return function()
 					hitInstance = result.Instance
 				end
 				initializeRuntime()
-				task.wait() -- Allow newly-created parts to enter spatial query data.
+				task.wait() -- Allow newly-created parts to enter spatial-query data.
 				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
 
+				expect.truthy(castData, "CastFire did not expose the created cast")
 				expect.truthy(cosmetic, "cast did not create a cosmetic projectile")
 				expect.truthy(cosmetic ~= template, "CloneTemplate did not clone the template")
 				expect.equal(cosmetic.Parent, container, "cloned cosmetic was parented to the wrong container")
 				expect.equal(template.Parent, arena, "cloning changed the original template's parent")
+
+				local filteredResult = workspace:Raycast(
+					Vector3.new(0, 0, 2),
+					Vector3.new(0, 0, -30),
+					castData.RayInfo.Parameters
+				)
+				local unfilteredResult = workspace:Raycast(
+					Vector3.new(0, 0, 2),
+					Vector3.new(0, 0, -30),
+					behavior.RaycastParams
+				)
+				local filterNames = {}
+				for _, instance in castData.RayInfo.Parameters.FilterDescendantsInstances do
+					table.insert(filterNames, instance:GetFullName())
+				end
+
 				expect.truthy(
 					table.find(castData.RayInfo.Parameters.FilterDescendantsInstances, container) ~= nil,
 					"AutoIgnoreContainer did not add the cosmetic container to the raycast filter"
 				)
+				local hitObserved = Framework.waitFor(function()
+					return hitInstance ~= nil
+				end, HIT_TIMEOUT)
 				expect.truthy(
-					Framework.waitFor(function()
-						return hitInstance ~= nil
-					end, HIT_TIMEOUT),
-					"cast hit its own cosmetic instead of reaching the wall"
+					hitObserved,
+					string.format(
+						"cast did not report a hit (filtered probe: %s; unfiltered probe: %s; filter type: %s; filter instances: [%s]; container: %s; cosmetic parent: %s; cosmetic CanQuery: %s; cosmetic position: %s; wall: %s)",
+						if filteredResult then filteredResult.Instance:GetFullName() else "<no hit>",
+						if unfilteredResult then unfilteredResult.Instance:GetFullName() else "<no hit>",
+						tostring(castData.RayInfo.Parameters.FilterType),
+						table.concat(filterNames, ", "),
+						container:GetFullName(),
+						if cosmetic.Parent then cosmetic.Parent:GetFullName() else "<no parent>",
+						tostring(cosmetic.CanQuery),
+						tostring(cosmetic.Position),
+						wall:GetFullName()
+					)
 				)
 				expect.equal(hitInstance, wall, "cast hit the wrong instance")
 				expect.truthy(cosmetic.Parent ~= nil, "FastCast unexpectedly cleaned up the cosmetic")
@@ -1296,9 +1363,7 @@ return function()
 				template:Destroy()
 				caster:Destroy()
 				arena:Destroy()
-			end)
-
-			test("CloneTemplate false uses the supplied cosmetic instance", function(expect)
+			end)			test("CloneTemplate false uses the supplied cosmetic instance", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local template = Instance.new("Part")
