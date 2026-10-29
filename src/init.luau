@@ -84,7 +84,6 @@ export type OnStepFunction = TypeDef.OnStepFunction
 export type VisualizeCastSettings = TypeDef.VisualizeCastSettings
 export type CasterSerial = TypeDef.CasterSerial
 
-export type FastCastEventsConfig = TypeDef.FastCastEventsConfig
 export type FastCastBehavior = TypeDef.FastCastBehavior
 
 export type CastTrajectory = TypeDef.CastTrajectory
