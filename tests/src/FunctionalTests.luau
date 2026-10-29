@@ -873,12 +873,32 @@ return function()
 				behavior.MaxDistance = 100
 				behavior.FastCastEventsConfig.UseOnStep = true
 
+				local canPierceCount = 0
 				local piercedCount = 0
 				local terminationCount = 0
+				local hitCount = 0
+				local lastCanPierceInstance = nil
+				local lastCanPierceResult = nil
+				local lastStepRuntime = nil
+				local lastStepDistance = nil
+				local castData = nil
 				local caster = newCaster(expect)
 				caster.CanPierce = function(_, result)
+					canPierceCount += 1
+					lastCanPierceInstance = result.Instance:GetFullName()
+					lastCanPierceResult = result
 					return result.Instance == wall
 				end
+				caster.CastFire = function(cast)
+					castData = cast
+				end
+				caster.OnStep = function(cast)
+					lastStepRuntime = cast.StateInfo.TotalRuntime
+					lastStepDistance = cast.StateInfo.DistanceCovered
+				end
+				caster.Hit:Connect(function()
+					hitCount += 1
+				end)
 				caster.Pierced:Connect(function(cast)
 					piercedCount += 1
 					FastCast.TerminateCast(cast)
@@ -890,19 +910,47 @@ return function()
 
 				task.wait() -- Allow newly-created parts to enter spatial query data.
 				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
-				expect.truthy(
-					Framework.waitFor(function()
-						return terminationCount > 0
-					end, HIT_TIMEOUT),
-					"termination queued by Pierced was lost"
+				local terminated = Framework.waitFor(function()
+					return terminationCount > 0
+				end, HIT_TIMEOUT)
+				local probeResult = workspace:Raycast(
+					Vector3.zero,
+					Vector3.new(0, 0, -30),
+					behavior.RaycastParams
 				)
-				expect.greaterThan(piercedCount, 0, "Pierced never fired for the wall")
+				local directHit = if probeResult then probeResult.Instance:GetFullName() else "<no hit>"
+				local canPierceResult = if lastCanPierceResult then lastCanPierceResult.Instance:GetFullName() else "<not called>"
+				expect.truthy(
+					terminated,
+					string.format(
+						"CastTerminating never fired (CanPierce: %d; last CanPierce instance: %s; Pierced: %d; Hit: %d; OnStep runtime: %s; OnStep distance: %s; direct raycast: %s)",
+						canPierceCount,
+						tostring(lastCanPierceInstance),
+						piercedCount,
+						hitCount,
+						tostring(lastStepRuntime),
+						tostring(lastStepDistance),
+						directHit
+					)
+				)
+				expect.greaterThan(
+					piercedCount,
+					0,
+					string.format(
+						"Pierced never fired (CanPierce calls: %d; last result: %s; Hit events: %d; direct raycast: %s; UseCanPierce: %s; UsePierced: %s)",
+						canPierceCount,
+						canPierceResult,
+						hitCount,
+						directHit,
+						tostring(behavior.FastCastEventsConfig.UseCanPierce),
+						tostring(behavior.FastCastEventsConfig.UsePierced)
+					)
+				)
 				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
 				expect.equal(cast.ID, nil, "terminated cast was not cleared")
 				caster:Destroy()
 				arena:Destroy()
 			end)
-
 			test("fire methods return their active cast", function(expect)
 				local arena = createArena(expect)
 				local container = createContainer(arena)
