@@ -1707,6 +1707,12 @@ function SerialSimulation.Register(cast: any)
 	SerialSimulation_Register(cast)
 end
 
+function SerialSimulation.UpdateTrajectory(castID: number, trajectory: TypeDef.CastTrajectory)
+	if casts_Trajectory[castID] ~= nil then
+		casts_Trajectory[castID] = trajectory
+	end
+end
+
 function SerialSimulation.CancelHighResResimulation(castID: number)
 	if casts_IsActivelyResimulating[castID] then
 		casts_CancelHighResCast[castID] = true
