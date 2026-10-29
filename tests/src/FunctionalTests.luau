@@ -435,11 +435,11 @@ return function()
 
 			test("event callbacks assigned after Init still fire", function(expect)
 				local arena = createArena(expect)
-				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
+				-- Keep this test focused on late Signal connections. A thick wall
+				-- avoids making it depend on high-fidelity substep behavior.
+				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 10))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
-				behavior.HighFidelitySegmentSize = 1
 
 				local caster = newCaster(expect)
 				initializeRuntime()
