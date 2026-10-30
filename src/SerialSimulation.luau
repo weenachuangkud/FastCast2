@@ -56,11 +56,11 @@ type CastVisualizerVariants =
 	| SphereVisualizerVariant
 
 -- Event type constants (numeric IDs avoid string comparison in hot path)
-local EVT_LENGTH_CHANGED = 1
-local EVT_HIT = 2
-local EVT_PIERCED = 3
-local EVT_CAST_TERMINATING = 4
-local EVT_ON_STEP = 5
+local EVT_ON_STEP = 1
+local EVT_LENGTH_CHANGED = 2
+local EVT_HIT = 3
+local EVT_PIERCED = 4
+local EVT_CAST_TERMINATING = 5
 
 --[[
 	Shoutout to DrSinek for some code
@@ -97,7 +97,6 @@ local casts_CancelHighResCast = {} :: { [number]: boolean }
 
 local casts_Trajectory = {} :: { [number]: TypeDef.CastTrajectory }
 
-local casts_FastCastEventsConfig = {} :: { [number]: TypeDef.FastCastEventsConfig }
 local casts_CasterId = {} :: { [number]: number }
 local CasterEvents = {} :: { [number]: any }
 
@@ -127,13 +126,52 @@ local casts_ID_Index = {} :: { [number]: number }
 local casts_HasCosmetic = {} :: { [number]: boolean }
 local castsWithCosmetics: number = 0
 
--- Packed metadata: f64 cast ID + u8 event type. Keep IDs lossless (no u32
--- wraparound); Roblox values stay in the reusable argument tables below.
--- Capacity doubles only at a new high-water mark, never during steady state.
-local EVENT_STRIDE = 9
-local eventCapacity = 256
-local eventMetadata = buffer.create(eventCapacity * EVENT_STRIDE)
-local queuedEventsCount: number = 0
+-- Each event type has its own double-buffered queue. Swapping buffers before
+-- dispatch preserves events queued by listeners for the next drain of that type.
+type QueuedEventBuffer = {
+	metadata: buffer,
+	capacity: number,
+	count: number,
+	argsPool: { { any } }
+}
+
+type QueuedEventQueue = {
+	pending: QueuedEventBuffer,
+	dispatching: QueuedEventBuffer
+}
+
+local EVENT_STRIDE = 8
+local EVENT_CAPACITY = 256
+
+local function CreateQueuedEventBuffer(): QueuedEventBuffer
+	return {
+		metadata = buffer.create(EVENT_CAPACITY * EVENT_STRIDE),
+		capacity = EVENT_CAPACITY,
+		count = 0,
+		argsPool = {}
+	}
+end
+
+local function CreateQueuedEventQueue(): QueuedEventQueue
+	return {
+		pending = CreateQueuedEventBuffer(),
+		dispatching = CreateQueuedEventBuffer()
+	}
+end
+
+local queuedOnStep = CreateQueuedEventQueue()
+local queuedLengthChanged = CreateQueuedEventQueue()
+local queuedHit = CreateQueuedEventQueue()
+local queuedPierced = CreateQueuedEventQueue()
+local queuedCastTerminating = CreateQueuedEventQueue()
+
+local queuedEventsByType: { [number]: QueuedEventQueue } = {
+	[EVT_ON_STEP] = queuedOnStep,
+	[EVT_LENGTH_CHANGED] = queuedLengthChanged,
+	[EVT_HIT] = queuedHit,
+	[EVT_PIERCED] = queuedPierced,
+	[EVT_CAST_TERMINATING] = queuedCastTerminating
+}
 
 -- Flat visualization queue: { castID, data }
 -- Reused every frame via table.clear
@@ -334,17 +372,6 @@ local Visualizers = {
 -- Pre-allocated pools (reused every frame, never freed)
 -- ============================================================================
 
-local argsPool: { { any } } = {}
-local argsPoolCount: number = 0
-
-local function GetArgs(): { any }
-	argsPoolCount += 1
-	if argsPoolCount > #argsPool then
-		argsPool[argsPoolCount] = {}
-	end
-	return argsPool[argsPoolCount]
-end
-
 local visPool: { QueuedVis } = {}
 local visPoolCount: number = 0
 
@@ -385,8 +412,7 @@ local function GetSegVisData(): { any }
 	return segVisPool[segVisPoolCount]
 end
 
-local function ResetPools()
-	argsPoolCount = 0
+local function ResetVisualPools()
 	visPoolCount = 0
 	hitVisPoolCount = 0
 	segVisPoolCount = 0
@@ -534,90 +560,85 @@ local function QueueEvent(
 	arg4: any,
 	arg5: any
 )
-	local args = GetArgs()
+	local eventQueue = queuedEventsByType[eventType]
+	if not eventQueue then
+		return
+	end
+
+	local queue = eventQueue.pending
+	queue.count += 1
+	local index = queue.count
+
+	if index > queue.capacity then
+		queue.capacity *= 2
+		local expanded = buffer.create(queue.capacity * EVENT_STRIDE)
+		buffer.copy(expanded, 0, queue.metadata)
+		queue.metadata = expanded
+	end
+
+	local args = queue.argsPool[index]
+	if not args then
+		args = {}
+		queue.argsPool[index] = args
+	end
+
 	args[1] = arg1
 	args[2] = arg2
 	args[3] = arg3
 	args[4] = arg4
 	args[5] = arg5
 
-	queuedEventsCount += 1
-	if queuedEventsCount > eventCapacity then
-		eventCapacity *= 2
-		local expanded = buffer.create(eventCapacity * EVENT_STRIDE)
-		buffer.copy(expanded, 0, eventMetadata)
-		eventMetadata = expanded
-	end
-	local offset = (queuedEventsCount - 1) * EVENT_STRIDE
-	buffer.writef64(eventMetadata, offset, castID)
-	buffer.writeu8(eventMetadata, offset + 8, eventType)
+	local offset = (index - 1) * EVENT_STRIDE
+	buffer.writef64(queue.metadata, offset, castID)
 end
 
-local function FireQueuedEvents()
-	for i = 1, queuedEventsCount do
+local function FireQueuedEvents(eventType: number)
+	local eventQueue = queuedEventsByType[eventType]
+	if not eventQueue then
+		return
+	end
+
+	-- Swap before dispatch. Events queued by listeners go into the pending
+	-- buffer and cannot overwrite the batch currently being processed.
+	local eventsToProcess = eventQueue.pending
+	eventQueue.pending = eventQueue.dispatching
+	eventQueue.dispatching = eventsToProcess
+	eventQueue.pending.count = 0
+
+	local eventCount = eventsToProcess.count
+	for i = 1, eventCount do
 		local offset = (i - 1) * EVENT_STRIDE
-		local castID = buffer.readf64(eventMetadata, offset)
-		local eventType = buffer.readu8(eventMetadata, offset + 8)
-		local args = argsPool[i]
+		local castID = buffer.readf64(eventsToProcess.metadata, offset)
+		local args = eventsToProcess.argsPool[i]
 
 		local cast = ActivesRef[castID]
 		if not cast then
 			continue
 		end
 
-		local eventConfig = casts_FastCastEventsConfig[castID]
 
-		if not eventConfig then
-			continue
-		end
+		if eventType == EVT_ON_STEP then
+			local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
+			if onStep and onStep:HasListeners() then
+				onStep:Fire(cast, args[1])
+			end
 
-		if eventType == EVT_LENGTH_CHANGED then
-			if eventConfig.UseLengthChanged then
-				local lengthChanged = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].LengthChanged
-				if lengthChanged then
-					lengthChanged:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3],
-						args[4],
-						args[5]
-					)
-				end
+		elseif eventType == EVT_LENGTH_CHANGED then
+			local lengthChanged = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].LengthChanged
+			if lengthChanged and lengthChanged:HasListeners() then
+				lengthChanged:Fire(cast, args[1], args[2], args[3], args[4], args[5])
 			end
 
 		elseif eventType == EVT_HIT then
-			if eventConfig.UseHit then
-				local Hit = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Hit
-				if Hit then
-					Hit:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3]
-					)
-				end
+			local hit = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Hit
+			if hit and hit:HasListeners() then
+				hit:Fire(cast, args[1], args[2], args[3])
 			end
 
 		elseif eventType == EVT_PIERCED then
-			if eventConfig.UsePierced then
-				local Pierced = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Pierced
-				if Pierced then
-					Pierced:Fire(
-						cast,
-						args[1],
-						args[2],
-						args[3]
-					)
-				end
-			end
-
-		elseif eventType == EVT_ON_STEP then
-			if eventConfig.UseOnStep then
-				local onStep = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].OnStep
-				if onStep then
-					onStep:Fire(cast, args[1])
-				end
+			local pierced = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].Pierced
+			if pierced and pierced:HasListeners() then
+				pierced:Fire(cast, args[1], args[2], args[3])
 			end
 
 		elseif eventType == EVT_CAST_TERMINATING then
@@ -626,7 +647,7 @@ local function FireQueuedEvents()
 				cast._TerminationQueued = false
 
 				local castTerminating = CasterEvents[casts_CasterId[castID]] and CasterEvents[casts_CasterId[castID]].CastTerminating
-				if eventConfig.UseCastTerminating and castTerminating then
+				if castTerminating and castTerminating:HasListeners() then
 					castTerminating:Fire(cast)
 				end
 			end
@@ -635,9 +656,7 @@ local function FireQueuedEvents()
 		end
 	end
 
-	ResetPools()
-	queuedEventsCount = 0
-	queuedVisCount = 0
+	eventsToProcess.count = 0
 end
 
 -- ============================================================================
@@ -799,7 +818,7 @@ local function ShouldPierce(
 	canPierce: TypeDef.CanPierceFunction?
 ): boolean
 	local cast = ActivesRef[id]
-	if not canPierce or not cast or not cast.StateInfo.FastCastEventsConfig.UseCanPierce then
+	if not canPierce or not cast then
 		return false
 	end
 
@@ -826,8 +845,10 @@ local function CastSegment(
 ): (RaycastResult?, boolean, number)
 	table.clear(pierceResults)
 
-	local endpoint = origin + displacement
 	local direction = if displacement.Magnitude > EPSILON then displacement.Unit else Vector3.zero
+	-- Extend the query by a tiny amount so a surface exactly at a segment
+	-- boundary is not missed due to raycast endpoint precision.
+	local endpoint = origin + displacement + direction * RAY_SEARCH_OFFSET
 	local rayOrigin = origin
 	local lastResult: RaycastResult? = nil
 	local rayInfo = casts_RayInfo[id]
@@ -1113,18 +1134,15 @@ local function SimulateCast(
 		cast.CFrame = casts_CFrame[id] * cast.Offset
 	end
 
-	local eventConfig = casts_FastCastEventsConfig[id]
-	if eventConfig and eventConfig.UseLengthChanged then
-		QueueEvent(
-			id,
-			EVT_LENGTH_CHANGED,
-			lastPoint,
-			unitDirection,
-			rayDisplacement,
-			velocity,
-			rayInfo.CosmeticBulletObject
-		)
-	end
+	QueueEvent(
+		id,
+		EVT_LENGTH_CHANGED,
+		lastPoint,
+		unitDirection,
+		rayDisplacement,
+		velocity,
+		rayInfo.CosmeticBulletObject
+	)
 
 	casts_DistanceCovered[id] += rayDisplacement
 
@@ -1293,9 +1311,8 @@ local function SimulateAlwaysHighFidelity(
 	)
 
 	local castEvents = CasterEvents[casts_CasterId[id]]
-	local eventConfig = casts_FastCastEventsConfig[id]
 	local canPiercefn = castEvents and castEvents.CanPierce
-	local canPierceEnabled = canPiercefn ~= nil and eventConfig ~= nil and eventConfig.UseCanPierce
+	local canPierceEnabled = canPiercefn ~= nil
 	local castTerminatingfn = castEvents and castEvents.CastTerminating
 
 	local endpoint = (resultOfCast and resultOfCast.Position) or currentPoint
@@ -1385,7 +1402,6 @@ function SerialSimulation_Register(cast: any)
 
 	casts_Trajectory[id] = cast.StateInfo.Trajectory
 
-	casts_FastCastEventsConfig[id] = cast.StateInfo.FastCastEventsConfig
 	casts_CasterId[id] = cast.CasterId
 
 	casts_VisualizeCasts[id] = cast.StateInfo.VisualizeCasts
@@ -1452,7 +1468,6 @@ function SerialSimulation_Unregister(castID: number)
 
 	casts_Trajectory[castID] = nil
 
-	casts_FastCastEventsConfig[castID] = nil
 	casts_CasterId[castID] = nil
 
 	if casts_HasCosmetic[castID] then
@@ -1554,6 +1569,23 @@ end
 -- ============================================================================
 
 local function UpdateCasts(delta: number)
+	-- Queue OnStep for active casts, then dispatch it before simulation movement.
+	-- This lets listeners modify trajectory for the current step while keeping
+	-- all callbacks inside the queued-event system.
+	for _, id in casts_ID do
+		local cast = ActivesRef[id]
+		local maxLifetime = cast and cast.StateInfo.MaxLifetime
+		local expired = maxLifetime ~= nil and casts_TotalRunTime[id] >= maxLifetime
+
+		if cast and not cast._Destroying and not cast.StateInfo.IsPaused and not expired
+			and casts_Trajectory[id]
+		then
+			QueueEvent(id, EVT_ON_STEP, delta)
+		end
+	end
+
+	FireQueuedEvents(EVT_ON_STEP)
+
 	for _, id in casts_ID do
 		local cast = ActivesRef[id]
 
@@ -1600,15 +1632,6 @@ local function UpdateCasts(delta: number)
 			)
 		end
 
-		-- Queue OnStep so it dispatches with the other events after simulation
-		-- and cosmetic movement. Changes made by the callback apply to later steps.
-		if cast and cast.StateInfo.FastCastEventsConfig.UseOnStep then
-			local events = CasterEvents[casts_CasterId[id]]
-			if events and events.OnStep then
-				QueueEvent(id, EVT_ON_STEP, delta)
-			end
-		end
-
 		if not ActivesRef[id] or cast._Destroying or cast.StateInfo.IsPaused then
 			continue
 		end
@@ -1643,7 +1666,13 @@ local function UpdateCasts(delta: number)
 	BulkMoveTo()
 
 	FireQueuedVisualizes()
-	FireQueuedEvents()
+	FireQueuedEvents(EVT_LENGTH_CHANGED)
+	FireQueuedEvents(EVT_HIT)
+	FireQueuedEvents(EVT_PIERCED)
+	FireQueuedEvents(EVT_CAST_TERMINATING)
+
+	ResetVisualPools()
+	queuedVisCount = 0
 end
 
 -- ============================================================================
@@ -1734,19 +1763,21 @@ end
 function SerialSimulation.QueueEvent(castID: number, eventType: string, ...: any)
 	-- Public wrapper for external callers (e.g. init.luau TerminateCast)
 	-- Map string event type to numeric constant
-	local numericType: number
+	local eventTypeID: number
 	if eventType == "CastTerminating" then
-		numericType = EVT_CAST_TERMINATING
+		eventTypeID = EVT_CAST_TERMINATING
 	elseif eventType == "Hit" then
-		numericType = EVT_HIT
+		eventTypeID = EVT_HIT
 	elseif eventType == "Pierced" then
-		numericType = EVT_PIERCED
+		eventTypeID = EVT_PIERCED
 	elseif eventType == "LengthChanged" then
-		numericType = EVT_LENGTH_CHANGED
+		eventTypeID = EVT_LENGTH_CHANGED
+	elseif eventType == "OnStep" then
+		eventTypeID = EVT_ON_STEP
 	else
 		return
 	end
-	QueueEvent(castID, numericType, ...)
+	QueueEvent(castID, eventTypeID, ...)
 end
 
 return SerialSimulation

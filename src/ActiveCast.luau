@@ -67,14 +67,6 @@ function ActiveCast.createCastData(
 				Acceleration = behavior.Acceleration,
 			},
 
-			FastCastEventsConfig = {
-				UseLengthChanged = behavior.FastCastEventsConfig.UseLengthChanged,
-				UseHit = behavior.FastCastEventsConfig.UseHit,
-				UsePierced = behavior.FastCastEventsConfig.UsePierced,
-				UseCastTerminating = behavior.FastCastEventsConfig.UseCastTerminating,
-				UseCanPierce = behavior.FastCastEventsConfig.UseCanPierce,
-				UseOnStep = behavior.FastCastEventsConfig.UseOnStep == true
-			},
 
 			VisualizeCasts = behavior.VisualizeCasts,
 			VisualizeCastSettings = behavior.VisualizeCastSettings,

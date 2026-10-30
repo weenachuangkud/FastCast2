@@ -181,20 +181,6 @@ behavior.VisualizeCastSettings = {
 | `CloneTemplate` | `boolean` | `true` | Clone CosmeticBulletTemplate or not  |
 | `UserData` | `any` | `nil` | Arbitrary data accessible on the cast |
 
-### Event Configuration
-
-```lua
-behavior.FastCastEventsConfig = {
-    UseLengthChanged = false,
-    UseHit = true,
-    UsePierced = true,
-    UseCastTerminating = true,
-    UseCanPierce = true,
-    UseCastFire = true,
-    UseOnStep = false
-}
-
-```
 
 ---
 
@@ -232,7 +218,6 @@ cast.StateInfo.IsActivelyResimulating: boolean
 cast.StateInfo.CancelHighResCast: boolean
 cast.StateInfo.VisualizeCasts: boolean
 cast.StateInfo.VisualizeCastSettings: VisualizeCastSettings
-cast.StateInfo.FastCastEventsConfig: FastCastEventsConfig
 cast.StateInfo.Trajectory = {
     StartTime: number,
     EndTime: number,            -- -1 if still active

@@ -48,7 +48,7 @@ local function FireCastFire(caster: any, cast, origin, direction, velocity, beha
 	local events = caster._events
 	local CastFireEvent = events and events.CastFire
 
-	if behavior.FastCastEventsConfig.UseCastFire and CastFireEvent then
+	if CastFireEvent and CastFireEvent:HasListeners() then
 		CastFireEvent:Fire(cast, origin, direction, velocity, behavior)
 	end
 end

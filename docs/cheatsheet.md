@@ -105,23 +105,6 @@ behavior.VisualizeCastSettings = {
 
 behavior.UserData = {}  -- Arbitrary data accessible on the cast
 
-behavior.FastCastEventsConfig = {
-    UseLengthChanged = false,
-    UseHit = true,
-    UsePierced = true,
-    UseCastTerminating = true,
-    UseCanPierce = true,
-    UseCastFire = true
-}
-
-behavior.FastCastEventsModuleConfig = {
-    UseLengthChanged = false,
-    UseHit = true,
-    UsePierced = true,
-    UseCastTerminating = true,
-    UseCanPierce = true,
-    UseCastFire = true
-}
 ```
 
 ---
@@ -142,7 +125,6 @@ cast.StateInfo.HighFidelityBehavior: number
 cast.StateInfo.HighFidelitySegmentSize: number
 cast.StateInfo.IsActivelyResimulating: boolean
 cast.StateInfo.CancelHighResCast: boolean
-cast.StateInfo.FastCastEventsConfig: FastCastEventsConfig
 cast.StateInfo.FastCastEventsModuleConfig: FastCastEventsModuleConfig  -- Parallel only
 cast.StateInfo.VisualizeCasts: boolean
 cast.StateInfo.VisualizeCastSettings: VisualizeCastSettings

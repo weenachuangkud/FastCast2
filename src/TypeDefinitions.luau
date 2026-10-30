@@ -197,24 +197,9 @@ export type CasterSerial = {
 	Destroy: (self: CasterSerial) -> ()
 }
 
---[=[
-	@type FastCastEventsConfig { UseLengthChanged: boolean, UseHit: boolean, UsePierced: boolean, UseCastTerminating: boolean, UseCastFire: boolean }
-	@within TypeDefinitions
-
-	Represents a FastCastBehavior configuration.
-]=]
-export type FastCastEventsConfig = {
-	UseLengthChanged: boolean,
-	UseHit: boolean,
-	UsePierced: boolean,
-	UseCastTerminating: boolean,
-	UseCastFire: boolean,
-	UseCanPierce: boolean,
-	UseOnStep: boolean
-}
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	MaxLifetime: number?,	MaxPiercesPerStep: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",		VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,    FastCastEventsConfig: FastCastEventsConfig,	UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	MaxLifetime: number?,	MaxPiercesPerStep: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",		VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,	UserData: any }
 	@within TypeDefinitions
 
 	Represents a FastCastBehavior configuration.
@@ -237,7 +222,6 @@ export type FastCastBehavior = {
 
 	CloneTemplate: boolean,
 
-	FastCastEventsConfig: FastCastEventsConfig,
 	UserData: any
 }
 
@@ -256,7 +240,7 @@ export type CastTrajectory = {
 }
 
 --[=[
-	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	IsPaused: boolean,	TotalRuntime: number,	MaxPiercesPerStep: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	FastCastEventsConfig: FastCastEventsConfig,	}
+	@type CastStateInfo { HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	IsPaused: boolean,	TotalRuntime: number,	MaxPiercesPerStep: number,	DistanceCovered: number,	IsActivelySimulatingPierce: boolean,	IsActivelyResimulating: boolean,	CancelHighResCast: boolean,	Trajectory: CastTrajectory,	VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,	}
 	@within TypeDefinitions
 
 	Represents cast state tracking data.
@@ -276,7 +260,6 @@ export type CastStateInfo = {
 	VisualizeCasts: boolean,  -- I don't use this anymore
 	VisualizeCastSettings: VisualizeCastSettings,
 
-	FastCastEventsConfig: FastCastEventsConfig,
 
 	}
 
