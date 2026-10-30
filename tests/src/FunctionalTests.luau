@@ -919,7 +919,7 @@ return function()
 						canPierceCount,
 						canPierceResult,
 						hitCount,
-						directHit,
+						directHit
 					)
 				)
 				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
