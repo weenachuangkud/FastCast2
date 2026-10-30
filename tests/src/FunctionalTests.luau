@@ -134,7 +134,6 @@ local function registerSerialCastTypes(test: (string, any) -> ())
 				local behavior = makeBehavior(container)
 				behavior.MaxLifetime = 3
 				behavior.HighFidelitySegmentSize = 0.25
-				behavior.FastCastEventsConfig.UseOnStep = true
 				behavior.UserData = { TestTag = castType }
 
 				local hitInstance = nil
@@ -229,7 +228,6 @@ return function()
 		Framework.describe("FastCastBehavior", function(test)
 			test("newBehavior returns the documented defaults", function(expect)
 				local behavior = FastCast.newBehavior()
-				local events = behavior.FastCastEventsConfig
 
 				expect.equal(behavior.MaxDistance, 1000, "MaxDistance default changed")
 				expect.equal(behavior.MaxLifetime, nil, "MaxLifetime should be unlimited by default")
@@ -247,23 +245,17 @@ return function()
 				expect.equal(behavior.CloneTemplate, true, "CloneTemplate should be enabled by default")
 				expect.equal(behavior.VisualizeCasts, false, "VisualizeCasts should be disabled by default")
 				expect.equal(type(behavior.VisualizeCastSettings), "table", "visualization settings are missing")
-				expect.equal(events.UseLengthChanged, false, "LengthChanged should be opt-in")
 				expect.equal(events.UseHit, true, "Hit should be enabled by default")
-				expect.equal(events.UsePierced, true, "Pierced should be enabled by default")
 				expect.equal(events.UseCastTerminating, true, "CastTerminating should be enabled by default")
-				expect.equal(events.UseCanPierce, true, "CanPierce should be enabled by default")
 				expect.equal(events.UseCastFire, true, "CastFire should be enabled by default")
-				expect.equal(events.UseOnStep, false, "OnStep should be opt-in")
 			end)
 
 			test("newBehavior returns independent nested configuration", function(expect)
 				local first = FastCast.newBehavior()
 				local second = FastCast.newBehavior()
 
-				first.FastCastEventsConfig.UseHit = false
 				first.VisualizeCastSettings.Debug_SegmentSize = 99
 
-				expect.equal(second.FastCastEventsConfig.UseHit, true, "event config was shared between behaviors")
 				expect.truthy(
 					second.VisualizeCastSettings.Debug_SegmentSize ~= 99,
 					"visualization settings were shared between behaviors"
@@ -325,8 +317,6 @@ return function()
 				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseOnStep = true
-				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local hitInstance = nil
 				local stepCount = 0
@@ -472,7 +462,6 @@ return function()
 				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 10))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseOnStep = true
 				-- This test verifies Signal listener semantics, not ordinary-step
 				-- collision timing. Always mode substeps the cast and prevents a
 				-- fast cast from skipping the wall between simulation frames.
@@ -606,7 +595,6 @@ return function()
 				local behavior = makeBehavior(container)
 				behavior.MaxPiercesPerStep = 3
 				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local stepCount = 0
 				local piercedSteps = {}
@@ -658,7 +646,6 @@ return function()
 				local behavior = makeBehavior(container)
 				behavior.MaxPiercesPerStep = 2
 				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local stepCount = 0
 				local piercedStep = nil
@@ -759,15 +746,13 @@ return function()
 				expect.truthy(
 					piercedCount > 0,
 					string.format(
-						"cast terminated without a Pierced event (CanPierce calls: %d; instances passed to CanPierce: [%s]; Pierced events: %d [%s]; Hit events: [%s]; direct raycast: %s; UseCanPierce: %s; UsePierced: %s; MaxPiercesPerStep: %s)",
+						"cast terminated without a Pierced event (CanPierce calls: %d; instances passed to CanPierce: [%s]; Pierced events: %d [%s]; Hit events: [%s]; direct raycast: %s; MaxPiercesPerStep: %s)",
 						canPierceCount,
 						table.concat(canPierceInstances, ", "),
 						piercedCount,
 						table.concat(piercedInstances, ", "),
 						table.concat(hitInstances, ", "),
 						if probeResult then probeResult.Instance:GetFullName() else "<no hit>",
-						tostring(behavior.FastCastEventsConfig.UseCanPierce),
-						tostring(behavior.FastCastEventsConfig.UsePierced),
 						tostring(behavior.MaxPiercesPerStep or 1)
 					)
 				)
@@ -778,7 +763,6 @@ return function()
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local lengthChanges = 0
 				local caster = newCaster(expect)
@@ -802,7 +786,6 @@ return function()
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local stepCount = 0
 				local terminationCount = 0
@@ -834,7 +817,6 @@ return function()
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local lengthChangedCount = 0
 				local lengthChangesAtTermination = 0
@@ -871,7 +853,6 @@ return function()
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxDistance = 100
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local canPierceCount = 0
 				local piercedCount = 0
@@ -937,13 +918,11 @@ return function()
 					piercedCount,
 					0,
 					string.format(
-						"Pierced never fired (CanPierce calls: %d; last result: %s; Hit events: %d; direct raycast: %s; UseCanPierce: %s; UsePierced: %s)",
+						"Pierced never fired (CanPierce calls: %d; last result: %s; Hit events: %d; direct raycast: %s)",
 						canPierceCount,
 						canPierceResult,
 						hitCount,
 						directHit,
-						tostring(behavior.FastCastEventsConfig.UseCanPierce),
-						tostring(behavior.FastCastEventsConfig.UsePierced)
 					)
 				)
 				expect.equal(terminationCount, 1, "CastTerminating fired more than once")
@@ -998,7 +977,6 @@ return function()
 				local wall = createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local hitInstance = nil
 				local stepCount = 0
@@ -1063,8 +1041,6 @@ return function()
 				local arena = createArena(expect)
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig.UseOnStep = true
-				behavior.FastCastEventsConfig.UseLengthChanged = true
 
 				local firedCast = nil
 				local stepCount = 0
@@ -1132,7 +1108,6 @@ return function()
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxLifetime = 0.1
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local firedCast = nil
 				local stepCount = 0
@@ -1173,7 +1148,6 @@ return function()
 				local container = createContainer(arena)
 				local behavior = makeBehavior(container)
 				behavior.MaxLifetime = 0
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				local firedCast = nil
 				local stepCount = 0
@@ -1266,7 +1240,6 @@ return function()
 				params.FilterType = Enum.RaycastFilterType.Exclude
 				params.FilterDescendantsInstances = { container, excludedWall }
 				behavior.RaycastParams = params
-				behavior.FastCastEventsConfig.UseOnStep = true
 
 				initializeRuntime()
 				-- The direct query is synchronous; yield one frame so newly created
@@ -1489,42 +1462,19 @@ return function()
 				arena:Destroy()
 			end)
 
-			test("event configuration can disable all callback channels", function(expect)
-				local arena = createArena(expect)
-				createWall(arena, Vector3.new(0, 0, -12), Vector3.new(50, 50, 2))
-				local container = createContainer(arena)
-				local behavior = makeBehavior(container)
-				behavior.FastCastEventsConfig = {
-					UseLengthChanged = false,
-					UseHit = false,
-					UsePierced = false,
-					UseCastTerminating = false,
-					UseCanPierce = false,
-					UseCastFire = false,
-					UseOnStep = false,
-				}
-
-				local callbackCount = 0
+			test("Signals report whether listeners are connected", function(expect)
 				local caster = newCaster(expect)
-				caster.CastFire = function() callbackCount += 1 end
-				caster.LengthChanged = function() callbackCount += 1 end
-				caster.Hit = function() callbackCount += 1 end
-				caster.Pierced = function() callbackCount += 1 end
-				caster.CastTerminating = function() callbackCount += 1 end
-				caster.OnStep = function() callbackCount += 1 end
-				caster.CanPierce = function()
-					callbackCount += 1
-					return true
-				end
+				local signal = caster.Hit
 
-				initializeRuntime()
-				task.wait() -- Allow newly-created parts to enter spatial query data.
-				fire(caster, "Raycast", Vector3.zero, Vector3.new(0, 0, -1), 120, behavior)
-				task.wait(0.5)
-				expect.equal(callbackCount, 0, "a disabled event callback still ran")
+				expect.equal(signal:HasListeners(), false, "new Signal should have no listeners")
+
+				local connection = signal:Connect(function() end)
+				expect.equal(signal:HasListeners(), true, "Signal should report a connected listener")
+
+				connection:Disconnect()
+				expect.equal(signal:HasListeners(), false, "Signal should report no listeners after disconnect")
 
 				caster:Destroy()
-				arena:Destroy()
 			end)
 
 			test("InitialOffset initializes a writable cosmetic cast Offset", function(expect)
@@ -1579,7 +1529,6 @@ return function()
 					behavior.HighFidelityBehavior = mode.Value
 					behavior.HighFidelitySegmentSize = mode.SegmentSize
 					behavior.MaxLifetime = 3
-					behavior.FastCastEventsConfig.UseOnStep = true
 
 					local hitInstance = nil
 					local stepCount = 0
@@ -1587,7 +1536,6 @@ return function()
 					local lastSegment = "not observed"
 					local crossingSegment = "not observed"
 					local castData = nil
-					behavior.FastCastEventsConfig.UseLengthChanged = true
 
 					local caster = newCaster(expect)
 					caster.CastFire = function(cast)
