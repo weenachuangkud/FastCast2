@@ -9,7 +9,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local FastCast = require(ReplicatedStorage:WaitForChild("FastCast2"))
-local FastCastEnums = require(ReplicatedStorage.FastCast2:WaitForChild("FastCastEnums"))
 
 local Framework = require(script.Parent.Framework)
 
@@ -235,7 +234,7 @@ return function()
 				expect.near(behavior.Acceleration, Vector3.zero, 1e-6, "Acceleration default changed")
 				expect.equal(
 					behavior.HighFidelityBehavior,
-					FastCastEnums.HighFidelityBehavior.Default,
+					FastCast.HighFidelityBehavior.Default,
 					"HighFidelityBehavior default changed"
 				)
 				expect.equal(behavior.HighFidelitySegmentSize, 0.5, "HighFidelitySegmentSize default changed")
@@ -462,7 +461,7 @@ return function()
 				-- This test verifies Signal listener semantics, not ordinary-step
 				-- collision timing. Always mode substeps the cast and prevents a
 				-- fast cast from skipping the wall between simulation frames.
-				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
+				behavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Always
 				behavior.HighFidelitySegmentSize = 1
 
 				local firstCount = 0
@@ -591,7 +590,7 @@ return function()
 				local finalWall = createWall(arena, Vector3.new(0, 0, -15), Vector3.new(50, 50, 1))
 				local behavior = makeBehavior(container)
 				behavior.MaxPiercesPerStep = 3
-				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+				behavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Default
 
 				local stepCount = 0
 				local piercedSteps = {}
@@ -642,7 +641,7 @@ return function()
 				local finalWall = createWall(arena, Vector3.new(0, 0, -25), Vector3.new(50, 50, 1))
 				local behavior = makeBehavior(container)
 				behavior.MaxPiercesPerStep = 2
-				behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+				behavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Default
 
 				local stepCount = 0
 				local piercedStep = nil
@@ -1511,9 +1510,9 @@ return function()
 
 			test("HighFidelity modes all resolve hits", function(expect)
 				local modes = {
-					{ Name = "Default", Value = FastCastEnums.HighFidelityBehavior.Default, SegmentSize = 0.5 },
-					{ Name = "Automatic", Value = FastCastEnums.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
-					{ Name = "Always", Value = FastCastEnums.HighFidelityBehavior.Always, SegmentSize = 1 },
+					{ Name = "Default", Value = FastCast.HighFidelityBehavior.Default, SegmentSize = 0.5 },
+					{ Name = "Automatic", Value = FastCast.HighFidelityBehavior.Automatic, SegmentSize = 0.25 },
+					{ Name = "Always", Value = FastCast.HighFidelityBehavior.Always, SegmentSize = 1 },
 				}
 
 				initializeRuntime()
