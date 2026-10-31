@@ -57,10 +57,6 @@ local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
-local FastCastEnums = require(
-	FastCastModule:WaitForChild("FastCastEnums")
-)
-
 local BenchmarkPackets = require(
 	ReplicatedStorage:WaitForChild("BenchmarkPackets")
 )
@@ -95,7 +91,7 @@ CastParams.IgnoreWater = true
 local CastBehavior = FastCast.newBehavior()
 
 CastBehavior.MaxDistance = 1e9
-CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+CastBehavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Default
 
 CastBehavior.HighFidelitySegmentSize = 1
 CastBehavior.Acceleration = Vector3.zero
@@ -133,9 +129,9 @@ end)
 local function getHighFidelityName()
 	local behavior = CastBehavior.HighFidelityBehavior
 
-	if behavior == FastCastEnums.HighFidelityBehavior.Default then
+	if behavior == FastCast.HighFidelityBehavior.Default then
 		return "Default"
-	elseif behavior == FastCastEnums.HighFidelityBehavior.Automatic then
+	elseif behavior == FastCast.HighFidelityBehavior.Automatic then
 		return "Automatic"
 	else
 		return "Always"
@@ -472,14 +468,14 @@ end
 local function cycleHighFidelity()
 	local current = CastBehavior.HighFidelityBehavior
 
-	if current == FastCastEnums.HighFidelityBehavior.Default then
-		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Automatic
+	if current == FastCast.HighFidelityBehavior.Default then
+		CastBehavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Automatic
 
-	elseif current == FastCastEnums.HighFidelityBehavior.Automatic then
-		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Always
+	elseif current == FastCast.HighFidelityBehavior.Automatic then
+		CastBehavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Always
 
 	else
-		CastBehavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+		CastBehavior.HighFidelityBehavior = FastCast.HighFidelityBehavior.Default
 	end
 
 	print(
