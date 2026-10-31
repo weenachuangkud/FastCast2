@@ -124,7 +124,6 @@ local UserInputService = game:GetService("UserInputService")
  
 -- Requires
 local FastCast2 = require(Rep:WaitForChild("FastCast2"))
-local FastCastEnums = require(Rep:WaitForChild("FastCast2"):WaitForChild("FastCastEnums"))
  
 -- CONSTANTS
 local SPEED = 500
@@ -151,7 +150,7 @@ CastParams.IgnoreWater = true
 local behavior = FastCast2.newBehavior()
 behavior.MaxDistance = 1000
 behavior.RaycastParams = CastParams
-behavior.HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default
+behavior.HighFidelityBehavior = FastCast2.HighFidelityBehavior.Default
 behavior.HighFidelitySegmentSize = 1
 behavior.Acceleration = Vector3.new(0, -workspace.Gravity/2.3, 0)
 behavior.CosmeticBulletContainer = ProjectileContainer
