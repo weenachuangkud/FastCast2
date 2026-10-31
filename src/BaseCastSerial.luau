@@ -7,12 +7,13 @@
 local FastCast2 = script.Parent
 
 local SerialSimulation = require(script.Parent.SerialSimulation)
-local FastCastEnums = require(FastCast2:WaitForChild("FastCastEnums"))
 local ActiveCast = require(FastCast2:WaitForChild("ActiveCast"))
 local TypeDef = require(FastCast2:WaitForChild("TypeDefinitions"))
 local Motor6DCache = require(FastCast2:WaitForChild("Motor6DCache"))
 
-local EnumCastTypes = FastCastEnums.CastType
+local CAST_TYPE_RAYCAST = 1
+local CAST_TYPE_BLOCKCAST = 2
+local CAST_TYPE_SPHERECAST = 3
 
 local BaseCast = {}
 
@@ -62,7 +63,7 @@ function BaseCast.Raycast(
 )
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, {
-		CastType = EnumCastTypes.Raycast
+		CastType = CAST_TYPE_RAYCAST
 	} :: any)
 
 	cast.CasterId = caster.CasterId
@@ -82,7 +83,7 @@ function BaseCast.Blockcast(
 )
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, {
-		CastType = EnumCastTypes.Blockcast,
+		CastType = CAST_TYPE_BLOCKCAST,
 		Size = Size
 	} :: any)
 
@@ -103,7 +104,7 @@ function BaseCast.Spherecast(
 )
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(BaseCast, NextProjectileID, Origin, Direction, Velocity, Behavior, {
-		CastType = EnumCastTypes.Spherecast,
+		CastType = CAST_TYPE_SPHERECAST,
 		Radius = Radius
 	} :: any)
 
