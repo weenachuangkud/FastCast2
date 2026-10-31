@@ -29,10 +29,4 @@ Enums.HighFidelityBehavior = {
 	Always = 3
 }
 
-Enums.CastType = {
-	Raycast = 1,
-	Blockcast = 2,
-	Spherecast = 3
-}
-
 return Enums
