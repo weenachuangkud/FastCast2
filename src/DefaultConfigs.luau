@@ -9,9 +9,10 @@
 -- Requires
 
 local TypeDefinitions = require(script.Parent.TypeDefinitions)
-local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 
 -- Defaults
+
+local HIGH_FIDELITY_BEHAVIOR_DEFAULT = 1
 
 local Defaults = {}
 
@@ -22,8 +23,11 @@ Defaults.VisualizationFolderName = "FastCastVisualizationObjects"
 Defaults.FastCastBehavior = {
 	RaycastParams = nil,
 	Acceleration = Vector3.new(),
+	InitialOffset = CFrame.identity,
 	MaxDistance = 1000,
-	HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default,
+	MaxLifetime = nil,
+	MaxPiercesPerStep = 1,
+	HighFidelityBehavior = HIGH_FIDELITY_BEHAVIOR_DEFAULT,
 	HighFidelitySegmentSize = 0.5,
 
 	CosmeticBulletTemplate = nil,
@@ -54,23 +58,8 @@ Defaults.FastCastBehavior = {
 		Debug_HitLifetime = 1
 	},
 
-	FastCastEventsModuleConfig = {
-		UseLengthChanged = false,
-		UseHit = true,
-		UsePierced = true,
-		UseCastTerminating = true,
-		UseCanPierce = true,
-		UseCastFire = true
-	},
+	CloneTemplate = true,
 
-	FastCastEventsConfig = {
-		UseLengthChanged = false,
-		UseHit = true,
-		UsePierced = true,
-		UseCastTerminating = true,
-		UseCanPierce = true,
-		UseCastFire = true
-	}
 } :: TypeDefinitions.FastCastBehavior
 
 return Defaults
