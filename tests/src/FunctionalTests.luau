@@ -410,7 +410,7 @@ return function()
 				fire(caster, "Raycast", Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), 60, behavior)
 
 				expect.truthy(firedCast, "CastFire did not run")
-				expect.equal(firedCast.Type, FastCastEnums.CastType.Raycast, "wrong cast type")
+				expect.equal(firedCast.Type, FastCast.CastType.Raycast, "wrong cast type")
 				expect.equal(firedCast.CFrame.Position, Vector3.new(0, 0, 0), "cast origin is wrong")
 
 				FastCast.TerminateCast(firedCast)
@@ -936,7 +936,7 @@ return function()
 
 				local cast = caster:RaycastFire(Vector3.zero, Vector3.new(0, 0, -1), 60, behavior)
 				expect.truthy(cast, "RaycastFire did not return a cast")
-				expect.equal(cast.Type, FastCastEnums.CastType.Raycast, "RaycastFire returned the wrong cast")
+				expect.equal(cast.Type, FastCast.CastType.Raycast, "RaycastFire returned the wrong cast")
 
 				FastCast.TerminateCast(cast)
 				caster:Destroy()
