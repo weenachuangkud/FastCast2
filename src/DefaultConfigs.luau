@@ -9,9 +9,10 @@
 -- Requires
 
 local TypeDefinitions = require(script.Parent.TypeDefinitions)
-local FastCastEnums = require(script.Parent:WaitForChild("FastCastEnums"))
 
 -- Defaults
+
+local HIGH_FIDELITY_BEHAVIOR_DEFAULT = 1
 
 local Defaults = {}
 
@@ -26,7 +27,7 @@ Defaults.FastCastBehavior = {
 	MaxDistance = 1000,
 	MaxLifetime = nil,
 	MaxPiercesPerStep = 1,
-	HighFidelityBehavior = FastCastEnums.HighFidelityBehavior.Default,
+	HighFidelityBehavior = HIGH_FIDELITY_BEHAVIOR_DEFAULT,
 	HighFidelitySegmentSize = 0.5,
 
 	CosmeticBulletTemplate = nil,
