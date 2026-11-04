@@ -195,7 +195,6 @@ local function connectCasterEvent(caster, eventName, callback)
 end
 
 local function createCaster()
-	FastCast.Init(Config.MovementMode)
 	local caster = FastCast.new()
 
 	connectCasterEvent(caster, "CastFire", onCastFire)
@@ -717,6 +716,7 @@ end)
 
 --// Initialization
 
+FastCast.Init(Config.MovementMode)
 rebuildCaster()
 
 showHelp()
