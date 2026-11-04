@@ -146,25 +146,6 @@ local function DestroyCasterSignals(self)
 	rawset(self, "CanPierce", nil)
 end
 
-local function RegisterCasterEvents(self)
-	local casterId = rawget(self, "CasterId")
-	local events = rawget(self, "_events")
-
-	if not casterId or not events then
-		return
-	end
-
-	SerialSimulation.RegisterCaster(casterId, {
-		CastFire = events.CastFire,
-		OnStep = events.OnStep,
-		Pierced = events.Pierced,
-		Hit = events.Hit,
-		LengthChanged = events.LengthChanged,
-		CanPierce = rawget(self, "CanPierce"),
-		CastTerminating = events.CastTerminating,
-	})
-end
-
 local function IndexCaster(self, key)
 	local events = rawget(self, "_events")
 	if events then
@@ -221,14 +202,12 @@ local function NewIndexCaster(self, key, value)
 		else
 			warn("[FastCast2] Cannot set event '" .. tostring(key) .. "', expected a function or Signal")
 		end
-		RegisterCasterEvents(self)
 		return
 	end
 
 	if QUERY_EVENTS[key] then
 		if value == nil or type(value) == "function" then
 			rawset(self, key, value)
-			RegisterCasterEvents(self)
 		else
 			warn("[FastCast2] Cannot set CanPierce, expected a function")
 		end
@@ -495,7 +474,7 @@ function FastCastSerial:Destroy()
 		return
 	end
 
-	SerialSimulation.DestroyCaster(self)
+	SerialSimulation.Destroy(self)
 	self.CasterId = nil
 	DestroyCasterSignals(self)
 	setmetatable(self, nil)
@@ -702,13 +681,11 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast.TerminateCast(cast: any)
-	-- A cast reference can outlive its simulation entry after natural termination.
-	-- _TerminateCast clears the table, so reject stale references before queuing.
 	if not cast or not cast.StateInfo or cast._Destroying or cast._TerminationQueued then
 		return
 	end
 
-	SerialSimulation.TerminateCast(cast)
+	SerialSimulation.QueueTerminate(cast)
 end
 
 -- Constructors
@@ -733,7 +710,6 @@ function FastCast.new()
 	}
 
 	setmetatable(fs, FastCastSerial)
-	RegisterCasterEvents(fs)
 	return fs
 end
 
