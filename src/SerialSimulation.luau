@@ -32,6 +32,10 @@ local SerialSimulation = {}
 -- Types
 -- ============================================================================
 
+type RaycastVariant = {
+	CastType: number
+}
+
 type BlockcastVariant = {
 	CastType: number,
 	Size: Vector3
@@ -42,7 +46,7 @@ type SpherecastVariant = {
 	Radius: number
 }
 
-type CastVariants = BlockcastVariant | SpherecastVariant
+type CastVariants = RaycastVariant | BlockcastVariant | SpherecastVariant
 
 type RayVisualizerVariant = {
 	castLength: number
@@ -391,8 +395,13 @@ local function FireQueuedVisualizes()
 		local cast = entry[1]
 		local data = entry[2]
 		local dataTag = entry[3] :: number
-		local settings = cast and cast.StateInfo.VisualizeCastSettings
-		if not settings then continue end
+		local settings = cast and cast.StateInfo and cast.StateInfo.VisualizeCastSettings
+		if not settings then
+			entry[1] = nil
+			entry[2] = nil
+			entry[3] = nil
+			continue
+		end
 
 		if dataTag == 1 then
 			local atCF = data[1] :: CFrame
@@ -405,6 +414,9 @@ local function FireQueuedVisualizes()
 				print("Piercing function returned TRUE to pierce this part.")
 			end
 			DbgVisualizeHit(atCF, wasPierce, settings)
+			entry[1] = nil
+			entry[2] = nil
+			entry[3] = nil
 			continue
 		end
 
@@ -414,7 +426,12 @@ local function FireQueuedVisualizes()
 
 		local castType = cast.CastVariant.CastType
 		local visualizer = Visualizers[castType]
-		if not visualizer then continue end
+		if not visualizer then
+			entry[1] = nil
+			entry[2] = nil
+			entry[3] = nil
+			continue
+		end
 
 		if castType == CAST_TYPE_RAYCAST then
 			reusableVariant.castLength = cast._RayDisplacement or 1
@@ -424,6 +441,9 @@ local function FireQueuedVisualizes()
 			reusableVariant.radius = (cast.CastVariant :: SpherecastVariant).Radius
 		end
 		visualizer(castStartCFrame, settings, reusableVariant)
+		entry[1] = nil
+		entry[2] = nil
+		entry[3] = nil
 	end
 end
 
@@ -515,7 +535,7 @@ end
 -- Simulation helpers
 -- ============================================================================
 
-local function QueueHit(cast: any, result: RaycastResult, velocity: Vector3, sub: boolean, castTerminatingfn: TypeDef.OnCastTerminatingFunction?)
+local function QueueHit(cast: any, result: RaycastResult, velocity: Vector3, sub: boolean)
 	local event = table.remove(queuedEventPool) or {}
 	event.cast = cast
 	event.arg1 = result
@@ -541,7 +561,11 @@ end
 
 local function ShouldPierce(cast: any, result: RaycastResult, velocity: Vector3, canPierce: TypeDef.CanPierceFunction?): boolean
 	if not canPierce or not cast._ActiveArray then return false end
-	return canPierce(cast, result, velocity, cast.RayInfo.CosmeticBulletObject)
+	local didPierce = canPierce(cast, result, velocity, cast.RayInfo.CosmeticBulletObject)
+	if not cast._ActiveArray or cast._Destroying then
+		return false
+	end
+	return didPierce
 end
 
 local function CastSegment(
@@ -594,7 +618,7 @@ end
 -- ============================================================================
 
 local function ResimulateHit(
-	cast: number,
+	cast: any,
 	delta: number,
 	lastDelta: number,
 	origin: Vector3,
@@ -603,7 +627,6 @@ local function ResimulateHit(
 	targetWorldRoot: WorldRoot,
 	castHandler: any,
 	canPierce: TypeDef.CanPierceFunction?,
-	castTerminatingfn: TypeDef.OnCastTerminatingFunction?,
 	fallbackResult: RaycastResult,
 	fallbackVelocity: Vector3
 ): boolean
@@ -674,6 +697,13 @@ local function ResimulateHit(
 			canPierce
 		)
 
+		if not cast._ActiveArray or cast._Destroying then
+			if cast.StateInfo then
+				cast.StateInfo.IsActivelyResimulating = false
+			end
+			return true
+		end
+
 		if cast.StateInfo.VisualizeCasts then
 			QueueVisualizeSegment(
 				cast,
@@ -698,8 +728,7 @@ local function ResimulateHit(
 			cast,
 			subResult,
 			subVelocity,
-			true,
-			castTerminatingfn
+			true
 		)
 
 		return true
@@ -713,8 +742,7 @@ local function ResimulateHit(
 		cast,
 		fallbackResult,
 		fallbackVelocity,
-		false,
-		castTerminatingfn
+		false
 	)
 
 	return true
@@ -725,7 +753,7 @@ end
 -- ============================================================================
 
 local function SimulateCast(
-	cast: number,
+	cast: any,
 	delta: number
 ): boolean
 	if DebugLogging.Casting then
@@ -792,8 +820,7 @@ local function SimulateCast(
 
 	local castEvents = CasterEvents[cast.CasterId]
 	local canPiercefn = castEvents and castEvents.CanPierce
-	local castTerminatingfn = castEvents and castEvents.CastTerminating
-
+	
 	local result, didHit = CastSegment(
 		cast,
 		cast._StepPierceResults,
@@ -804,6 +831,10 @@ local function SimulateCast(
 		handler,
 		canPiercefn
 	)
+
+	if not cast._ActiveArray or cast._Destroying then
+		return true
+	end
 
 	local rayDisplacement = if result
 		then (result.Position - lastPoint).Magnitude
@@ -824,9 +855,7 @@ local function SimulateCast(
 	-- its cosmetic object. Offset is writable at runtime, so update this every
 	-- simulation step rather than only when the cast is registered.
 	
-	if cast then
-		cast.CFrame = cast._SimulationCFrame * cast.Offset
-	end
+	cast.CFrame = cast._SimulationCFrame * cast.Offset
 
 	local event = table.remove(queuedEventPool) or {}
 	event.cast = cast
@@ -851,9 +880,9 @@ local function SimulateCast(
 	if not result then
 		QueueSegmentPierces(cast, cast._StepPierceResults, velocity, false)
 		if cast.StateInfo.DistanceCovered >= (cast.RayInfo.MaxDistance or DEFAULT_MAX_DISTANCE) then
-			local event = table.remove(queuedEventPool) or {}
-		event.cast = cast
-		table.insert(queuedCastTerminating, event)
+				local event = table.remove(queuedEventPool) or {}
+			event.cast = cast
+			table.insert(queuedCastTerminating, event)
 			return true
 		end
 		return false
@@ -880,8 +909,8 @@ local function SimulateCast(
 		if cast.StateInfo.IsActivelyResimulating then
 			QueueSegmentPierces(cast, cast._StepPierceResults, velocity, false)
 			local event = table.remove(queuedEventPool) or {}
-		event.cast = cast
-		table.insert(queuedCastTerminating, event)
+			event.cast = cast
+			table.insert(queuedCastTerminating, event)
 
 			warn(
 				"Cascading cast lag encountered! "
@@ -905,7 +934,6 @@ local function SimulateCast(
 			worldRoot,
 			handler,
 			canPiercefn,
-			castTerminatingfn,
 			result,
 			velocity
 		)
@@ -918,8 +946,7 @@ local function SimulateCast(
 		cast,
 		result,
 		velocity,
-		false,
-		castTerminatingfn
+		false
 	)
 	return true
 end
@@ -929,7 +956,7 @@ end
 -- ============================================================================
 
 local function SimulateAlwaysHighFidelity(
-	cast: number,
+	cast: any,
 	delta: number
 )
 	if cast.StateInfo.IsActivelyResimulating then
@@ -1002,8 +1029,7 @@ local function SimulateAlwaysHighFidelity(
 	local castEvents = CasterEvents[cast.CasterId]
 	local canPiercefn = castEvents and castEvents.CanPierce
 	local canPierceEnabled = canPiercefn ~= nil
-	local castTerminatingfn = castEvents and castEvents.CastTerminating
-
+	
 	local endpoint = (resultOfCast and resultOfCast.Position) or currentPoint
 
 	local distance = (endpoint - lastPoint).Magnitude
@@ -1058,6 +1084,13 @@ local function SimulateAlwaysHighFidelity(
 			substepStopped = true
 			break
 		end
+
+		if not cast._ActiveArray or cast._Destroying then
+			if cast.StateInfo then
+				cast.StateInfo.IsActivelyResimulating = false
+			end
+			return
+		end
 	end
 
 	cast.StateInfo.IsActivelyResimulating = false
@@ -1066,7 +1099,7 @@ local function SimulateAlwaysHighFidelity(
 	-- refined substep reports it, but preserve that hit if rounding leaves
 	-- every refined substep short of the surface.
 	if resultOfCast and not substepStopped and not canPierceEnabled then
-		QueueHit(cast, resultOfCast, currentVelocity, false, castTerminatingfn)
+		QueueHit(cast, resultOfCast, currentVelocity, false)
 	end
 end
 
@@ -1164,8 +1197,6 @@ local function SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Mo
 		end
 	end
 end
-
--- ============================================================================
 
 -- ============================================================================
 -- Main update
@@ -1339,8 +1370,6 @@ local function UpdateCasts(delta: number)
 end
 
 -- ============================================================================
-
--- ============================================================================
 -- Public API
 -- ============================================================================
 
@@ -1453,5 +1482,4 @@ function SerialSimulation.GetEvent(name: string, casterId: number): any
 	return events and events[name]
 end
 
-return SerialSimulation
 return SerialSimulation
