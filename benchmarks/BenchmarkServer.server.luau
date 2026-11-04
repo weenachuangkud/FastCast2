@@ -4,7 +4,7 @@
 	Date: 2026
 
 	Interactive server benchmark.
-	Receives keyboard commands sent by the client benchmark over ByteNet.
+	Receives keyboard commands sent by the client benchmark through a RemoteEvent.
 
 	Commands:
 		p  - Start benchmark
@@ -25,8 +25,6 @@
 
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-
 local BenchmarkInput = ReplicatedStorage:FindFirstChild("FastCast2BenchmarkInput") :: RemoteEvent?
 if not BenchmarkInput then
 	BenchmarkInput = Instance.new("RemoteEvent")
