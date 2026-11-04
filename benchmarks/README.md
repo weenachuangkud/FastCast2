@@ -47,11 +47,11 @@ local Config = {
 
 **Type**: Script (runs in ServerScriptService)
 
-Same benchmark logic as the client, but runs on the server. Controlled via chat messages instead of keyboard input (since UserInputService is client-only).
+Same benchmark logic as the client, but runs on the server. Press N in the client benchmark to switch input to the server, then use the same keyboard controls.
 
-### Chat Commands
+### Controls
 
-Type the letter in chat:
+Switch to Server input mode with N, then use the same keys as the client benchmark:
 
 | Command | Action |
 |---------|--------|
@@ -120,7 +120,7 @@ Throughput: xx.xx projectiles/s
 
 1. Run `rojo serve benchmarks.project.json` from the repository root.
 2. Connect an empty Studio place with the Rojo plugin.
-3. Play in Studio -- press P on the client or type p in chat on the server.
+3. Play in Studio -- press P for the client benchmark. Press N to switch to Server input mode, then press P to run the server benchmark.
 
 The benchmark project mounts FastCast2 in `ReplicatedStorage`, the client benchmark in `ReplicatedFirst`, and the server benchmark in `ServerScriptService`. You can also insert either script manually in those locations if you do not use Rojo.
 
