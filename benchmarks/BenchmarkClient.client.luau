@@ -165,6 +165,7 @@ local function onCastTerminating(cast)
 end
 
 local function createCaster()
+	FastCast.Init(Config.MovementMode)
 	local caster = FastCast.new()
 	caster.CastFire:Connect(onCastFire)
 	caster.CastTerminating:Connect(onCastTerminating)
@@ -194,9 +195,6 @@ local function rebuildCaster()
 
 	Caster = createCaster()
 end
-
--- Initialize the shared serial runtime before creating casters.
-FastCast.Init(Config.MovementMode)
 
 -- Create initial caster.
 Caster = createCaster()
