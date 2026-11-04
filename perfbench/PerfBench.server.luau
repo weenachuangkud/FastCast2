@@ -17,6 +17,7 @@ local FastCastConfig = require(ReplicatedStorage.FastCast2:WaitForChild("Config"
 
 local SENTINEL = "PERFBENCH_RESULT"
 local SAMPLE_SECONDS = 5
+local CLEANUP_TIMEOUT = 5
 local COUNTS = { 6000 }
 local INSTANCED = { true }
 local MOVEMENT = { true, false }
@@ -71,6 +72,8 @@ behavior.Acceleration = Vector3.zero
 behavior.AutoIgnoreContainer = true
 behavior.HighFidelitySegmentSize = 1
 
+FastCast.Init("BulkMoveTo")
+
 local function runCase(projectileCount: number, instanced: boolean, movement: boolean)
 	local castMode = "Serial"
 
@@ -78,9 +81,23 @@ local function runCase(projectileCount: number, instanced: boolean, movement: bo
 	behavior.CosmeticBulletContainer = if instanced then cosmeticContainer else nil
 
 	local caster = FastCast.new()
-	FastCast.Init("BulkMoveTo")
+	local activeCasts = {}
+	local activeCastCount = 0
 
-	caster:SetMovementModeEnabled(movement, "BulkMoveTo")
+	FastCast.SetMovementModeEnabled(movement, "BulkMoveTo")
+
+	caster.CastTerminating:Connect(function(cast)
+		local cosmetic = cast.RayInfo.CosmeticBulletObject
+
+		if cosmetic and cosmetic.Parent then
+			cosmetic:Destroy()
+		end
+
+		if activeCasts[cast.ID] then
+			activeCasts[cast.ID] = nil
+			activeCastCount -= 1
+		end
+	end)
 
 	local random = Random.new(2026)
 	local creationStarted = os.clock()
@@ -98,7 +115,9 @@ local function runCase(projectileCount: number, instanced: boolean, movement: bo
 		)
 		direction = if direction.Magnitude == 0 then Vector3.xAxis else direction.Unit
 
-		caster:RaycastFire(origin, direction, 6, behavior)
+		local cast = caster:RaycastFire(origin, direction, 6, behavior)
+		activeCasts[cast.ID] = cast
+		activeCastCount += 1
 	end
 
 	local creationMs = (os.clock() - creationStarted) * 1000
@@ -112,9 +131,40 @@ local function runCase(projectileCount: number, instanced: boolean, movement: bo
 
 	local average, p50, p95, p99 = summarize()
 
+	local casts = {}
+
+	for _, cast in activeCasts do
+		casts[#casts + 1] = cast
+	end
+
 	local cleanupStarted = os.clock()
-	caster:Destroy()
+
+	for _, cast in casts do
+		FastCast.TerminateCast(cast)
+	end
+
+	local deadline = os.clock() + CLEANUP_TIMEOUT
+
+	while activeCastCount > 0 and os.clock() < deadline do
+		task.wait()
+	end
+
 	local cleanupMs = (os.clock() - cleanupStarted) * 1000
+
+	if activeCastCount > 0 then
+		for _, cast in activeCasts do
+			local cosmetic = cast.RayInfo and cast.RayInfo.CosmeticBulletObject
+
+			if cosmetic and cosmetic.Parent then
+				cosmetic:Destroy()
+			end
+		end
+
+		caster:Destroy()
+		error(("Timed out waiting for %d casts to terminate"):format(activeCastCount))
+	end
+
+	caster:Destroy()
 
 	print(string.format(
 		"%s %s|%s|%d|instanced=%s|movement=%s|create=%.1f|avg=%.2f|p50=%.2f|p95=%.2f|p99=%.2f|cleanup=%.1f",
