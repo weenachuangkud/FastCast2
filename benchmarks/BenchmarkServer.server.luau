@@ -181,6 +181,8 @@ end
 
 --// Cast Cleanup
 
+local destroyCaster
+
 local function cleanupCasts()
 	local casts = {}
 
@@ -211,7 +213,7 @@ local function cleanupCasts()
 	return activeCount, cleanupElapsed
 end
 
-local function destroyCaster()
+destroyCaster = function()
 	if Caster then
 		for _, cast in ActiveCasts do
 			local cosmetic = cast.RayInfo and cast.RayInfo.CosmeticBulletObject
@@ -410,7 +412,7 @@ local function runBenchmark()
 			activeCount
 		)
 
-		-- Give FastCast2 time to finish processing terminated casts.
+		-- Keep a short idle gap between benchmark runs.
 		task.wait(BENCHMARK_COOLDOWN)
 
 		--// IMPORTANT
