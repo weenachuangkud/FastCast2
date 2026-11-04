@@ -1299,10 +1299,12 @@ local function QueueOnStepFor(activeArray: { any }, delta: number)
 	end
 end
 
-local function UpdateCasts(delta: number)
+local function QueueOnStepEvents(delta: number)
 	QueueOnStepFor(activeInstancedCasts, delta)
 	QueueOnStepFor(activeInstancelessCasts, delta)
+end
 
+local function FireQueuedOnStep()
 	local eventsToProcess = queuedOnStep
 	queuedOnStep = dispatchOnStep
 	dispatchOnStep = eventsToProcess
@@ -1322,13 +1324,14 @@ local function UpdateCasts(delta: number)
 		table.insert(eventPool, event)
 	end
 	table.clear(eventsToProcess)
+end
 
+local function SimulateCasts(delta: number)
 	UpdateCastArray(activeInstancedCasts, delta)
 	UpdateCastArray(activeInstancelessCasts, delta)
-	UpdateMotor6Ds()
-	BulkMoveTo()
-	FireQueuedVisualizes()
+end
 
+local function FireQueuedLengthChanged()
 	local lengthEvents = queuedLengthChanged
 	queuedLengthChanged = dispatchLengthChanged
 	dispatchLengthChanged = lengthEvents
@@ -1347,7 +1350,9 @@ local function UpdateCasts(delta: number)
 		table.insert(eventPool, event)
 	end
 	table.clear(lengthEvents)
+end
 
+local function FireQueuedHit()
 	local hitEvents = queuedHit
 	queuedHit = dispatchHit
 	dispatchHit = hitEvents
@@ -1366,7 +1371,9 @@ local function UpdateCasts(delta: number)
 		table.insert(eventPool, event)
 	end
 	table.clear(hitEvents)
+end
 
+local function FireQueuedPierced()
 	local piercedEvents = queuedPierced
 	queuedPierced = dispatchPierced
 	dispatchPierced = piercedEvents
@@ -1385,7 +1392,9 @@ local function UpdateCasts(delta: number)
 		table.insert(eventPool, event)
 	end
 	table.clear(piercedEvents)
+end
 
+local function FireQueuedCastTerminating()
 	local terminatingEvents = queuedCastTerminating
 	queuedCastTerminating = dispatchCastTerminating
 	dispatchCastTerminating = terminatingEvents
@@ -1407,9 +1416,32 @@ local function UpdateCasts(delta: number)
 		table.insert(eventPool, event)
 	end
 	table.clear(terminatingEvents)
+end
 
+local function ResetQueuesAndPools()
 	ResetVisualPools()
 	queuedVisCount = 0
+end
+
+local function UpdateCasts(delta: number)
+	-- 1. Simulation / OnStep
+	QueueOnStepEvents(delta)
+	FireQueuedOnStep()
+	SimulateCasts(delta)
+
+	-- 2. Visual movement
+	UpdateMotor6Ds()
+	BulkMoveTo()
+	FireQueuedVisualizes()
+
+	-- 3. Public events
+	FireQueuedLengthChanged()
+	FireQueuedHit()
+	FireQueuedPierced()
+	FireQueuedCastTerminating()
+
+	-- 4. Reset queues / pools
+	ResetQueuesAndPools()
 end
 
 -- ============================================================================
