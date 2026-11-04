@@ -50,6 +50,7 @@ local Config = {
 
 --// Constants
 local BENCHMARK_COOLDOWN = 2.5
+local CLEANUP_TIMEOUT = 5
 local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 
 --// Modules
@@ -108,6 +109,7 @@ CastBehavior.RaycastParams = CastParams
 
 local Caster
 local ActiveCasts = {}
+local ActiveCastCount = 0
 
 local IsBenchmarking = false
 
@@ -145,7 +147,8 @@ end
 --// Caster
 
 local function onCastFire(cast)
-	ActiveCasts[#ActiveCasts + 1] = cast
+	ActiveCasts[cast.ID] = cast
+	ActiveCastCount += 1
 end
 
 local function onCastTerminating(cast)
@@ -155,28 +158,35 @@ local function onCastTerminating(cast)
 		cosmetic:Destroy()
 	end
 
-	local index = table.find(ActiveCasts, cast)
-
-	if index then
-		table.remove(ActiveCasts, index)
+	if ActiveCasts[cast.ID] then
+		ActiveCasts[cast.ID] = nil
+		ActiveCastCount -= 1
 	end
 end
 
 local function createCaster()
 	local caster = FastCast.new()
-	FastCast.Init(Config.MovementMode)
-	caster.CastFire = onCastFire
-	caster.CastTerminating = onCastTerminating
+	caster.CastFire:Connect(onCastFire)
+	caster.CastTerminating:Connect(onCastTerminating)
 	return caster
 end
 
 local function destroyCaster()
 	if Caster then
+		for _, cast in ActiveCasts do
+			local cosmetic = cast.RayInfo and cast.RayInfo.CosmeticBulletObject
+
+			if cosmetic and cosmetic.Parent then
+				cosmetic:Destroy()
+			end
+		end
+
 		Caster:Destroy()
 		Caster = nil
 	end
 
 	table.clear(ActiveCasts)
+	ActiveCastCount = 0
 end
 
 local function rebuildCaster()
@@ -184,6 +194,9 @@ local function rebuildCaster()
 
 	Caster = createCaster()
 end
+
+-- Initialize the shared serial runtime before creating casters.
+FastCast.Init(Config.MovementMode)
 
 -- Create initial caster.
 Caster = createCaster()
@@ -304,15 +317,33 @@ end
 --// Cleanup
 
 local function cleanupCasts()
-	for i = #ActiveCasts, 1, -1 do
-		local cast = ActiveCasts[i]
+	local casts = {}
 
-		if cast then
-			FastCast.TerminateCast(cast)
-		end
-
-		ActiveCasts[i] = nil
+	for _, cast in ActiveCasts do
+		casts[#casts + 1] = cast
 	end
+
+	local activeCount = #casts
+	local cleanupStarted = os.clock()
+
+	for _, cast in casts do
+		FastCast.TerminateCast(cast)
+	end
+
+	local deadline = os.clock() + CLEANUP_TIMEOUT
+
+	while ActiveCastCount > 0 and os.clock() < deadline do
+		task.wait()
+	end
+
+	local cleanupElapsed = os.clock() - cleanupStarted
+
+	if ActiveCastCount > 0 then
+		warn(("Timed out waiting for %d casts to terminate. Forcing caster cleanup."):format(ActiveCastCount))
+		destroyCaster()
+	end
+
+	return activeCount, cleanupElapsed
 end
 
 
@@ -362,22 +393,14 @@ local function benchmark()
 		-- Cleanup
 		printSeparator("CLEANUP")
 
-		local activeCount = #ActiveCasts
-		local cleanupStarted = os.clock()
-
-		cleanupCasts()
-
-		local cleanupElapsed = os.clock() - cleanupStarted
+		local activeCount, cleanupElapsed = cleanupCasts()
 
 		printOperationStats(
 			cleanupElapsed,
 			activeCount
 		)
 
-		-- Clear our references
-		table.clear(ActiveCasts)
-
-		-- Wait for FastCast to settle
+		-- Allow the frame and output to settle before the next run.
 		task.wait(BENCHMARK_COOLDOWN)
 
 		-- IMPORTANT:
@@ -400,11 +423,9 @@ local function benchmark()
 		warn("Benchmark error:")
 		warn(err)
 
-		-- Also recover from an error by creating a fresh caster
-		task.defer(function()
-			rebuildCaster()
-			print("Caster recovered after benchmark error.")
-		end)
+		-- Destroy any remaining cosmetic instances before discarding the caster.
+		rebuildCaster()
+		print("Caster recovered after benchmark error.")
 	end
 
 	print("IsBenchmarking =", IsBenchmarking)
@@ -445,12 +466,7 @@ local function toggleMovementMode()
 		Config.MovementMode = "BulkMoveTo"
 	end
 
-	if Caster then
-		Caster:SetMovementModeEnabled(
-			true,
-			Config.MovementMode
-		)
-	end
+	FastCast.SetMovementModeEnabled(true, Config.MovementMode)
 
 	print(("MovementMode: %s"):format(Config.MovementMode))
 end
@@ -539,6 +555,7 @@ local function showControls()
 	print("<  - Decrease HighFidelitySegmentSize")
 	print("N  - Toggle Client / Server input mode")
 	print("R  - Cycle Raycast / Blockcast / Spherecast")
+	print("N  - Toggle Client / Server input mode")
 	print("I  - Show benchmark info")
 	print("H  - Show controls")
 end
