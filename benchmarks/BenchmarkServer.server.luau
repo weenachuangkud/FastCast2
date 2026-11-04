@@ -27,6 +27,13 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
+local BenchmarkInput = ReplicatedStorage:FindFirstChild("FastCast2BenchmarkInput") :: RemoteEvent?
+if not BenchmarkInput then
+	BenchmarkInput = Instance.new("RemoteEvent")
+	BenchmarkInput.Name = "FastCast2BenchmarkInput"
+	BenchmarkInput.Parent = ReplicatedStorage
+end
+
 --// Configuration
 
 local Config = {
@@ -59,9 +66,6 @@ local CLEANUP_TIMEOUT = 5
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
-local BenchmarkPackets = require(
-	ReplicatedStorage:WaitForChild("BenchmarkPackets")
-)
 
 --// Projectile Objects
 
@@ -480,7 +484,14 @@ local function toggleMovementMode()
 		Config.MovementMode = "BulkMoveTo"
 	end
 
-	FastCast.SetMovementModeEnabled(true, Config.MovementMode)
+	local setMovementModeEnabled = FastCast.SetMovementModeEnabled
+
+	if type(setMovementModeEnabled) ~= "function" then
+		warn("[FastCast2 Benchmark] This FastCast2 module does not support runtime movement-mode switching. Set Config.MovementMode before starting the benchmark.")
+		return
+	end
+
+	setMovementModeEnabled(true, Config.MovementMode)
 
 	print(("MovementMode: %s"):format(
 		Config.MovementMode
@@ -672,9 +683,9 @@ local function runCommand(command)
 	end
 end
 
---// ByteNet (client key input)
+--// Client key input
 
-BenchmarkPackets.Input.listen(function(keyName)
+BenchmarkInput.OnServerEvent:Connect(function(_player, keyName)
 	if typeof(keyName) ~= "string" then
 		return
 	end
