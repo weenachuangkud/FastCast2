@@ -1065,7 +1065,9 @@ local function SimulateAlwaysHighFidelity(
 		end
 
 		if not cast._ActiveArray then
-			cast.StateInfo.IsActivelyResimulating = false
+			if cast.StateInfo then
+				cast.StateInfo.IsActivelyResimulating = false
+			end
 			return
 		end
 
@@ -1080,16 +1082,18 @@ local function SimulateAlwaysHighFidelity(
 
 		-- Stop advancing the cast in this frame as soon as a substep hits
 		-- something or reaches MaxDistance.
-		if SimulateCast(cast, timeIncrement) then
-			substepStopped = true
-			break
-		end
+		local stopped = SimulateCast(cast, timeIncrement)
 
 		if not cast._ActiveArray or cast._Destroying then
 			if cast.StateInfo then
 				cast.StateInfo.IsActivelyResimulating = false
 			end
 			return
+		end
+
+		if stopped then
+			substepStopped = true
+			break
 		end
 	end
 
@@ -1261,7 +1265,10 @@ local function UpdateCasts(delta: number)
 						else
 							SimulateCast(cast, delta)
 						end
-						cast.CFrame = GetCosmeticCFrame(cast)
+
+						if cast._ActiveArray then
+							cast.CFrame = GetCosmeticCFrame(cast)
+						end
 					end
 				end
 			end
