@@ -1572,10 +1572,7 @@ end
 -- Main update
 -- ============================================================================
 
-local function UpdateCasts(delta: number)
-	-- Queue OnStep for active casts, then dispatch it before simulation movement.
-	-- This lets listeners modify trajectory for the current step while keeping
-	-- all callbacks inside the queued-event system.
+local function QueueOnStepEvents(delta: number)
 	for _, id in casts_ID do
 		local cast = ActivesRef[id]
 		local maxLifetime = cast and cast.StateInfo.MaxLifetime
@@ -1587,9 +1584,9 @@ local function UpdateCasts(delta: number)
 			QueueEvent(id, EVT_ON_STEP, delta)
 		end
 	end
+end
 
-	FireQueuedEvents(EVT_ON_STEP)
-
+local function SimulateCasts(delta: number)
 	for _, id in casts_ID do
 		local cast = ActivesRef[id]
 
@@ -1625,7 +1622,7 @@ local function UpdateCasts(delta: number)
 		end
 
 		-- Preserve the position at the start of this simulation update before
-		-- high-fidelity substeps run. OnStep dispatches after movement.
+		-- high-fidelity substeps run. OnStep dispatches before movement.
 		if cast then
 			local trajectory = casts_Trajectory[id]
 			cast.PreviousPosition = GetPositionAtTime(
@@ -1661,22 +1658,52 @@ local function UpdateCasts(delta: number)
 			cast.CFrame = GetCosmeticCFrame(id)
 		end
 	end
+end
 
-	-- =========================================================================
-	-- Main-thread-only work.
-	-- =========================================================================
+local function FireQueuedOnStep()
+	FireQueuedEvents(EVT_ON_STEP)
+end
 
-	UpdateMotor6Ds()
-	BulkMoveTo()
-
-	FireQueuedVisualizes()
+local function FireQueuedLengthChanged()
 	FireQueuedEvents(EVT_LENGTH_CHANGED)
-	FireQueuedEvents(EVT_HIT)
-	FireQueuedEvents(EVT_PIERCED)
-	FireQueuedEvents(EVT_CAST_TERMINATING)
+end
 
+local function FireQueuedHit()
+	FireQueuedEvents(EVT_HIT)
+end
+
+local function FireQueuedPierced()
+	FireQueuedEvents(EVT_PIERCED)
+end
+
+local function FireQueuedCastTerminating()
+	FireQueuedEvents(EVT_CAST_TERMINATING)
+end
+
+local function ResetQueuesAndPools()
 	ResetVisualPools()
 	queuedVisCount = 0
+end
+
+local function UpdateCasts(delta: number)
+	-- 1. Simulation / OnStep
+	QueueOnStepEvents(delta)
+	FireQueuedOnStep()
+	SimulateCasts(delta)
+
+	-- 2. Visual movement
+	UpdateMotor6Ds()
+	BulkMoveTo()
+	FireQueuedVisualizes()
+
+	-- 3. Public events
+	FireQueuedLengthChanged()
+	FireQueuedHit()
+	FireQueuedPierced()
+	FireQueuedCastTerminating()
+
+	-- 4. Reset queues / pools
+	ResetQueuesAndPools()
 end
 
 -- ============================================================================
