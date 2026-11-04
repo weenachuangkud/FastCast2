@@ -48,7 +48,7 @@ local Config = {
 
 **Type**: Script (runs in ServerScriptService)
 
-Same benchmark logic as the client, but runs on the server. It receives key commands from the client benchmark through ByteNet; it does not read chat messages.
+Same benchmark logic as the client, but runs on the server. It receives key commands from the client benchmark through a RemoteEvent; it does not read chat messages.
 
 To control the server benchmark, press N in the client benchmark to switch the input mode to **Server**, then use the same keys listed above.
 
@@ -120,16 +120,9 @@ Throughput: xx.xx projectiles/s
 
 ## Quick Start
 
-1. Install the benchmark's ByteNet dependency from the repository root:
-   ```sh
-   cd benchmarks
-   wally install
-   cd ..
-   ```
-   This creates `benchmarks/Packages`, which is mounted by `benchmarks.project.json`.
-2. Run `rojo serve benchmarks.project.json` from the repository root.
-3. Connect an empty Studio place with the Rojo plugin.
-4. Play in Studio -- press P for the client benchmark. Press N to switch to Server input mode, then press P to run the server benchmark.
+1. Run `rojo serve benchmarks.project.json` from the repository root.
+2. Connect an empty Studio place with the Rojo plugin.
+3. Play in Studio -- press P for the client benchmark. Press N to switch to Server input mode, then press P to run the server benchmark.
 
 The benchmark project mounts FastCast2 in `ReplicatedStorage`, the client benchmark in `ReplicatedFirst`, and the server benchmark in `ServerScriptService`. You can also insert either script manually in those locations if you do not use Rojo.
 
