@@ -1,0 +1,16 @@
+{
+	"name": "FastCast2Tests",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"FastCast2": {
+				"$path": "src"
+			}
+		},
+		"ServerScriptService": {
+			"FastCast2Tests": {
+				"$path": "tests/src"
+			}
+		}
+	}
+}

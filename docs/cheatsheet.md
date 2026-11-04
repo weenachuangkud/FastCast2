@@ -4,11 +4,23 @@ sidebar_position: 2
 
 # FastCast2 CheatSheet
 
+## Runtime Lifecycle
+
+```lua
+FastCast.Init() -- Initialize once, or resume after Stop()
+FastCast.Stop() -- Stop simulation updates; active casts are retained
+FastCast.Init() -- Resume the existing runtime
+```
+
+`Init()` is safe to call repeatedly. `Stop()` does not reset the singleton or destroy active casts. Changing `Config.SimulationMode` while stopped takes effect on the next `Init()`. Change movement mode with `FastCast.SetMovementModeEnabled(enabled, mode)`.
+
+---
+
 ## Quick Example
 
 ```lua
 local caster = FastCast2.new()
-caster:Init("BulkMoveTo", false)
+caster:Init("BulkMoveTo")
 
 caster.Hit = function(cast, result, velocity, bullet)
 	print("Hit:", result.Instance)
@@ -25,11 +37,7 @@ caster:RaycastFire(origin, direction, 500, behavior)
 local Caster = FastCast2.new()  -- Construct a new Serial Caster
 
 Caster:Init(
-    movementMode: "BulkMoveTo" | "Motor6D",  -- Movement method for cosmetic bullets.
-    useObjectCache: boolean,                  -- Enable ObjectCache for this Caster.
-    Template: BasePart | Model?,              -- Template for ObjectCache (if enabled).
-    CacheSize: number?,                       -- Number of objects to pre-allocate.
-    CacheHolder: Instance?                    -- Parent for cached objects.
+    movementMode: "BulkMoveTo" | "Motor6D"  -- Movement method.
 )
 -- ⚠ Must be called before any Fire methods — nothing happens without Init!
 
@@ -58,80 +66,6 @@ Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
 --// Configuration
 
 Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
-Caster:SetObjectCacheEnabled(enabled: boolean, Template?, CacheSize?, CacheHolder?) → ()
-
-
---// Lifecycle
-
-Caster:Destroy() → ()
-```
-
----
-
-## Caster — Parallel Mode
-
-```lua
---// Construct & Init
-
-local Caster = FastCast2.newParallel()
-
-Caster:Init(
-    numWorkers: number,                 -- Number of Actor VMs. Must be > 1.
-    newParent: Folder,                  -- Parent for the FastCastVMs Folder.
-    newName: string,                    -- Name for the FastCastVMs Folder.
-    ContainerParent: Folder,            -- Parent for worker VM Containers.
-    VMContainerName: string,            -- Name for VM Containers.
-    VMname: string,                     -- Name given to each worker VM.
-    movementMode: "BulkMoveTo" | "Motor6D",  -- Movement method.
-    FastCastEventsModule: ModuleScript?,-- ModuleScript returning a FastCastEvents table.
-    useObjectCache: boolean,            -- Enable ObjectCache for this Caster.
-    Template: BasePart | Model?,        -- Template for ObjectCache (if enabled).
-    CacheSize: number?,                 -- Number of objects to pre-allocate.
-    CacheHolder: Instance?              -- Parent for cached objects.
-)
--- ⚠ Must be called before any Fire methods — nothing happens without Init!
-
-
---// Fire Methods (same as Serial)
-
-Caster:RaycastFire(origin, direction, velocity, BehaviorData)
-Caster:BlockcastFire(origin, Size, direction, velocity, BehaviorData)
-Caster:SpherecastFire(origin, Radius, direction, velocity, BehaviorData)
-
--- Example:
--- caster:RaycastFire(Vector3.new(0,5,0), Vector3.new(0,0,-1), 500, behavior)
--- caster:BlockcastFire(Vector3.new(0,5,0), Vector3.new(2,2,2), Vector3.new(0,0,-1), 500, behavior)
--- caster:SpherecastFire(Vector3.new(0,5,0), 3, Vector3.new(0,0,-1), 500, behavior)
-
-
---// Configuration
-
-Caster:SetFastCastEventsModule(moduleScript: ModuleScript) → ()
-Caster:SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | "Motor6D") → ()
-Caster:SetObjectCacheEnabled(enabled, Template?, CacheSize?, CacheHolder?) → ()
-
-
---// Cast Manipulation  (use FastCast static methods)
-
-FastCast:GetPositionCast(cast) → Vector3
-FastCast:GetVelocityCast(cast) → Vector3
-FastCast:GetAccelerationCast(cast) → Vector3
-
-FastCast:SetVelocityCast(cast, velocity) → ()
-FastCast:SetAccelerationCast(cast, acceleration) → ()
-FastCast:SetPositionCast(cast, position) → ()
-
-FastCast:AddPositionCast(cast, position) → ()
-FastCast:AddVelocityCast(cast, velocity) → ()
-FastCast:AddAccelerationCast(cast, acceleration) → ()
-
--- ⚠ After any Set/Add, sync changes to push state to the worker VM:
-Caster:SyncChangesToCast(cast) → ()
-
-FastCast:TerminateCast(cast) → ()
--- TerminateCast fires CastTerminating, returns cosmetic to cache, and unregisters the cast.
--- Call from Hit/Pierced callback to stop a cast early:
--- caster.Hit = function(cast) FastCast:TerminateCast(cast) end
 
 
 --// Lifecycle
@@ -171,23 +105,6 @@ behavior.VisualizeCastSettings = {
 
 behavior.UserData = {}  -- Arbitrary data accessible on the cast
 
-behavior.FastCastEventsConfig = {
-    UseLengthChanged = false,
-    UseHit = true,
-    UsePierced = true,
-    UseCastTerminating = true,
-    UseCanPierce = true,
-    UseCastFire = true
-}
-
-behavior.FastCastEventsModuleConfig = {
-    UseLengthChanged = false,
-    UseHit = true,
-    UsePierced = true,
-    UseCastTerminating = true,
-    UseCanPierce = true,
-    UseCastFire = true
-}
 ```
 
 ---
@@ -208,7 +125,6 @@ cast.StateInfo.HighFidelityBehavior: number
 cast.StateInfo.HighFidelitySegmentSize: number
 cast.StateInfo.IsActivelyResimulating: boolean
 cast.StateInfo.CancelHighResCast: boolean
-cast.StateInfo.FastCastEventsConfig: FastCastEventsConfig
 cast.StateInfo.FastCastEventsModuleConfig: FastCastEventsModuleConfig  -- Parallel only
 cast.StateInfo.VisualizeCasts: boolean
 cast.StateInfo.VisualizeCastSettings: VisualizeCastSettings

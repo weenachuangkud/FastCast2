@@ -1,0 +1,21 @@
+{
+	"name": "FastCast2Benchmarks",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"FastCast2": {
+				"$path": "src"
+			}
+		},
+		"ReplicatedFirst": {
+			"BenchmarkClient": {
+				"$path": "benchmarks/BenchmarkClient.client.luau"
+			}
+		},
+		"ServerScriptService": {
+			"BenchmarkServer": {
+				"$path": "benchmarks/BenchmarkServer.server.luau"
+			}
+		}
+	}
+}

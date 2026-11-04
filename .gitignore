@@ -6,6 +6,7 @@
 
 # Rojo stuff
 sourcemap.json
+aftman.toml
 
 # Roblox Studio lock files
 /*.rbxlx.lock
@@ -14,6 +15,7 @@ sourcemap.json
 # Moonwave related stuff
 /node_modules
 /package-lock.json
+
 
 # FastCast2 related stuff
 /src/*.legacy.luau
