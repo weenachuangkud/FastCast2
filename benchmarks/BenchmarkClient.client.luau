@@ -455,20 +455,16 @@ local function toggleInstancing()
 end
 
 local function toggleMovementMode()
-	if Config.MovementMode == "BulkMoveTo" then
-		Config.MovementMode = "Motor6D"
-	else
-		Config.MovementMode = "BulkMoveTo"
-	end
-
+	local nextMode = if Config.MovementMode == "BulkMoveTo" then "Motor6D" else "BulkMoveTo"
 	local setMovementModeEnabled = FastCast.SetMovementModeEnabled
 
 	if type(setMovementModeEnabled) ~= "function" then
-		warn("[FastCast2 Benchmark] This FastCast2 module does not support runtime movement-mode switching. Set Config.MovementMode before starting the benchmark.")
+		warn("[FastCast2 Benchmark] This FastCast2 module does not expose FastCast.SetMovementModeEnabled. Change Config.MovementMode before starting the benchmark.")
 		return
 	end
 
-	setMovementModeEnabled(true, Config.MovementMode)
+	setMovementModeEnabled(true, nextMode)
+	Config.MovementMode = nextMode
 
 	print(("MovementMode: %s"):format(Config.MovementMode))
 end
