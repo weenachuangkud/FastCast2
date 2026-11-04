@@ -25,12 +25,17 @@
 
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local BenchmarkInput = ReplicatedStorage:FindFirstChild("FastCast2BenchmarkInput") :: RemoteEvent?
-if not BenchmarkInput then
-	BenchmarkInput = Instance.new("RemoteEvent")
-	BenchmarkInput.Name = "FastCast2BenchmarkInput"
-	BenchmarkInput.Parent = ReplicatedStorage
+local BenchmarkInputInstance = ReplicatedStorage:FindFirstChild("FastCast2BenchmarkInput")
+
+if BenchmarkInputInstance then
+	assert(BenchmarkInputInstance:IsA("RemoteEvent"), "FastCast2BenchmarkInput must be a RemoteEvent")
+else
+	BenchmarkInputInstance = Instance.new("RemoteEvent")
+	BenchmarkInputInstance.Name = "FastCast2BenchmarkInput"
+	BenchmarkInputInstance.Parent = ReplicatedStorage
 end
+
+local BenchmarkInput = BenchmarkInputInstance :: RemoteEvent
 
 --// Configuration
 
@@ -64,6 +69,12 @@ local CLEANUP_TIMEOUT = 5
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
+
+assert(type(FastCast.Init) == "function", "FastCast2 is missing FastCast.Init")
+assert(type(FastCast.new) == "function", "FastCast2 is missing FastCast.new")
+assert(type(FastCast.newBehavior) == "function", "FastCast2 is missing FastCast.newBehavior")
+assert(type(FastCast.TerminateCast) == "function", "FastCast2 is missing FastCast.TerminateCast")
+assert(type(FastCast.HighFidelityBehavior) == "table", "FastCast2 is missing HighFidelityBehavior")
 
 --// Projectile Objects
 
@@ -172,11 +183,24 @@ end
 
 --// Caster Creation
 
+local function connectCasterEvent(caster, eventName, callback)
+	local signal = caster[eventName]
+	local connect = signal and signal.Connect
+
+	if type(connect) == "function" then
+		connect(signal, callback)
+	else
+		caster[eventName] = callback
+	end
+end
+
 local function createCaster()
 	FastCast.Init(Config.MovementMode)
 	local caster = FastCast.new()
-	caster.CastFire:Connect(onCastFire)
-	caster.CastTerminating:Connect(onCastTerminating)
+
+	connectCasterEvent(caster, "CastFire", onCastFire)
+	connectCasterEvent(caster, "CastTerminating", onCastTerminating)
+
 	return caster
 end
 
