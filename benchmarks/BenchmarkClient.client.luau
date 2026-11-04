@@ -183,7 +183,6 @@ local function connectCasterEvent(caster, eventName, callback)
 end
 
 local function createCaster()
-	FastCast.Init(Config.MovementMode)
 	local caster = FastCast.new()
 
 	connectCasterEvent(caster, "CastFire", onCastFire)
@@ -216,7 +215,8 @@ local function rebuildCaster()
 	Caster = createCaster()
 end
 
--- Create initial caster.
+-- Initialize the shared runtime once, then create the benchmark caster.
+FastCast.Init(Config.MovementMode)
 Caster = createCaster()
 
 --// Benchmark Information
