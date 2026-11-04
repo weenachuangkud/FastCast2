@@ -4,7 +4,7 @@
 	Date: 2026
 
 	Interactive server benchmark.
-	Type single letters in chat to control the benchmark.
+	Receives keyboard commands sent by the client benchmark over ByteNet.
 
 	Commands:
 		p  - Start benchmark
@@ -52,6 +52,7 @@ local Config = {
 
 --// Constants
 local BENCHMARK_COOLDOWN = 2.5
+local CLEANUP_TIMEOUT = 5
 
 --// Modules
 
@@ -110,6 +111,7 @@ CastBehavior.VisualizeCasts = Config.VisualizeCasts
 
 local Caster
 local ActiveCasts = {}
+local ActiveCastCount = 0
 
 local IsBenchmarking = false
 
@@ -149,7 +151,8 @@ end
 --// Cast Tracking
 
 local function onCastFire(cast)
-	ActiveCasts[#ActiveCasts + 1] = cast
+	ActiveCasts[cast.ID] = cast
+	ActiveCastCount += 1
 end
 
 local function onCastTerminating(cast)
@@ -159,50 +162,71 @@ local function onCastTerminating(cast)
 		cosmetic:Destroy()
 	end
 
-	local index = table.find(ActiveCasts, cast)
-
-	if index then
-		table.remove(ActiveCasts, index)
+	if ActiveCasts[cast.ID] then
+		ActiveCasts[cast.ID] = nil
+		ActiveCastCount -= 1
 	end
 end
 
 --// Caster Creation
 
+FastCast.Init(Config.MovementMode)
+
 local function createCaster()
 	local caster = FastCast.new()
-	FastCast.Init(Config.MovementMode)
-	caster.CastFire = onCastFire
-	caster.CastTerminating = onCastTerminating
+	caster.CastFire:Connect(onCastFire)
+	caster.CastTerminating:Connect(onCastTerminating)
 	return caster
 end
 
 --// Cast Cleanup
 
-local function terminateActiveCasts()
-	for i = #ActiveCasts, 1, -1 do
-		local cast = ActiveCasts[i]
+local function cleanupCasts()
+	local casts = {}
 
-		if cast then
-			FastCast.TerminateCast(cast)
-		end
-
-		ActiveCasts[i] = nil
+	for _, cast in ActiveCasts do
+		casts[#casts + 1] = cast
 	end
 
-	table.clear(ActiveCasts)
+	local activeCount = #casts
+	local cleanupStarted = os.clock()
+
+	for _, cast in casts do
+		FastCast.TerminateCast(cast)
+	end
+
+	local deadline = os.clock() + CLEANUP_TIMEOUT
+
+	while ActiveCastCount > 0 and os.clock() < deadline do
+		task.wait()
+	end
+
+	local cleanupElapsed = os.clock() - cleanupStarted
+
+	if ActiveCastCount > 0 then
+		warn(("Timed out waiting for %d casts to terminate. Forcing caster cleanup."):format(ActiveCastCount))
+		destroyCaster()
+	end
+
+	return activeCount, cleanupElapsed
 end
 
 local function destroyCaster()
-	if not Caster then
-		return
+	if Caster then
+		for _, cast in ActiveCasts do
+			local cosmetic = cast.RayInfo and cast.RayInfo.CosmeticBulletObject
+
+			if cosmetic and cosmetic.Parent then
+				cosmetic:Destroy()
+			end
+		end
+
+		Caster:Destroy()
+		Caster = nil
 	end
 
-	terminateActiveCasts()
-
-	Caster:Destroy()
-	Caster = nil
-
 	table.clear(ActiveCasts)
+	ActiveCastCount = 0
 end
 
 local function rebuildCaster()
@@ -379,12 +403,7 @@ local function runBenchmark()
 		--// Cleanup
 		printSection("CLEANUP")
 
-		local activeCount = #ActiveCasts
-		local cleanupStarted = os.clock()
-
-		terminateActiveCasts()
-
-		local cleanupElapsed = os.clock() - cleanupStarted
+		local activeCount, cleanupElapsed = cleanupCasts()
 
 		printOperationStats(
 			cleanupElapsed,
@@ -463,12 +482,7 @@ local function toggleMovementMode()
 		Config.MovementMode = "BulkMoveTo"
 	end
 
-	if Caster then
-		Caster:SetMovementModeEnabled(
-			true,
-			Config.MovementMode
-		)
-	end
+	FastCast.SetMovementModeEnabled(true, Config.MovementMode)
 
 	print(("MovementMode: %s"):format(
 		Config.MovementMode
@@ -536,7 +550,7 @@ end
 local function showHelp()
 	printSection("FastCast2 Server Benchmark Keys")
 
-	print("Type these commands in chat:")
+	print("Use the client benchmark and switch input mode to Server with N:")
 
 	print("p - Start benchmark")
 	print("l - Increase projectile amount by 500")
