@@ -58,7 +58,16 @@ local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
-local BenchmarkInput = ReplicatedStorage:WaitForChild("FastCast2BenchmarkInput") :: RemoteEvent
+
+assert(type(FastCast.Init) == "function", "FastCast2 is missing FastCast.Init")
+assert(type(FastCast.new) == "function", "FastCast2 is missing FastCast.new")
+assert(type(FastCast.newBehavior) == "function", "FastCast2 is missing FastCast.newBehavior")
+assert(type(FastCast.TerminateCast) == "function", "FastCast2 is missing FastCast.TerminateCast")
+assert(type(FastCast.HighFidelityBehavior) == "table", "FastCast2 is missing HighFidelityBehavior")
+
+local BenchmarkInputInstance = ReplicatedStorage:WaitForChild("FastCast2BenchmarkInput")
+assert(BenchmarkInputInstance:IsA("RemoteEvent"), "FastCast2BenchmarkInput must be a RemoteEvent")
+local BenchmarkInput = BenchmarkInputInstance :: RemoteEvent
 
 --// Objects
 
@@ -162,11 +171,24 @@ local function onCastTerminating(cast)
 	end
 end
 
+local function connectCasterEvent(caster, eventName, callback)
+	local signal = caster[eventName]
+	local connect = signal and signal.Connect
+
+	if type(connect) == "function" then
+		connect(signal, callback)
+	else
+		caster[eventName] = callback
+	end
+end
+
 local function createCaster()
 	FastCast.Init(Config.MovementMode)
 	local caster = FastCast.new()
-	caster.CastFire:Connect(onCastFire)
-	caster.CastTerminating:Connect(onCastTerminating)
+
+	connectCasterEvent(caster, "CastFire", onCastFire)
+	connectCasterEvent(caster, "CastTerminating", onCastTerminating)
+
 	return caster
 end
 
