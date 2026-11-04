@@ -1410,6 +1410,7 @@ end
 function SerialSimulation.Raycast(caster: any, origin: Vector3, direction: Vector3, velocity: Vector3 | number, behavior: TypeDef.FastCastBehavior)
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(SerialSimulation, NextProjectileID, origin, direction, velocity, behavior, { CastType = CAST_TYPE_RAYCAST } :: any)
+	cast.CasterId = caster.CasterId
 	cast._Caster = caster
 	cast._CasterEvents = caster._events
 	RegisterCast(cast)
@@ -1420,6 +1421,7 @@ end
 function SerialSimulation.Blockcast(caster: any, origin: Vector3, size: Vector3, direction: Vector3, velocity: Vector3 | number, behavior: TypeDef.FastCastBehavior)
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(SerialSimulation, NextProjectileID, origin, direction, velocity, behavior, { CastType = CAST_TYPE_BLOCKCAST, Size = size } :: any)
+	cast.CasterId = caster.CasterId
 	cast._Caster = caster
 	cast._CasterEvents = caster._events
 	RegisterCast(cast)
@@ -1430,6 +1432,7 @@ end
 function SerialSimulation.Spherecast(caster: any, origin: Vector3, radius: number, direction: Vector3, velocity: Vector3 | number, behavior: TypeDef.FastCastBehavior)
 	NextProjectileID += 1
 	local cast = ActiveCast.createCastData(SerialSimulation, NextProjectileID, origin, direction, velocity, behavior, { CastType = CAST_TYPE_SPHERECAST, Radius = radius } :: any)
+	cast.CasterId = caster.CasterId
 	cast._Caster = caster
 	cast._CasterEvents = caster._events
 	RegisterCast(cast)
