@@ -58,9 +58,7 @@ local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
-local BenchmarkPackets = require(
-	ReplicatedStorage:WaitForChild("BenchmarkPackets")
-)
+local BenchmarkInput = ReplicatedStorage:WaitForChild("FastCast2BenchmarkInput") :: RemoteEvent
 
 --// Objects
 
@@ -463,7 +461,14 @@ local function toggleMovementMode()
 		Config.MovementMode = "BulkMoveTo"
 	end
 
-	FastCast.SetMovementModeEnabled(true, Config.MovementMode)
+	local setMovementModeEnabled = FastCast.SetMovementModeEnabled
+
+	if type(setMovementModeEnabled) ~= "function" then
+		warn("[FastCast2 Benchmark] This FastCast2 module does not support runtime movement-mode switching. Set Config.MovementMode before starting the benchmark.")
+		return
+	end
+
+	setMovementModeEnabled(true, Config.MovementMode)
 
 	print(("MovementMode: %s"):format(Config.MovementMode))
 end
@@ -633,7 +638,7 @@ local Keybinds = {
 --// Input
 
 local function sendInputToServer(keyCode)
-	BenchmarkPackets.Input.send(keyCode.Name)
+	BenchmarkInput:FireServer(keyCode.Name)
 end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
