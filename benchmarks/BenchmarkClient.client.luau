@@ -57,9 +57,9 @@ local INPUT_MODE_TOGGLE_KEY = Enum.KeyCode.N
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
-local BenchmarkPackets = require(
-	ReplicatedStorage:WaitForChild("BenchmarkPackets")
-)
+local BenchmarkInputInstance = ReplicatedStorage:WaitForChild("FastCast2BenchmarkInput")
+assert(BenchmarkInputInstance:IsA("RemoteEvent"), "FastCast2BenchmarkInput must be a RemoteEvent")
+local BenchmarkInput = BenchmarkInputInstance :: RemoteEvent
 
 --// Objects
 
@@ -164,7 +164,6 @@ end
 
 local function createCaster()
 	local caster = FastCast.new()
-	FastCast.Init(Config.MovementMode)
 	caster.CastFire = onCastFire
 	caster.CastTerminating = onCastTerminating
 	return caster
@@ -185,7 +184,8 @@ local function rebuildCaster()
 	Caster = createCaster()
 end
 
--- Create initial caster.
+-- Initialize the shared runtime once, then create the benchmark caster.
+FastCast.Init(Config.MovementMode)
 Caster = createCaster()
 
 --// Benchmark Information
@@ -445,12 +445,7 @@ local function toggleMovementMode()
 		Config.MovementMode = "BulkMoveTo"
 	end
 
-	if Caster then
-		Caster:SetMovementModeEnabled(
-			true,
-			Config.MovementMode
-		)
-	end
+	FastCast.SetMovementModeEnabled(true, Config.MovementMode)
 
 	print(("MovementMode: %s"):format(Config.MovementMode))
 end
@@ -620,7 +615,7 @@ local Keybinds = {
 --// Input
 
 local function sendInputToServer(keyCode)
-	BenchmarkPackets.Input.send(keyCode.Name)
+	BenchmarkInput:FireServer(keyCode.Name)
 end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
