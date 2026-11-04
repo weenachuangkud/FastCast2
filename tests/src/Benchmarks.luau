@@ -13,6 +13,7 @@ local RunService = game:GetService("RunService")
 local FastCast = require(ReplicatedStorage:WaitForChild("FastCast2"))
 
 local Benchmarks = {}
+local CLEANUP_TIMEOUT = 5
 
 Benchmarks.DefaultConfig = {
 	projectileCount = 500,
@@ -91,16 +92,26 @@ local function fire(caster: any, castType: string, origin: Vector3, direction: V
 	end
 end
 
-local function createCaster(activeCasts: { any }): any
+local function createCaster(activeCasts: any): any
 	FastCast.Init("BulkMoveTo")
 	local caster = FastCast.new()
-	caster.CastFire = function(cast: any)
-		table.insert(activeCasts, cast)
-	end
+
+	caster.CastFire:Connect(function(cast)
+		activeCasts.casts[cast.ID] = cast
+		activeCasts.count += 1
+	end)
+
+	caster.CastTerminating:Connect(function(cast)
+		if activeCasts.casts[cast.ID] then
+			activeCasts.casts[cast.ID] = nil
+			activeCasts.count -= 1
+		end
+	end)
+
 	return caster
 end
 
-local function runCase(mode: string, castType: string, caster: any, activeCasts: { any }, config: any)
+local function runCase(mode: string, castType: string, caster: any, activeCasts: any, config: any)
 	local random = Random.new(config.randomSeed)
 	local creationStarted = os.clock()
 
@@ -119,15 +130,33 @@ local function runCase(mode: string, castType: string, caster: any, activeCasts:
 	isMeasuringFrames = false
 
 	local frames = summarizeFrames()
-	local activeCount = #activeCasts
+	local activeCount = activeCasts.count
+	local casts = {}
+
+	for _, cast in activeCasts.casts do
+		casts[#casts + 1] = cast
+	end
+
 	local cleanupStarted = os.clock()
 
-	for index = #activeCasts, 1, -1 do
-		FastCast:TerminateCast(activeCasts[index])
-		activeCasts[index] = nil
+	for _, cast in casts do
+		FastCast.TerminateCast(cast)
+	end
+
+	local deadline = os.clock() + CLEANUP_TIMEOUT
+
+	while activeCasts.count > 0 and os.clock() < deadline do
+		task.wait()
 	end
 
 	local cleanupSeconds = os.clock() - cleanupStarted
+
+	if activeCasts.count > 0 then
+		caster:Destroy()
+		table.clear(activeCasts.casts)
+		activeCasts.count = 0
+		error(("Timed out waiting for %d casts to terminate"):format(activeCount - (#casts - activeCasts.count)))
+	end
 
 	local result = {
 		mode = mode,
@@ -181,7 +210,10 @@ function Benchmarks.run(overrides: any?): { any }
 	local results = {}
 
 	local mode = "Serial"
-	local activeCasts = {}
+	local activeCasts = {
+		casts = {},
+		count = 0,
+	}
 	local caster = createCaster(activeCasts)
 
 	for _, castType in config.castTypes do
