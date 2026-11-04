@@ -65,8 +65,6 @@ type CastVisualizerVariants =
 	| BlockVisualizerVariant
 	| SphereVisualizerVariant
 
--- Event type constants (numeric IDs avoid string comparison in hot path)
-
 --[[
 	Shoutout to DrSinek for some code
 ]]
@@ -831,7 +829,7 @@ local function SimulateCast(
 		handler,
 		canPiercefn
 	)
-	if not cast.StateInfo then
+	if not cast.StateInfo or cast._Destroying then
 		return true
 	end
 
