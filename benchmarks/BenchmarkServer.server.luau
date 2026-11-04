@@ -170,9 +170,8 @@ end
 
 --// Caster Creation
 
-FastCast.Init(Config.MovementMode)
-
 local function createCaster()
+	FastCast.Init(Config.MovementMode)
 	local caster = FastCast.new()
 	caster.CastFire:Connect(onCastFire)
 	caster.CastTerminating:Connect(onCastTerminating)
