@@ -188,12 +188,6 @@ export type CasterSerial = {
 		Behavior: FastCastBehavior?
 	) -> ActiveSpherecastData,
 
-	SetMovementModeEnabled: (
-		self: CasterSerial,
-		enabled: boolean,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
 	Destroy: (self: CasterSerial) -> ()
 }
 
