@@ -13,6 +13,7 @@ Fires projectiles and tracks frame-time statistics using keyboard controls.
 | Key | Action |
 |-----|--------|
 | P | Start benchmark |
+| N | Toggle input mode between Client and Server |
 | L | Increase projectile count by 500 |
 | K | Decrease projectile count by 500 (floor 0) |
 | U | Toggle Instanced / Instanceless |
@@ -47,11 +48,9 @@ local Config = {
 
 **Type**: Script (runs in ServerScriptService)
 
-Same benchmark logic as the client, but runs on the server. Controlled via chat messages instead of keyboard input (since UserInputService is client-only).
+Same benchmark logic as the client, but runs on the server. It receives key commands from the client benchmark through ByteNet; it does not read chat messages.
 
-### Chat Commands
-
-Type the letter in chat:
+To control the server benchmark, press N in the client benchmark to switch the input mode to **Server**, then use the same keys listed above.
 
 | Command | Action |
 |---------|--------|
@@ -111,7 +110,8 @@ Throughput: xx.xx projectiles/s
 === DONE ===
 ```
 
-- **Elapsed / throughput** measure synchronous projectile creation and cleanup work.
+- **Creation elapsed / throughput** measure synchronous cast creation.
+- **Cleanup elapsed / throughput** include termination requests, simulation dispatch, and the CastTerminating callbacks that destroy cosmetic projectile instances.
 - **Average frame time** is calculated from every heartbeat during the simulation window; FPS is derived from that average.
 - **P50 / P95 / P99** expose frame-time spikes that an FPS average can hide (lower is better).
 - Each run uses the same random seed for repeatable projectile origins and directions.
@@ -120,7 +120,7 @@ Throughput: xx.xx projectiles/s
 
 1. Run `rojo serve benchmarks.project.json` from the repository root.
 2. Connect an empty Studio place with the Rojo plugin.
-3. Play in Studio -- press P on the client or type p in chat on the server.
+3. Play in Studio -- press P for the client benchmark. Press N to switch to Server input mode, then press P to run the server benchmark.
 
 The benchmark project mounts FastCast2 in `ReplicatedStorage`, the client benchmark in `ReplicatedFirst`, and the server benchmark in `ServerScriptService`. You can also insert either script manually in those locations if you do not use Rojo.
 
