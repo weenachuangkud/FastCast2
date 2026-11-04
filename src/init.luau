@@ -474,7 +474,7 @@ function FastCastSerial:Destroy()
 		return
 	end
 
-	SerialSimulation.Destroy(self)
+	SerialSimulation.DestroyCaster(self)
 	self.CasterId = nil
 	DestroyCasterSignals(self)
 	setmetatable(self, nil)
