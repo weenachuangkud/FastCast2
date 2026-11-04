@@ -336,13 +336,12 @@ local function cleanupCasts()
 		task.wait()
 	end
 
-	local cleanupElapsed = os.clock() - cleanupStarted
-
 	if ActiveCastCount > 0 then
 		warn(("Timed out waiting for %d casts to terminate. Forcing caster cleanup."):format(ActiveCastCount))
 		destroyCaster()
 	end
 
+	local cleanupElapsed = os.clock() - cleanupStarted
 	return activeCount, cleanupElapsed
 end
 
