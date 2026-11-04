@@ -52,7 +52,9 @@ Same benchmark logic as the client, but runs on the server. It receives key comm
 
 To control the server benchmark, press N in the client benchmark to switch the input mode to **Server**, then use the same keys listed above.
 
-| Command | Action |
+### Server command keys
+
+| Key | Action |
 |---------|--------|
 | p | Start benchmark |
 | l | Increase projectile count by 500 |
