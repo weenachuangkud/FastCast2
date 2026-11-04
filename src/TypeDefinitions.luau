@@ -315,7 +315,7 @@ export type SphereCastRayInfo = {
 export type BaseCastData = { [string]: any }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, _TerminationQueued: boolean, Type : "Raycast", CFrame: CFrame }
+	@type ActiveCastData { Caster: BaseCastData, CasterId: number, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, _TerminationQueued: boolean, Type : "Raycast", CFrame: CFrame }
 	@within TypeDefinitions	
 	
 	Represents an active cast data.
@@ -336,7 +336,7 @@ export type ActiveCastData = {
 }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: BlockCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Blockcast", CFrame: CFrame }
+	@type ActiveCastData { Caster: BaseCastData, CasterId: number, StateInfo: CastStateInfo, RayInfo: BlockCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Blockcast", CFrame: CFrame }
 	@within TypeDefinitions	
 	
 	Represents an active block cast data.
@@ -356,7 +356,7 @@ export type ActiveBlockcastData = {
 }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: SphereCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Spherecast", CFrame: CFrame }
+	@type ActiveCastData { Caster: BaseCastData, CasterId: number, StateInfo: CastStateInfo, RayInfo: SphereCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Spherecast", CFrame: CFrame }
 	@within TypeDefinitions	
 	
 	Represents an active sphere cast data.

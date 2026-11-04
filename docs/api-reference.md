@@ -188,11 +188,12 @@ behavior.VisualizeCastSettings = {
 
 ### 3.1 What is ActiveCast
 
-ActiveCast represents a projectile in flight. Its simulation state is stored directly on the cast (AoS).
+ActiveCast represents a projectile in flight. Its simulation state is stored directly on the cast (AoS). Individual casts do not expose a cast ID; the serial simulation stores and queues cast references directly.
 
 ### 3.2 Data Structure
 
 ```lua
+cast.CasterId: number       -- ID of the caster that fired this cast
 cast.PreviousPosition: Vector3 -- Position at the start of the most recent simulation step
 cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
 cast.Offset: CFrame          -- Local-space cosmetic offset; can be changed while the cast is active
