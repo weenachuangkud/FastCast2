@@ -180,7 +180,23 @@ end
 
 --// Cast Cleanup
 
-local destroyCaster
+local function destroyCaster()
+	if Caster then
+		for _, cast in ActiveCasts do
+			local cosmetic = cast.RayInfo and cast.RayInfo.CosmeticBulletObject
+
+			if cosmetic and cosmetic.Parent then
+				cosmetic:Destroy()
+			end
+		end
+
+		Caster:Destroy()
+		Caster = nil
+	end
+
+	table.clear(ActiveCasts)
+	ActiveCastCount = 0
+end
 
 local function cleanupCasts()
 	local casts = {}
@@ -209,24 +225,6 @@ local function cleanupCasts()
 
 	local cleanupElapsed = os.clock() - cleanupStarted
 	return activeCount, cleanupElapsed
-end
-
-destroyCaster = function()
-	if Caster then
-		for _, cast in ActiveCasts do
-			local cosmetic = cast.RayInfo and cast.RayInfo.CosmeticBulletObject
-
-			if cosmetic and cosmetic.Parent then
-				cosmetic:Destroy()
-			end
-		end
-
-		Caster:Destroy()
-		Caster = nil
-	end
-
-	table.clear(ActiveCasts)
-	ActiveCastCount = 0
 end
 
 local function rebuildCaster()
