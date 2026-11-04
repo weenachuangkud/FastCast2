@@ -27,6 +27,16 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
+local BenchmarkInputInstance = ReplicatedStorage:FindFirstChild("FastCast2BenchmarkInput")
+if BenchmarkInputInstance then
+	assert(BenchmarkInputInstance:IsA("RemoteEvent"), "FastCast2BenchmarkInput must be a RemoteEvent")
+else
+	BenchmarkInputInstance = Instance.new("RemoteEvent")
+	BenchmarkInputInstance.Name = "FastCast2BenchmarkInput"
+	BenchmarkInputInstance.Parent = ReplicatedStorage
+end
+local BenchmarkInput = BenchmarkInputInstance :: RemoteEvent
+
 --// Configuration
 
 local Config = {
@@ -58,9 +68,6 @@ local BENCHMARK_COOLDOWN = 2.5
 local FastCastModule = ReplicatedStorage:WaitForChild("FastCast2")
 
 local FastCast = require(FastCastModule)
-local BenchmarkPackets = require(
-	ReplicatedStorage:WaitForChild("BenchmarkPackets")
-)
 
 --// Projectile Objects
 
@@ -170,7 +177,6 @@ end
 
 local function createCaster()
 	local caster = FastCast.new()
-	FastCast.Init(Config.MovementMode)
 	caster.CastFire = onCastFire
 	caster.CastTerminating = onCastTerminating
 	return caster
@@ -183,7 +189,7 @@ local function terminateActiveCasts()
 		local cast = ActiveCasts[i]
 
 		if cast then
-			FastCast:TerminateCast(cast)
+			FastCast.TerminateCast(cast)
 		end
 
 		ActiveCasts[i] = nil
@@ -463,12 +469,7 @@ local function toggleMovementMode()
 		Config.MovementMode = "BulkMoveTo"
 	end
 
-	if Caster then
-		Caster:SetMovementModeEnabled(
-			true,
-			Config.MovementMode
-		)
-	end
+	FastCast.SetMovementModeEnabled(true, Config.MovementMode)
 
 	print(("MovementMode: %s"):format(
 		Config.MovementMode
@@ -660,9 +661,9 @@ local function runCommand(command)
 	end
 end
 
---// ByteNet (client key input)
+--// Client key input
 
-BenchmarkPackets.Input.listen(function(keyName)
+BenchmarkInput.OnServerEvent:Connect(function(_player, keyName)
 	if typeof(keyName) ~= "string" then
 		return
 	end
@@ -676,6 +677,7 @@ end)
 
 --// Initialization
 
+FastCast.Init(Config.MovementMode)
 rebuildCaster()
 
 showHelp()
