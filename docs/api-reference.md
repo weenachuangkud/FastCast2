@@ -188,12 +188,11 @@ behavior.VisualizeCastSettings = {
 
 ### 3.1 What is ActiveCast
 
-ActiveCast represents a projectile in flight. It's a pure data structure (AoS) exposed to users, while internally FastCast2 uses SoA for performance.
+ActiveCast represents a projectile in flight. Its simulation state is stored directly on the cast (AoS).
 
 ### 3.2 Data Structure
 
 ```lua
-cast.ID: number              -- Unique identifier
 cast.PreviousPosition: Vector3 -- Position at the start of the most recent simulation step
 cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
 cast.Offset: CFrame          -- Local-space cosmetic offset; can be changed while the cast is active

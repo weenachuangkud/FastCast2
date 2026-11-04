@@ -92,7 +92,6 @@ type QueuedVis = { any }
 
 local activeInstancedCasts: { any } = {}
 local activeInstancelessCasts: { any } = {}
-local NextProjectileID = 0
 local Motor6DCacheInstance: any = nil
 
 local CurrentMovementMode: "BulkMoveTo" | "Motor6D" = "BulkMoveTo"
@@ -1432,9 +1431,7 @@ local function FireCastFire(caster: any, cast: any, origin: Vector3, direction: 
 end
 
 function SerialSimulation.Raycast(caster: any, origin: Vector3, direction: Vector3, velocity: Vector3 | number, behavior: TypeDef.FastCastBehavior)
-	NextProjectileID += 1
-	local cast = ActiveCast.createCastData(SerialSimulation, NextProjectileID, origin, direction, velocity, behavior, { CastType = CAST_TYPE_RAYCAST } :: any)
-	cast.CasterId = caster.CasterId
+	local cast = ActiveCast.createCastData(SerialSimulation, origin, direction, velocity, behavior, { CastType = CAST_TYPE_RAYCAST } :: any)
 	cast._Caster = caster
 	cast._CasterEvents = caster._events
 	RegisterCast(cast)
@@ -1443,9 +1440,7 @@ function SerialSimulation.Raycast(caster: any, origin: Vector3, direction: Vecto
 end
 
 function SerialSimulation.Blockcast(caster: any, origin: Vector3, size: Vector3, direction: Vector3, velocity: Vector3 | number, behavior: TypeDef.FastCastBehavior)
-	NextProjectileID += 1
-	local cast = ActiveCast.createCastData(SerialSimulation, NextProjectileID, origin, direction, velocity, behavior, { CastType = CAST_TYPE_BLOCKCAST, Size = size } :: any)
-	cast.CasterId = caster.CasterId
+	local cast = ActiveCast.createCastData(SerialSimulation, origin, direction, velocity, behavior, { CastType = CAST_TYPE_BLOCKCAST, Size = size } :: any)
 	cast._Caster = caster
 	cast._CasterEvents = caster._events
 	RegisterCast(cast)
@@ -1454,9 +1449,7 @@ function SerialSimulation.Blockcast(caster: any, origin: Vector3, size: Vector3,
 end
 
 function SerialSimulation.Spherecast(caster: any, origin: Vector3, radius: number, direction: Vector3, velocity: Vector3 | number, behavior: TypeDef.FastCastBehavior)
-	NextProjectileID += 1
-	local cast = ActiveCast.createCastData(SerialSimulation, NextProjectileID, origin, direction, velocity, behavior, { CastType = CAST_TYPE_SPHERECAST, Radius = radius } :: any)
-	cast.CasterId = caster.CasterId
+	local cast = ActiveCast.createCastData(SerialSimulation, origin, direction, velocity, behavior, { CastType = CAST_TYPE_SPHERECAST, Radius = radius } :: any)
 	cast._Caster = caster
 	cast._CasterEvents = caster._events
 	RegisterCast(cast)

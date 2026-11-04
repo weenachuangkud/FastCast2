@@ -315,7 +315,7 @@ export type SphereCastRayInfo = {
 export type BaseCastData = { [string]: any }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, _TerminationQueued: boolean, Type : "Raycast", CFrame: CFrame, ID: number }
+	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: CastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, _TerminationQueued: boolean, Type : "Raycast", CFrame: CFrame }
 	@within TypeDefinitions	
 	
 	Represents an active cast data.
@@ -332,11 +332,10 @@ export type ActiveCastData = {
 	_TerminationQueued: boolean,
 	Type : "Raycast",
 	CFrame: CFrame,
-	ID: number
 }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: BlockCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Blockcast", CFrame: CFrame, ID: number }
+	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: BlockCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Blockcast", CFrame: CFrame }
 	@within TypeDefinitions	
 	
 	Represents an active block cast data.
@@ -352,11 +351,10 @@ export type ActiveBlockcastData = {
 	_Destroying: boolean,
 	Type : "Blockcast",
 	CFrame: CFrame,
-	ID: number
 }
 
 --[=[
-	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: SphereCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Spherecast", CFrame: CFrame, ID: number }
+	@type ActiveCastData { Caster: BaseCastData, StateInfo: CastStateInfo, RayInfo: SphereCastRayInfo, UserData: { [any]: any }, PreviousPosition: Vector3, _Destroying: boolean, Type : "Spherecast", CFrame: CFrame }
 	@within TypeDefinitions	
 	
 	Represents an active sphere cast data.
@@ -372,7 +370,6 @@ export type ActiveSpherecastData = {
 	_Destroying: boolean,
 	Type : "Spherecast",
 	CFrame: CFrame,
-	ID: number
 }
 
 return {}
