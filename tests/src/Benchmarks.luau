@@ -152,10 +152,11 @@ local function runCase(mode: string, castType: string, caster: any, activeCasts:
 	local cleanupSeconds = os.clock() - cleanupStarted
 
 	if activeCasts.count > 0 then
+		local remainingCount = activeCasts.count
 		caster:Destroy()
 		table.clear(activeCasts.casts)
 		activeCasts.count = 0
-		error(("Timed out waiting for %d casts to terminate"):format(activeCount - (#casts - activeCasts.count)))
+		error(("Timed out waiting for %d casts to terminate"):format(remainingCount))
 	end
 
 	local result = {
