@@ -145,12 +145,13 @@ export type VisualizeCastSettings = {
 }
 
 --[=[
-	@type CasterSerial { WorldRoot: WorldRoot, LengthChanged: Signal.Signal<OnLengthChangedFunction>, Hit: Signal.Signal<OnHitFunction>, CanPierce: CanPierceFunction?, Pierced: Signal.Signal<OnPiercedFunction>, CastTerminating: Signal.Signal<OnCastTerminatingFunction>, CastFire: Signal.Signal<OnCastFireFunction>, MovementMode: "BulkMoveTo" | "Motor6D"?, RaycastFire: (self: CasterSerial, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), BlockcastFire: (self: CasterSerial, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), SpherecastFire: (self: CasterSerial, Origin: Vector3, Radius: number, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> (), SetMovementModeEnabled: (self: CasterSerial, enabled: boolean, mode: "BulkMoveTo" | "Motor6D") -> (), Destroy: (self: CasterSerial) -> () }
+	@type CasterSerial { CasterId: number, WorldRoot: WorldRoot, LengthChanged: Signal.Signal<OnLengthChangedFunction>, Hit: Signal.Signal<OnHitFunction>, CanPierce: CanPierceFunction?, Pierced: Signal.Signal<OnPiercedFunction>, CastTerminating: Signal.Signal<OnCastTerminatingFunction>, CastFire: Signal.Signal<OnCastFireFunction>, OnStep: Signal.Signal<OnStepFunction>, RaycastFire: (self: CasterSerial, Origin: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> ActiveCastData, BlockcastFire: (self: CasterSerial, Origin: Vector3, Size: Vector3, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> ActiveBlockcastData, SpherecastFire: (self: CasterSerial, Origin: Vector3, Radius: number, Direction: Vector3, Velocity: Vector3 | number, Behavior: FastCastBehavior?) -> ActiveSpherecastData, Destroy: (self: CasterSerial) -> () }
 	@within TypeDefinitions
 
-	Represents the serial caster exposed by FastCast.new().
+	Represents the serial caster returned by FastCast.new(). Movement mode is configured globally with FastCast.SetMovementModeEnabled().
 ]=]
 export type CasterSerial = {
+	CasterId: number,
 	WorldRoot: WorldRoot,
 	LengthChanged: Signal.Signal<OnLengthChangedFunction> | OnLengthChangedFunction,
 	Hit: Signal.Signal<OnHitFunction> | OnHitFunction,
@@ -159,8 +160,6 @@ export type CasterSerial = {
 	CastTerminating: Signal.Signal<OnCastTerminatingFunction> | OnCastTerminatingFunction,
 	CastFire: Signal.Signal<OnCastFireFunction> | OnCastFireFunction,
 	OnStep: Signal.Signal<OnStepFunction> | OnStepFunction,
-
-	MovementMode: ("BulkMoveTo" | "Motor6D")?,
 
 	RaycastFire: (
 		self: CasterSerial,
@@ -188,21 +187,15 @@ export type CasterSerial = {
 		Behavior: FastCastBehavior?
 	) -> ActiveSpherecastData,
 
-	SetMovementModeEnabled: (
-		self: CasterSerial,
-		enabled: boolean,
-		mode: "BulkMoveTo" | "Motor6D"
-	) -> (),
-
 	Destroy: (self: CasterSerial) -> ()
 }
 
 
 --[=[
-	@type FastCastBehavior { RaycastParams: RaycastParams?,	MaxDistance: number,	MaxLifetime: number?,	MaxPiercesPerStep: number,	Acceleration: Vector3,	HighFidelityBehavior: number,	HighFidelitySegmentSize: number,	CosmeticBulletTemplate: Instance?,	CosmeticBulletContainer: Instance?,	AutoIgnoreContainer: boolean,	MovementMethod: "BulkMoveTo" | "Transform",		VisualizeCasts: boolean, 	VisualizeCastSettings: VisualizeCastSettings,   CloneTemplate: boolean,	UserData: any }
+	@type FastCastBehavior { RaycastParams: RaycastParams?, MaxDistance: number, MaxLifetime: number?, MaxPiercesPerStep: number, Acceleration: Vector3, InitialOffset: CFrame, HighFidelityBehavior: number, HighFidelitySegmentSize: number, CosmeticBulletTemplate: Instance?, CosmeticBulletContainer: Instance?, AutoIgnoreContainer: boolean, VisualizeCasts: boolean, VisualizeCastSettings: VisualizeCastSettings, CloneTemplate: boolean, UserData: any }
 	@within TypeDefinitions
 
-	Represents a FastCastBehavior configuration.
+	Represents a FastCastBehavior configuration. Cosmetic movement mode is configured globally with FastCast.SetMovementModeEnabled().
 ]=]
 export type FastCastBehavior = {
 	RaycastParams: RaycastParams?,
