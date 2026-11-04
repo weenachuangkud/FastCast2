@@ -322,6 +322,7 @@ export type BaseCastData = { [string]: any }
 ]=]
 export type ActiveCastData = {
 	Caster: BaseCastData,
+	CasterId: number,
 	StateInfo: CastStateInfo,
 	RayInfo: CastRayInfo,
 	UserData: { [any]: any },
@@ -342,6 +343,7 @@ export type ActiveCastData = {
 ]=]
 export type ActiveBlockcastData = {
 	Caster: BaseCastData,
+	CasterId: number,
 	StateInfo: CastStateInfo,
 	RayInfo: BlockCastRayInfo,
 	UserData: { [any]: any },
@@ -361,6 +363,7 @@ export type ActiveBlockcastData = {
 ]=]
 export type ActiveSpherecastData = {
 	Caster: BaseCastData,
+	CasterId: number,
 	StateInfo: CastStateInfo,
 	RayInfo: SphereCastRayInfo,
 	UserData: { [any]: any },
