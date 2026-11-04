@@ -308,7 +308,7 @@ local function cleanupCasts()
 		local cast = ActiveCasts[i]
 
 		if cast then
-			FastCast:TerminateCast(cast)
+			FastCast.TerminateCast(cast)
 		end
 
 		ActiveCasts[i] = nil
