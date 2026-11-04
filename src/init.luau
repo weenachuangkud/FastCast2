@@ -67,7 +67,6 @@ A powerful modern projectile library
 local Signal = require(script:WaitForChild("Signal"))
 local TypeDef = require(script:WaitForChild("TypeDefinitions"))
 local DefaultConfigs = require(script:WaitForChild("DefaultConfigs"))
-local BaseCastSerial = require(script:WaitForChild("BaseCastSerial"))
 local SerialSimulation = require(script:WaitForChild("SerialSimulation"))
 
 -- Type Exports
@@ -147,25 +146,6 @@ local function DestroyCasterSignals(self)
 	rawset(self, "CanPierce", nil)
 end
 
-local function RegisterCasterEvents(self)
-	local casterId = rawget(self, "CasterId")
-	local events = rawget(self, "_events")
-
-	if not casterId or not events then
-		return
-	end
-
-	BaseCastSerial.RegisterCaster(casterId, {
-		CastFire = events.CastFire,
-		OnStep = events.OnStep,
-		Pierced = events.Pierced,
-		Hit = events.Hit,
-		LengthChanged = events.LengthChanged,
-		CanPierce = rawget(self, "CanPierce"),
-		CastTerminating = events.CastTerminating,
-	})
-end
-
 local function IndexCaster(self, key)
 	local events = rawget(self, "_events")
 	if events then
@@ -222,14 +202,12 @@ local function NewIndexCaster(self, key, value)
 		else
 			warn("[FastCast2] Cannot set event '" .. tostring(key) .. "', expected a function or Signal")
 		end
-		RegisterCasterEvents(self)
 		return
 	end
 
 	if QUERY_EVENTS[key] then
 		if value == nil or type(value) == "function" then
 			rawset(self, key, value)
-			RegisterCasterEvents(self)
 		else
 			warn("[FastCast2] Cannot set CanPierce, expected a function")
 		end
@@ -336,7 +314,7 @@ local function ModifyTransformation(
 	trajectory.Acceleration = acceleration or trajectory.Acceleration
 	trajectory.StartTime = cast.StateInfo.TotalRuntime
 	cast.StateInfo.CancelHighResCast = true
-	SerialSimulation.CancelHighResResimulation(cast.ID)
+	SerialSimulation.CancelHighResResimulation(cast)
 end
 
 local function deepCopyTable(tbl: {any}): {any}
@@ -382,7 +360,7 @@ function FastCast.SetMovementModeEnabled(enabled: boolean, mode: "BulkMoveTo" | 
 		return
 	end
 
-	BaseCastSerial.SetMovementModeEnabled(enabled, mode)
+	SerialSimulation.SetMovementModeEnabled(enabled, mode)
 end
 
 --[=[
@@ -410,7 +388,7 @@ function FastCast.Init(movementMode: "BulkMoveTo" | "Motor6D"?)
 		return
 	end
 
-	BaseCastSerial.Init(movementMode)
+	SerialSimulation.Init(movementMode)
 	RuntimeInitialized = true
 end
 
@@ -434,7 +412,7 @@ function FastCastSerial:RaycastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	return BaseCastSerial.Raycast(self, origin, direction, velocity, BehaviorData)
+	return SerialSimulation.Raycast(self, origin, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -458,7 +436,7 @@ function FastCastSerial:BlockcastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	return BaseCastSerial.Blockcast(self, origin, Size, direction, velocity, BehaviorData)
+	return SerialSimulation.Blockcast(self, origin, Size, direction, velocity, BehaviorData)
 end
 
 --[=[
@@ -482,7 +460,7 @@ function FastCastSerial:SpherecastFire(
 		BehaviorData = FastCast.newBehavior()
 	end
 
-	return BaseCastSerial.Spherecast(self, origin, Radius, direction, velocity, BehaviorData)
+	return SerialSimulation.Spherecast(self, origin, Radius, direction, velocity, BehaviorData)
 end
 
 
@@ -496,7 +474,7 @@ function FastCastSerial:Destroy()
 		return
 	end
 
-	BaseCastSerial.Destroy(self)
+	SerialSimulation.DestroyCaster(self)
 	self.CasterId = nil
 	DestroyCasterSignals(self)
 	setmetatable(self, nil)
@@ -703,17 +681,11 @@ end
 	Note: If EndTime is already set, the cast is already terminated and this function returns early.
 ]=]
 function FastCast.TerminateCast(cast: any)
-	-- A cast reference can outlive its simulation entry after natural termination.
-	-- _TerminateCast clears the table, so reject stale references before queuing.
-	if not cast or type(cast.ID) ~= "number" or cast._Destroying or cast._TerminationQueued then
+	if not cast or not cast.StateInfo or cast._Destroying or cast._TerminationQueued then
 		return
 	end
 
-	cast._Destroying = true
-	cast._TerminationQueued = true
-
-	-- QueueTerminate ignores casts that are already terminating.
-	SerialSimulation.QueueEvent(cast.ID, "CastTerminating")
+	SerialSimulation.QueueTerminate(cast)
 end
 
 -- Constructors
@@ -738,7 +710,6 @@ function FastCast.new()
 	}
 
 	setmetatable(fs, FastCastSerial)
-	RegisterCasterEvents(fs)
 	return fs
 end
 

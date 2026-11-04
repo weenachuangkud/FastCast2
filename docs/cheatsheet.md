@@ -112,7 +112,6 @@ behavior.UserData = {}  -- Arbitrary data accessible on the cast
 ## ActiveCastData
 
 ```lua
-cast.ID: number              -- Unique cast identifier
 cast.Type: number            -- 1=Raycast, 2=Blockcast, 3=Spherecast
 cast.CFrame: CFrame          -- Current cosmetic bullet CFrame
 cast.UserData: any           -- Custom data from behavior.UserData

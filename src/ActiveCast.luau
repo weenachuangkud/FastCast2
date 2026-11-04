@@ -40,7 +40,6 @@ end
 
 function ActiveCast.createCastData(
 	BaseCast: any,
-	activeCastID: number,
 	origin: Vector3,
 	direction: Vector3,
 	velocity: Vector3 | number,
@@ -86,7 +85,6 @@ function ActiveCast.createCastData(
 		CastVariant = variant,
 		CFrame = CFrame.new(origin),
 		Offset = behavior.InitialOffset or CFrame.identity,
-		ID = activeCastID
 	}
 
 	if variant.CastType == CAST_TYPE_BLOCKCAST then
