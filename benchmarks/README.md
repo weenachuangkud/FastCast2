@@ -120,9 +120,16 @@ Throughput: xx.xx projectiles/s
 
 ## Quick Start
 
-1. Run `rojo serve benchmarks.project.json` from the repository root.
-2. Connect an empty Studio place with the Rojo plugin.
-3. Play in Studio -- press P for the client benchmark. Press N to switch to Server input mode, then press P to run the server benchmark.
+1. Install the benchmark's ByteNet dependency from the repository root:
+   ```sh
+   cd benchmarks
+   wally install
+   cd ..
+   ```
+   This creates `benchmarks/Packages`, which is mounted by `benchmarks.project.json`.
+2. Run `rojo serve benchmarks.project.json` from the repository root.
+3. Connect an empty Studio place with the Rojo plugin.
+4. Play in Studio -- press P for the client benchmark. Press N to switch to Server input mode, then press P to run the server benchmark.
 
 The benchmark project mounts FastCast2 in `ReplicatedStorage`, the client benchmark in `ReplicatedFirst`, and the server benchmark in `ServerScriptService`. You can also insert either script manually in those locations if you do not use Rojo.
 
