@@ -819,8 +819,7 @@ local function SimulateCast(
 	local worldRoot = rayInfo.WorldRoot
 	local handler = castHandlers[variant.CastType]
 
-	local castEvents = cast._CasterEvents
-	local canPiercefn = castEvents and castEvents.CanPierce
+	local canPiercefn = cast._Caster and cast._Caster.CanPierce
 	
 	local result, didHit = CastSegment(
 		cast,
@@ -1039,8 +1038,7 @@ local function SimulateAlwaysHighFidelity(
 		variant
 	)
 
-	local castEvents = cast._CasterEvents
-	local canPiercefn = castEvents and castEvents.CanPierce
+	local canPiercefn = cast._Caster and cast._Caster.CanPierce
 	local canPierceEnabled = canPiercefn ~= nil
 	
 	local endpoint = (resultOfCast and resultOfCast.Position) or currentPoint
